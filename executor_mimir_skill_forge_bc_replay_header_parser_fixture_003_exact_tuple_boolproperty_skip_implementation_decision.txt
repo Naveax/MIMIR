@@ -1,0 +1,56 @@
+MIMIR Skill Forge BC replay header parser fixture_003 exact tuple + BoolProperty skip-only implementation decision
+
+Pass: F003-I1E
+Date: 2026-08-12
+
+Outcome: PASS
+
+Decision:
+The bounded fixture_003 implementation pass completed successfully on GitHub and is ready for a separate implementation audit/admission pass.
+
+Implemented and evidenced:
+- exact `Fixture003Exact` tuple only
+- exact BuildVersion `251020.62592.500294`
+- non-selected top-level `BoolProperty` skip-only semantics
+- declared BoolProperty size must be 0
+- exactly one separate bool byte consumed
+- only 0/1 accepted
+- invalid value malformed
+- missing value insufficient/truncated
+- no BoolProperty metadata mapping
+- `bForfeit` absent from ReplayHeader metadata
+- selected BoolProperty remains unsupported
+- unknown near-neighbor BuildVersion remains unsupported
+- fixture_001/002 regressions remain passing
+- fixture_003 full checked-in replay happy path passes
+- fixture_003 header-only path passes
+
+GitHub validation authority:
+- branch: agent/f003-fixture003-bool-skip
+- accepted code commit: 890642aef864910d63bc61d73b846bdd57d6650b
+- GitHub Actions workflow: CI
+- run: #18
+- run id: 31588274140
+- job id: 94087062936
+- conclusion: success
+
+Validation summary:
+- mimir-replay: 28 passed, 0 failed
+- mimir-skill: 273 passed, 0 failed
+- full workspace tests: passed
+- cargo fmt --check: passed
+- cargo check workspace/all-targets/all-features: passed
+- cargo clippy workspace/all-targets/all-features -D warnings: passed
+- mimir-export --list: 173 tests listed
+- largest-100 replay corpus size/SHA-256 verification: passed
+
+Important existing debt discovered:
+`mimir-skill` still has one fixture-specific seam test using the historical absolute `D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay` path and that seam test skips on GitHub-hosted runners. This is outside F003-I1 implementation scope. It is recorded, not silently fixed or counted as proof.
+
+Still closed:
+ReplayInput::File, source materialization, CRC validation, content_crc, body/network/frame/raw-state/event parsing, wildcard BuildVersion, broad ReplayVersion=8, BoolProperty -> FieldValue::Boolean, selected BoolProperty mapping, bForfeit metadata, backend parser dependency, CLI/runtime/export widening.
+
+Next exact pass:
+F003-A1 — fixture_003 implementation audit/admission.
+
+This decision records implementation completion only. It does not itself admit the capability.
