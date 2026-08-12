@@ -1,0 +1,70 @@
+name: R3.10d Version Sensitive Wire Conflicts
+
+on:
+  push:
+    branches:
+      - agent/r3-10-boxcars-frame-differential-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  conflicts:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Correlate supported attribute names to wire variants by build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP 'r3_10d_boxcars_target'
+          $log = Join-Path $env:RUNNER_TEMP 'r3_10d_conflicts.log'
+
+          & cargo run --manifest-path tools/r3_10_boxcars_probe/Cargo.toml --release --bin variant_conflicts *> $log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            Write-Host "R3_10D_EXIT=$code"
+            Get-Content -LiteralPath $log -Tail 500
+            exit $code
+          }
+
+          Remove-Item -LiteralPath tools/r3_10_boxcars_probe/Cargo.lock -ErrorAction SilentlyContinue
+
+          $required = @(
+            'boxcars_git_rev=c70e77df7af81b436cb545d070bb90c82f562d0b',
+            'expected_replays=103',
+            'expected_supported_lane=47',
+            'SUMMARY supported_replays=47',
+            'version_sensitive_wire_dispatch_required=true',
+            'native_wire_decoder_admitted=false',
+            'R3_10D_CONFLICT_EVIDENCE_COMPLETED=PASS'
+          )
+          foreach ($marker in $required) {
+            if (-not (Select-String -LiteralPath $log -SimpleMatch $marker -Quiet)) {
+              Get-Content -LiteralPath $log -Tail 500
+              throw "missing R3.10d marker: $marker"
+            }
+          }
+
+          Get-Content -LiteralPath $log | Where-Object {
+            $_ -match '^R3\.10d ' -or
+            $_ -match '^boxcars_' -or
+            $_ -match '^expected_' -or
+            $_ -match '^SUMMARY ' -or
+            $_ -match '^CONFLICT ' -or
+            $_ -match '^CONFLICT_VARIANT ' -or
+            $_ -match '_admitted=' -or
+            $_ -match '_required=' -or
+            $_ -match '^R3_10D_CONFLICT_EVIDENCE_COMPLETED='
+          }
+
+          $tracked = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($tracked.Count -ne 0) {
+            throw "R3.10d evidence mutated tracked files: $($tracked -join ', ')"
+          }
+          Write-Host 'R3_10D_TRACKED_SOURCE_MUTATION=false'
+          Write-Host 'R3_10D_EXIT=0'
