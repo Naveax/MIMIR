@@ -1,0 +1,67 @@
+name: R3.12 Validate Clean Exact SHA
+
+on:
+  push:
+    branches:
+      - agent/r3-12-network-lookup-clean-validation
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-readback:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact clean R3.12 commit
+        uses: actions/checkout@v6
+        with:
+          ref: 9f5811c5aca38bdf5265380a065f15f3912501ff
+          fetch-depth: 1
+
+      - name: Assert exact checkout
+        shell: pwsh
+        run: |
+          $actual = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($actual -ne '9f5811c5aca38bdf5265380a065f15f3912501ff') {
+            throw "exact checkout drift: $actual"
+          }
+          Write-Host "R3_12_EXACT_SHA=$actual"
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full verifier with concise readback
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $log = Join-Path $env:RUNNER_TEMP 'r3_12_verify_repo.log'
+          & pwsh -NoProfile -File scripts/verify_repo.ps1 2>&1 | Tee-Object -FilePath $log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            Write-Host "R3_12_VERIFY_EXIT=$code"
+            Get-Content -LiteralPath $log -Tail 500
+            exit $code
+          }
+
+          $markers = @(
+            'test result: ok. 101 passed; 0 failed',
+            'test result: ok. 273 passed; 0 failed',
+            'PASS: 100 replay fixtures match manifest size + SHA-256.',
+            'supported=44 unsupported=56 malformed=0 mapping_error=0 other_error=0',
+            'PASS: MIMIR repository verification completed with real command arguments.'
+          )
+          foreach ($marker in $markers) {
+            if (-not (Select-String -LiteralPath $log -SimpleMatch $marker -Quiet)) {
+              throw "missing R3.12 verifier marker: $marker"
+            }
+            Write-Host "READBACK $marker"
+          }
+          Write-Host 'R3_12_FULL_VERIFICATION=PASS'
+          Write-Host 'R3_12_VERIFY_EXIT=0'
