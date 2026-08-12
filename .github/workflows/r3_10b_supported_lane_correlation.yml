@@ -1,0 +1,71 @@
+name: R3.10b Supported Lane Correlation
+
+on:
+  push:
+    branches:
+      - agent/r3-10-boxcars-frame-differential-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  correlation:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run supported-lane timing and attribute correlation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP 'r3_10b_boxcars_target'
+          $log = Join-Path $env:RUNNER_TEMP 'r3_10b_supported_lane.log'
+
+          & cargo run --manifest-path tools/r3_10_boxcars_probe/Cargo.toml --release --bin correlate *> $log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            Write-Host "R3_10B_EXIT=$code"
+            Get-Content -LiteralPath $log -Tail 400
+            exit $code
+          }
+
+          Remove-Item -LiteralPath tools/r3_10_boxcars_probe/Cargo.lock -ErrorAction SilentlyContinue
+
+          $required = @(
+            'boxcars_git_rev=c70e77df7af81b436cb545d070bb90c82f562d0b',
+            'expected_replays=103',
+            'expected_supported_lane=47',
+            'SUMMARY supported_replays=47',
+            'SUMMARY supported_decode_ok=47',
+            'SUMMARY attribute_object_oob=0',
+            'SUMMARY spawn_object_oob=0',
+            'R3_10B_CORRELATION_COMPLETED=PASS'
+          )
+          foreach ($marker in $required) {
+            if (-not (Select-String -LiteralPath $log -SimpleMatch $marker -Quiet)) {
+              Get-Content -LiteralPath $log -Tail 400
+              throw "missing R3.10b marker: $marker"
+            }
+          }
+
+          Get-Content -LiteralPath $log | Where-Object {
+            $_ -match '^R3\.10b ' -or
+            $_ -match '^boxcars_' -or
+            $_ -match '^expected_' -or
+            $_ -match '^MISMATCH_ROW ' -or
+            $_ -match '^SUMMARY ' -or
+            $_ -match '^SUPPORTED_ATTRIBUTE ' -or
+            $_ -match '^SUPPORTED_SPAWN_OBJECT ' -or
+            $_ -match '_admitted=' -or
+            $_ -match '^R3_10B_CORRELATION_COMPLETED='
+          }
+
+          $tracked = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($tracked.Count -ne 0) {
+            throw "R3.10b evidence mutated tracked files: $($tracked -join ', ')"
+          }
+          Write-Host 'R3_10B_TRACKED_SOURCE_MUTATION=false'
+          Write-Host 'R3_10B_EXIT=0'
