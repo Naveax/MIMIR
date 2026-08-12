@@ -861,8 +861,9 @@ mod tests {
             ..HeaderSpec::minimal()
         }));
 
-        let error = read_synthetic(bytes)
-            .expect_err("unknown BuildVersion near fixture_003 must not be accepted by wildcard policy");
+        let error = read_synthetic(bytes).expect_err(
+            "unknown BuildVersion near fixture_003 must not be accepted by wildcard policy",
+        );
 
         assert_error_contains(error, "replay header parse error: unsupported-version");
     }
@@ -908,18 +909,22 @@ mod tests {
 
     #[test]
     fn minimal_reader_skips_non_selected_bool_property_false_without_metadata() {
-        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[0], true);
+        let bytes =
+            build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[0], true);
 
-        let header = read_synthetic(bytes).expect("non-selected false BoolProperty should be skipped");
+        let header =
+            read_synthetic(bytes).expect("non-selected false BoolProperty should be skipped");
 
         assert!(header.metadata.get("bForfeit").is_none());
     }
 
     #[test]
     fn minimal_reader_skips_non_selected_bool_property_true_without_metadata() {
-        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[1], true);
+        let bytes =
+            build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[1], true);
 
-        let header = read_synthetic(bytes).expect("non-selected true BoolProperty should be skipped");
+        let header =
+            read_synthetic(bytes).expect("non-selected true BoolProperty should be skipped");
 
         assert!(header.metadata.get("bForfeit").is_none());
     }
@@ -929,14 +934,16 @@ mod tests {
         let bytes =
             build_replay_with_bool_property(HeaderSpec::minimal_without_id(), "Id", 0, &[1], true);
 
-        let error = read_synthetic(bytes).expect_err("selected BoolProperty must remain unsupported");
+        let error =
+            read_synthetic(bytes).expect_err("selected BoolProperty must remain unsupported");
 
         assert_error_contains(error, "replay header parse error: unsupported-property");
     }
 
     #[test]
     fn minimal_reader_rejects_non_selected_bool_property_nonzero_declared_size() {
-        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 1, &[1], true);
+        let bytes =
+            build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 1, &[1], true);
 
         let error = read_synthetic(bytes)
             .expect_err("BoolProperty declared size other than zero must be malformed");
@@ -946,7 +953,8 @@ mod tests {
 
     #[test]
     fn minimal_reader_rejects_truncated_non_selected_bool_property_value() {
-        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[], false);
+        let bytes =
+            build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[], false);
 
         let error = read_synthetic(bytes)
             .expect_err("BoolProperty missing its separate one-byte value must be insufficient");
@@ -956,7 +964,8 @@ mod tests {
 
     #[test]
     fn minimal_reader_rejects_invalid_non_selected_bool_property_value() {
-        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[2], true);
+        let bytes =
+            build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[2], true);
 
         let error =
             read_synthetic(bytes).expect_err("BoolProperty values other than 0 or 1 are malformed");
