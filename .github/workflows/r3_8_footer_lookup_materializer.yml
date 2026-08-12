@@ -1,0 +1,54 @@
+name: R3.8 Footer Lookup Materializer
+
+on:
+  push:
+    branches:
+      - agent/r3-8-footer-lookup-materializer
+    paths:
+      - tools/r3_8_apply_footer_lookup_materializer.py
+      - .github/workflows/r3_8_footer_lookup_materializer.yml
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded R3.8 source patch
+        shell: pwsh
+        run: |
+          python tools/r3_8_apply_footer_lookup_materializer.py
+          cargo fmt --all
+          git diff --check
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.8 pre-validation source scope drift: $($changed -join ', ')"
+          }
+
+      - name: Focused replay verification
+        shell: pwsh
+        run: |
+          cargo check -p mimir-replay --all-targets --all-features
+          cargo test -p mimir-replay -- --nocapture
+          cargo clippy -p mimir-replay --all-targets --all-features -- -D warnings
+
+      - name: Restore non-source drift and commit source only
+        shell: pwsh
+        run: |
+          git restore --source=HEAD -- Cargo.lock
+          git diff --check
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.8 commit scope drift after Cargo.lock restore: $($changed -join ', ')"
+          }
+          git config user.name "Naveax"
+          git config user.email "79841922+Naveax@users.noreply.github.com"
+          git add -- crates/mimir-replay/src/lib.rs
+          git diff --cached --check
+          git commit -m "Add replay footer lookup materializer"
+          git push origin HEAD:agent/r3-8-footer-lookup-materializer
