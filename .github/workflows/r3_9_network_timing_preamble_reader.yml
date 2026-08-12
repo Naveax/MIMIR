@@ -1,0 +1,65 @@
+name: R3.9 Network Timing Preamble Reader
+
+on:
+  push:
+    branches:
+      - agent/r3-9-network-timing-preamble-reader
+    paths:
+      - tools/r3_9_apply_network_timing_preamble.py
+      - .github/workflows/r3_9_network_timing_preamble_reader.yml
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded R3.9 source patch
+        shell: pwsh
+        run: |
+          python tools/r3_9_apply_network_timing_preamble.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.9 pre-validation source scope drift: $($changed -join ', ')"
+          }
+
+      - name: Strict focused replay verification
+        shell: pwsh
+        run: |
+          cargo check -p mimir-replay --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test -p mimir-replay -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy -p mimir-replay --all-targets --all-features -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Restore non-source drift and commit source only
+        shell: pwsh
+        run: |
+          git restore --source=HEAD -- Cargo.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.9 commit scope drift after Cargo.lock restore: $($changed -join ', ')"
+          }
+          git config user.name "Naveax"
+          git config user.email "79841922+Naveax@users.noreply.github.com"
+          git add -- crates/mimir-replay/src/lib.rs
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git commit -m "Add replay network timing preamble reader"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git push origin HEAD:agent/r3-9-network-timing-preamble-reader
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
