@@ -1,0 +1,20 @@
+name: R3.9 Network Timing Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-9-network-timing-evidence
+    paths:
+      - tools/r3_9_network_timing_evidence.py
+      - .github/workflows/r3_9_network_timing_evidence.yml
+
+jobs:
+  evidence:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+      - name: Scan first-frame timing and decoder preconditions
+        shell: pwsh
+        run: |
+          python tools/r3_9_network_timing_evidence.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
