@@ -1,0 +1,239 @@
+name: R3.3 Content Scaffold Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-3-content-scaffold-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Scan levels keyframes and network boundary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          if (-not [BitConverter]::IsLittleEndian) {
+            throw "R3.3 evidence scanner requires a little-endian runner"
+          }
+
+          function Read-I32At([byte[]]$Bytes, [int64]$Offset, [int64]$Limit, [string]$Field) {
+            if ($Offset -lt 0 -or $Offset + 4 -gt $Limit) {
+              throw "${Field} i32 out of bounds at offset $Offset with limit $Limit"
+            }
+            return [BitConverter]::ToInt32($Bytes, [int]$Offset)
+          }
+
+          function Skip-UnrealText([byte[]]$Bytes, [int64]$Cursor, [int64]$Limit, [string]$Field) {
+            $characters = Read-I32At $Bytes $Cursor $Limit "${Field}.characters"
+            $next = $Cursor + 4
+            if ($characters -lt -10000 -or $characters -gt 10000) {
+              throw "${Field} character count $characters exceeds bounded evidence limit"
+            }
+            if ($characters -lt 0) {
+              $byteLength = [int64](-$characters) * 2
+            } else {
+              $byteLength = [int64]$characters
+            }
+            if ($next + $byteLength -gt $Limit) {
+              throw "${Field} text payload exceeds content boundary"
+            }
+            return [pscustomobject]@{
+              next = $next + $byteLength
+              characters = $characters
+              byte_length = $byteLength
+            }
+          }
+
+          function Scan-ReplayContentScaffold([string]$Path, [string]$Class) {
+            try {
+              $bytes = [System.IO.File]::ReadAllBytes($Path)
+              $length = [int64]$bytes.LongLength
+              if ($length -lt 16) { throw "replay shorter than 16 bytes" }
+
+              $headerSize = Read-I32At $bytes 0 $length "header_size"
+              if ($headerSize -lt 0) { throw "negative header_size $headerSize" }
+              $headerEnd = [int64]8 + [int64]$headerSize
+              if ($headerEnd + 8 -gt $length) { throw "content framing lies beyond input" }
+
+              $contentSize = Read-I32At $bytes $headerEnd $length "content_size"
+              if ($contentSize -lt 0) { throw "negative content_size $contentSize" }
+              $contentStart = $headerEnd + 8
+              $contentEnd = $contentStart + [int64]$contentSize
+              if ($contentEnd -ne $length) {
+                throw "content boundary is not exact: computed_end=$contentEnd input_len=$length"
+              }
+
+              $cursor = $contentStart
+              $levelsCountOffset = $cursor
+              $levelsCount = Read-I32At $bytes $cursor $contentEnd "levels.count"
+              $cursor += 4
+              if ($levelsCount -lt 0 -or $levelsCount -gt 25000) {
+                throw "levels count $levelsCount is outside bounded evidence range"
+              }
+              $levelsDataStart = $cursor
+              for ($i = 0; $i -lt $levelsCount; $i++) {
+                $span = Skip-UnrealText $bytes $cursor $contentEnd "levels[$i]"
+                $cursor = [int64]$span.next
+              }
+              $levelsEnd = $cursor
+
+              $keyframesCountOffset = $cursor
+              $keyframesCount = Read-I32At $bytes $cursor $contentEnd "keyframes.count"
+              $cursor += 4
+              if ($keyframesCount -lt 0 -or $keyframesCount -gt 25000) {
+                throw "keyframes count $keyframesCount is outside bounded evidence range"
+              }
+              $keyframesDataStart = $cursor
+              $keyframesBytes = [int64]$keyframesCount * 12
+              if ($cursor + $keyframesBytes -gt $contentEnd) {
+                throw "keyframe tuples exceed content boundary"
+              }
+
+              $firstKeyframeFrame = $null
+              $firstKeyframePosition = $null
+              $lastKeyframeFrame = $null
+              $lastKeyframePosition = $null
+              if ($keyframesCount -gt 0) {
+                $firstKeyframeFrame = Read-I32At $bytes ($cursor + 4) $contentEnd "keyframes[0].frame"
+                $firstKeyframePosition = Read-I32At $bytes ($cursor + 8) $contentEnd "keyframes[0].position"
+                $lastOffset = $cursor + ([int64]($keyframesCount - 1) * 12)
+                $lastKeyframeFrame = Read-I32At $bytes ($lastOffset + 4) $contentEnd "keyframes[last].frame"
+                $lastKeyframePosition = Read-I32At $bytes ($lastOffset + 8) $contentEnd "keyframes[last].position"
+              }
+              $cursor += $keyframesBytes
+              $keyframesEnd = $cursor
+
+              $networkSizeOffset = $cursor
+              $networkSize = Read-I32At $bytes $cursor $contentEnd "network_size"
+              $cursor += 4
+              if ($networkSize -lt 0) { throw "negative network_size $networkSize" }
+              $networkStart = $cursor
+              $networkEnd = $networkStart + [int64]$networkSize
+              if ($networkEnd -gt $contentEnd) {
+                throw "network_data exceeds content boundary: network_end=$networkEnd content_end=$contentEnd"
+              }
+              $footerSize = $contentEnd - $networkEnd
+
+              return [pscustomobject]@{
+                class = $Class
+                path = $Path
+                valid = $true
+                reason = "ok"
+                byte_length = $length
+                content_start = $contentStart
+                content_end = $contentEnd
+                levels_count_offset = $levelsCountOffset
+                levels_count = $levelsCount
+                levels_data_start = $levelsDataStart
+                levels_end = $levelsEnd
+                keyframes_count_offset = $keyframesCountOffset
+                keyframes_count = $keyframesCount
+                keyframes_data_start = $keyframesDataStart
+                keyframes_end = $keyframesEnd
+                first_keyframe_frame = $firstKeyframeFrame
+                first_keyframe_position = $firstKeyframePosition
+                last_keyframe_frame = $lastKeyframeFrame
+                last_keyframe_position = $lastKeyframePosition
+                network_size_offset = $networkSizeOffset
+                network_size = $networkSize
+                network_start = $networkStart
+                network_end = $networkEnd
+                footer_size = $footerSize
+              }
+            } catch {
+              return [pscustomobject]@{
+                class = $Class
+                path = $Path
+                valid = $false
+                reason = $_.Exception.Message
+                byte_length = $null
+                content_start = $null
+                content_end = $null
+                levels_count_offset = $null
+                levels_count = $null
+                levels_data_start = $null
+                levels_end = $null
+                keyframes_count_offset = $null
+                keyframes_count = $null
+                keyframes_data_start = $null
+                keyframes_end = $null
+                first_keyframe_frame = $null
+                first_keyframe_position = $null
+                last_keyframe_frame = $null
+                last_keyframe_position = $null
+                network_size_offset = $null
+                network_size = $null
+                network_start = $null
+                network_end = $null
+                footer_size = $null
+              }
+            }
+          }
+
+          function Min-Property($Rows, [string]$Property) {
+            if (@($Rows).Count -eq 0) { return $null }
+            return ($Rows | Measure-Object -Property $Property -Minimum).Minimum
+          }
+
+          function Max-Property($Rows, [string]$Property) {
+            if (@($Rows).Count -eq 0) { return $null }
+            return ($Rows | Measure-Object -Property $Property -Maximum).Maximum
+          }
+
+          $historicalPaths = @(
+            "external_fixtures/sample_001.replay",
+            "external_fixtures/sample_002.replay",
+            "external_fixtures/sample_003.replay"
+          )
+          $historical = @()
+          foreach ($path in $historicalPaths) {
+            $row = Scan-ReplayContentScaffold $path "historical_fixture"
+            $historical += $row
+            Write-Host ("R3_3_HISTORICAL " + ($row | ConvertTo-Json -Compress))
+          }
+
+          $corpusFiles = @(Get-ChildItem -Path "test_corpus/largest_100" -Filter "*.replay" -File | Sort-Object Name)
+          if ($corpusFiles.Count -ne 100) {
+            throw "expected exactly 100 checked-in stress replay files, found $($corpusFiles.Count)"
+          }
+
+          $corpus = @()
+          foreach ($file in $corpusFiles) {
+            $row = Scan-ReplayContentScaffold $file.FullName "largest_100"
+            $corpus += $row
+            if (-not $row.valid) {
+              Write-Host ("R3_3_OUTLIER " + ($row | ConvertTo-Json -Compress))
+            }
+          }
+
+          $historicalValid = @($historical | Where-Object { $_.valid })
+          $corpusValid = @($corpus | Where-Object { $_.valid })
+          $summary = [pscustomobject]@{
+            historical_scanned = $historical.Count
+            historical_scaffold_valid = $historicalValid.Count
+            corpus_scanned = $corpus.Count
+            corpus_scaffold_valid = $corpusValid.Count
+            corpus_scaffold_invalid = $corpus.Count - $corpusValid.Count
+            levels_count_min = Min-Property $corpusValid "levels_count"
+            levels_count_max = Max-Property $corpusValid "levels_count"
+            keyframes_count_min = Min-Property $corpusValid "keyframes_count"
+            keyframes_count_max = Max-Property $corpusValid "keyframes_count"
+            network_size_min = Min-Property $corpusValid "network_size"
+            network_size_max = Max-Property $corpusValid "network_size"
+            footer_size_min = Min-Property $corpusValid "footer_size"
+            footer_size_max = Max-Property $corpusValid "footer_size"
+            crc_validation_performed = $false
+            network_decode_performed = $false
+            footer_parse_performed = $false
+            frame_decode_performed = $false
+          }
+          Write-Host ("R3_3_SUMMARY " + ($summary | ConvertTo-Json -Compress))
+
+          if ($historicalValid.Count -ne $historical.Count -or $corpusValid.Count -ne $corpus.Count) {
+            Write-Warning "R3.3 found scaffold outliers; do not admit a universal levels/keyframes/network boundary policy from this run."
+          }
