@@ -24,6 +24,8 @@ jobs:
           $ErrorActionPreference = 'Stop'
           python tools/r3_13_apply_network_lookup_plan.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/r3_13_fix_lookup_plan_borrows.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo fmt --all
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git diff --check
