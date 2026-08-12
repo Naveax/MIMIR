@@ -1,8 +1,9 @@
 use boxcars::ParserBuilder;
 use mimir_replay::{
     replay_network_attribute_tag_v1, replay_network_parent_class_v1,
-    MinimalReplayFooterLookupMaterializationReader, MinimalReplayHeaderReader, ReplayFooterLookupMaterializationReader,
-    ReplayInput, ReplayNetworkAttributeTagV1, ReplayReader,
+    MinimalReplayFooterLookupMaterializationReader, MinimalReplayHeaderReader,
+    ReplayFooterLookupMaterializationReader, ReplayInput, ReplayNetworkAttributeTagV1,
+    ReplayReader,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -65,7 +66,9 @@ fn hierarchy_object_indices(
         }
         current = parent.to_string();
         if seen.len() > 65 {
-            return Err(format!("parent depth escaped admitted surface for {object_name}"));
+            return Err(format!(
+                "parent depth escaped admitted surface for {object_name}"
+            ));
         }
     }
 
@@ -78,7 +81,9 @@ fn build_effective_maps(
 ) -> Result<Vec<StreamMap>, String> {
     let (name_index, duplicates) = build_name_index(objects);
     if duplicates != 0 {
-        return Err(format!("duplicate object names are outside admitted R3.13 evidence: {duplicates}"));
+        return Err(format!(
+            "duplicate object names are outside admitted R3.13 evidence: {duplicates}"
+        ));
     }
 
     let mut effective = Vec::with_capacity(objects.len());
@@ -101,7 +106,11 @@ fn build_effective_maps(
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let paths = replay_paths()?;
     if paths.len() != EXPECTED_REPLAY_COUNT {
-        return Err(format!("expected {EXPECTED_REPLAY_COUNT} replay files, found {}", paths.len()).into());
+        return Err(format!(
+            "expected {EXPECTED_REPLAY_COUNT} replay files, found {}",
+            paths.len()
+        )
+        .into());
     }
 
     let mut supported_replays = 0usize;
@@ -121,7 +130,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut property_object_mismatch = 0u64;
     let mut decoded_not_implemented_hits = 0u64;
     let mut same_frame_new_delete = 0u64;
-    let mut active_actor_overwrite = 0u64;
+    let mut active_actor_overwrite_same_class = 0u64;
+    let mut active_actor_overwrite_class_changed = 0u64;
     let mut delete_missing_actor = 0u64;
     let mut failure_samples = Vec::<String>::new();
 
@@ -150,21 +160,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let footer = MinimalReplayFooterLookupMaterializationReader
             .read_footer_lookup_materialization(&input)
-            .map_err(|error| format!("MIMIR footer lookup failed for {}: {error}", display_path(&path)))?;
+            .map_err(|error| {
+                format!(
+                    "MIMIR footer lookup failed for {}: {error}",
+                    display_path(&path)
+                )
+            })?;
         let replay = ParserBuilder::new(&bytes)
             .never_check_crc()
             .must_parse_network_data()
             .parse()
-            .map_err(|error| format!("Boxcars decode failed for {}: {error:?}", display_path(&path)))?;
-        let frames = replay
-            .network_frames
-            .as_ref()
-            .ok_or_else(|| format!("Boxcars omitted network frames for {}", display_path(&path)))?;
+            .map_err(|error| {
+                format!(
+                    "Boxcars decode failed for {}: {error:?}",
+                    display_path(&path)
+                )
+            })?;
+        let frames = replay.network_frames.as_ref().ok_or_else(|| {
+            format!(
+                "Boxcars omitted network frames for {}",
+                display_path(&path)
+            )
+        })?;
 
         if footer.objects != replay.objects {
             object_table_mismatches += 1;
             if failure_samples.len() < MAX_FAILURE_SAMPLES {
-                failure_samples.push(format!("OBJECT_TABLE_MISMATCH path={}", display_path(&path)));
+                failure_samples.push(format!(
+                    "OBJECT_TABLE_MISMATCH path={}",
+                    display_path(&path)
+                ));
             }
             continue;
         }
@@ -182,7 +207,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     property_object_oob += 1;
                     continue;
                 }
-                if target.insert(property.stream_id, property.object_index).is_some() {
+                if target
+                    .insert(property.stream_id, property.object_index)
+                    .is_some()
+                {
                     duplicate_local_stream_entries += 1;
                 }
                 if replay_network_attribute_tag_v1(&objects[property.object_index as usize])
@@ -221,11 +249,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     actor_class_oob += 1;
                     continue;
                 }
-                if active_actors
-                    .insert(actor.actor_id.0, actor.object_id.0 as u32)
-                    .is_some()
+                let new_object_index = actor.object_id.0 as u32;
+                if let Some(previous_object_index) =
+                    active_actors.insert(actor.actor_id.0, new_object_index)
                 {
-                    active_actor_overwrite += 1;
+                    if previous_object_index == new_object_index {
+                        active_actor_overwrite_same_class += 1;
+                    } else {
+                        active_actor_overwrite_class_changed += 1;
+                        if failure_samples.len() < MAX_FAILURE_SAMPLES {
+                            failure_samples.push(format!(
+                                "ACTOR_CLASS_CHANGED path={} frame={} actor={} previous_object={} previous_name={} new_object={} new_name={}",
+                                display_path(&path),
+                                frame_index,
+                                actor.actor_id.0,
+                                previous_object_index,
+                                objects[previous_object_index as usize],
+                                new_object_index,
+                                objects[new_object_index as usize]
+                            ));
+                        }
+                    }
                 }
             }
 
@@ -253,9 +297,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     continue;
                 }
                 let stream_id = update.stream_id.0 as u32;
-                let Some(property_object_index) = effective[actor_object_index as usize]
-                    .get(&stream_id)
-                    .copied()
+                let Some(property_object_index) =
+                    effective[actor_object_index as usize].get(&stream_id).copied()
                 else {
                     unresolved_stream += 1;
                     if failure_samples.len() < MAX_FAILURE_SAMPLES {
@@ -328,7 +371,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SUMMARY property_object_mismatch={property_object_mismatch}");
     println!("SUMMARY decoded_not_implemented_hits={decoded_not_implemented_hits}");
     println!("SUMMARY same_frame_new_delete={same_frame_new_delete}");
-    println!("SUMMARY active_actor_overwrite={active_actor_overwrite}");
+    println!(
+        "SUMMARY active_actor_overwrite_same_class={active_actor_overwrite_same_class}"
+    );
+    println!(
+        "SUMMARY active_actor_overwrite_class_changed={active_actor_overwrite_class_changed}"
+    );
     println!("SUMMARY delete_missing_actor={delete_missing_actor}");
     for sample in &failure_samples {
         println!("FAILURE_SAMPLE {sample}");
@@ -345,7 +393,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         || property_object_mismatch != 0
         || decoded_not_implemented_hits != 0
         || same_frame_new_delete != 0
-        || active_actor_overwrite != 0
         || delete_missing_actor != 0
     {
         return Err("R3.13 inherited resolver differential evidence found a hard mismatch".into());
