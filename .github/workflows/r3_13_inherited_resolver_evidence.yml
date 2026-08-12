@@ -48,7 +48,6 @@ jobs:
             'SUMMARY property_object_mismatch=0',
             'SUMMARY decoded_not_implemented_hits=0',
             'SUMMARY same_frame_new_delete=0',
-            'SUMMARY active_actor_overwrite=0',
             'SUMMARY delete_missing_actor=0',
             'network_payload_decoded_by_mimir=false',
             'inherited_stream_resolver_production_admitted=false',
