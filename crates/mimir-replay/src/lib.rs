@@ -75,9 +75,11 @@ const SUPPORTED_GAME_TYPE: &str = "TAGame.Replay_Soccar_TA";
 const SUPPORTED_REPLAY_VERSION: i32 = 8;
 const SUPPORTED_BUILD_VERSION_FIXTURE_001: &str = "241206.55345.468477";
 const SUPPORTED_BUILD_VERSION_FIXTURE_002: &str = "250811.43331.492665";
+const SUPPORTED_BUILD_VERSION_FIXTURE_003: &str = "251020.62592.500294";
 const MAX_ADMITTED_TEXT_BYTES: i32 = 10_000;
 
 const KIND_ARRAY: &str = "ArrayProperty";
+const KIND_BOOL: &str = "BoolProperty";
 const KIND_FLOAT: &str = "FloatProperty";
 const KIND_INT: &str = "IntProperty";
 const KIND_NAME: &str = "NameProperty";
@@ -88,6 +90,7 @@ const KIND_STR: &str = "StrProperty";
 enum SupportedReplayHeaderTupleV1 {
     Fixture001Exact,
     Fixture002Exact,
+    Fixture003Exact,
 }
 
 fn supported_replay_header_tuple_v1(
@@ -110,6 +113,7 @@ fn supported_replay_header_tuple_v1(
     match build_version {
         SUPPORTED_BUILD_VERSION_FIXTURE_001 => Some(SupportedReplayHeaderTupleV1::Fixture001Exact),
         SUPPORTED_BUILD_VERSION_FIXTURE_002 => Some(SupportedReplayHeaderTupleV1::Fixture002Exact),
+        SUPPORTED_BUILD_VERSION_FIXTURE_003 => Some(SupportedReplayHeaderTupleV1::Fixture003Exact),
         _ => None,
     }
 }
@@ -451,6 +455,7 @@ fn skip_non_selected_property(
     value_len: usize,
 ) -> Result<()> {
     match kind {
+        KIND_BOOL => skip_non_selected_bool_property(key, cursor, value_len),
         KIND_ARRAY | KIND_FLOAT | KIND_INT | KIND_NAME | KIND_QWORD | KIND_STR => {
             cursor.skip_bounded(value_len, format!("property {key} value"))
         }
@@ -458,6 +463,26 @@ fn skip_non_selected_property(
             "unsupported-property",
             format!("property {key} uses unsupported kind {kind}"),
         )),
+    }
+}
+
+fn skip_non_selected_bool_property(
+    key: &str,
+    cursor: &mut HeaderCursor<'_>,
+    value_len: usize,
+) -> Result<()> {
+    if value_len != 0 {
+        return Err(malformed(format!(
+            "property {key} BoolProperty has declared size {value_len}, expected 0"
+        )));
+    }
+
+    let value = cursor.read_exact(1, format!("property {key} BoolProperty value"))?[0];
+    match value {
+        0 | 1 => Ok(()),
+        _ => Err(malformed(format!(
+            "property {key} BoolProperty value must be 0 or 1, got {value}"
+        ))),
     }
 }
 
@@ -592,9 +617,20 @@ mod tests {
     use std::path::PathBuf;
 
     const FIXTURE_001_LABEL: &str = "rl_replay_header_fixture_001";
-    const FIXTURE_001_PATH: &str = r"D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay";
+    const FIXTURE_001_PATH: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../external_fixtures/sample_001.replay"
+    );
     const FIXTURE_002_LABEL: &str = "rl_replay_header_fixture_002";
-    const FIXTURE_002_PATH: &str = r"D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay";
+    const FIXTURE_002_PATH: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../external_fixtures/sample_002.replay"
+    );
+    const FIXTURE_003_LABEL: &str = "rl_replay_header_fixture_003";
+    const FIXTURE_003_PATH: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../external_fixtures/sample_003.replay"
+    );
 
     #[test]
     fn unsupported_reader_fails_explicitly() {
@@ -632,9 +668,10 @@ mod tests {
                 .try_into()
                 .expect("fixture should contain header_size"),
         );
-        assert!(header_size >= 0);
+        assert_eq!(header_size, 13_200);
         let header_end =
             8 + usize::try_from(header_size).expect("fixture header_size should fit usize");
+        assert_eq!(header_end, 13_208);
         let header_only = bytes[..header_end].to_vec();
         let header_only_input = ReplayInput::Memory {
             label: FIXTURE_001_LABEL.to_string(),
@@ -693,6 +730,57 @@ mod tests {
             .expect("fixture_002 complete header-only slice should parse without body bytes");
 
         assert_fixture_002_header(&header_only);
+        assert_eq!(header_only, full_header);
+    }
+
+    #[test]
+    fn minimal_reader_parses_rl_replay_header_fixture_003_exact_happy_path() {
+        let Some(bytes) = load_fixture_bytes_or_skip(FIXTURE_003_PATH, FIXTURE_003_LABEL) else {
+            return;
+        };
+
+        let header = MinimalReplayHeaderReader
+            .read_header(&ReplayInput::Memory {
+                label: FIXTURE_003_LABEL.to_string(),
+                bytes,
+            })
+            .expect("fixture_003 exact header should parse");
+
+        assert_fixture_003_header(&header);
+        assert!(header.metadata.get("bForfeit").is_none());
+    }
+
+    #[test]
+    fn minimal_reader_parses_rl_replay_header_fixture_003_header_only_slice() {
+        let Some(bytes) = load_fixture_bytes_or_skip(FIXTURE_003_PATH, FIXTURE_003_LABEL) else {
+            return;
+        };
+
+        let header_size = i32::from_le_bytes(
+            bytes[0..4]
+                .try_into()
+                .expect("fixture should contain header_size"),
+        );
+        assert_eq!(header_size, 11_190);
+        let header_end =
+            8 + usize::try_from(header_size).expect("fixture header_size should fit usize");
+        assert_eq!(header_end, 11_198);
+
+        let full_header = MinimalReplayHeaderReader
+            .read_header(&ReplayInput::Memory {
+                label: FIXTURE_003_LABEL.to_string(),
+                bytes: bytes.clone(),
+            })
+            .expect("fixture_003 full bytes should parse");
+        let header_only = MinimalReplayHeaderReader
+            .read_header(&ReplayInput::Memory {
+                label: FIXTURE_003_LABEL.to_string(),
+                bytes: bytes[..header_end].to_vec(),
+            })
+            .expect("fixture_003 complete header-only slice should parse without body bytes");
+
+        assert_fixture_003_header(&header_only);
+        assert!(header_only.metadata.get("bForfeit").is_none());
         assert_eq!(header_only, full_header);
     }
 
@@ -769,12 +857,12 @@ mod tests {
     #[test]
     fn minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple() {
         let bytes = build_replay_bytes(build_header(HeaderSpec {
-            build_version: "250812.43331.492665".to_string(),
+            build_version: "251020.62592.500295".to_string(),
             ..HeaderSpec::minimal()
         }));
 
         let error = read_synthetic(bytes)
-            .expect_err("unknown BuildVersion must not be accepted by wildcard policy");
+            .expect_err("unknown BuildVersion near fixture_003 must not be accepted by wildcard policy");
 
         assert_error_contains(error, "replay header parse error: unsupported-version");
     }
@@ -819,11 +907,69 @@ mod tests {
     }
 
     #[test]
+    fn minimal_reader_skips_non_selected_bool_property_false_without_metadata() {
+        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[0], true);
+
+        let header = read_synthetic(bytes).expect("non-selected false BoolProperty should be skipped");
+
+        assert!(header.metadata.get("bForfeit").is_none());
+    }
+
+    #[test]
+    fn minimal_reader_skips_non_selected_bool_property_true_without_metadata() {
+        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[1], true);
+
+        let header = read_synthetic(bytes).expect("non-selected true BoolProperty should be skipped");
+
+        assert!(header.metadata.get("bForfeit").is_none());
+    }
+
+    #[test]
+    fn minimal_reader_rejects_selected_bool_property() {
+        let bytes =
+            build_replay_with_bool_property(HeaderSpec::minimal_without_id(), "Id", 0, &[1], true);
+
+        let error = read_synthetic(bytes).expect_err("selected BoolProperty must remain unsupported");
+
+        assert_error_contains(error, "replay header parse error: unsupported-property");
+    }
+
+    #[test]
+    fn minimal_reader_rejects_non_selected_bool_property_nonzero_declared_size() {
+        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 1, &[1], true);
+
+        let error = read_synthetic(bytes)
+            .expect_err("BoolProperty declared size other than zero must be malformed");
+
+        assert_error_contains(error, "replay header parse error: malformed");
+    }
+
+    #[test]
+    fn minimal_reader_rejects_truncated_non_selected_bool_property_value() {
+        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[], false);
+
+        let error = read_synthetic(bytes)
+            .expect_err("BoolProperty missing its separate one-byte value must be insufficient");
+
+        assert_error_contains(error, "replay header parse error: insufficient");
+    }
+
+    #[test]
+    fn minimal_reader_rejects_invalid_non_selected_bool_property_value() {
+        let bytes = build_replay_with_bool_property(HeaderSpec::minimal(), "bForfeit", 0, &[2], true);
+
+        let error =
+            read_synthetic(bytes).expect_err("BoolProperty values other than 0 or 1 are malformed");
+
+        assert_error_contains(error, "replay header parse error: malformed");
+    }
+
+    #[test]
     fn minimal_reader_rejects_unknown_property_kind() {
         let mut spec = HeaderSpec::minimal();
         spec.extra_properties.push(PropertySpec {
             key: "Unselected".to_string(),
-            kind: "BoolProperty".to_string(),
+            kind: "ByteProperty".to_string(),
             value: vec![1],
         });
         let bytes = build_replay_bytes(build_header(spec));
@@ -1005,6 +1151,54 @@ mod tests {
         );
     }
 
+    fn assert_fixture_003_header(header: &ReplayHeader) {
+        assert_eq!(
+            header.replay_id,
+            ReplayId::new("DF72482811F0B757082C458D84251EFF")
+        );
+        assert_eq!(header.source_label, FIXTURE_003_LABEL);
+        assert_eq!(header.total_frames, Some(8_288));
+        assert_eq!(
+            header.metadata.get("ReplayName"),
+            Some(&FieldValue::Text("asdasd".to_string()))
+        );
+        assert_eq!(
+            header.metadata.get("Date"),
+            Some(&FieldValue::Text("2025-11-01 19-20-48".to_string()))
+        );
+        assert_eq!(
+            header.metadata.get("MapName"),
+            Some(&FieldValue::Text("cs_day_p".to_string()))
+        );
+        assert_eq!(
+            header.metadata.get("ReplayVersion"),
+            Some(&FieldValue::Integer(8))
+        );
+        assert_eq!(
+            header.metadata.get("BuildVersion"),
+            Some(&FieldValue::Text(
+                SUPPORTED_BUILD_VERSION_FIXTURE_003.to_string()
+            ))
+        );
+        assert_eq!(
+            header.metadata.get("MaxChannels"),
+            Some(&FieldValue::Integer(2047))
+        );
+        assert_eq!(
+            header.metadata.get("MatchType"),
+            Some(&FieldValue::Text("Online".to_string()))
+        );
+        assert_eq!(
+            header.metadata.get("TeamSize"),
+            Some(&FieldValue::Integer(2))
+        );
+        assert_eq!(
+            header.metadata.get("RecordFPS"),
+            Some(&FieldValue::Float(30.0))
+        );
+        assert!(header.metadata.get("bForfeit").is_none());
+    }
+
     fn read_synthetic(bytes: Vec<u8>) -> Result<ReplayHeader> {
         MinimalReplayHeaderReader.read_header(&ReplayInput::Memory {
             label: "synthetic".to_string(),
@@ -1137,6 +1331,35 @@ mod tests {
         );
         header.extend_from_slice(&0u32.to_le_bytes());
         header.extend_from_slice(&property.value);
+    }
+
+    fn build_replay_with_bool_property(
+        mut spec: HeaderSpec,
+        key: &str,
+        declared_size: u32,
+        value_bytes: &[u8],
+        include_terminator: bool,
+    ) -> Vec<u8> {
+        spec.include_terminator = false;
+        let mut header = build_header(spec);
+        append_bool_property(&mut header, key, declared_size, value_bytes);
+        if include_terminator {
+            header.extend_from_slice(&encode_str("None"));
+        }
+        build_replay_bytes(header)
+    }
+
+    fn append_bool_property(
+        header: &mut Vec<u8>,
+        key: &str,
+        declared_size: u32,
+        value_bytes: &[u8],
+    ) {
+        header.extend_from_slice(&encode_str(key));
+        header.extend_from_slice(&encode_str(KIND_BOOL));
+        header.extend_from_slice(&declared_size.to_le_bytes());
+        header.extend_from_slice(&0u32.to_le_bytes());
+        header.extend_from_slice(value_bytes);
     }
 
     fn build_replay_bytes(header: Vec<u8>) -> Vec<u8> {
