@@ -88,13 +88,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let mut supported_replays = 0usize;
-    let mut attribute_names = BTreeSet::<String>::new();
+    let mut net_cache_attribute_names = BTreeSet::<String>::new();
+    let mut decoded_attribute_names = BTreeSet::<String>::new();
     let mut all_object_names = BTreeSet::<String>::new();
     let mut net_cache_class_names = BTreeSet::<String>::new();
     let mut spawn_shapes = BTreeMap::<String, BTreeSet<&'static str>>::new();
     let mut duplicate_object_names = 0usize;
     let mut net_cache_oob = 0usize;
     let mut net_property_oob = 0usize;
+    let mut decoded_attribute_oob = 0usize;
     let mut spawn_oob = 0usize;
 
     println!("R3.11 Supported Lookup Surface Dump");
@@ -134,7 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for property in &cache.properties {
                 match replay.objects.get(property.object_ind as usize) {
                     Some(name) => {
-                        attribute_names.insert(name.clone());
+                        net_cache_attribute_names.insert(name.clone());
                     }
                     None => net_property_oob += 1,
                 }
@@ -143,6 +145,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let frames = replay.network_frames.as_ref().ok_or("missing network frames")?;
         for frame in &frames.frames {
+            for update in &frame.updated_actors {
+                match replay.objects.get(update.object_id.0 as usize) {
+                    Some(name) => {
+                        decoded_attribute_names.insert(name.clone());
+                    }
+                    None => decoded_attribute_oob += 1,
+                }
+            }
             for actor in &frame.new_actors {
                 match replay.objects.get(actor.object_id.0 as usize) {
                     Some(name) => {
@@ -159,17 +169,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("SUMMARY supported_replays={supported_replays}");
-    println!("SUMMARY unique_attribute_names_from_net_cache={}", attribute_names.len());
+    println!(
+        "SUMMARY unique_attribute_names_from_net_cache={}",
+        net_cache_attribute_names.len()
+    );
+    println!(
+        "SUMMARY unique_decoded_attribute_names={}",
+        decoded_attribute_names.len()
+    );
     println!("SUMMARY unique_object_names={}", all_object_names.len());
     println!("SUMMARY unique_net_cache_class_names={}", net_cache_class_names.len());
     println!("SUMMARY unique_spawn_object_names={}", spawn_shapes.len());
     println!("SUMMARY duplicate_object_names={duplicate_object_names}");
     println!("SUMMARY net_cache_object_oob={net_cache_oob}");
     println!("SUMMARY net_property_object_oob={net_property_oob}");
+    println!("SUMMARY decoded_attribute_object_oob={decoded_attribute_oob}");
     println!("SUMMARY spawn_object_oob={spawn_oob}");
 
-    for name in &attribute_names {
-        println!("ATTRIBUTE_NAME\t{name}");
+    for name in &net_cache_attribute_names {
+        println!("NET_CACHE_ATTRIBUTE_NAME\t{name}");
+    }
+    for name in &decoded_attribute_names {
+        println!("DECODED_ATTRIBUTE_NAME\t{name}");
     }
     for name in &all_object_names {
         println!("OBJECT_NAME\t{name}");
@@ -188,6 +209,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if supported_replays != EXPECTED_SUPPORTED_LANE
         || net_cache_oob != 0
         || net_property_oob != 0
+        || decoded_attribute_oob != 0
         || spawn_oob != 0
     {
         return Err("supported lookup surface hard invariant failed".into());
