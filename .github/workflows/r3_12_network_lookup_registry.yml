@@ -1,0 +1,70 @@
+name: R3.12 Network Lookup Registry
+
+on:
+  push:
+    branches:
+      - agent/r3-12-network-lookup-registry
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded R3.12 source patch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python tools/r3_12_apply_network_lookup_registry.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.12 pre-validation source scope drift: $($changed -join ', ')"
+          }
+          Write-Host 'R3_12_PATCH_SCOPE=PASS'
+
+      - name: Strict focused replay verification
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo check -p mimir-replay --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test -p mimir-replay -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy -p mimir-replay --all-targets --all-features -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_12_FOCUSED_VERIFICATION=PASS'
+
+      - name: Restore non-source drift and commit source only
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git restore --source=HEAD -- Cargo.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.12 commit scope drift: $($changed -join ', ')"
+          }
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git add -- crates/mimir-replay/src/lib.rs
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git commit -m 'Add replay network lookup registry'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git push origin HEAD:agent/r3-12-network-lookup-registry
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_12_SOURCE_ONLY_COMMIT=PASS'
