@@ -42,7 +42,7 @@ def parse_parent_classes(data_rs: str) -> dict[str, str]:
 def parse_spawn_stats(data_rs: str) -> dict[str, str]:
     body = section(data_rs, "pub(crate) static SPAWN_STATS", "pub(crate) static ATTRIBUTES")
     rows = re.findall(
-        r'\(\s*"([^"]+)"\s*,\s*SpawnTrajectory::([A-Za-z0-9_]+)\s*\)',
+        r'\(\s*"([^"]+)"\s*,\s*SpawnTrajectory::([A-Za-z0-9_]+)\s*,?\s*\)',
         body,
         re.DOTALL,
     )
