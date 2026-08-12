@@ -1,0 +1,204 @@
+name: R3.5 Footer Structure Evidence V2
+
+on:
+  push:
+    branches:
+      - agent/r3-5-footer-structure-evidence
+
+jobs:
+  evidence:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Scan footer structure across checked-in replay corpus
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          function Take-I32 {
+            param([byte[]]$Bytes, [ref]$Pos, [int64]$End, [string]$Field)
+            if (($Pos.Value + 4) -gt $End) { throw "truncated ${Field} at $($Pos.Value)" }
+            $value = [BitConverter]::ToInt32($Bytes, [int]$Pos.Value)
+            $Pos.Value += 4
+            return $value
+          }
+
+          function Skip-Bytes {
+            param([ref]$Pos, [int64]$Count, [int64]$End, [string]$Field)
+            if ($Count -lt 0) { throw "negative byte count for ${Field}" }
+            if (($Pos.Value + $Count) -gt $End) { throw "truncated ${Field} at $($Pos.Value): need $Count bytes" }
+            $Pos.Value += $Count
+          }
+
+          function Take-Count {
+            param([byte[]]$Bytes, [ref]$Pos, [int64]$End, [string]$Field)
+            $value = Take-I32 $Bytes $Pos $End $Field
+            if ($value -lt 0) { throw "negative count for ${Field}: $value" }
+            if ($value -gt 25000) { throw "count too large for ${Field}: $value" }
+            return $value
+          }
+
+          function Skip-Text {
+            param([byte[]]$Bytes, [ref]$Pos, [int64]$End, [string]$Field)
+            $characters = Take-I32 $Bytes $Pos $End "${Field}.length"
+            if ($characters -lt -10000 -or $characters -gt 10000) { throw "text length out of bounds for ${Field}: $characters" }
+            [int64]$byteCount = if ($characters -lt 0) { -2L * [int64]$characters } else { [int64]$characters }
+            Skip-Bytes $Pos $byteCount $End $Field
+          }
+
+          function Skip-RawString {
+            param([byte[]]$Bytes, [ref]$Pos, [int64]$End, [string]$Field)
+            $size = Take-I32 $Bytes $Pos $End "${Field}.length"
+            if ($size -lt 0) { throw "negative raw string length for ${Field}: $size" }
+            if ($size -gt 10000) { throw "raw string length out of bounds for ${Field}: $size" }
+            Skip-Bytes $Pos ([int64]$size) $End $Field
+          }
+
+          function Skip-TextList {
+            param([byte[]]$Bytes, [ref]$Pos, [int64]$End, [string]$Field)
+            $count = Take-Count $Bytes $Pos $End "${Field}.count"
+            for ($i = 0; $i -lt $count; $i++) {
+              Skip-Text $Bytes $Pos $End "${Field}[$i]"
+            }
+            return $count
+          }
+
+          function Parse-ReplayStructure {
+            param([string]$Path)
+            [byte[]]$bytes = [IO.File]::ReadAllBytes($Path)
+            [int64]$fileEnd = $bytes.LongLength
+            [int64]$posValue = 0
+            $pos = [ref]$posValue
+
+            $headerSize = Take-I32 $bytes $pos $fileEnd 'header_size'
+            if ($headerSize -lt 0) { throw "negative header_size: $headerSize" }
+            Skip-Bytes $pos 4 $fileEnd 'header_crc'
+            Skip-Bytes $pos ([int64]$headerSize) $fileEnd 'header_data'
+
+            $contentSize = Take-I32 $bytes $pos $fileEnd 'content_size'
+            if ($contentSize -lt 0) { throw "negative content_size: $contentSize" }
+            Skip-Bytes $pos 4 $fileEnd 'content_crc'
+            [int64]$contentStart = $pos.Value
+            [int64]$contentEnd = $contentStart + [int64]$contentSize
+            if ($contentEnd -ne $fileEnd) { throw "content framing mismatch: content_end=$contentEnd file_end=$fileEnd" }
+
+            $levels = Skip-TextList $bytes $pos $contentEnd 'levels'
+
+            $keyframes = Take-Count $bytes $pos $contentEnd 'keyframes.count'
+            Skip-Bytes $pos (12L * [int64]$keyframes) $contentEnd 'keyframes.data'
+
+            $networkSize = Take-I32 $bytes $pos $contentEnd 'network_size'
+            if ($networkSize -lt 0) { throw "negative network_size: $networkSize" }
+            [int64]$networkStart = $pos.Value
+            Skip-Bytes $pos ([int64]$networkSize) $contentEnd 'network_data'
+            [int64]$networkEnd = $pos.Value
+            [int64]$footerStart = $networkEnd
+
+            $debugInfo = Take-Count $bytes $pos $contentEnd 'debug_info.count'
+            for ($i = 0; $i -lt $debugInfo; $i++) {
+              [void](Take-I32 $bytes $pos $contentEnd "debug_info[$i].frame")
+              Skip-Text $bytes $pos $contentEnd "debug_info[$i].user"
+              Skip-Text $bytes $pos $contentEnd "debug_info[$i].text"
+            }
+
+            $tickmarks = Take-Count $bytes $pos $contentEnd 'tickmarks.count'
+            for ($i = 0; $i -lt $tickmarks; $i++) {
+              Skip-Text $bytes $pos $contentEnd "tickmarks[$i].description"
+              [void](Take-I32 $bytes $pos $contentEnd "tickmarks[$i].frame")
+            }
+
+            $packages = Skip-TextList $bytes $pos $contentEnd 'packages'
+            $objects = Skip-TextList $bytes $pos $contentEnd 'objects'
+            $names = Skip-TextList $bytes $pos $contentEnd 'names'
+
+            $classIndices = Take-Count $bytes $pos $contentEnd 'class_indices.count'
+            for ($i = 0; $i -lt $classIndices; $i++) {
+              Skip-RawString $bytes $pos $contentEnd "class_indices[$i].class"
+              [void](Take-I32 $bytes $pos $contentEnd "class_indices[$i].index")
+            }
+
+            $netCache = Take-Count $bytes $pos $contentEnd 'net_cache.count'
+            [int64]$netCacheProperties = 0
+            for ($i = 0; $i -lt $netCache; $i++) {
+              [void](Take-I32 $bytes $pos $contentEnd "net_cache[$i].object_ind")
+              [void](Take-I32 $bytes $pos $contentEnd "net_cache[$i].parent_id")
+              [void](Take-I32 $bytes $pos $contentEnd "net_cache[$i].cache_id")
+              $propertyCount = Take-Count $bytes $pos $contentEnd "net_cache[$i].properties.count"
+              $netCacheProperties += $propertyCount
+              Skip-Bytes $pos (8L * [int64]$propertyCount) $contentEnd "net_cache[$i].properties"
+            }
+
+            if ($pos.Value -ne $contentEnd) {
+              throw "footer did not end at content boundary: cursor=$($pos.Value) content_end=$contentEnd remaining=$($contentEnd - $pos.Value)"
+            }
+
+            [pscustomobject]@{
+              path = $Path
+              bytes = $fileEnd
+              content_start = $contentStart
+              content_end = $contentEnd
+              levels = $levels
+              keyframes = $keyframes
+              network_start = $networkStart
+              network_size = $networkSize
+              network_end = $networkEnd
+              footer_start = $footerStart
+              footer_bytes = $contentEnd - $footerStart
+              debug_info = $debugInfo
+              tickmarks = $tickmarks
+              packages = $packages
+              objects = $objects
+              names = $names
+              class_indices = $classIndices
+              net_cache = $netCache
+              net_cache_properties = $netCacheProperties
+              exact_footer_fit = $true
+            }
+          }
+
+          $historicalFiles = @(
+            'external_fixtures/sample_001.replay',
+            'external_fixtures/sample_002.replay',
+            'external_fixtures/sample_003.replay'
+          )
+          $corpusFiles = @(Get-ChildItem -LiteralPath 'test_corpus/largest_100' -Filter '*.replay' -File | Sort-Object Name | ForEach-Object { $_.FullName })
+          if ($corpusFiles.Count -ne 100) { throw "expected 100 stress replays, found $($corpusFiles.Count)" }
+
+          $historical = @()
+          foreach ($path in $historicalFiles) { $historical += Parse-ReplayStructure $path }
+
+          $corpus = @()
+          foreach ($path in $corpusFiles) { $corpus += Parse-ReplayStructure $path }
+
+          Write-Host 'R3.5 Replay Footer Structural Evidence V2'
+          Write-Host "historical_exact_footer_fit=$(@($historical | Where-Object exact_footer_fit).Count)/3"
+          foreach ($row in $historical) {
+            Write-Host ("historical path={0} network_end={1} footer_bytes={2} debug={3} tickmarks={4} packages={5} objects={6} names={7} class_indices={8} net_cache={9} net_cache_properties={10} content_end={11}" -f $row.path,$row.network_end,$row.footer_bytes,$row.debug_info,$row.tickmarks,$row.packages,$row.objects,$row.names,$row.class_indices,$row.net_cache,$row.net_cache_properties,$row.content_end)
+          }
+
+          $exactCorpus = @($corpus | Where-Object exact_footer_fit).Count
+          Write-Host "largest_100_exact_footer_fit=$exactCorpus/100"
+          Write-Host "largest_100_outliers=$($corpus.Count - $exactCorpus)"
+          Write-Host "footer_bytes_min=$(($corpus.footer_bytes | Measure-Object -Minimum).Minimum)"
+          Write-Host "footer_bytes_max=$(($corpus.footer_bytes | Measure-Object -Maximum).Maximum)"
+          Write-Host "debug_info_count_min=$(($corpus.debug_info | Measure-Object -Minimum).Minimum)"
+          Write-Host "debug_info_count_max=$(($corpus.debug_info | Measure-Object -Maximum).Maximum)"
+          Write-Host "tickmark_count_min=$(($corpus.tickmarks | Measure-Object -Minimum).Minimum)"
+          Write-Host "tickmark_count_max=$(($corpus.tickmarks | Measure-Object -Maximum).Maximum)"
+          Write-Host "object_count_min=$(($corpus.objects | Measure-Object -Minimum).Minimum)"
+          Write-Host "object_count_max=$(($corpus.objects | Measure-Object -Maximum).Maximum)"
+          Write-Host "name_count_min=$(($corpus.names | Measure-Object -Minimum).Minimum)"
+          Write-Host "name_count_max=$(($corpus.names | Measure-Object -Maximum).Maximum)"
+          Write-Host "class_index_count_min=$(($corpus.class_indices | Measure-Object -Minimum).Minimum)"
+          Write-Host "class_index_count_max=$(($corpus.class_indices | Measure-Object -Maximum).Maximum)"
+          Write-Host "net_cache_count_min=$(($corpus.net_cache | Measure-Object -Minimum).Minimum)"
+          Write-Host "net_cache_count_max=$(($corpus.net_cache | Measure-Object -Maximum).Maximum)"
+          Write-Host "net_cache_property_count_min=$(($corpus.net_cache_properties | Measure-Object -Minimum).Minimum)"
+          Write-Host "net_cache_property_count_max=$(($corpus.net_cache_properties | Measure-Object -Maximum).Maximum)"
+          Write-Host 'network_bits_decoded=false'
+          Write-Host 'crc_validated=false'
+          Write-Host 'footer_semantics_interpreted=false'
+
+          if ($exactCorpus -ne 100) { throw 'footer exact-fit evidence failed for stress corpus' }
+          Write-Host 'PASS: footer structural scaffold exactly consumes all 3 historical + 100 stress replays.'
