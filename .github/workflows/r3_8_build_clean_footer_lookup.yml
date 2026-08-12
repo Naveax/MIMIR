@@ -1,0 +1,61 @@
+name: R3.8 Build Clean Footer Lookup Commit
+
+on:
+  push:
+    branches:
+      - agent/r3-8-footer-lookup-materializer
+    paths:
+      - .github/workflows/r3_8_build_clean_footer_lookup.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-clean:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build clean source-only commit from verified source blob
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $SourceSha = 'a474249bfc32d8fdc763fb98867008300d6100ee'
+          $MainSha = '569d523fb16a169ad4b9feafcca1d4636f3c333e'
+          $CleanBranch = 'agent/r3-8-footer-lookup-clean'
+
+          git fetch origin
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $remoteMain = (git rev-parse origin/main).Trim()
+          if ($remoteMain -ne $MainSha) {
+            throw "main drifted before R3.8 clean reconstruction: expected=$MainSha actual=$remoteMain"
+          }
+
+          git checkout -B $CleanBranch $MainSha
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git checkout $SourceSha -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git reset HEAD -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.8 clean reconstruction scope drift: $($changed -join ', ')"
+          }
+
+          git config user.name "Naveax"
+          git config user.email "79841922+Naveax@users.noreply.github.com"
+          git add -- crates/mimir-replay/src/lib.rs
+          $staged = @(git diff --cached --name-only)
+          if ($staged.Count -ne 1 -or $staged[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.8 clean staged scope drift: $($staged -join ', ')"
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git commit -m "Add replay footer lookup materializer"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git push origin HEAD:$CleanBranch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
