@@ -3061,7 +3061,8 @@ mod tests {
         let mut content = build_lookup_footer_content();
         let objects_count_offset = 24usize;
         let object_text_offset = objects_count_offset + 4;
-        content[object_text_offset..object_text_offset + 4].copy_from_slice(&(-2i32).to_le_bytes());
+        // Core.Object + trailing NUL occupies 12 bytes; -6 keeps the scaffold byte width at 12.
+        content[object_text_offset..object_text_offset + 4].copy_from_slice(&(-6i32).to_le_bytes());
         let error = MinimalReplayFooterLookupMaterializationReader
             .read_footer_lookup_materialization(&build_footer_replay(content))
             .expect_err("R3.8 lookup admission does not claim UTF-16 object text");
