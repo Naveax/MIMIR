@@ -24,6 +24,29 @@ function Invoke-VerificationCommand {
     }
 }
 
+$RequiredReplayFixtures = @(
+    (Join-Path $RepoRoot "external_fixtures/sample_001.replay"),
+    (Join-Path $RepoRoot "external_fixtures/sample_002.replay"),
+    (Join-Path $RepoRoot "external_fixtures/sample_003.replay")
+)
+
+foreach ($FixturePath in $RequiredReplayFixtures) {
+    if (-not (Test-Path -LiteralPath $FixturePath -PathType Leaf)) {
+        throw "Required checked-in replay fixture is missing: $FixturePath"
+    }
+
+    $Fixture = Get-Item -LiteralPath $FixturePath
+    if ($Fixture.Length -le 0) {
+        throw "Required checked-in replay fixture is empty: $FixturePath"
+    }
+}
+
+$env:MIMIR_REPLAY_FIXTURE_PATH = $RequiredReplayFixtures[0]
+
+Write-Host ""
+Write-Host "PASS: required checked-in replay fixtures are present."
+Write-Host "MIMIR_REPLAY_FIXTURE_PATH=$env:MIMIR_REPLAY_FIXTURE_PATH"
+
 Invoke-VerificationCommand `
     -Executable "cargo" `
     -CommandArguments @("fmt", "--all", "--", "--check")
