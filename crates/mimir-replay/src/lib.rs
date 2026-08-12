@@ -38,6 +38,47 @@ pub trait ReplayReader {
     fn read_header(&self, input: &ReplayInput) -> Result<ReplayHeader>;
 }
 
+/// Structural framing facts immediately after the replay header.
+///
+/// This type does not imply supported ReplayHeader semantics, CRC validity,
+/// replay-body semantic validity, frame decoding, raw-state extraction, or events.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayBodyBoundaryV1 {
+    pub source_label: String,
+    pub header_size: u32,
+    pub header_end: u64,
+    pub content_size: u32,
+    /// Stored content CRC field. MinimalReplayBodyBoundaryReader does not validate it.
+    pub content_crc: u32,
+    pub content_start: u64,
+    pub content_end: u64,
+    pub input_len: u64,
+}
+
+pub trait ReplayBodyBoundaryReader {
+    fn read_body_boundary(&self, input: &ReplayInput) -> Result<ReplayBodyBoundaryV1>;
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub struct MinimalReplayBodyBoundaryReader;
+
+impl ReplayBodyBoundaryReader for MinimalReplayBodyBoundaryReader {
+    fn read_body_boundary(&self, input: &ReplayInput) -> Result<ReplayBodyBoundaryV1> {
+        match input {
+            ReplayInput::Memory { label, bytes } => {
+                parse_replay_body_boundary_from_memory(label, bytes)
+            }
+            ReplayInput::File(path) => Err(body_boundary_error(
+                "unsupported-input",
+                format!(
+                    "ReplayInput::File is outside the minimal body-boundary reader: {}",
+                    path.display()
+                ),
+            )),
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct MinimalReplayHeaderReader;
 
@@ -245,6 +286,137 @@ struct ParsedHeaderProperties {
     replay_version: Option<i32>,
     build_version: Option<String>,
     metadata: Metadata,
+}
+
+fn parse_replay_body_boundary_from_memory(
+    label: &str,
+    bytes: &[u8],
+) -> Result<ReplayBodyBoundaryV1> {
+    if label.is_empty() {
+        return Err(body_boundary_error(
+            "mapping",
+            "ReplayInput::Memory.label must be non-empty for ReplayBodyBoundaryV1.source_label",
+        ));
+    }
+
+    if bytes.len() < 8 {
+        return Err(body_boundary_error(
+            "insufficient",
+            format!(
+                "body-boundary framing needs the 8-byte replay preamble, input has {} bytes",
+                bytes.len()
+            ),
+        ));
+    }
+
+    let header_size_i32 =
+        i32::from_le_bytes(bytes[0..4].try_into().expect("slice is exactly four bytes"));
+    if header_size_i32 < 0 {
+        return Err(body_boundary_error(
+            "malformed",
+            format!("header_size {header_size_i32} is negative"),
+        ));
+    }
+
+    let header_size = usize::try_from(header_size_i32).map_err(|_| {
+        body_boundary_error(
+            "malformed",
+            format!("header_size {header_size_i32} cannot fit usize"),
+        )
+    })?;
+    let header_end = 8usize.checked_add(header_size).ok_or_else(|| {
+        body_boundary_error(
+            "malformed",
+            format!("header_size {header_size_i32} overflows header_end"),
+        )
+    })?;
+    let framing_end = header_end
+        .checked_add(8)
+        .ok_or_else(|| body_boundary_error("malformed", "content framing end overflows usize"))?;
+
+    if framing_end > bytes.len() {
+        return Err(body_boundary_error(
+            "insufficient",
+            format!(
+                "header_end {header_end} requires 8 content-framing bytes through {framing_end}, input has {} bytes",
+                bytes.len()
+            ),
+        ));
+    }
+
+    let content_size_i32 = i32::from_le_bytes(
+        bytes[header_end..header_end + 4]
+            .try_into()
+            .expect("slice is exactly four bytes"),
+    );
+    if content_size_i32 < 0 {
+        return Err(body_boundary_error(
+            "malformed",
+            format!("content_size {content_size_i32} is negative"),
+        ));
+    }
+    let content_crc = u32::from_le_bytes(
+        bytes[header_end + 4..header_end + 8]
+            .try_into()
+            .expect("slice is exactly four bytes"),
+    );
+    let content_size = usize::try_from(content_size_i32).map_err(|_| {
+        body_boundary_error(
+            "malformed",
+            format!("content_size {content_size_i32} cannot fit usize"),
+        )
+    })?;
+    let content_start = framing_end;
+    let content_end = content_start.checked_add(content_size).ok_or_else(|| {
+        body_boundary_error(
+            "malformed",
+            format!("content_size {content_size_i32} overflows content_end"),
+        )
+    })?;
+
+    if content_end > bytes.len() {
+        return Err(body_boundary_error(
+            "insufficient",
+            format!(
+                "content_size {content_size_i32} requires content_end {content_end}, input has {} bytes",
+                bytes.len()
+            ),
+        ));
+    }
+    if content_end < bytes.len() {
+        return Err(body_boundary_error(
+            "malformed",
+            format!(
+                "content_size {content_size_i32} leaves {} trailing bytes after content_end {content_end}",
+                bytes.len() - content_end
+            ),
+        ));
+    }
+
+    let header_size = u32::try_from(header_size_i32)
+        .map_err(|_| body_boundary_error("malformed", "non-negative header_size cannot fit u32"))?;
+    let content_size = u32::try_from(content_size_i32).map_err(|_| {
+        body_boundary_error("malformed", "non-negative content_size cannot fit u32")
+    })?;
+    let header_end = u64::try_from(header_end)
+        .map_err(|_| body_boundary_error("malformed", "header_end cannot fit u64"))?;
+    let content_start = u64::try_from(content_start)
+        .map_err(|_| body_boundary_error("malformed", "content_start cannot fit u64"))?;
+    let content_end = u64::try_from(content_end)
+        .map_err(|_| body_boundary_error("malformed", "content_end cannot fit u64"))?;
+    let input_len = u64::try_from(bytes.len())
+        .map_err(|_| body_boundary_error("malformed", "input length cannot fit u64"))?;
+
+    Ok(ReplayBodyBoundaryV1 {
+        source_label: label.to_string(),
+        header_size,
+        header_end,
+        content_size,
+        content_crc,
+        content_start,
+        content_end,
+        input_len,
+    })
 }
 
 fn parse_replay_header_from_memory(label: &str, bytes: &[u8]) -> Result<ReplayHeader> {
@@ -605,6 +777,13 @@ fn decode_windows1252(bytes: &[u8], context: &str) -> Result<String> {
     Ok(decoded)
 }
 
+fn body_boundary_error(category: &str, detail: impl Into<String>) -> MimirError {
+    MimirError::message(format!(
+        "replay body boundary error: {category}: {}",
+        detail.into()
+    ))
+}
+
 fn parse_error(category: &str, detail: impl Into<String>) -> MimirError {
     MimirError::message(format!(
         "replay header parse error: {category}: {}",
@@ -669,6 +848,222 @@ mod tests {
         let unique: BTreeSet<_> = SUPPORTED_BUILD_VERSIONS_V1.iter().copied().collect();
         assert_eq!(unique.len(), SUPPORTED_BUILD_VERSIONS_V1.len());
     }
+    #[test]
+    fn minimal_body_boundary_reader_matches_three_historical_fixtures() {
+        let cases = [
+            (
+                FIXTURE_001_PATH,
+                FIXTURE_001_LABEL,
+                13_200u32,
+                13_208u64,
+                2_987_805u32,
+                2_323_044_833u32,
+                13_216u64,
+                3_001_021u64,
+            ),
+            (
+                FIXTURE_002_PATH,
+                FIXTURE_002_LABEL,
+                11_273u32,
+                11_281u64,
+                2_621_614u32,
+                3_734_167_123u32,
+                11_289u64,
+                2_632_903u64,
+            ),
+            (
+                FIXTURE_003_PATH,
+                FIXTURE_003_LABEL,
+                11_190u32,
+                11_198u64,
+                1_627_332u32,
+                3_991_282_011u32,
+                11_206u64,
+                1_638_538u64,
+            ),
+        ];
+
+        for (
+            path,
+            label,
+            header_size,
+            header_end,
+            content_size,
+            content_crc,
+            content_start,
+            input_len,
+        ) in cases
+        {
+            let Some(bytes) = load_fixture_bytes_or_skip(path, label) else {
+                return;
+            };
+            let boundary = MinimalReplayBodyBoundaryReader
+                .read_body_boundary(&ReplayInput::Memory {
+                    label: label.to_string(),
+                    bytes,
+                })
+                .expect("historical fixture body boundary should be structurally valid");
+
+            assert_eq!(boundary.source_label, label);
+            assert_eq!(boundary.header_size, header_size);
+            assert_eq!(boundary.header_end, header_end);
+            assert_eq!(boundary.content_size, content_size);
+            assert_eq!(boundary.content_crc, content_crc);
+            assert_eq!(boundary.content_start, content_start);
+            assert_eq!(boundary.content_end, input_len);
+            assert_eq!(boundary.input_len, input_len);
+        }
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_exactly_frames_checked_in_largest_100_corpus() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test_corpus/largest_100");
+        if !root.is_dir() {
+            eprintln!("skipping largest_100 body-boundary regression; corpus root is absent");
+            return;
+        }
+
+        let mut replay_paths = fs::read_dir(&root)
+            .expect("largest_100 corpus directory should be readable")
+            .map(|entry| {
+                entry
+                    .expect("corpus directory entry should be readable")
+                    .path()
+            })
+            .filter(|path| path.extension().and_then(|value| value.to_str()) == Some("replay"))
+            .collect::<Vec<_>>();
+        replay_paths.sort();
+        assert_eq!(replay_paths.len(), 100);
+
+        for path in replay_paths {
+            let bytes = fs::read(&path).expect("checked-in corpus replay should be readable");
+            let label = path
+                .file_name()
+                .expect("corpus replay should have a file name")
+                .to_string_lossy()
+                .into_owned();
+            let boundary = MinimalReplayBodyBoundaryReader
+                .read_body_boundary(&ReplayInput::Memory {
+                    label: label.clone(),
+                    bytes,
+                })
+                .unwrap_or_else(|error| panic!("body boundary failed for {label}: {error}"));
+            assert_eq!(boundary.source_label, label);
+            assert_eq!(boundary.content_end, boundary.input_len);
+        }
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_file_input() {
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::file("sample.replay"))
+            .expect_err("file input remains outside the body-boundary reader");
+        assert_error_contains(error, "replay body boundary error: unsupported-input");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_empty_memory_label() {
+        let bytes = build_body_boundary_bytes(&[], 0, 0, &[]);
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: String::new(),
+                bytes,
+            })
+            .expect_err("empty source labels are not admitted");
+        assert_error_contains(error, "replay body boundary error: mapping");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_truncated_preamble() {
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: "synthetic".to_string(),
+                bytes: vec![0; 7],
+            })
+            .expect_err("an eight-byte replay preamble is required");
+        assert_error_contains(error, "replay body boundary error: insufficient");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_negative_header_size() {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&(-1i32).to_le_bytes());
+        bytes.extend_from_slice(&0u32.to_le_bytes());
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: "synthetic".to_string(),
+                bytes,
+            })
+            .expect_err("negative header_size is malformed");
+        assert_error_contains(error, "replay body boundary error: malformed");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_truncated_content_framing() {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&0i32.to_le_bytes());
+        bytes.extend_from_slice(&0u32.to_le_bytes());
+        bytes.extend_from_slice(&0i32.to_le_bytes());
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: "synthetic".to_string(),
+                bytes,
+            })
+            .expect_err("content_size without content_crc is truncated framing");
+        assert_error_contains(error, "replay body boundary error: insufficient");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_negative_content_size() {
+        let bytes = build_body_boundary_bytes(&[], 0, -1, &[]);
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: "synthetic".to_string(),
+                bytes,
+            })
+            .expect_err("negative content_size is malformed");
+        assert_error_contains(error, "replay body boundary error: malformed");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_content_size_beyond_input() {
+        let bytes = build_body_boundary_bytes(&[1, 2, 3], 0, 4, &[9, 8, 7]);
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: "synthetic".to_string(),
+                bytes,
+            })
+            .expect_err("declared content beyond input is insufficient");
+        assert_error_contains(error, "replay body boundary error: insufficient");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_rejects_trailing_bytes_after_content() {
+        let mut bytes = build_body_boundary_bytes(&[1, 2], 0, 2, &[3, 4]);
+        bytes.push(5);
+        let error = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: "synthetic".to_string(),
+                bytes,
+            })
+            .expect_err("bytes after declared content are malformed framing");
+        assert_error_contains(error, "replay body boundary error: malformed");
+    }
+
+    #[test]
+    fn minimal_body_boundary_reader_reports_crc_without_validating_it() {
+        let bytes = build_body_boundary_bytes(&[0xAA; 12], 0xDEADBEEF, 3, &[1, 2, 3]);
+        let boundary = MinimalReplayBodyBoundaryReader
+            .read_body_boundary(&ReplayInput::Memory {
+                label: "synthetic".to_string(),
+                bytes,
+            })
+            .expect("arbitrary stored CRC must not be validated in this pass");
+        assert_eq!(boundary.content_crc, 0xDEADBEEF);
+        assert_eq!(boundary.content_size, 3);
+        assert_eq!(boundary.content_end, boundary.input_len);
+    }
+
     #[test]
     fn unsupported_reader_fails_explicitly() {
         let reader = UnsupportedReplayReader;
@@ -1595,6 +1990,24 @@ mod tests {
         );
         replay.extend_from_slice(&0u32.to_le_bytes());
         replay.extend_from_slice(&header);
+        replay
+    }
+
+    fn build_body_boundary_bytes(
+        header: &[u8],
+        content_crc: u32,
+        declared_content_size: i32,
+        content: &[u8],
+    ) -> Vec<u8> {
+        let mut replay = Vec::new();
+        replay.extend_from_slice(
+            &(i32::try_from(header.len()).expect("synthetic header should fit i32")).to_le_bytes(),
+        );
+        replay.extend_from_slice(&0u32.to_le_bytes());
+        replay.extend_from_slice(header);
+        replay.extend_from_slice(&declared_content_size.to_le_bytes());
+        replay.extend_from_slice(&content_crc.to_le_bytes());
+        replay.extend_from_slice(content);
         replay
     }
 
