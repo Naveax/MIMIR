@@ -1,0 +1,36 @@
+executor mimir skill forge bc post-consumer-intake realization planning next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+mimir_export boundary
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no export bundle, sidecar, manifest, index, or runtime export semantics may be silently widened from this pass
+
+next pass type after this one
+- another planning/reopen decision pass
+- not a contract-definition pass
+- not a realization pass
+
+scope of that next pass only
+- consume the post-consumer-intake realization planning artifact
+- re-audit the exact low-boost-recovery consumer-intake realization boundary
+- decide whether exactly one still-closed domain has enough evidence for an explicit reopen-decision boundary
+- if no single domain is justified, stop again with a no-op planning decision
+
+still forbidden in the next pass unless explicitly reopened
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- actual replay parsing
+- parser-success logic
+- raw-state payload parsing
+- tensor/control materialization
+- corpus-wide replay ingestion
+- `mimir_replay::ReplayInput` creation
+- `mimir_export` widening
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+reason this is the next step
+- consumer-intake realization is established only as opaque byte preservation
+- the repo does not yet justify one sharper contract-definition or realization boundary
+- the next missing work is a single-domain reopen decision, but this pass does not choose or reopen that domain

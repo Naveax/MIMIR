@@ -1,0 +1,129 @@
+CURRENT CANONICAL BASELINES
+
+- Current surviving public execution-result wrapper count in `crates/mimir-export/src/lib.rs`: 4
+- Current surviving compatibility-wrapper count in `crates/mimir-export/src/lib.rs`: 1
+- Current canonical baseline set:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_index_load_summary`
+- Current remaining README-documented compatibility wrapper count: 0
+- Older stage artifacts now stale after Stage 66: yes
+  - `executor_stage64_rewiring_readiness.txt` is already marked historical, but its `6 / 3` surviving-wrapper counts and pre-Stage-66 helper inventory are no longer live.
+  - `executor_stage65_rewired_persist_register_baseline.txt` is now historical for surface-count purposes because Stage 66 removed the persist-lane pair and reduced the `mimir-export` test count from the Stage 65 snapshot.
+  - `executor_stage66_removed_persist_lane_pair.txt` remains accurate as a historical removal record and does not need semantic correction.
+
+CURRENT SURVIVING EXECUTION-RESULT WRAPPERS
+
+- `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - classification: canonical baseline
+- `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - classification: canonical baseline
+- `query_stub_execute_register_report_and_index_load_summary`
+  - classification: canonical baseline
+- `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+  - classification: remaining compatibility wrapper
+
+FINAL BATCH C AGGREGATE ROOT AUDIT
+
+- Wrapper under audit:
+  - `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+- Canonical replacement if fully expanded:
+  - `query_stub_execute_register_report_and_index_load_summary`
+  - `load_query_and_aggregate_execution_result_job_report_collection_summaries`
+  - `persist_register_and_index_load_execution_result_job_report_collection_summary`
+- Live composition path:
+  - `query_stub_execute_register_report_and_index_load_summary`
+  - `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+- Current reference footprint:
+  - one live public definition in `crates/mimir-export/src/lib.rs`
+  - five dedicated wrapper tests in `crates/mimir-export/src/lib.rs`
+  - no README migration references
+  - repo-local historical references remain in prior stage artifacts only
+- Stage 47 parity status:
+  - not included in the live Stage 47 parity cluster in source
+  - `executor_stage47_wrapper_parity_audit.txt` still records it as not directly covered by that cluster
+- README role:
+  - no README migration role remains
+  - README migration guidance is canonical-only and already points to the lower-level aggregate-then-publish lane
+- Dependency notes:
+  - no surviving public wrapper depends on it
+  - no canonical baseline depends on it
+  - current repo-local call sites outside the definition are its five dedicated tests only
+- Updated removal readiness:
+  - unchanged
+- Removal difficulty:
+  - medium
+- Recommended classification:
+  - stop here
+- Rationale:
+  - Stage 66 removed the persist-lane pair, but that did not improve the Batch C root's parity story or reduce the external-consumer uncertainty that previously blocked removal.
+  - Repo-local evidence now shows full isolation from other live wrappers, but the user-facing simplification value of removing the final surviving compatibility root is small because README guidance is already canonical-only and the supported baseline set is already narrow.
+  - The remaining uncertainty is not internal composition correctness. The five dedicated wrapper tests prove the wrapper is composition-only and behaviorally stable. The unresolved question is whether a still-useful external caller relies on this shorter aggregate-and-publish root.
+  - Because there is no repo-local pressure to keep removing APIs and no repo-local evidence proving the final convenience root is unused, this is no longer the strongest breaking-cleanup target.
+
+REMOVE NEXT VS STOP HERE COMPARISON
+
+- Option A: remove the Batch C aggregate root next in a dedicated breaking pass
+  - repo-local cleanup footprint:
+    - remove one public wrapper definition
+    - remove five dedicated wrapper tests
+    - update historical/audit artifacts that still name it as the lone remaining compatibility root
+  - remaining uncertainty:
+    - external-consumer usefulness remains unresolved in repo-local evidence
+    - no Stage 47 parity cluster coverage exists for this name, so removal would rely on dedicated wrapper tests plus canonical contract coverage
+  - parity / coverage confidence:
+    - medium
+    - dedicated wrapper tests are strong, but there is no extra Stage 47 explicit parity scaffold for this exact name
+  - expected user-facing simplification value:
+    - low
+    - the public surface shrinks by one name, but README guidance is already canonical-only and the canonical path is already documented
+  - risk of over-cleaning a still-useful edge:
+    - medium
+    - this is the last surviving convenience root for the aggregate-and-publish shape
+
+- Option B: keep it and stop execution-result compatibility cleanup here for now
+  - repo-local cleanup footprint:
+    - none beyond this audit/status documentation
+  - remaining uncertainty:
+    - the same external-consumer question remains, but it stops being forced into another breaking pass without stronger evidence
+  - parity / coverage confidence:
+    - high for keeping it
+    - the wrapper is isolated, behavior-tested, and does not distort README or canonical guidance
+  - expected user-facing simplification value:
+    - none immediately, but the repo already presents the canonical migration path clearly
+  - risk of over-cleaning a still-useful edge:
+    - low
+    - no runtime or semantic churn is introduced and no supported baseline needs to move
+
+- Comparison conclusion:
+  - repo-local evidence favors Option B.
+  - Removing the Batch C root next is technically feasible, but the simplification gain is small and the remaining uncertainty is exactly the kind of edge-case compatibility risk that should not be cleaned away just to finish the count.
+
+POST-STAGE-66 DOC / ARTIFACT STATUS
+
+- `README.md`
+  - re-checked
+  - remains accurate
+  - no edit required
+- `executor_stage64_rewiring_readiness.txt`
+  - re-checked
+  - already marked historical
+  - no further edit required
+- `executor_stage65_rewired_persist_register_baseline.txt`
+  - re-checked
+  - added a short historical note so its Stage 65 surface snapshot is not mistaken for the live post-Stage-66 state
+- `executor_stage66_removed_persist_lane_pair.txt`
+  - re-checked
+  - remains accurate as a Stage 66 historical removal record
+  - no edit required
+
+RECOMMENDED NEXT STEP
+
+- Recommended Stage 68 disposition:
+  - explicit stop / freeze of execution-result cleanup
+- Why:
+  - no non-removal preparatory work is still needed for this lane
+  - direct breaking removal of the Batch C root is possible, but current repo-local evidence does not justify it strongly enough to outweigh the risk of over-cleaning the final remaining compatibility edge
+  - another audit would likely restate the same evidence unless new external-consumer constraints or API deprecation requirements appear
+- Historical note:
+  - Stage 68 is the formal closure/freeze follow-on artifact for this stop-here recommendation.

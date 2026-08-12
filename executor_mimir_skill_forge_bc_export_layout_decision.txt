@@ -1,0 +1,106 @@
+executor mimir skill forge bc export layout decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact export-layout/refinement role chosen
+- one low-boost-recovery-specific logical export-layout/refinement boundary above
+  `LowBoostRecoveryBcSpecimenBatchingResultV1`
+- exact job:
+  - admit only already-batched low-boost-recovery refined specimens
+  - revalidate the batching result without regrouping or resorting it
+  - preserve each ordered batch group as one ordered recovery-context lane
+  - preserve the full refined specimen payload unchanged inside each lane
+  - mark the result ready only for one later family-specific downstream export-consumer boundary
+
+exact output / disposition chosen
+- exact result type:
+  - `LowBoostRecoveryBcExportLayoutResultV1`
+- exact lane type:
+  - `LowBoostRecoveryBcExportLayoutLaneV1`
+- exact layout disposition:
+  - `ReadyForLowBoostRecoveryDownstreamExportConsumerOnly`
+- exact preserved batch context:
+  - `specimen_count`
+  - `group_count`
+  - `source_batching_disposition`
+- exact layout notes:
+  - `BatchingBoundaryPreserved`
+  - `RecoveryContextLaneLayoutOnly`
+  - `TensorAndControlMaterializationDeferred`
+  - `MimirExportIntegrationDeferred`
+- exact lane shape:
+  - `source_group_ordinal`
+  - source recovery-context lineage
+  - ordered `specimens: Vec<LowBoostRecoveryBcConsumerRefinementResultV1>`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcSpecimenBatchingResultV1`.
+- Require `batching_disposition` to remain
+  `ReadyForLowBoostRecoveryLayoutRefinementOnly`.
+- Require `specimen_count > 0`.
+- Require `groups` to be non-empty.
+- Require `specimen_count` to equal the number of preserved specimens across all groups.
+- Require each `group_ordinal` to match the concrete group position.
+- Require groups to remain in the exact batching order.
+- Require each group to contain at least one preserved refined specimen.
+- Revalidate every preserved specimen instead of trusting construction history.
+- Require every specimen to remain aligned with its enclosing group lineage.
+- Require specimen order within each group to remain the exact batching order.
+- Require every `artifact_id` to remain unique across the full batching result.
+
+exact layout decisions chosen
+- One logical recovery-context lane is created per ordered batch group.
+- Lane vector order is exactly the incoming group order.
+- `source_group_ordinal` preserves the original group identity instead of inventing a new batch id.
+- No filesystem path, directory, manifest, tensor, or control materialization was introduced.
+- No regrouping, resorting, flattening, or payload reshaping was introduced.
+
+exact failure decisions chosen
+- Any batching-result drift fails explicitly.
+- Any empty group fails explicitly.
+- Any preserved specimen malformed for batching invariants fails explicitly with group/specimen
+  position.
+- Any group-order drift or within-group specimen-order drift fails explicitly.
+- Any duplicate `artifact_id` fails explicitly.
+- No repair, fallback, regrouping, resorting, or silent skip was added.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any generic multi-family export-layout framework
+- any filesystem layout or manifest emission
+- any new shared persisted DTO in `mimir-types`
+- any `mimir-io` widening
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust type shaping / narrow implementation were added, and why
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcExportLayoutDispositionV1`
+  - `LowBoostRecoveryBcExportLayoutNoteV1`
+  - `LowBoostRecoveryBcExportLayoutLaneV1`
+  - `LowBoostRecoveryBcExportLayoutResultV1`
+  - `LowBoostRecoveryBcExportLayoutError`
+  - `refine_low_boost_recovery_bc_export_layout_v1(...)`
+- Added one local batching-result revalidation helper because
+  `LowBoostRecoveryBcSpecimenBatchingResultV1` is public and can be manually constructed, so
+  layout/refinement cannot trust construction history alone.
+- No `mimir-types` additions were needed because the layout result remains repo-local and is not a
+  persisted or cross-crate DTO.
+- No `mimir-io` changes were needed because raw artifact IO ownership was already correct.
+- No `mimir-export` changes were made.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess what the first logical layout unit above ordered groups
+  is.
+- The next pass no longer needs to guess whether it may regroup or resort the batching result.
+- The next pass has one explicit family-specific downstream-ready surface built from preserved
+  recovery-context lanes instead of raw artifacts, handoffs, or loose refined specimens.
+- That makes the immediate next step obvious:
+  one family-specific downstream export-consumer boundary above the layout result, still without
+  reopening `mimir_export`.

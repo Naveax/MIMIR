@@ -1,0 +1,155 @@
+HISTORICAL NOTE
+
+- This artifact is the post-Stage-56 snapshot taken before Stage 58 removed the final README-documented compatibility aggregate waypoint.
+- Its wrapper counts and next-step recommendation are not the live post-Stage-58 state.
+- Use `executor_stage58_removed_final_documented_waypoint.txt` for the Stage 58 removal record and `executor_stage59_batch_c_root_readiness.txt` for the current post-Stage-58 audit.
+
+CURRENT CANONICAL BASELINES
+
+- Current surviving public execution-result wrapper count in `crates/mimir-export/src/lib.rs`: 9
+- Current surviving compatibility-wrapper count in `crates/mimir-export/src/lib.rs`: 6
+- Current canonical baseline set:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_index_load_summary`
+- Canonical lower-level execution-result lanes remain:
+  - report publication: `persist_execution_result_job_report` + `register_execution_result_job_report_in_index` + `load_indexed_execution_result_job_report`
+  - report retrieval: `load_and_query_execution_result_job_reports`
+  - summary publication: `persist_execution_result_job_report_collection_summary` + `register_execution_result_job_report_collection_summary_in_index` + `load_indexed_execution_result_job_report_collection_summary`
+  - summary retrieval: `load_and_query_execution_result_job_report_collection_summaries`
+  - summary retrieval plus aggregate: `load_query_and_aggregate_execution_result_job_report_collection_summaries`
+- Historical Batch B classification is now stale wherever it still implies two README-documented aggregate wrappers survived Stage 56. That is no longer true.
+- Historical Batch C classification remains directionally accurate: one separate queried-summary aggregate root still survives outside README migration guidance.
+
+CURRENT SURVIVING COMPATIBILITY WRAPPERS
+
+- Current surviving compatibility wrappers:
+  - `query_stub_execute_and_persist_execution_result_job_report`
+  - `query_stub_execute_persist_and_load_execution_result_job_report`
+  - `query_load_and_summarize_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries`
+  - `query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries`
+  - `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+- Current remaining README-documented compatibility wrapper:
+  - `query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries`
+- Other surviving compatibility helpers that still exist but are not the primary target of this pass:
+  - `query_stub_execute_and_persist_execution_result_job_report`
+  - `query_stub_execute_persist_and_load_execution_result_job_report`
+  - `query_load_and_summarize_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries`
+
+FINAL DOCUMENTED WAYPOINT AUDIT
+
+- Wrapper:
+  - `query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries`
+- Canonical replacement:
+  - `query_stub_execute_register_report_and_index_load_summary`
+  - `load_query_and_aggregate_execution_result_job_report_collection_summaries`
+- Exact live composition path:
+  - first call `query_stub_execute_register_report_and_index_load_summary`
+  - then call `load_query_and_aggregate_execution_result_job_report_collection_summaries`
+- Current reference footprint:
+  - one live public definition in `crates/mimir-export/src/lib.rs`
+  - four dedicated wrapper tests in `crates/mimir-export/src/lib.rs`
+  - one stage47 parity assertion block in `crates/mimir-export/src/lib.rs`
+  - one stage47 explicit helper in `crates/mimir-export/src/lib.rs`
+  - one README migration bullet in `README.md`
+  - no repo-local source wrapper depends on it
+- README migration role:
+  - yes
+  - it is the last surviving README-documented compatibility waypoint after Stage 56
+- Dependency notes:
+  - no surviving wrapper in `crates/mimir-export/src/lib.rs` calls it
+  - removal would not force a same-pass rewrite of another surviving wrapper
+- Stage47 parity / explicit-helper coverage:
+  - yes
+  - wrapper-specific parity and explicit helper coverage still exist
+- Updated removal readiness:
+  - higher
+- Removal difficulty:
+  - low
+- Recommended classification:
+  - next removal candidate
+- Rationale:
+  - the canonical replacement lane is already explicit and complete
+  - the repo-local footprint is now isolated to its own wrapper tests, one parity helper cluster, and one README bullet
+  - no other surviving wrapper now uses this waypoint as an intermediate lane
+  - removal remains compatibility-breaking, but the break is local and mechanically auditable
+
+BATCH C / SEPARATE ROOT STATUS
+
+- Wrapper:
+  - `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+- Canonical replacement if fully expanded:
+  - `query_stub_execute_register_report_and_index_load_summary`
+  - `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+- Exact live composition path:
+  - first call `query_stub_execute_register_report_and_index_load_summary`
+  - then call `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+- Current reference footprint:
+  - one live public definition in `crates/mimir-export/src/lib.rs`
+  - five dedicated wrapper tests in `crates/mimir-export/src/lib.rs`
+  - no stage47 parity helper or explicit stage47 helper
+  - no README migration bullet
+- README role:
+  - none
+  - it remains outside README migration guidance
+- Whether it remains separate:
+  - yes
+  - it is a distinct queried-summary aggregate-and-persist root, not the README-documented aggregate-query waypoint
+- Whether touching the remaining documented aggregate waypoint would affect this wrapper:
+  - no direct effect
+  - both wrappers share the same canonical summary-publication entrypoint, but neither calls the other
+- Updated classification:
+  - separate later candidate
+- Rationale:
+  - it is not currently part of the README compatibility map
+  - its replacement lane terminates in a different canonical helper than the documented aggregate waypoint
+  - there is no repo-local dependency pressure to remove it in the next pass
+
+NEXT-STEP COMPARISON
+
+- A: `query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries`
+  - README role: yes
+  - repo-local dependencies: none
+  - stage47 parity coverage: yes
+  - removal readiness: higher
+  - removal difficulty: low
+- B: `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+  - README role: no
+  - repo-local dependencies: none
+  - stage47 parity coverage: no
+  - removal readiness: unchanged
+  - removal difficulty: medium
+- Comparison conclusion:
+  - the next cleanup target should be A, not B
+  - the next breaking pass should remove one wrapper only, not a grouped pair
+  - after that single-wrapper removal, the README migration map can be reduced to canonical-only aggregate lanes
+  - external-consumer uncertainty still exists for all compatibility removals because repo-local evidence cannot prove there are no outside callers, but no additional repo-local blocker remains for A
+
+REPO-LOCAL DOC / ARTIFACT STATUS
+
+- `README.md`
+  - re-checked
+  - current post-Stage-56 wording is already accurate
+  - no README edit was required in this pass
+- `executor_stage55_second_removal_readiness.txt`
+  - stale as a current readiness snapshot
+  - updated with a short historical note rather than rewritten
+- `executor_stage56_removed_batch_b_second.txt`
+  - re-checked
+  - remains an accurate historical removal record
+  - no edit required
+- Runtime behavior and public APIs:
+  - unchanged in this pass
+
+RECOMMENDED NEXT BREAKING STEP
+
+- Remove `query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries` in the next dedicated compatibility-breaking pass.
+- In that pass:
+  - delete its wrapper definition
+  - delete its four dedicated wrapper tests
+  - delete the stage47 explicit helper and parity block that exist only for that wrapper
+  - remove the README compatibility bullet and leave only the canonical aggregate lane
+- Do not group that removal with `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries` yet.
+- Keep the Batch C queried-summary aggregate root for a later separate audit unless external-consumer evidence justifies bundling it.

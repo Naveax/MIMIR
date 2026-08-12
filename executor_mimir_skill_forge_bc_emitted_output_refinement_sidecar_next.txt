@@ -1,0 +1,44 @@
+executor mimir skill forge bc emitted-output refinement / sidecar-manifest next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- continued receipt-bound low-boost-recovery-specific downstream step above
+  `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`
+- no sidecar/manifest realization in that pass unless this decision is explicitly reopened
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+why this is the immediate next pass
+- The repo now has:
+  - one real low-boost-recovery actual filesystem emission boundary
+  - one bounded low-boost-recovery emitted-output audit/readback boundary
+  - one explicit no-widening decision that the audited result remains sufficient for now
+- The next unresolved problem is no longer whether a sidecar/manifest must exist.
+- The next unresolved problem is whether the first real downstream family-specific consumer can
+  operate directly on the audited result without any new emitted file contract.
+
+what the next pass should consume
+- `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`
+- the already-emitted audited family root directory referenced by that result
+
+what the next pass should do
+- define one narrow continued receipt-bound low-boost-recovery downstream boundary that consumes
+  the audited result directly
+- preserve audited lane/specimen order and audited read-back specimen semantics without adding a
+  manifest
+- make any remaining insufficiency explicit instead of patching it with speculative emitted files
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no family-specific sidecar/manifest realization unless a concrete insufficiency is demonstrated
+- no generic multi-family emitted-output refinement or manifest framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+
+why a sidecar/manifest realization pass is not next
+- No concrete consumer need currently forces receipt-independent reopening.
+- The audited result already carries verified paths, order, counts, artifact ids, and read-back
+  specimen payloads.
+- Realizing a sidecar/manifest now would duplicate existing audited information instead of closing
+  a demonstrated downstream defect.

@@ -1,0 +1,48 @@
+executor mimir skill forge bc post replay-input creation realization boundary next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+mimir_export boundary
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no export bundle, sidecar, manifest, index, runtime export, or downstream consumer semantics may be silently widened from this pass
+
+next pass type
+- one contract-definition pass for exactly one selected domain
+- selected domain: actual replay parsing
+
+exact next input
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesRealizationResultV1`
+
+exact next responsibility
+- define one low-boost-recovery-specific actual replay parsing contract boundary above the realized memory ReplayInput bridge
+- consume only the receipt-bound realization result and the per-specimen `ReplayInput::Memory` already preserved there
+- define exact parser input tuple preservation rules
+- define exact parser output boundary and failure behavior
+- keep parser-success policy separate unless explicitly reopened later
+- keep raw-state payload parsing separate unless explicitly reopened later
+
+still forbidden in the next pass unless explicitly reopened
+- replay parsing implementation, unless the next pass explicitly scopes implementation rather than contract definition
+- parser-success logic
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- raw-state payload parsing
+- tensor/control materialization
+- corpus-wide replay ingestion
+- real rollout physics
+- async/background systems
+- database code
+- runtime CLI commands
+- execution-result cleanup boundary changes
+- `mimir_export` widening
+- `mimir-replay` source changes
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+reason this is the next step
+- the realized bridge proves memory ReplayInput creation and byte preservation only
+- the next missing boundary is not locator, carrier discovery, source materialization, raw-state parsing, parser-success policy, or export
+- the next missing boundary is one exact parser-facing contract for the already-realized memory `ReplayInput`

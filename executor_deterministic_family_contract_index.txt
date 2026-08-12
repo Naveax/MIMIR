@@ -1,0 +1,177 @@
+executor deterministic-family contract index
+repo root: D:\RocketLeague bot\MIMIR
+status legend: closed / partial / deferred
+
+surface: base deterministic vertical-slice execution
+lane(s): Stage69Sample, Stage77Second
+proof type: positive runtime + canonical reload + repeated-run
+current evidence: `executor_stage69_vertical_slice.txt`; `executor_stage73_vertical_slice_contract_freeze.txt`; current tests `deterministic_vertical_slice_persists_reloadable_outputs`, `second_deterministic_vertical_slice_persists_reloadable_outputs`, repeated-run tests
+status: closed
+
+surface: frozen golden snapshot identity
+lane(s): Stage69Sample, Stage77Second
+proof type: positive snapshot freeze
+current evidence: `executor_stage73_vertical_slice_contract_freeze.txt`; current tests `deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`, `second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`
+status: closed
+
+surface: branch order / scoreboard row order / teacher ordering
+lane(s): Stage69Sample direct; Stage77Second broad same-family coverage
+proof type: positive ordering contract + snapshot/teacher-order checks
+current evidence: `executor_stage73_vertical_slice_contract_freeze.txt`; `executor_stage80_contract_index.txt`; current `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+status: closed
+
+surface: scorer_weights direct effect on scores
+lane(s): Stage69Sample, Stage77Second
+proof type: direct-effect mutation
+current evidence: `executor_stage85_scorer_weights_effect.txt`; `executor_stage99_stage77_scorer_weights_effect.txt`; current scorer-weight tests on both lanes
+status: closed
+
+surface: proposal score_signals direct effect on components / totals / teacher ordering
+lane(s): Stage69Sample, Stage77Second
+proof type: direct-effect mutation with exact component assertions
+current evidence: `executor_stage90_score_signals_effect.txt`; `executor_stage98_stage77_score_signals_effect.txt`; current score-signals tests on both lanes
+status: closed
+
+surface: simulation_seed direct consumption into SimulationRequest.seed
+lane(s): Stage69Sample, Stage77Second
+proof type: direct request-capture proof
+current evidence: `executor_stage86_simulation_seed_effect.txt`; `executor_stage100_stage77_simulation_seed_effect.txt`; current simulation-seed tests on both lanes
+status: closed
+
+surface: proposal actions direct consumption into SimulationRequest.commands
+lane(s): Stage77Second
+proof type: direct request-capture proof
+current evidence: `executor_stage77_closure_batch_audit.txt`; current `second_deterministic_vertical_slice_directly_consumes_proposal_actions_into_simulation_requests_without_perturbing_other_contract_edges`
+status: closed
+
+surface: teacher_namespace propagation
+lane(s): Stage69Sample, Stage77Second
+proof type: direct-effect mutation
+current evidence: `executor_stage87_teacher_namespace_effect.txt`; `executor_stage96_stage77_teacher_namespace_effect.txt`; current teacher-namespace tests on both lanes
+status: closed
+
+surface: anchor_hint.metadata propagation
+lane(s): Stage69Sample, Stage77Second
+proof type: direct-effect mutation
+current evidence: `executor_stage88_anchor_metadata_effect.txt`; `executor_stage97_stage77_anchor_metadata_effect.txt`; current anchor-metadata tests on both lanes
+status: closed
+
+surface: proposal label / actions / legal_hint / metadata propagation into exported branch payload
+lane(s): Stage69Sample, Stage77Second
+proof type: direct-effect mutation
+current evidence: `executor_stage89_proposal_surface_effect.txt`; `executor_stage101_stage77_proposal_surface_effect.txt`; current proposal-surface tests
+status: closed
+
+surface: branch metadata heterogeneous value-shape preservation
+lane(s): Stage77Second
+proof type: direct export/load preservation proof
+current evidence: `executor_stage77_closure_batch_audit.txt`; current `second_deterministic_vertical_slice_preserves_branch_metadata_value_shapes_without_perturbing_other_contract_edges`
+status: closed
+
+surface: export_name to teacher label id derivation
+lane(s): Stage69Sample direct; Stage77Second indirect same-family coverage
+proof type: direct-effect mutation on Stage69 + broad Stage77 stability
+current evidence: `executor_stage92_export_name_teacher_id_effect.txt`; Stage77 proposal/teacher stability tests
+status: partial
+
+surface: scoreboard component-key identity / schema drift
+lane(s): Stage77Second explicit; Stage69 broadly covered by exact component assertions
+proof type: explicit negative drift + direct component-value assertions
+current evidence: `executor_stage93_scoreboard_component_schema.txt`; `executor_stage94_stage77_scoreboard_component_drift.txt`; current Stage77 schema-drift test
+status: closed
+
+surface: scoreboard component ordering as independently versioned contract
+lane(s): both lanes
+proof type: implementation-backed determinism only
+current evidence: `executor_stage93_scoreboard_component_schema.txt` documents `BTreeMap` ordering; no separate schema-order artifact
+status: partial
+
+surface: exported branch payload negative drift after hash refresh
+lane(s): Stage77Second
+proof type: targeted negative drift guard
+current evidence: `executor_stage77_closure_batch_audit.txt`; current `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface`
+status: closed
+
+surface: targeted branch artifact corruption rejection at canonical load
+lane(s): Stage77Second
+proof type: targeted corruption failure
+current evidence: `executor_stage77_closure_batch_audit.txt`; current `second_deterministic_vertical_slice_rejects_targeted_branch_artifact_corruption_at_canonical_load_boundary`
+status: closed
+
+surface: persisted-input rejection for missing required proposal label
+lane(s): Stage77Second
+proof type: targeted input-contract negative
+current evidence: `executor_stage77_closure_batch_audit.txt`; current `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+status: closed
+
+surface: persisted-input rejection for missing optional proposal fields
+lane(s): both lanes
+proof type: intentionally absent
+current evidence: `executor_stage77_closure_batch_audit.txt` states optional/defaulted fields were deferred because current loader semantics default them
+status: deferred
+
+surface: manifest / index stability under proposal-surface-only mutation
+lane(s): Stage77Second
+proof type: packaging stability proof
+current evidence: `executor_stage77_closure_batch_audit.txt`; current `second_deterministic_vertical_slice_keeps_manifest_and_index_stable_except_for_the_mutated_branch_payload_hash`
+status: closed
+
+surface: scoreboard row-count drift
+lane(s): Stage69Sample, Stage77Second
+proof type: canonical-load negative
+current evidence: `executor_stage75_negative_matrix.txt`; current loader-failure tests on both lanes
+status: closed
+
+surface: teacher artifact count drift
+lane(s): Stage69Sample explicit; Stage77Second family-level loader contract
+proof type: canonical-load negative
+current evidence: `executor_stage75_negative_matrix.txt`; current missing/extra artifact drift tests
+status: closed
+
+surface: non-branch teacher target drift
+lane(s): Stage69Sample
+proof type: explicit negative
+current evidence: `executor_stage75_negative_matrix.txt`; current `canonical_vertical_slice_teacher_targets_fail_explicitly_on_non_branch_target_drift`
+status: closed
+
+surface: teacher artifact ordinal-file drift
+lane(s): Stage69Sample, Stage77Second
+proof type: snapshot negative
+current evidence: `executor_stage75_negative_matrix.txt`; current ordinal-file drift tests on both lanes
+status: closed
+
+surface: anchor-count drift in canonical snapshot
+lane(s): Stage69Sample
+proof type: snapshot negative
+current evidence: `executor_stage75_negative_matrix.txt`; current `canonical_vertical_slice_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+status: closed
+
+surface: missing fake backend precondition
+lane(s): family-level runtime precondition
+proof type: explicit failure
+current evidence: `executor_stage73_vertical_slice_contract_freeze.txt`; current `deterministic_vertical_slice_fails_explicitly_without_fake_backend`
+status: closed
+
+surface: branch-payload canonical reload parity via independent implementation
+lane(s): Stage77Second
+proof type: none; shared-path tautology avoided
+current evidence: `executor_stage77_closure_batch_audit.txt` marks parity proof intentionally deferred because runtime and canonical result share the same load/adapt path
+status: deferred
+
+surface: real replay ingestion
+lane(s): n/a
+proof type: intentionally out of scope
+current evidence: Stage69/73 scope artifacts and project constraints keep replay parsing out of this family
+status: deferred
+
+surface: real rollout / real physics / live backend behavior
+lane(s): n/a
+proof type: intentionally out of scope
+current evidence: Stage69 scope artifact and later closure artifacts keep fake-backend-only semantics
+status: deferred
+
+surface: async/background/database/runtime-CLI expansion
+lane(s): n/a
+proof type: intentionally out of scope
+current evidence: pass constraints plus earlier stage artifacts keep those systems out of this family
+status: deferred

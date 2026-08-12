@@ -1,0 +1,115 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window materialization attempt realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact realization role chosen
+- one low-boost-recovery-specific actual materialization-attempt realization boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractV1`
+- exact job:
+  - admit only the frozen receipt-bound materialization contract
+  - revalidate that the contract still preserves the exact receipt-bound root/order/identity/input/output invariants
+  - emit the first truthful per-specimen materialization-attempt result surface
+  - make explicit whether the repo can realize any raw-state payload access without replay parsing
+
+exact attempt-result shape defined
+- exact realization disposition type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationDispositionV1`
+- exact realization note type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationNoteV1`
+- exact per-specimen result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationLaneResultV1`
+- exact top-level result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationResultV1`
+- exact entry function:
+  - `realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_materialization_attempt_v1(...)`
+- exact error type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationError`
+
+exact realization decision chosen
+- current implementation can only emit:
+  - a truthful non-materialized attempt result
+- exact per-specimen disposition:
+  - `RealizedForTruthfulNonMaterializedAttemptOnly`
+- exact reason:
+  - `source_raw_state_window_ref` is still only an opaque handle
+  - the audited family root is still only a BC specimen-tree anchor
+  - no repo-local contract above this boundary maps the opaque handle to raw-state payload
+  - replay parsing remains deferred and forbidden in this pass
+
+exact output / disposition chosen
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_contract_disposition`
+  - ordered `source_contract_notes`
+  - `source_chosen_locator_contract_shape`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `realization_disposition`
+  - ordered `realization_notes`
+  - `chosen_materialization_contract_shape`
+- exact per-specimen output fields:
+  - `specimen_ordinal`
+  - `consumed_materialization_attempt_input`
+  - `preserved_materialization_attempt_output_boundary`
+  - `materialization_attempt_disposition`
+- exact realization notes:
+  - `ReceiptBoundValidatedSpecimenFileMaterializationContractBoundaryPreserved`
+  - `ContractInputsRevalidated`
+  - `AuditedFamilyRootReferencePreservedAsBcSpecimenTreeAnchor`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ArtifactIdsPreserved`
+  - `AnchoredBcSpecimenFilePathsPreserved`
+  - `SourceRawStateWindowRefsPreserved`
+  - `ReceiptBoundSourceLineagePreserved`
+  - `ObservationBindingKindAndAcceptedReferenceWindowPreservedForDeferredObservationAccess`
+  - `SourceRawStateWindowRefRemainsOpaqueMaterializationReferenceOnly`
+  - `TruthfulNonMaterializedAttemptResultOnly`
+  - `ReplayParsingStillDeferred`
+  - `TensorAndControlMaterializationStillDeferred`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationStillForbidden`
+
+exact admission / failure decisions chosen
+- Admit only
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractV1`.
+- Require the exact validation disposition/note set, exact reopen disposition/note set, exact locator contract shape, exact contract disposition/note set, exact counts, exact root basename/existence/directory-ness, exact lane/specimen order, and exact chosen materialization contract shape already frozen below this boundary.
+- Require each specimen's admitted validated-specimen identity/lineage to stay exact against both the preserved materialization-attempt input and the preserved materialization-attempt output boundary.
+- Require each anchored specimen-file path to remain receipt-bound below the preserved audited family root.
+- Hard fail on degraded contract input.
+- Hard fail on count/root/order/artifact-id drift.
+- Hard fail on any admitted/input/output boundary mismatch.
+- Hard fail on any attempt to reinterpret the audited family root as raw-state storage.
+- Hard fail on any attempt to widen this pass into replay parsing, raw-state payload materialization, tensors, controls, sidecars, manifests, generic indexing, or `mimir_export`.
+
+what was intentionally excluded
+- any replay parsing
+- any raw-state payload exposure
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family raw-state/index/export/materialization framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - the new realization DTOs
+  - the realization error surface
+  - the strict contract validator for attempt realization
+  - `realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_materialization_attempt_v1(...)`
+  - narrow tests covering valid semantics, degraded contract rejection, identity-drift rejection, and determinism
+- Added only because this pass needed one machine-verifiable truthful result surface above the frozen contract; leaving the pass as prose only would force the next pass to guess whether the current implementation had already proven success, failure, or non-materialized attempt semantics.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The repo now has one explicit machine-verifiable answer that the current raw-state materialization attempt can only be realized as a truthful non-materialized result.
+- The next pass no longer needs to guess whether a narrower successful raw-state access already exists above the contract.
+- The remaining unresolved question is now narrower and obvious:
+  - whether replay parsing must be deliberately reopened to provide a truthful raw-state source for `source_raw_state_window_ref`
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

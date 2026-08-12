@@ -1,0 +1,36 @@
+executor mimir skill forge canonicalizer + event/phase next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+next pass
+- parameter solver + variation engine for low boost recovery
+
+exact problem
+- Turn the new low-boost-recovery canonical replay-slice boundary into a bounded parameter set
+  that later variation and validator passes can reason about without inventing replay truth.
+- Define the minimum variation surface around that parameter set while staying inside the chosen
+  family and without widening export/runtime semantics.
+
+what the new canonicalizer/extractor boundary now makes possible
+- Solver logic can consume one explicit canonical state instead of inferring ownership from raw
+  replay-slice fields.
+- Solver logic can rely on one deterministic candidate phase window.
+- Variation logic can anchor generated changes to a stable family-specific window and provenance
+  chain.
+- Later validator work can distinguish parameter/variation uncertainty from earlier malformed
+  boundary failures.
+
+what is still intentionally unresolved
+- raw-state materialization from `raw_state_window_ref`
+- low-boost threshold proof
+- contact truth
+- recovery success proof
+- physical reachability
+- whether a given slice is semantically rich enough for a reusable recovery parameter solution
+
+scope risk
+- high
+- The main risk is overfitting one replay slice into a parameter set that looks precise but is not
+  actually supported by the current evidence boundary.
+- A second risk is quietly growing a generic variation framework before low-boost-recovery-specific
+  parameter ownership is proven.

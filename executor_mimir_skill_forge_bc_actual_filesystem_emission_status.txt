@@ -1,0 +1,15 @@
+pass type: MIMIR Skill Forge v1 low-boost-recovery actual filesystem emission boundary pass
+runtime behavior changed: no
+public APIs added: yes
+public APIs removed: no
+BC-actual-filesystem-emission artifact added: yes
+decision artifact added: yes
+next-step artifact added: yes
+source/docs changed: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 173 tests, 0 benchmarks
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

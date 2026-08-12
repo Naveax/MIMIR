@@ -1,0 +1,144 @@
+executor mimir skill forge bc receipt-bound specimen-file-anchored raw-state-window locator contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact contract-definition role chosen
+- one low-boost-recovery-specific contract-definition boundary above:
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofResultV1`
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenDecisionResultV1`
+- exact job:
+  - admit only already-validated planning/proof/reopen inputs
+  - preserve the exact per-specimen contract input contributed by the planning result
+  - define one deterministic receipt-bound BC specimen-file lookup source per admitted specimen
+  - return one bounded contract-only result without realizing raw-state lookup
+
+exact contract shape defined
+- exact contract type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractV1`
+- exact entry function:
+  - `define_low_boost_recovery_bc_receipt_bound_specimen_file_anchored_raw_state_window_locator_contract_v1(...)`
+- exact admitted per-specimen input type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractAdmittedSpecimenV1`
+- exact locator output type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorLookupSourceV1`
+- exact lane/specimen result types:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractLaneResultV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractSpecimenResultV1`
+- exact deterministic path rule:
+  - `audited_family_root_directory/recovery_context_lane_{lane_ordinal:04}/specimen_{specimen_ordinal:04}.json`
+- exact preserved invariant:
+  - one admitted specimen binds
+    (`audited_family_root_directory`, `lane_ordinal`, `specimen_ordinal`, `artifact_id`,
+    `source_raw_state_window_ref`)
+    to exactly one deterministic BC specimen-file lookup source
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractDispositionV1`
+- exact disposition:
+  - `ContractDefinedForReceiptBoundSpecimenFileLookupSourceOnly`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractNoteV1`
+- exact chosen shape field:
+  - `chosen_locator_contract_shape`
+- exact chosen shape:
+  - `ReceiptBoundSpecimenFileAnchored`
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_planning_disposition`
+  - ordered `source_planning_notes`
+  - `source_proof_disposition`
+  - ordered `source_proof_notes`
+  - `source_reopen_decision_disposition`
+  - ordered `source_reopen_decision_notes`
+  - `source_exact_insufficiency_marker`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `contract_disposition`
+  - ordered `contract_notes`
+  - `chosen_locator_contract_shape`
+- exact contract note set:
+  - `RawStateWindowLookupObservationAccessPlanningBoundaryPreserved`
+  - `RawStateWindowLookupRealizationProofBoundaryPreserved`
+  - `ReceiptBoundRawStateWindowLocatorReopenDecisionBoundaryPreserved`
+  - `PlanningProofAndReopenInputsCrossValidated`
+  - `AuditedFamilyRootReferencePreservedAsBcSpecimenTreeAnchor`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ArtifactIdsPreserved`
+  - `DeterministicReceiptBoundBcSpecimenFileLookupSourceDefined`
+  - `SourceRawStateWindowRefPreservedAsOpaqueLocatorBindingInput`
+  - `ObservationBindingKindAndAcceptedReferenceWindowPreservedForDeferredObservationAccess`
+  - `ActualRawStateWindowLookupRealizationDeferred`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationStillForbidden`
+
+exact admission decisions chosen
+- Admit only planning + proof + reopen results already inside the low-boost-recovery receipt-bound
+  chain.
+- Reuse the existing planning/proof reopen-decision validator so degraded planning, degraded proof,
+  count drift, order drift, artifact-id drift, and root drift still hard-fail.
+- Require the reopen decision to preserve the exact planning-note set, proof-note set, insufficiency
+  marker, reopen note set, audited family root basename, and chosen contract shape.
+- Require reopen counts/root/dispositions/notes/marker to match the admitted planning/proof inputs
+  exactly.
+- Preserve the audited family root only as a BC specimen-tree anchor.
+
+exact failure decisions chosen
+- Hard fail on degraded planning input.
+- Hard fail on degraded proof input.
+- Hard fail on degraded reopen decision input.
+- Hard fail on mismatched counts, root, planning notes, proof notes, proof marker, or reopen shape.
+- Hard fail on any attempt to reinterpret the audited family root as raw-state storage.
+- Hard fail on any attempt to widen this pass into actual lookup realization.
+- Hard fail on any attempt to widen this pass into sidecars, manifests, generic indexing, or
+  `mimir_export`.
+
+what was intentionally excluded
+- any actual raw-state lookup realization
+- any raw-state locator/index implementation beyond contract definition
+- any BC specimen-file existence/readback realization at this boundary
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family locator/index/export framework
+- any generic manifest/index framework
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractDispositionV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractNoteV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractAdmittedSpecimenV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorLookupSourceV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractSpecimenResultV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractLaneResultV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractDefinitionError`
+  - `define_low_boost_recovery_bc_receipt_bound_specimen_file_anchored_raw_state_window_locator_contract_v1(...)`
+- Added minimal tests for:
+  - valid contract-definition result production
+  - degraded planning rejection
+  - degraded proof rejection
+  - degraded reopen rejection
+  - determinism
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were added.
+- Reason code changes were justified:
+  - the next pass needs a machine-verifiable contract surface for exact per-specimen admitted input
+    and deterministic specimen-file lookup-source binding
+  - leaving this boundary as prose only would force the next pass to guess contract shape
+
+why this is enough for the next pass
+- The repo now has an explicit contract for the reopened shape instead of only a reopen decision.
+- One admitted specimen now has an exact contract input view and an exact deterministic lookup
+  source.
+- The next pass no longer needs to re-decide shape or semantics.
+- The next pass can move to first locator realization while still keeping raw-state materialization
+  deferred and `mimir_export` closed.

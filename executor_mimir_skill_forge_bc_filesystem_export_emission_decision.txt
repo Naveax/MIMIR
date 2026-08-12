@@ -1,0 +1,134 @@
+executor mimir skill forge bc filesystem export emission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact filesystem / export-emission refinement role chosen
+- one low-boost-recovery-specific filesystem / export-emission refinement boundary above
+  `LowBoostRecoveryBcDownstreamExportConsumerResultV1`
+- exact job:
+  - admit only already-preserved low-boost-recovery downstream consumer lanes
+  - revalidate the downstream export-consumer boundary without reshaping it
+  - preserve each ordered recovery-context lane unchanged
+  - derive one deterministic family root directory token
+  - derive one deterministic lane-directory name per preserved lane
+  - derive one deterministic specimen file-stem plan per preserved specimen inside each lane
+  - mark the result ready only for one later low-boost-recovery actual filesystem emission
+    boundary
+
+exact output / disposition chosen
+- exact result type:
+  - `LowBoostRecoveryBcFilesystemExportEmissionPlanResultV1`
+- exact lane-plan type:
+  - `LowBoostRecoveryBcFilesystemExportEmissionLanePlanV1`
+- exact specimen-plan type:
+  - `LowBoostRecoveryBcFilesystemExportEmissionSpecimenPlanV1`
+- exact refinement disposition:
+  - `ReadyForLowBoostRecoveryFilesystemEmissionBoundaryOnly`
+- exact preserved downstream context:
+  - `specimen_count`
+  - `group_count`
+  - `source_consumer_disposition`
+  - `source_consumer_notes`
+- exact planning fields:
+  - `planned_family_root_directory = "low_boost_recovery_bc_v1"`
+  - `planned_relative_lane_directory = "recovery_context_lane_{lane_ordinal:04}"`
+  - `planned_specimen_file_stem = "specimen_{specimen_ordinal:04}"`
+- exact refinement notes:
+  - `DownstreamExportConsumerBoundaryPreserved`
+  - `RecoveryContextLaneFilesystemEmissionPlanOnly`
+  - `ActualFilesystemEmissionDeferred`
+  - `TensorAndControlMaterializationDeferred`
+  - `MimirExportIntegrationDeferred`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcDownstreamExportConsumerResultV1`.
+- Require `source_layout_disposition` to remain
+  `ReadyForLowBoostRecoveryDownstreamExportConsumerOnly`.
+- Require `source_layout_notes` to remain the exact export-layout note set.
+- Require `consumer_disposition` to remain
+  `ReadyForLowBoostRecoveryFilesystemExportEmissionRefinementOnly`.
+- Require `consumer_notes` to remain the exact downstream export-consumer note set.
+- Require `specimen_count > 0`.
+- Require `group_count > 0`.
+- Require `preserved_recovery_context_lanes` to be non-empty.
+- Require `group_count` to equal the number of preserved lanes.
+- Require each `source_group_ordinal` to match the concrete lane position.
+- Require lanes to remain in the exact downstream export-consumer order.
+- Require each lane to contain at least one preserved refined specimen.
+- Revalidate every preserved specimen instead of trusting construction history.
+- Require every specimen to remain aligned with its enclosing lane lineage.
+- Require specimen order within each lane to remain the exact downstream export-consumer order.
+- Require every `artifact_id` to remain unique across the full consumer result.
+- Require `specimen_count` to equal the number of preserved specimens across all lanes.
+
+exact refinement decisions chosen
+- The plan preserves each downstream lane as-is through `preserved_lane` instead of inventing a
+  new family-specific lane payload.
+- Path planning is intentionally ordinal-based only.
+- No replay id, subject id, slice id, phase id, or artifact id is embedded into a file or
+  directory name in v1.
+- Reason:
+  - embedding lineage strings into paths would require invented filesystem sanitization semantics
+  - that would widen this pass beyond a narrow deterministic planning boundary
+- File extensions were left undecided on purpose.
+- Manifest names were left undecided on purpose.
+- Actual directories and files were not emitted.
+
+exact failure decisions chosen
+- Any downstream export-consumer drift fails explicitly as malformed refinement input.
+- Any lane-order drift or within-lane specimen-order drift fails explicitly.
+- Any empty lane fails explicitly.
+- Any preserved specimen malformed for existing downstream invariants fails explicitly with
+  lane/specimen position.
+- Any duplicate `artifact_id` fails explicitly.
+- No repair, fallback, regrouping, resorting, path inference, sanitization layer, or silent skip
+  was added.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any generic multi-family filesystem / export-emission framework
+- any generic bundle/index/manifest orchestration framework
+- any actual filesystem writes
+- any file-extension decision
+- any manifest-file-name decision
+- any new shared DTO in `mimir-types`
+- any `mimir-io` widening
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust type shaping / narrow implementation were added, and why
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcFilesystemExportEmissionDispositionV1`
+  - `LowBoostRecoveryBcFilesystemExportEmissionNoteV1`
+  - `LowBoostRecoveryBcFilesystemExportEmissionSpecimenPlanV1`
+  - `LowBoostRecoveryBcFilesystemExportEmissionLanePlanV1`
+  - `LowBoostRecoveryBcFilesystemExportEmissionPlanResultV1`
+  - `LowBoostRecoveryBcFilesystemExportEmissionError`
+  - `refine_low_boost_recovery_bc_filesystem_export_emission_v1(...)`
+- Added one local downstream-consumer revalidation helper because
+  `LowBoostRecoveryBcDownstreamExportConsumerResultV1` is public and can be manually
+  constructed, so the new planning boundary cannot trust construction history alone.
+- Reused `LowBoostRecoveryBcExportLayoutLaneV1` inside `preserved_lane` instead of inventing a
+  second lineage/specimen lane payload because this pass only adds deterministic filesystem
+  planning around already-preserved lanes.
+- No `mimir-types` additions were needed because the plan result remains repo-local and is not a
+  persisted or cross-crate DTO.
+- No `mimir-io` changes were needed because raw artifact IO ownership was already correct.
+- No `mimir-export` changes were made.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess the first deterministic filesystem planning shape.
+- The next pass no longer needs to guess whether path names should be lineage-derived or
+  ordinal-derived.
+- The next pass now has one explicit family-specific plan result that preserves downstream lanes
+  unchanged while adding only a root directory token, lane-directory names, and specimen
+  file-stem plans.
+- That makes the immediate next step obvious:
+  one low-boost-recovery-specific actual filesystem emission boundary above the plan result,
+  still without reopening `mimir_export`.

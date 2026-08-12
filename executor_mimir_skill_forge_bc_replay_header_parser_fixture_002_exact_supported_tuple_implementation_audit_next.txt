@@ -1,0 +1,33 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation audit next
+
+selected outcome driving next step
+- Outcome A
+
+recommended next pass
+- plan the next narrow replay-header parser boundary
+
+next pass may
+- plan a narrow, explicitly bounded replay-header parser boundary
+- preserve exact tuple admission discipline
+- preserve ReplayInput::Memory-only parser success unless separately justified
+- preserve header-only stop-boundary reasoning
+
+next pass must not
+- broaden parser expansion without a separate explicit planning boundary
+- add export/runtime/CLI integration
+- add ReplayInput::File support
+- add wildcard BuildVersion support
+- add all-ReplayVersion=8 support
+- add future unknown build support
+- add CRC validation
+- read or validate content_crc
+- parse body/raw-state/frame/event data
+- add backend replay parser dependencies
+
+current admitted boundary carried forward
+- parser-success is admitted only for exact allowlisted tuples through ReplayInput::Memory
+- fixture_001 regression is admitted
+- fixture_002 exact happy path is admitted
+- fixture_002 header-only stop-boundary is admitted
+- unknown BuildVersion rejection is admitted
+- broad parser-success is not admitted

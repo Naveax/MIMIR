@@ -1,0 +1,46 @@
+helper names added or updated
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane_with_proposal_surface`
+
+crate(s) touched
+- `mimir-cli`
+
+which base lane was used
+- `VerticalSliceFixtureLane::Stage69Sample`
+
+exact proposal mutation applied
+- mutated proposal index `1` (`candidate-beta`) only
+- `actions` changed from:
+  - `boost { pressed: true }`
+  - `steer { direction: 0.5 }`
+- to:
+  - `boost { pressed: false, stage89_action_tag: "proposal-surface" }`
+  - `steer { direction: -0.25 }`
+- `legal_hint` stayed `Some(true)` to preserve the existing branch-generation path and avoid `LegalHintFilter` suppression
+- `metadata` changed from `{ proposal_source: "fixture-beta" }`
+- to `{ proposal_contract_tag: "stage89-explicit-propagation", proposal_source: "fixture-beta-mutated" }`
+
+which proposal index/label was mutated
+- index `1`
+- label `candidate-beta`
+
+what direct evidence proved actions / legal_hint / metadata propagation
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_explicitly_propagates_proposal_actions_legal_hint_and_metadata_without_perturbing_other_contract_edges`
+- baseline canonical reload asserted `consumer_export.branches[1].actions`, `consumer_export.branches[1].legality_hint`, and `consumer_export.branches[1].metadata` exactly match the unmutated persisted proposal surface
+- mutated canonical reload asserted `consumer_export.branches[1].actions`, `consumer_export.branches[1].legality_hint`, and `consumer_export.branches[1].metadata` exactly match the mutated persisted proposal surface
+- the test inspects the concrete exported branch payload after canonical reload, not only broad consumer-export equality
+
+what unrelated surfaces remained stable
+- branch ids stayed identical between baseline and mutated runs
+- scoreboard totals stayed identical between baseline and mutated runs
+- teacher target ordering stayed identical between baseline and mutated runs
+- canonical reload succeeded for both runs
+- frozen Stage 73 snapshot identity stayed identical between baseline and mutated runs
+
+tests added or updated
+- added `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_explicitly_propagates_proposal_actions_legal_hint_and_metadata_without_perturbing_other_contract_edges`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this closes an under-covered edge without widening runtime semantics
+- this pass closes the remaining proposal-surface observability gap by proving one persisted proposal’s `actions`, `legal_hint`, and `metadata` survive the existing deterministic Stage 69 vertical-slice path into the exported branch payload after canonical reload, while keeping branch count, scoring, teacher ordering, bundle boundaries, and loader semantics unchanged

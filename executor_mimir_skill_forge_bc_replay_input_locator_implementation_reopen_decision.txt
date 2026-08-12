@@ -1,0 +1,136 @@
+executor mimir skill forge bc replay-input locator implementation reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-17
+
+exact reopen role chosen
+- one low-boost-recovery-specific reopen-decision boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputLocatorRealizationResultV1`
+- exact job:
+  - admit only the existing truthful non-located replay-input locator realization result
+  - revalidate the exact receipt-bound root/order/path and per-specimen identity tuple already
+    frozen by that realization
+  - decide whether the remaining missing piece is truly replay-input locator implementation work
+  - fix the narrowest honest next contract shape only if reopening is justified
+
+exact reopen / no-reopen decision chosen
+- decision:
+  - reopen justified for one narrow receipt-bound replay-input locator implementation boundary
+- reason:
+  - the admitted realization result already proves the current truthful limit is
+    `RealizedForTruthfulNonLocatedReplayInputLocatorOnly`
+  - the preserved tuple is already stable enough for one more family-specific, receipt-bound
+    contract-only boundary
+  - no implementation-facing boundary exists yet above that truthful result
+
+exact criteria used
+- The remaining missing piece had to be replay-input locator implementation work rather than a
+  lower-layer contract defect.
+- The next boundary had to stay low-boost-recovery-specific.
+- The next boundary had to stay receipt-bound.
+- The next boundary had to avoid sidecars, manifests, and generic indexing.
+- The next boundary had to avoid `mimir_export`.
+- The next boundary had to stay below actual replay parsing.
+- The next boundary had to stay below actual raw-state payload, tensor, and control
+  materialization.
+- The next boundary had to introduce only one locator-implementation-facing handle contract
+  without inventing replay-path semantics absent from the admitted realization result.
+- The next boundary had to preserve:
+  - `source_replay` as opaque lineage only
+  - `audited_family_root_directory` as a BC specimen-tree anchor only
+  - `FutureParserConsumableReplayHandleOnly` as contract-only and not locator success
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputLocatorImplementationReopenDispositionV1`
+- exact disposition:
+  - `ReopenJustifiedForReceiptBoundReplayInputLocatorImplementationContract`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputLocatorImplementationReopenNoteV1`
+- exact chosen shape field:
+  - `chosen_replay_input_locator_implementation_contract_shape`
+- exact chosen shape:
+  - `ReceiptBoundReplayInputLocatorImplementationOnly`
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_realization_disposition`
+  - ordered `source_realization_notes`
+  - `source_chosen_locator_contract_shape`
+  - `source_chosen_materialization_contract_shape`
+  - `source_chosen_replay_parsing_contract_shape`
+  - `source_chosen_replay_input_access_contract_shape`
+  - `source_chosen_replay_input_locator_contract_shape`
+  - `audited_family_root_directory`
+  - `decision_disposition`
+  - ordered `decision_notes`
+  - `chosen_replay_input_locator_implementation_contract_shape`
+
+exact admission / failure decisions chosen
+- Admit only the exact replay-input locator realization result already inside the low-boost-
+  recovery receipt-bound chain.
+- Require the exact replay-input locator contract disposition/note set, replay-input locator
+  realization disposition/note set, source chosen shapes, chosen replay-input locator contract
+  shape, root basename/existence/directory-ness, and exact lane/specimen order.
+- Require every consumed locator boundary input and preserved locator output boundary to remain
+  identical across:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+  - `preserved_observation_binding_kind`
+  - `preserved_accepted_reference_window`
+- Require the preserved locator handle kind to remain
+  `FutureParserConsumableReplayHandleOnly`.
+- Hard fail on degraded realization input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on artifact-id drift or duplicate artifact ids.
+- Hard fail on any attempt to reinterpret `source_replay`, `provenance_label`, or the audited
+  family root as an implicit replay locator or replay storage.
+- Hard fail on any attempt to widen this pass into actual replay-input locator implementation,
+  replay parsing, raw-state payload materialization, tensor/control materialization, sidecars,
+  manifests, generic indexing, or `mimir_export`.
+
+what was intentionally excluded
+- any actual replay-input locator implementation
+- any actual replay parsing implementation
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputLocatorImplementationReopenDispositionV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputLocatorImplementationReopenNoteV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputLocatorImplementationContractShapeV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputLocatorImplementationReopenDecisionResultV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputLocatorImplementationReopenDecisionError`
+  - `decide_low_boost_recovery_bc_receipt_bound_replay_input_locator_implementation_reopen_from_receipt_bound_validated_specimen_file_raw_state_window_replay_input_locator_realization_v1(...)`
+  - strict realization-result validation for this decision boundary
+  - narrow tests covering valid semantics, degraded realization rejection, identity-drift
+    rejection, and determinism
+- No `mimir-types`, `mimir-replay`, `mimir-io`, or `mimir-export` changes were added.
+- Reason code changes were justified:
+  - prior reopen decisions in this repo are machine-verifiable `mimir-skill` boundaries
+  - the next pass needs a typed, auditable decision result instead of re-auditing the locator
+    realization boundary from prose
+
+why this is enough for the next pass
+- The repo now has one explicit machine-verifiable answer to whether replay-input locator
+  implementation work must reopen.
+- That answer stays strictly low-boost-recovery-specific and strictly receipt-bound.
+- The next immediate task is now obvious and narrow:
+  - a first contract-definition pass for
+    `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputLocatorImplementationContractV1`
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

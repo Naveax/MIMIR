@@ -1,0 +1,89 @@
+executor mimir skill forge bc replay header parser remaining non-mapping byte layout error boundary admission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+selected outcome driving next step
+- Outcome B
+- non-mapping byte-layout and parser error-boundary evidence is partially admitted
+- exact fixture tuple, top-level byte layout, minimal stop policy, and many hard boundaries are
+  admitted
+- byte-layout evidence remains partial overall
+- error-boundary evidence remains partial overall
+- parser implementation remains blocked
+- parser-success logic remains blocked
+
+immediate next pass type
+- remaining precise gap closure pass for non-mapping parser implementation readiness
+- not parser implementation
+- not parser-success logic
+
+why parser implementation is not the next pass
+- Outcome B was selected
+- enforced CRC validation remains unadmitted
+- nested ArrayProperty semantics remain unadmitted
+- unencountered property kind support remains unadmitted
+- UTF-16 parse_text support remains unadmitted
+- malformed-boundary evidence remains partial for nested arrays, UTF-16 text, and CRC mismatch
+- implementation has not been explicitly reopened
+
+immediate next pass input
+- fixture id: rl_replay_header_fixture_001
+- fixture path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- prior external parser report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+- mapping/error-boundary admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_MAPPING_GAP_ERROR_BOUNDARY_ADMISSION_V1.md
+- new non-mapping admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_NON_MAPPING_BYTE_LAYOUT_ERROR_BOUNDARY_ADMISSION_V1.md
+
+immediate next pass must decide
+- whether first implementation may permanently defer header CRC validation under the admitted
+  read-but-defer policy, or whether an in-project CRC algorithm/range validation proof is required
+  first
+- whether top-level ArrayProperty skip-by-size is sufficient for the first minimal header parser,
+  or whether nested array dictionary validation must be admitted first
+- whether UTF-16 parse_text remains unsupported for the first implementation, or whether UTF-16
+  support must be admitted first
+- whether unencountered property kinds remain hard unsupported-property errors for the first
+  implementation, or whether additional property-kind support must be admitted first
+- whether current MimirError::Message category text remains sufficient in implementation tests, or
+  whether typed replay errors should be reopened despite this pass not requiring them
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only if fixture evidence, complete byte-layout evidence,
+  complete expected output evidence, and required error boundaries are admitted and implementation
+  is explicitly reopened
+
+if next pass closes the remaining gaps
+- the following pass may be an explicit parser implementation planning reopen pass
+- parser code still must not be implemented until that later pass explicitly reopens it
+
+if next pass leaves gaps partial
+- parser implementation remains blocked
+- the following pass must target the remaining precise gap rather than broad replay parsing
+
+parser implementation closure
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic closure
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing closure
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction closure
+- replay frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator closure
+- replay-source actual materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- mimir_export widening remains forbidden unless explicitly reopened

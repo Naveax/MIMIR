@@ -1,0 +1,3 @@
+backend = "deterministic-fake"
+default_seed = 7
+command_labels = ["bootstrap", "tick"]

@@ -1,0 +1,375 @@
+executor stage 83 vertical-slice input/output bridge consistency map
+
+scope
+- repo root: `D:\RocketLeague bot\MIMIR`
+- contract family: persisted vertical-slice input artifact -> runtime materialization -> export/scoreboard/teacher artifacts -> canonical reload -> frozen snapshot
+- authoritative code locations:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs`
+  - `crates/mimir-cli/src/vertical_slice.rs`
+  - `crates/mimir-cli/src/vertical_slice_result.rs`
+  - `crates/mimir-io/src/lib.rs`
+  - `crates/mimir-types/src/lib.rs`
+
+A. INPUT -> RUNTIME -> OUTPUT TRACE
+
+1. replay_id
+- persisted input field:
+  - `PersistedVerticalSliceInput.replay_id`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> VerticalSliceFixture.replay_id`
+  - `run_deterministic_vertical_slice(...) -> HintAnchorDetector.detect_persisted(&fixture.replay_id, ...)`
+- output observability:
+  - becomes `anchor.replay_id` inside the export bundle consumer surface
+  - reappears in `CanonicalVerticalSliceResult::golden_snapshot(...)` as `VerticalSliceGoldenSnapshot.replay_id`
+  - tied to frozen snapshot identity via the single exported anchor
+
+2. export_name
+- persisted input field:
+  - `PersistedVerticalSliceInput.export_name`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> VerticalSliceFixture.export_name`
+  - `run_deterministic_vertical_slice(...) -> ExportBundleInput.export_name`
+  - `teacher_seed_label(...) -> TeacherLabelId::new(format!(\"{}:teacher:{ordinal}\", fixture.export_name))`
+- output observability:
+  - visible in export bundle manifest identity
+  - visible indirectly in teacher-label ids
+  - reappears in canonical reload through `consumer_export.manifest.export_name`
+  - reappears in frozen snapshot as `VerticalSliceGoldenSnapshot.export_name`
+
+3. teacher_namespace
+- persisted input field:
+  - `PersistedVerticalSliceInput.teacher_namespace`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> VerticalSliceFixture.teacher_namespace`
+  - `teacher_seed_label(...)` writes metadata key `teacher_namespace`
+  - `synthesize_teacher_labels(...)` uses it as `TeacherSynthesisRequest.namespace`
+  - `synthesize_teacher_labels(...)` also writes metadata key `teacher_namespace_copy`
+  - `persist_teacher_artifacts(...)` writes teacher artifact header metadata key `teacher_namespace`
+- output observability:
+  - teacher-label artifacts only
+  - canonical result loader retains full `teacher_artifacts`
+  - not copied into `VerticalSliceGoldenSnapshot`
+  - not part of export bundle manifest identity
+
+4. simulation_seed
+- persisted input field:
+  - `PersistedVerticalSliceInput.simulation_seed`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> VerticalSliceFixture.simulation_seed`
+  - `simulation_request_for_branch(...) -> SimulationRequest.seed`
+- output observability:
+  - no direct field in export bundle, scoreboard artifact, canonical snapshot, or teacher artifacts
+  - reflected only indirectly through deterministic repeated-run equality of the runtime result and canonical reload
+  - current fake backend keeps repeated runs stable; the seed is part of that stability contract, not a first-class output field
+
+5. anchor_hint fields
+- persisted input field group:
+  - `PersistedVerticalSliceInput.anchor_hint.anchor_id`
+  - `PersistedVerticalSliceInput.anchor_hint.frame_index`
+  - `PersistedVerticalSliceInput.anchor_hint.kind`
+  - `PersistedVerticalSliceInput.anchor_hint.metadata`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> AnchorHint`
+  - `run_deterministic_vertical_slice(...) -> HintAnchorDetector.detect_persisted(...)`
+- output observability:
+  - `anchor_id`, `frame_index`, and `kind` become visible through the export bundle anchor payload
+  - canonical reload exposes them via `consumer_export.anchors[0]`
+  - frozen snapshot exposes `anchor_id`, `anchor_frame_index`, and `anchor_kind`
+  - `anchor_hint.metadata` survives in the persisted/exported anchor artifact but is not copied into the frozen snapshot
+
+6. proposal labels / actions / legal_hint / metadata
+- persisted input field group:
+  - `PersistedVerticalSliceProposal.label`
+  - `PersistedVerticalSliceProposal.actions`
+  - `PersistedVerticalSliceProposal.legal_hint`
+  - `PersistedVerticalSliceProposal.metadata`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> VerticalSliceProposalFixture.branch_proposal`
+  - `run_deterministic_vertical_slice(...) -> BranchGenerationRequest.proposals`
+  - `BoundedManualBranchGenerator::generate_persisted(...)` materializes branch artifacts in proposal order
+  - `simulation_request_for_branch(...)` maps `actions` into `SimulationCommand { label, metadata }`
+- output observability:
+  - label becomes visible in export bundle branch payload and in scoreboard row `branch_label`
+  - actions / legal_hint / metadata become visible in export bundle branch payload
+  - labels are checked explicitly in ordering tests
+  - actions / legal_hint / metadata are not copied into the frozen snapshot
+
+7. proposal score_signals
+- persisted input field group:
+  - `PersistedVerticalSliceProposal.score_signals`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> VerticalSliceProposalFixture.score_signals`
+  - `score_branch(...) -> WeightedSumScorer::score(Some(branch_id.clone()), score_signals)`
+- output observability:
+  - visible in scoreboard artifact as score components and score total
+  - visible indirectly in teacher ranking order after sorting by score descending
+  - visible indirectly in frozen snapshot only as scoreboard `total_score` values and teacher target ordering
+  - not copied verbatim into the frozen snapshot
+
+8. scorer_weights
+- persisted input field:
+  - `PersistedVerticalSliceInput.scorer_weights`
+- runtime materialization:
+  - `fixture_from_persisted_input(...) -> VerticalSliceFixture.scorer_weights`
+  - `run_deterministic_vertical_slice(...) -> WeightedSumScorer::new(fixture.scorer_weights.clone())`
+- output observability:
+  - no direct field in export bundle, scoreboard artifact, teacher artifacts, canonical snapshot, or golden snapshot
+  - reflected only indirectly through scoreboard totals and downstream teacher ranking order
+
+9. fixture_lane header metadata
+- persisted input artifact header group:
+  - `ArtifactHeader.metadata[\"fixture_lane\"]`
+  - related header identity: `producer = mimir-cli-tests`, `created_by_component = vertical-slice-test-support`
+- runtime materialization:
+  - none inside `VerticalSliceFixture`
+  - current lane identity is selected by the explicit match arm in `persisted_input_artifact_for_lane(...)`, not by reading header metadata back into runtime logic
+- output observability:
+  - runtime fixture artifact only at `vertical-slice-input.json`
+  - covered by persisted input round-trip tests
+  - not propagated into export bundle, scoreboard artifact, teacher artifacts, canonical result fields, or frozen snapshot
+
+B. OBSERVABILITY SURFACE
+
+replay_id
+- runtime fixture only: yes
+- export bundle: yes
+- scoreboard artifact: no
+- teacher-label artifacts: no
+- canonical result loader surface: yes
+- golden snapshot: yes
+- explicit tests:
+  - `persisted_stage69_vertical_slice_input_materializes_same_frozen_snapshot`
+  - `persisted_stage77_vertical_slice_input_materializes_same_frozen_snapshot`
+  - `deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`
+  - `second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`
+
+export_name
+- runtime fixture only: yes
+- export bundle: yes
+- scoreboard artifact: no
+- teacher-label artifacts: indirect via teacher id prefix only
+- canonical result loader surface: yes
+- golden snapshot: yes
+- explicit tests:
+  - `assert_fixture_lane_matches_expected_contract(...)`
+  - `deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+
+teacher_namespace
+- runtime fixture only: yes
+- export bundle: no
+- scoreboard artifact: no
+- teacher-label artifacts: yes
+- canonical result loader surface: yes, through full teacher artifacts
+- golden snapshot: no
+- explicit tests:
+  - `assert_fixture_lane_matches_expected_contract(...)`
+  - teacher artifact equality inside canonical parity helper
+
+simulation_seed
+- runtime fixture only: yes
+- export bundle: no
+- scoreboard artifact: no first-class field
+- teacher-label artifacts: no
+- canonical result loader surface: no first-class field
+- golden snapshot: no
+- specific explicit tests:
+  - `persisted_vertical_slice_input_repeated_runs_stay_identical`
+  - `deterministic_vertical_slice_is_identical_across_repeated_runs`
+  - `deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+  - `second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+
+anchor_hint fields
+- runtime fixture only: yes
+- export bundle: yes
+- scoreboard artifact: no
+- teacher-label artifacts: no
+- canonical result loader surface: yes
+- golden snapshot:
+  - `anchor_id`, `frame_index`, `kind`: yes
+  - `metadata`: no
+- explicit tests:
+  - `assert_fixture_lane_matches_expected_contract(...)`
+  - `assert_fixture_lane_snapshot_fails_explicitly_when_anchor_count_is_not_one(...)`
+
+proposal labels / actions / legal_hint / metadata
+- runtime fixture only: yes
+- export bundle: yes
+- scoreboard artifact:
+  - label: yes as `branch_label`
+  - actions / legal_hint / metadata: no
+- teacher-label artifacts:
+  - label: yes
+  - actions / legal_hint / metadata: no
+- canonical result loader surface: yes
+- golden snapshot:
+  - label/actions/legal_hint/metadata: no
+- explicit tests:
+  - `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+  - `assert_fixture_lane_matches_expected_contract(...)` via consumer export equality
+
+proposal score_signals
+- runtime fixture only: yes
+- export bundle: no
+- scoreboard artifact: yes
+- teacher-label artifacts: indirect through ordering only
+- canonical result loader surface: yes through scoreboard payload
+- golden snapshot: indirect totals only
+- explicit tests:
+  - `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+  - `canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+
+scorer_weights
+- runtime fixture only: yes
+- export bundle: no
+- scoreboard artifact: indirect through totals only
+- teacher-label artifacts: indirect through ranking order only
+- canonical result loader surface: indirect only
+- golden snapshot: indirect only
+- explicit tests:
+  - same repeated-run and ordering tests as `score_signals`
+
+fixture_lane header metadata
+- runtime fixture only: yes, in the persisted input artifact header
+- export bundle: no
+- scoreboard artifact: no
+- teacher-label artifacts: no
+- canonical result loader surface: no
+- golden snapshot: no
+- explicit tests:
+  - `persisted_vertical_slice_input_artifact_round_trips_through_json`
+  - `persisted_vertical_slice_input_contract_round_trips_exactly`
+
+C. BRIDGE INVARIANTS
+
+1. proposal order -> branch generation order
+- `run_deterministic_vertical_slice(...)` zips `branch_artifacts.iter().zip(&fixture.proposals)`
+- the branch generator must return the same count as proposal count
+- export bundle branch order and scoreboard row order depend on this preserved proposal order
+
+2. scorer_weights + score_signals -> scoreboard totals
+- `WeightedSumScorer::new(fixture.scorer_weights.clone())`
+- `score_branch(...) -> scorer.score(Some(branch_id.clone()), score_signals)`
+- current visible totals:
+  - Stage69: `3.5`, `5.0`
+  - Stage77: `6.0`, `2.5`
+
+3. scoreboard totals -> teacher ranking order
+- `teacher_seed_label(...)` stores each branch total in the teacher seed label
+- `synthesize_teacher_labels(...)` sorts labels by descending score, then by label id as a tie-breaker
+- persisted teacher artifact ordinal is therefore the current ranking surface
+
+4. export_name / replay_id / anchor identity -> frozen snapshot identity
+- frozen snapshot identity currently includes:
+  - `export_name`
+  - `replay_id`
+  - `anchor_id`
+  - `anchor_frame_index`
+  - `anchor_kind`
+- snapshot construction requires exactly one anchor
+
+5. simulation_seed -> deterministic repeated-run identity
+- the seed is passed into every `SimulationRequest`
+- no first-class output field carries the seed back out
+- current contract proof is equality across two independent runs, not direct seed echo
+
+6. fixture header metadata -> explicit lane identity only
+- `fixture_lane` is documentary identity on `vertical-slice-input.json`
+- it does not drive scoring, branch generation, teacher synthesis, export semantics, or snapshot materialization
+
+7. canonical loader cardinality invariants
+- export bundle branch count must equal scoreboard row count
+- scoreboard row count must equal teacher artifact file count
+- teacher targets must remain `TeacherLabelTarget::Branch`
+- these are explicit failure boundaries, not inferred tolerances
+
+8. frozen snapshot is intentionally narrower than canonical reload
+- snapshot captures identity, branch order, scoreboard totals, and teacher target order
+- snapshot does not include:
+  - teacher namespace
+  - anchor metadata
+  - branch actions
+  - branch legal_hint
+  - branch metadata
+  - score component breakdown
+  - scorer weights
+  - fixture header metadata
+
+D. KNOWN NON-BRIDGED OR INDIRECT AREAS
+
+- `simulation_seed` has no direct visible output field; it is only reflected by deterministic repeated-run identity.
+- `scorer_weights` are not persisted back out anywhere in the output surface; they only affect totals indirectly.
+- `proposal.score_signals` are not exported directly; only scoreboard score components/totals and derived teacher ranking expose their effects.
+- `anchor_hint.metadata` survives in the exported anchor artifact but not in the golden snapshot.
+- proposal `actions`, `legal_hint`, and `metadata` survive in export bundle branch artifacts, but not in the scoreboard, teacher artifacts, or golden snapshot.
+- `teacher_namespace` is visible in teacher-label artifacts and canonical teacher artifact reload, but not in the frozen snapshot.
+- input header `fixture_lane` metadata is documentary identity only, not runtime semantics.
+- canonical loader does not reload `vertical-slice-input.json`; the input artifact guards the upstream boundary, while canonical reload guards the downstream artifact boundary.
+
+E. TEST COVERAGE BRIDGE MAP
+
+persisted input round-trip tests
+- `crates/mimir-types/src/lib.rs::persisted_vertical_slice_input_artifact_round_trips_through_json`
+- `crates/mimir-io/src/lib.rs::writes_and_reads_vertical_slice_input_artifact_with_wrapper`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_contract_round_trips_exactly`
+
+persisted input negative boundary tests
+- `crates/mimir-io/src/lib.rs::vertical_slice_input_wrapper_rejects_schema_mismatch_explicitly`
+- `crates/mimir-io/src/lib.rs::vertical_slice_input_wrapper_rejects_wrong_artifact_kind_explicitly`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_wrong_kind_fails_explicitly`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_schema_mismatch_fails_explicitly`
+
+persisted materialization -> frozen snapshot tests
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_stage69_vertical_slice_input_materializes_same_frozen_snapshot`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_stage77_vertical_slice_input_materializes_same_frozen_snapshot`
+
+parity helpers
+- `run_fixture_lane(...)`
+- `run_fixture_lane_and_load(...)`
+- `assert_fixture_lane_matches_expected_contract(...)`
+- checks:
+  - export bundle manifest/cardinality
+  - canonical export reload equality
+  - scoreboard artifact equality
+  - teacher artifact equality
+  - frozen snapshot equality
+
+repeated-run determinism tests
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_repeated_runs_stay_identical`
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_is_identical_across_repeated_runs`
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+- `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+
+negative harness tests
+- scoreboard row count drift:
+  - `assert_fixture_lane_scoreboard_row_count_drift_fails_explicitly(...)`
+  - `canonical_vertical_slice_result_loader_fails_explicitly_on_scoreboard_row_count_drift`
+  - `second_deterministic_vertical_slice_loader_fails_explicitly_on_scoreboard_row_count_drift`
+- extra teacher artifact count drift:
+  - `assert_fixture_lane_extra_teacher_artifact_count_drift_fails_explicitly(...)`
+  - `canonical_vertical_slice_result_loader_fails_explicitly_on_extra_teacher_artifact_drift`
+- missing teacher artifact drift:
+  - `assert_fixture_lane_missing_teacher_artifact_fails_explicitly(...)`
+  - `canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing`
+- non-branch teacher target drift:
+  - `assert_fixture_lane_non_branch_teacher_target_drift_fails_explicitly(...)`
+  - `canonical_vertical_slice_teacher_targets_fail_explicitly_on_non_branch_target_drift`
+- teacher artifact ordinal/file drift:
+  - `assert_fixture_lane_teacher_artifact_ordinal_file_drift_changes_snapshot(...)`
+  - `canonical_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+  - `second_deterministic_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+- anchor-count drift:
+  - `assert_fixture_lane_snapshot_fails_explicitly_when_anchor_count_is_not_one(...)`
+  - `canonical_vertical_slice_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+
+explicit ordering tests
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+- `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+
+current trusted reading order
+1. `executor_stage82_input_contract_index.txt`
+2. `executor_stage80_contract_index.txt`
+3. `crates/mimir-cli/src/vertical_slice_test_support.rs`
+4. `crates/mimir-cli/src/vertical_slice.rs`
+5. `crates/mimir-cli/src/vertical_slice_result.rs`
+6. this file

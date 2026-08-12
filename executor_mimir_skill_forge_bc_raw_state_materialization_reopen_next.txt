@@ -1,0 +1,54 @@
+executor mimir skill forge bc raw-state materialization reopen next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a first narrow contract-definition pass for the raw-state materialization boundary
+- exact target contract:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+why this is the immediate next pass
+- The locator contract is already explicit.
+- The anchored path-only locator is already explicit.
+- Specimen-file existence and identity-preserving readback are already explicit.
+- This pass now makes the reopen decision explicit.
+- The next unresolved problem is no longer whether reopening is justified.
+- The next unresolved problem is the exact contract that binds validated specimen identity and
+  `source_raw_state_window_ref` to one honest raw-state materialization attempt boundary.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+- `LowBoostRecoveryBcRawStateMaterializationReopenDecisionResultV1`
+- the preserved audited family root directory already carried by those boundaries
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- define the narrowest contract-only surface for raw-state materialization
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that actual raw-state materialization is still deferred
+- preserve any observation-access linkage only as deferred lineage, not tensor materialization
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no actual raw-state materialization
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family raw-state/index/export framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout/physics work
+
+classification of the next pass
+- a first narrow contract-definition pass for the raw-state materialization boundary
+
+why the next pass is not a continued no-reopen proof/refinement pass
+- The reopen question is now answered explicitly.
+- Another no-reopen refinement pass would just restate already-proven locator/readback facts.
+
+why the next pass is not a broader reopen decision
+- The narrow family-specific reopen has already been chosen.
+- Broadening now would violate the staged-delivery constraint and reopen more than the remaining
+  defect requires.

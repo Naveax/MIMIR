@@ -1,0 +1,57 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-source actual-materialization realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+next pass
+- a broader replay-source actual-materialization reopen decision above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a broader reopen decision
+
+why this is the immediate next pass
+- The replay-source actual-materialization contract is already explicit.
+- This pass now makes the truthful blocked replay-source actual-materialization realization explicit.
+- The next unresolved problem is no longer contract shape.
+- The next unresolved problem is no longer realization-result shape.
+- The next unresolved problem is whether one broader boundary must be reopened to admit explicit replay-source carrier provenance or source binding before any replay-parsing-related reopen or contract work.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationRealizationResultV1`
+- the preserved audited family root directory reference already carried by that realization result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- decide whether replay-source actual-materialization must now be deliberately reopened more broadly than the current contract/result pair
+- preserve the invariant that `source_replay` remains opaque lineage unless a later explicit boundary proves more
+- preserve the invariant that `source_replay.provenance_label` is not an implicit replay path
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve that `FutureParserConsumableReplayHandleOnly` is still not replay source
+- preserve that `ExplicitReplaySourceMaterializationRequiredBeforeReplayInputOrParsing` is still a requirement-only boundary
+- preserve that `FutureExplicitReplaySourceCarrierOnly` is still not a realized carrier
+- stay below replay parsing
+- stay below raw-state payload materialization
+- stay below tensor/control materialization
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no replay-source actual-materialization implementation
+- no replay parsing implementation
+- no actual raw-state payload materialization
+- no tensor materialization
+- no control/action extraction
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family replay/raw-state/index/export/materialization framework
+- no rollout/physics/runtime work
+
+why the next pass is not another narrow replay-source actual-materialization refinement pass
+- This pass already freezes the truthful blocked replay-source actual-materialization realization semantics.
+- Another narrow refinement pass would only restate the same blocked truth without deciding how the missing explicit carrier boundary can honestly be widened.
+
+why the next pass is not a replay-parsing-related reopen or contract pass
+- Replay parsing is still downstream of explicit replay-source actual-materialization.
+- The current realization still proves the project does not honestly have an explicit replay-source carrier yet.
+- Reopening replay parsing first would skip the missing replay-source actual-materialization decision boundary.

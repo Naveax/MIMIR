@@ -1,0 +1,88 @@
+executor mimir skill forge bc replay header parser fixture_003 report admission decision
+
+exact outcome chosen
+- Outcome A
+
+whether fixture identities were verified
+- fixture_001 identity verified: yes
+- fixture_002 identity verified: yes
+- fixture_003 identity verified: yes
+
+whether generated reports were verified
+- yes
+- parser/header report path: artifacts/replay_header_reports/rl_replay_header_fixture_003_report.txt
+- parser/header report size: 4167 bytes
+- structural report path: artifacts/replay_header_reports/rl_replay_header_fixture_003_structural_report.txt
+- structural report size: 21787 bytes
+- both reports identify fixture_003 byte length and SHA-256 correctly: yes
+- both reports preserve evidence-only non-claim language: yes
+
+whether parser/header report was admitted as evidence-only
+- yes
+
+whether structural report was admitted as evidence-only
+- yes
+
+whether selected property candidate evidence was admitted
+- yes
+- admitted only as external/report candidate evidence for later mapping/error-boundary admission
+- not admitted as MIMIR parser output
+
+whether structural byte-layout candidate evidence was admitted
+- yes
+- admitted only as external structural/report evidence
+- first body boundary fields are candidates only
+
+whether BoolProperty evidence was admitted as report-only
+- yes
+- bForfeit BoolProperty is report evidence only
+- BoolProperty support in MIMIR parser is not admitted
+
+whether parser code changed
+- no
+
+whether parser-success was claimed for fixture_003
+- no
+
+whether fixture_003 supported-version policy was admitted
+- no
+
+whether third supported tuple was added
+- no
+
+what was intentionally not broadened
+- no broad parser-success admitted
+- no broad ReplayVersion = 8 support added
+- no wildcard BuildVersion support added
+- no future unknown build support added
+- no ReplayInput::File support added
+- no replay-source materialization added
+- no CRC validation added
+- no content_crc read or validation added
+- no body/raw-state/frame/event parsing added
+- no export/runtime/CLI integration added
+- no backend replay parser dependency added
+- no BoolProperty parser support admitted
+
+whether forbidden files/dependencies changed
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-types/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- dependencies added to MIMIR: no
+- backend replay parser dependency added to MIMIR: no
+
+decision
+- admit Outcome A
+- fixture_003 external parser/header report is admitted as evidence-only
+- fixture_003 external structural report is admitted as evidence-only
+- fixture_003 selected property evidence is admitted only as candidate mapping evidence
+- fixture_003 byte-layout evidence is admitted only as external structural/report evidence
+- no parser-success is claimed for fixture_003
+- no broad parser-success is admitted
+- no third supported tuple is added
+- next pass may be fixture_003 mapping/error-boundary admission

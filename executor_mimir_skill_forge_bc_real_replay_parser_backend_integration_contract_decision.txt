@@ -1,0 +1,74 @@
+executor mimir skill forge bc real replay parser backend integration contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- Outcome A
+- contract only for a real header reader integrated into `mimir-replay`
+- no concrete backend dependency selected in this pass
+- a future implementation pass must separately select or implement the backend
+
+exact backend integration scope chosen
+- future target remains limited to `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- first admitted input remains limited to valid supported `ReplayInput::Memory` replay bytes
+- future output remains limited to `Ok(ReplayHeader)` for valid supported bytes or structured errors for invalid, malformed, insufficient, unsupported, or deferred inputs
+- default backend owner is `mimir-replay`
+- `mimir-skill` may consume a future real reader only through the existing `ReplayReader` contract and the current low-boost contract/realization chain
+- `UnsupportedReplayReader` remains valid scaffold behavior and must stay distinguishable from any future real reader
+
+whether a concrete backend/dependency was selected or deferred
+- deferred
+- audit found no existing replay parser backend dependency in workspace manifests or lockfile
+- `crates/mimir-replay/Cargo.toml` currently depends only on `mimir-core`, `mimir-types`, and `serde`
+- selecting a dependency now would be premature and would overstate backend readiness
+
+why this is the narrowest honest choice
+- the previous trusted pass authorized only a minimal real header parser backend requirement
+- the current repo proves only scaffold unsupported-reader behavior
+- a contract can define ownership, input/output boundaries, error taxonomy, fixture evidence, determinism, no-fake-header rules, and coexistence with `UnsupportedReplayReader` without implementing parser logic
+- backend selection is a separate decision because no concrete dependency is already justified by the audit
+- implementation planning is broader than backend selection because it would begin committing to parser construction steps before choosing the backend
+
+what was intentionally excluded
+- parser implementation
+- backend dependency addition
+- parser-success policy
+- `ReplayHeader` production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization implementation
+- replay-source carrier discovery implementation
+- replay-input locator implementation
+- `mimir_export` widening
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- interpreting `source_replay` as a replay path
+- interpreting `source_replay.provenance_label` as a replay path
+- interpreting `audited_family_root_directory` as replay storage
+
+whether Rust/code changes were added, and why or why not
+- no Rust/code changes were added
+- no contract-facing type addition was necessary
+- the existing `ReplayInput`, `ReplayHeader`, `ReplayReader`, and `UnsupportedReplayReader` surface is sufficient to define the integration contract
+- adding Rust here would imply parser implementation, backend selection, or parser readiness that this pass does not prove
+
+why this is enough for the next pass
+- backend owner is defined as `mimir-replay`
+- dependency selection is explicitly deferred
+- first input and output boundaries are exact
+- required future error categories are named
+- fixture evidence requirements are explicit
+- determinism and no-fake-header requirements are explicit
+- `UnsupportedReplayReader` coexistence is defined
+- `mimir-skill` consumption remains constrained to the existing reader contract and realization chain
+- the next pass can choose the backend without reopening parser implementation, parser-success policy, raw-state parsing, frame/event extraction, locator/carrier/materialization, or export widening
+

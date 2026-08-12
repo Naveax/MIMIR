@@ -1,0 +1,55 @@
+executor mimir skill forge bc replay-input creation from opaque caller-admitted replay bytes realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+realization boundary chosen
+- realized exactly `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesContractV1`
+- selected family remains `low_boost_recovery`
+- implementation ownership remains in `mimir-skill`
+- `mimir-replay` source, `mimir-io`, `mimir-export`, and `mimir-types` remain untouched
+
+truthful realized fact
+- the contract-defined ReplayInput bridge is revalidated as `ReplayInput::Memory`
+- the label is revalidated as receipt-derived only from artifact id, lane ordinal, and specimen ordinal
+- the bytes are revalidated as exactly the preserved opaque caller-admitted replay bytes
+- the realization emits one result type for this contract only
+
+explicitly not realized
+- replay parsing
+- parser success
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- raw-state payload parsing
+- tensor/control materialization
+- corpus replay ingestion
+- `mimir_export` widening
+
+failure posture chosen
+- degraded contract notes hard-fail
+- disposition or chosen-shape drift hard-fails
+- lane/specimen order drift hard-fails
+- duplicate artifact ids hard-fail
+- receipt-root or specimen-path drift hard-fails
+- handle-kind drift hard-fails
+- consumer-intake boundary drift hard-fails
+- ReplayInput-creation boundary input/output drift hard-fails
+- bridge drift hard-fails
+- file-backed ReplayInput hard-fails
+- label drift hard-fails
+- byte drift hard-fails
+
+why this stays below downstream stages
+- the pass only inspects contract-owned structures and `ReplayInput` enum variants already present in the contract result
+- no parser API is called
+- no replay path is derived from `source_replay`, `source_replay.provenance_label`, or `audited_family_root_directory`
+- no carrier source is discovered
+- no locator candidate is created
+- no raw-state payload is parsed
+- no export bundle semantics are changed
+
+accepted residual uncertainty
+- memory-backed ReplayInput existence does not imply the bytes are parseable
+- byte preservation does not imply replay-source actual-materialization success
+- label preservation does not imply replay-input locator success
+- sanitizer/training/runtime behavior remains outside this pass

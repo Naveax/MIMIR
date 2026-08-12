@@ -1,0 +1,122 @@
+executor mimir skill forge bc replay header parser readiness handoff status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+pass type
+- parser-readiness handoff / integration-planning pass
+- docs/artifacts only
+- no parser scope expansion
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_READINESS_HANDOFF_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_readiness_handoff_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_readiness_handoff_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_readiness_handoff_status.txt
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture identity verified
+- yes
+
+implementation audit input verified
+- yes
+
+consumer boundaries inspected
+- yes
+
+future opt-in policy admitted
+- yes
+
+next pass may implement code
+- yes, only if separately reopened for selected candidate B
+- selected candidate B: narrow mimir-replay README/example test only
+- consumer/runtime/export code remains closed
+
+parser-success admitted for first minimal boundary
+- yes
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+  - result: success
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+forbidden crate boundary check
+- mimir-replay Rust source modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- Cargo.toml modified by this pass: no
+- Cargo.lock modified by this pass: no
+- mimir_export widening: no
+- backend dependency added: no
+- parser backend dependency scan command:
+  rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+- parser backend dependency scan result: no matches
+- scoped tracked diff command:
+  git diff --name-only -- crates/mimir-replay/src/lib.rs crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- scoped tracked diff result: no tracked file diffs reported
+- workspace caveat: git rev-parse reports D:/ as the broader Git root, so broad git status is not
+  useful for MIMIR-only boundary evidence
+
+current admitted safe opt-in policy
+- MinimalReplayHeaderReader remains explicit opt-in only
+- no global default reader replacement
+- UnsupportedReplayReader remains truthful unsupported default
+- future callers may invoke MinimalReplayHeaderReader.read_header only with already admitted
+  ReplayInput::Memory bytes and label
+- no parser facts may be derived from path, hash, filename, fixture identity, provenance label,
+  receipt lineage, or artifact id
+- successful header parse is not replay-source materialization
+- successful header parse is not body/raw-state/frame/event parsing
+- no mimir-export routing
+- no ReplayInput::File support
+- no dependency additions

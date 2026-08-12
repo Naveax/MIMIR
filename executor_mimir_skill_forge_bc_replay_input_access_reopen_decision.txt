@@ -1,0 +1,151 @@
+executor mimir skill forge bc replay-input-access reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-16
+
+exact reopen role chosen
+- one low-boost-recovery-specific reopen-decision boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- exact job:
+  - admit only the existing blocked replay-side parse-attempt realization result
+  - revalidate that the admitted result still preserves the exact receipt-bound root/order/path and
+    per-specimen identity tuple
+  - decide whether one earlier replay-input-access / replay-source-binding boundary must now be
+    reopened before parser work can be honest
+  - refuse to invent replay paths, replay bytes, or parser success
+
+exact reopen / no-reopen decision chosen
+- chosen decision:
+  - reopen justified for one narrow receipt-bound replay-input-access / replay-source-binding boundary
+- exact reopened contract name:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractV1`
+- exact reason:
+  - the parser-success no-reopen decision already isolated the missing piece:
+    - no parser-consumable replay handle exists above the blocked replay-side parse-attempt result
+  - the blocked result already preserves enough trustworthy receipt-bound lineage to define one
+    binding contract without widening architecture:
+    - `lane_ordinal`
+    - `specimen_ordinal`
+    - `artifact_id`
+    - `anchored_bc_specimen_file_path`
+    - `source_raw_state_window_ref`
+    - `source_slice_id`
+    - `source_replay`
+    - `source_subject`
+    - `source_phase_id`
+    - preserved deferred observation lineage
+  - no current evidence proves that sidecars, manifests, generic indexing, or `mimir_export`
+    belong in the defect path
+
+exact criteria used
+- Require the missing piece to remain replay-input-access / replay-source-binding, not another
+  lower-layer defect.
+- Require the reopened boundary to stay low-boost-recovery-specific.
+- Require the reopened boundary to stay strictly receipt-bound.
+- Require the reopened boundary to avoid sidecars, manifests, and generic indexing unless a later
+  explicit reopen proves them necessary.
+- Require the reopened boundary to avoid `mimir_export`.
+- Require the reopened boundary to stay below parser-success work.
+- Require the reopened boundary to stay below actual raw-state payload, tensor, and control
+  materialization.
+- Require the new handle semantics to be introduced only as an explicit new contract output bound
+  to the preserved lineage tuple, not as an implicit derivation from `source_replay`,
+  `provenance_label`, or `audited_family_root_directory`.
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenDispositionV1`
+- exact disposition:
+  - `ReopenJustifiedForReceiptBoundReplayInputAccessSourceBindingContract`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenNoteV1`
+- exact chosen-shape type:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessContractShapeV1`
+- exact chosen shape:
+  - `ReceiptBoundReplayInputAccessSourceBindingOnly`
+- exact success result type:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenDecisionResultV1`
+- exact entry function:
+  - `decide_low_boost_recovery_bc_receipt_bound_replay_input_access_reopen_from_receipt_bound_validated_specimen_file_raw_state_window_replay_side_parse_attempt_realization_v1(...)`
+- exact success result fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_realization_disposition`
+  - ordered `source_realization_notes`
+  - `source_chosen_locator_contract_shape`
+  - `source_chosen_materialization_contract_shape`
+  - `source_chosen_replay_parsing_contract_shape`
+  - `audited_family_root_directory`
+  - `decision_disposition`
+  - ordered `decision_notes`
+  - `chosen_replay_input_access_contract_shape`
+
+exact admission / failure decisions chosen
+- Admit only the exact blocked replay-side parse-attempt realization result.
+- Require the exact source contract disposition/note set, locator/materialization shapes,
+  replay-parsing contract shape, blocked realization disposition/note set, counts, audited family
+  root, lane/specimen order, and per-specimen blocked dispositions already frozen below this boundary.
+- Require every consumed replay-side parse-attempt input and preserved output boundary to remain
+  aligned on:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+- Require preserved deferred observation lineage to remain bounded and non-materialized.
+- Hard fail on degraded realization input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on artifact-id drift or duplicate artifact ids.
+- Hard fail on any input/output-boundary identity drift.
+- Hard fail on any attempt to reinterpret `source_replay`, `provenance_label`, or the audited
+  family root as an implicit replay locator.
+- Hard fail on any attempt to widen this pass into replay-input locator implementation, replay
+  parsing, raw-state payload materialization, tensor/control materialization, sidecars, manifests,
+  generic indexing, or `mimir_export`.
+- No valid-input no-reopen path was added.
+- Reason no no-reopen path exists:
+  - the parser-success no-reopen pass already proved parser work is too early
+  - the only remaining missing contract-level defect is the replay-input-access / source-binding boundary
+  - valid admitted input already satisfies the reopen criteria
+
+what was intentionally excluded
+- any actual replay-input locator implementation
+- any actual replay parsing implementation
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenDispositionV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenNoteV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessContractShapeV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenDecisionResultV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenDecisionError`
+  - `decide_low_boost_recovery_bc_receipt_bound_replay_input_access_reopen_from_receipt_bound_validated_specimen_file_raw_state_window_replay_side_parse_attempt_realization_v1(...)`
+  - narrow tests covering valid semantics, degraded realization rejection, identity-drift rejection,
+    and determinism
+- Added because this pass now bridges one code-backed blocked realization boundary to one next
+  contract-definition pass. Leaving the reopen decision as prose only would force the next pass to
+  depend on documentation instead of a tiny machine-verifiable decision result.
+- No `mimir-types`, `mimir-replay`, `mimir-io`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The repo now has an explicit machine-verifiable answer that one replay-input-access /
+  replay-source-binding boundary must be reopened before parser work.
+- The next pass no longer has to re-decide whether that reopen is legal.
+- The next pass no longer has to guess the narrowest honest shape.
+- The next immediate task is now obvious and narrow:
+  - define the replay-input-access / source-binding contract itself
+  - keep it receipt-bound, family-specific, and still below parser implementation
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

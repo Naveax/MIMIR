@@ -1,0 +1,64 @@
+executor mimir skill forge curriculum / export shell decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+exact shell output fields chosen
+- `family`
+- `source_slice_id`
+- `source_replay`
+- `source_subject`
+- `source_raw_state_window_ref`
+- `source_phase_id`
+- `source_phase_window`
+- `accepted_reference_variant_id`
+- `accepted_reference_variant_window`
+- `evaluated_variant_ids`
+- `accepted_decision`
+- `decision_reason`
+- `confidence_band`
+- `carried_unresolved_assumptions`
+- `shell_notes`
+- `consumer_hint`
+
+exact admission rules chosen
+- emit shell output only when the parameter bundle is structurally valid
+- emit shell output only when the generated variant set is structurally valid
+- emit shell output only when validation lineage matches the parameter bundle and exact reference
+  variant
+- emit shell output only when:
+  - `decision == accept_candidate`
+  - `reason == provisional_candidate_accepted`
+  - `confidence_band == boundary_stable`
+  - `reference_variant_id` is present and matches the exact observed-window variant
+  - `evaluated_variant_ids` matches the deterministic classified variant lineage
+- `abstain`, `reject`, and `malformed` do not emit shell output
+
+what was intentionally excluded
+- any full BC dataset or BC export package
+- any DAgger or PPO auxiliary export surface
+- any runtime bridge or runtime invocation hint beyond the bounded `eval_harness_only` consumer
+  hint
+- any generic multi-family curriculum or export framework
+- any speculative metadata bag
+- any replay parsing, replay mining, rollout, or physics proof
+- any widening of existing `mimir-export` bundle semantics
+
+whether Rust type shaping and narrow implementation were added, and why
+- Yes.
+- Added `LowBoostRecoveryCurriculumExportShellV1` plus the narrow
+  `LowBoostRecoveryCurriculumExportShellNoteV1` and
+  `LowBoostRecoveryCurriculumExportConsumerHintV1` enums in `crates/mimir-types/src/lib.rs`.
+- These were added because the shell is plain family-specific data that later consumers may need
+  to read without re-running validator logic.
+- Added one narrow constructor in `crates/mimir-skill/src/lib.rs`:
+  `build_low_boost_recovery_curriculum_export_shell_v1`.
+- The constructor returns `Ok(None)` for non-accepted decisions and hard-fails on structural
+  inconsistency so malformed or drifted evidence cannot silently leak into shell output.
+
+why this is enough for the next eval/consumer pass
+- The next low-boost-recovery eval harness pass now has one bounded accepted-candidate shell to
+  consume.
+- The shell preserves exact lineage, accepted reference window, confidence band, decision reason,
+  and unresolved assumptions.
+- The shell remains honest about provisional acceptance and does not claim proof beyond the current
+  validator boundary.

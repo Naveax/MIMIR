@@ -1,0 +1,50 @@
+executor mimir skill forge bc replay header parser external fixture supply admission retry next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+immediate next pass type
+- byte-layout evidence admission pass
+
+immediate next pass only
+- admit byte-layout evidence for fixture id rl_replay_header_fixture_001
+- evidence must identify the supported Rocket League replay header admission rule, supported
+  version or version family if version-gated, header boundary, field encodings, endianness,
+  string/property encoding rules if used, and body/raw-state boundary where header parsing stops
+- evidence must define replay id derivation or explicitly keep replay id policy blocked
+- evidence must define total_frames as byte-backed Some(u32) or an explicit admitted None policy
+- evidence must define metadata as key-by-key byte-backed metadata or an explicit admitted empty
+  metadata policy
+- evidence must define insufficient, malformed, and unsupported-if-distinguishable error boundaries
+  before parser-success logic can reopen
+- do not parse the fixture in this pass unless a future instruction explicitly reopens byte-layout
+  evidence generation through an approved tool/report path
+- do not produce ReplayHeader
+- do not derive replay id from label, path, filename, provenance, or hash
+- do not derive total frames from filename, label, path, provenance, or replay frames
+- do not derive metadata from filename, label, path, provenance, or hash
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only after both fixture evidence and byte-layout evidence are
+  admitted
+
+parser implementation closure
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic closure
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing closure
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction closure
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator closure
+- replay-source materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- mimir_export widening remains forbidden unless explicitly reopened

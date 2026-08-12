@@ -1,0 +1,53 @@
+helper names added or updated:
+- persisted_input_artifact_for_lane_with_proposal_score_signals
+- deterministic_vertical_slice_score_signals_directly_change_score_output_and_teacher_ordering_without_perturbing_other_contract_edges
+
+crate(s) touched:
+- mimir-cli
+
+base lane used:
+- Stage69Sample
+
+exact score_signals mutation applied:
+- proposal index 0 only
+- proposal label: candidate-alpha
+- baseline score_signals: {"coverage": 2.0, "stability": 3.0}
+- mutated score_signals: {"coverage": 4.0, "stability": 3.0}
+- unchanged on both runs: replay_id, export_name, teacher_namespace, simulation_seed, anchor_hint, proposal labels, proposal actions, proposal legal_hint, proposal metadata, scorer_weights
+
+which proposal index/label was mutated:
+- index 0 / candidate-alpha
+
+expected old totals vs new totals:
+- anchor-stage69:branch:0 total: 3.5 -> 5.5
+- anchor-stage69:branch:1 total: 5.0 -> 5.0
+- score component payload expectation:
+- anchor-stage69:branch:0 coverage component: 2.0 -> 4.0
+- anchor-stage69:branch:0 stability component: 1.5 -> 1.5
+- anchor-stage69:branch:1 components unchanged: coverage 4.0, stability 1.0
+
+whether teacher ordering changed and how:
+- yes
+- baseline teacher targets in order: ["anchor-stage69:branch:1", "anchor-stage69:branch:0"]
+- mutated teacher targets in order: ["anchor-stage69:branch:0", "anchor-stage69:branch:1"]
+- ordering change is explained by branch 0 total rising above branch 1 while branch 1 stays unchanged
+
+what unrelated surfaces remained stable:
+- branch count remained 2
+- branch ids remained ["anchor-stage69:branch:0", "anchor-stage69:branch:1"]
+- anchor identity remained stable: id, frame_index, kind, metadata
+- proposal actions remained stable for both branches
+- proposal legal_hint remained stable for both branches
+- proposal metadata remained stable for both branches
+- canonical reload succeeded for baseline and mutated runs
+- frozen snapshot identity fields unrelated to totals/order remained stable: export_name, replay_id, anchor_id, anchor_frame_index, anchor_kind, export directory name, scoreboard artifact relative path, teacher artifact relative paths, branch_ids_in_order
+
+tests added or updated:
+- added deterministic_vertical_slice_score_signals_directly_change_score_output_and_teacher_ordering_without_perturbing_other_contract_edges
+- added persisted_input_artifact_for_lane_with_proposal_score_signals
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 173 tests, 0 benchmarks
+
+short note on why this closes an under-covered edge without widening runtime semantics:
+- this pass proves the persisted-input score_signals payload is consumed directly by the existing scoring path, changes scoreboard totals/components only where intended, and can change downstream teacher ordering without perturbing unrelated vertical-slice contract surfaces or expanding runtime/export semantics

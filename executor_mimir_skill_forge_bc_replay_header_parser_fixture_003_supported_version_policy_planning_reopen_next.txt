@@ -1,0 +1,44 @@
+executor mimir skill forge bc replay header parser fixture 003 supported-version policy planning reopen next
+
+selected outcome
+- Outcome A
+
+recommended next pass
+- fixture_003 exact supported tuple plus non-selected BoolProperty skip-only implementation
+  planning
+
+allowed next-pass scope
+- planning only is preferred before code
+- specify the exact Fixture003Exact tuple addition
+- specify the exact non-selected BoolProperty skip-only byte-layout boundary
+- specify fixture_003 happy-path and header-only tests
+- specify malformed BoolProperty tests
+- specify selected BoolProperty unsupported tests
+- specify unknown BuildVersion rejection tests
+- specify fixture_001 and fixture_002 regression preservation
+
+required caveat for next pass
+- fixture_003 parser-success may be claimed only after both exact tuple support and exact
+  non-selected BoolProperty skip-only handling are implemented and verified
+- bForfeit must remain excluded from metadata
+- BoolProperty -> FieldValue::Boolean must remain closed unless separately reopened
+- selected BoolProperty must remain unsupported unless separately reopened
+
+next pass must not
+- claim broad parser success
+- admit broad version-family support
+- admit ReplayVersion = 8 family support
+- admit wildcard BuildVersion support
+- admit future unknown build support
+- add ReplayInput::File support
+- add replay-source materialization
+- add CRC validation
+- read or validate content_crc in MIMIR parser code
+- parse body/raw-state/frame/event data
+- map bForfeit to metadata
+- admit BoolProperty -> FieldValue::Boolean metadata mapping
+- add backend replay parser dependencies
+- add CLI/runtime/export behavior
+
+no broad parser expansion yet
+- yes

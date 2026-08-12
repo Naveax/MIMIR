@@ -1,0 +1,141 @@
+HISTORICAL NOTE
+
+- This file is a Stage 63 snapshot.
+- Stage 64 adds `executor_stage64_rewiring_readiness.txt` for the persist-lane rewiring-readiness audit and should be treated as the live follow-on assessment.
+
+CURRENT CANONICAL BASELINES
+
+- Current surviving public execution-result wrapper count in `crates/mimir-export/src/lib.rs`: 6
+- Current surviving compatibility-wrapper count in `crates/mimir-export/src/lib.rs`: 3
+- Current canonical baseline set:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_index_load_summary`
+- Current remaining README-documented compatibility wrapper count: 0
+- Current canonical lower-level execution-result lanes:
+  - report execute/persist: `query_and_stub_execute_execution_result_job_spec` -> `persist_execution_result_job_report`
+  - report execute/persist/load: `query_and_stub_execute_execution_result_job_spec` -> `persist_execution_result_job_report` -> `load_execution_result_job_report`
+  - report publication/index load: `persist_execution_result_job_report` -> `register_execution_result_job_report_in_index` -> `load_indexed_execution_result_job_report`
+  - report retrieval: `load_and_query_execution_result_job_report_index` -> `load_selected_execution_result_job_reports`
+  - summary publication/index load: `persist_execution_result_job_report_collection_summary` -> `register_execution_result_job_report_collection_summary_in_index` -> `load_indexed_execution_result_job_report_collection_summary`
+  - queried summary load: `load_and_query_execution_result_job_report_collection_summaries`
+  - queried summary aggregate: `load_query_and_aggregate_execution_result_job_report_collection_summaries`
+  - canonical aggregate publish/index-load lane: `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+- Older stage artifact status after Stage 62:
+  - `executor_stage62_removed_query_load_wrapper.txt` remains accurate as the historical Stage 62 removal record.
+  - `executor_stage61_remaining_helper_reclassification.txt` is now historical only and needed a note because its live counts and surviving-helper list predate Stage 62.
+  - `executor_stage59_batch_c_root_readiness.txt` remains historical and stale for live counts/order because it predates Stages 60 through 62.
+
+CURRENT SURVIVING COMPATIBILITY HELPERS
+
+- `query_stub_execute_and_persist_execution_result_job_report`
+- `query_stub_execute_persist_and_load_execution_result_job_report`
+- `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+
+HELPER-BY-HELPER AUDIT
+
+- `query_stub_execute_and_persist_execution_result_job_report`
+  - canonical replacement if expanded: `query_and_stub_execute_execution_result_job_spec` -> `persist_execution_result_job_report`
+  - live composition path: directly calls `query_and_stub_execute_execution_result_job_spec`, then `persist_execution_result_job_report`, then returns the in-memory report without reload
+  - current reference footprint:
+    - one public definition in `crates/mimir-export/src/lib.rs`
+    - one live repo-local source dependency from `query_stub_execute_persist_and_load_execution_result_job_report`
+    - no dedicated wrapper-named tests
+    - no README migration guidance entry
+    - historical mentions remain in preserved stage artifacts
+  - stage47 parity status: not included in the live Stage 47 parity cluster; there is no dedicated Stage 47 explicit parity helper for this wrapper name
+  - README role or no README role: no README role
+  - dependency notes:
+    - one surviving compatibility helper depends on it
+    - no canonical baseline depends on it directly
+  - updated removal readiness: unchanged
+  - removal difficulty: medium
+  - recommended classification: grouped removal candidate
+  - rationale: repo-local semantics are exact and narrow, but removing it alone would either force same-pass rewiring inside another surviving compatibility helper or leave a dead internal composition gap
+
+- `query_stub_execute_persist_and_load_execution_result_job_report`
+  - canonical replacement if expanded: `query_and_stub_execute_execution_result_job_spec` -> `persist_execution_result_job_report` -> `load_execution_result_job_report`
+  - live composition path: calls `query_stub_execute_and_persist_execution_result_job_report`, then `load_execution_result_job_report`
+  - current reference footprint:
+    - one public definition in `crates/mimir-export/src/lib.rs`
+    - one live canonical-baseline dependency from `query_stub_execute_persist_load_and_register_execution_result_job_report`
+    - four dedicated wrapper tests in `crates/mimir-export/src/lib.rs`
+    - one live Stage 47 parity assertion plus one explicit Stage 47 replacement helper in `crates/mimir-export/src/lib.rs`
+    - no README migration guidance entry
+    - historical mentions remain in preserved stage artifacts
+  - stage47 parity status: included in the live Stage 47 parity cluster
+  - README role or no README role: no README role
+  - dependency notes:
+    - upstream dependency on `query_stub_execute_and_persist_execution_result_job_report`
+    - one canonical baseline currently depends on it
+  - updated removal readiness: unchanged
+  - removal difficulty: medium
+  - recommended classification: separate later candidate
+  - rationale: parity evidence is good and the canonical replacement lane is exact, but the current supported baseline still routes through it, so removal would no longer be isolated to compatibility-only cleanup
+
+- `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+  - canonical replacement if expanded: `query_stub_execute_register_report_and_index_load_summary` -> `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+  - live composition path: calls `query_stub_execute_register_report_and_index_load_summary`, then `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+  - current reference footprint:
+    - one public definition in `crates/mimir-export/src/lib.rs`
+    - no surviving wrapper depends on it
+    - no canonical baseline depends on it
+    - five dedicated wrapper tests in `crates/mimir-export/src/lib.rs`
+    - no live Stage 47 parity assertion and no explicit Stage 47 replacement helper for this aggregate wrapper
+    - no README migration guidance entry
+    - historical mentions remain in preserved stage artifacts, especially earlier Batch C planning artifacts
+  - stage47 parity status: not included in the live Stage 47 parity cluster
+  - README role or no README role: no README role
+  - dependency notes:
+    - repo-local source isolation is strong
+    - remaining uncertainty is concentrated in cleanup confidence and external-consumer ambiguity around the aggregate root, not in internal source dependencies
+  - updated removal readiness: unchanged
+  - removal difficulty: medium
+  - recommended classification: re-audit later
+  - rationale: it is isolated in repo-local source terms, but it has weaker parity evidence than the other survivors and still carries the highest external-consumer uncertainty of the remaining set
+
+DIRECT NEXT-STEP COMPARISON
+
+- Best next single-helper breaking-removal target, if any:
+  - none in the current surviving set
+- Why there is no new single-helper target:
+  - `query_stub_execute_and_persist_execution_result_job_report` still has a surviving helper dependency edge
+  - `query_stub_execute_persist_and_load_execution_result_job_report` still sits under a canonical baseline
+  - `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries` is source-isolated but remains the weakest parity-backed and highest-uncertainty root
+- Grouped-removal conclusion:
+  - `query_stub_execute_and_persist_execution_result_job_report` now reads as the clearest grouped-removal candidate, and the only plausible pair is with `query_stub_execute_persist_and_load_execution_result_job_report`
+  - no grouped removal is required immediately, but removing `query_stub_execute_and_persist_execution_result_job_report` alone is not clean
+- Canonical-baseline dependency blocker conclusion:
+  - canonical-baseline dependency is now the main blocker for `query_stub_execute_persist_and_load_execution_result_job_report`
+  - that same dependency edge indirectly blocks clean single removal of `query_stub_execute_and_persist_execution_result_job_report`
+- External-consumer uncertainty blocker conclusion:
+  - external-consumer uncertainty is now the main blocker for `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+- Batch C aggregate root conclusion:
+  - the Batch C aggregate root is still later, not the best immediate next target
+  - its repo-local cleanup footprint is manageable, but the current evidence still does not beat the canonical-baseline blocker on the other lane or resolve the external-consumer uncertainty around the aggregate root itself
+
+POST-STAGE-62 DOC / ARTIFACT STATUS
+
+- `README.md`
+  - re-checked
+  - remains accurate for the post-Stage-62 state
+  - migration guidance already points only to canonical report and summary lanes
+  - no edit required
+- `executor_stage61_remaining_helper_reclassification.txt`
+  - updated with a short historical note
+  - preserved otherwise as a pre-Stage-62 snapshot
+- `executor_stage62_removed_query_load_wrapper.txt`
+  - re-checked
+  - remains accurate as the historical Stage 62 removal record
+  - no edit required
+
+RECOMMENDED NEXT BREAKING STEP
+
+- Recommended next breaking step:
+  - no immediate API removal in this audit pass
+  - if the next breaking pass wants the smallest dependency-clean removal, first decide whether to rewire the canonical baseline off `query_stub_execute_persist_and_load_execution_result_job_report`
+- Preferred next decision order:
+  - first, decide whether `query_stub_execute_persist_load_and_register_execution_result_job_report` should be internally expanded to the canonical lower-level lane
+  - if yes, re-audit `query_stub_execute_persist_and_load_execution_result_job_report` and `query_stub_execute_and_persist_execution_result_job_report` together as a grouped removal candidate
+  - if no, keep both persist-lane compatibility helpers in place and defer them
+  - keep the Batch C aggregate root as a separate later candidate until its external-consumer uncertainty is re-audited explicitly

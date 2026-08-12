@@ -1,0 +1,49 @@
+executor mimir skill forge bc raw-state-window lookup realization proof next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a deliberate low-boost-recovery-specific reopen decision for one receipt-bound raw-state-window
+  locator contract above `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+why this is the immediate next pass
+- The repo now has an explicit proof that the current planning-owned view is insufficient for
+  actual receipt-bound raw-state-window lookup realization.
+- The proof isolated one exact missing piece:
+  `MissingReceiptBoundRawStateWindowLocatorContract`.
+- Actual lookup realization is not honest yet because the current admitted boundary still does not
+  bind `source_raw_state_window_ref` to one concrete receipt-bound lookup source.
+
+what the next pass should consume
+- `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1`
+- `LowBoostRecoveryBcRawStateWindowLookupRealizationProofResultV1`
+- the same audited family root directory reference preserved by the planning result
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- decide whether one narrow family-specific locator contract can be added above the current
+  planning boundary without reopening sidecars/manifests or generic indexing
+- make the minimum honest mechanism explicit if such a reopen is justified
+- keep actual raw-state lookup realization deferred until that locator contract exists
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one of those
+  mechanisms is the minimum honest fix
+- no generic multi-family downstream/export framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout/physics work
+
+classification of the next pass
+- a deliberate reopen decision
+
+why the next pass is not actual lookup realization
+- This proof pass showed that the current planning-owned view still lacks a receipt-bound locator
+  contract for `source_raw_state_window_ref`.
+- Implementing actual lookup next would require inventing storage semantics or silently reopening
+  lower boundaries.
+- That would violate the proof result produced in this pass.

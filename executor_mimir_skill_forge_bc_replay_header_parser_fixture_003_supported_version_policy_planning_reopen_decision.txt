@@ -1,0 +1,167 @@
+executor mimir skill forge bc replay header parser fixture 003 supported-version policy planning reopen decision
+
+selected outcome
+- Outcome A
+
+fixture identities verified
+- yes
+- fixture_001:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+  - byte length: 3001021
+  - SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+  - first four bytes little-endian i32: 13200
+  - extension: .replay
+  - byte length > 8: yes
+- fixture_002:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+  - byte length: 2632903
+  - SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+  - first four bytes little-endian i32: 11273
+  - extension: .replay
+  - byte length > 8: yes
+- fixture_003:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+  - byte length: 1638538
+  - SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+  - first four bytes little-endian i32: 11190
+  - extension: .replay
+  - byte length > 8: yes
+  - differs from fixture_001 by SHA-256: yes
+  - differs from fixture_002 by SHA-256: yes
+
+BoolProperty closure input verified
+- yes
+- prior BoolProperty closure selected Outcome A
+- bForfeit is report-only / excluded-from-metadata
+- bForfeit is not selected ReplayHeader metadata
+- bForfeit is not ReplayHeader output
+- BoolProperty -> FieldValue::Boolean remains closed
+- current parser behavior remains unsupported-property for BoolProperty
+- future non-selected BoolProperty skip-only handling may be planned
+- implementation is still deferred
+
+current supported-version implementation inspected
+- yes
+- current private enum variants:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+- current exact shared constants:
+  - major_version = 868
+  - minor_version = 32
+  - net_version = 10
+  - game_type = TAGame.Replay_Soccar_TA
+  - ReplayVersion = 8
+- current exact BuildVersion constants:
+  - fixture_001 = 241206.55345.468477
+  - fixture_002 = 250811.43331.492665
+- unknown BuildVersion maps to unsupported-version
+- version policy does not depend on fixture path/hash/filename/provenance/artifact id/fixture id
+- no fixture_003 BuildVersion or Fixture003Exact variant exists now
+
+exact selected future policy
+- exact three-tuple allowlist only:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+  - SupportedReplayHeaderTupleV1::Fixture003Exact
+- planned Fixture003Exact tuple:
+  - major_version = 868
+  - minor_version = 32
+  - net_version = 10
+  - game_type = TAGame.Replay_Soccar_TA
+  - ReplayVersion = 8
+  - BuildVersion = 251020.62592.500294
+- Fixture003Exact is planned as exact tuple support only
+- this policy is not implemented now
+
+exact BoolProperty prerequisite
+- fixture_003 parser-success requires exact non-selected BoolProperty skip-only parser handling
+- bForfeit must remain absent from metadata
+- BoolProperty -> FieldValue::Boolean remains closed
+- selected BoolProperty remains unsupported unless separately reopened
+- future implementation must not skip BoolProperty by declared size alone because fixture_003
+  evidence has declared size 0 while scanner consumed 1 byte
+
+exact rejected policies
+- wildcard BuildVersion support
+- BuildVersion prefix/range/date-family/regex/contains/version-family support
+- all ReplayVersion = 8 support
+- all major=868/minor=32/net=10/soccar/replayversion8 support
+- future unknown build support
+- path/hash/filename/provenance/artifact-id/fixture-id parser predicates
+- ReplayInput::File support
+- replay-source materialization
+- CRC validation
+- content_crc read or validation in MIMIR parser code
+- body/raw-state/frame/event parsing
+- BoolProperty metadata mapping
+- adding bForfeit to selected metadata
+- export/runtime/CLI integration
+- backend replay parser dependency in MIMIR
+
+exact future implementation boundary
+- modify only crates/mimir-replay/src/lib.rs
+- no Cargo.toml changes
+- no Cargo.lock changes
+- no mimir-skill changes
+- no mimir-types changes
+- no mimir-export/mimir-io/mimir-cli changes
+- extend exact tuple allowlist with Fixture003Exact
+- keep ReplayInput::Memory only
+- keep ReplayInput::File unsupported
+- keep header-only parsing ending at 8 + header_size
+- keep header_crc layout-read only and non-validating
+- do not read or validate content_crc
+- keep body/raw-state/frame/event parsing closed
+- do not map BoolProperty to metadata
+- do not add bForfeit to selected metadata
+- add exact non-selected BoolProperty skip-only handling before fixture_003 parser success is
+  claimed
+- preserve fixture_001 and fixture_002 regressions
+- add unknown BuildVersion rejection regression
+- add selected BoolProperty unsupported regression
+- add malformed BoolProperty failure regression
+- no backend dependency
+- no broad parser framework
+
+parser code changed now
+- no
+
+parser-success claimed for fixture_003 now
+- no
+
+fixture_003 supported-version policy implemented now
+- no
+
+third supported tuple added now
+- no
+
+what was intentionally not broadened
+- parser-success
+- parser scope
+- supported-version family
+- ReplayVersion = 8 support
+- BuildVersion support
+- future unknown build support
+- input support
+- CRC behavior
+- replay-source materialization
+- body/raw-state/frame/event parsing
+- metadata mapping
+- BoolProperty support
+- CLI/runtime/export behavior
+- dependency graph
+
+forbidden files/dependencies changed
+- no intended changes
+- no Rust source changes
+- no manifests changed
+- no lockfile changed
+- no dependencies added
+- no backend replay parser dependency added
+- no CLI/runtime/export/IO/type behavior changed
+
+decision summary
+- Outcome A is selected because fixture_003 can be safely planned as a future exact third
+  supported tuple without admitting broad version-family support or parser success.
+- Fixture_003 parser-success remains blocked until exact non-selected BoolProperty skip-only
+  handling is implemented and verified in a later implementation pass.

@@ -1,0 +1,132 @@
+HISTORICAL NOTE
+
+- This file is a pre-Stage-56 readiness snapshot.
+- Its wrapper counts and "next removal" conclusions are no longer current after Stage 56 removed `query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary`.
+- Use `executor_stage56_removed_batch_b_second.txt` for the Stage 56 removal record and `executor_stage57_final_waypoint_readiness.txt` for the current post-Stage-56 waypoint audit.
+
+CURRENT CANONICAL BASELINES
+
+- Current surviving public execution-result wrapper count in crates/mimir-export/src/lib.rs: 10
+- Current surviving compatibility-wrapper count in crates/mimir-export/src/lib.rs: 7
+- Current canonical baseline set:
+  - query_stub_execute_persist_load_and_register_execution_result_job_report
+  - query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports
+  - query_stub_execute_register_report_and_index_load_summary
+- Canonical lower-level baseline lanes remain unchanged:
+  - report publication: persist_execution_result_job_report + register_execution_result_job_report_in_index + load_indexed_execution_result_job_report
+  - report retrieval: load_and_query_execution_result_job_reports
+  - summary publication: persist_execution_result_job_report_collection_summary + register_execution_result_job_report_collection_summary_in_index + load_indexed_execution_result_job_report_collection_summary
+  - summary retrieval/aggregation: load_and_query_execution_result_job_report_collection_summaries + load_query_and_aggregate_execution_result_job_report_collection_summaries
+
+CURRENT SURVIVING COMPATIBILITY WRAPPERS
+
+- Current surviving compatibility wrappers in crates/mimir-export/src/lib.rs:
+  - query_stub_execute_and_persist_execution_result_job_report
+  - query_stub_execute_persist_and_load_execution_result_job_report
+  - query_load_and_summarize_execution_result_job_reports
+  - query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+  - query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  - query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+  - query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+- Current remaining documented compatibility wrappers:
+  - query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  - query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+- Current README-documented migration waypoints are limited to those two Batch B wrappers.
+- The prior Batch C wrapper remains separate for now. It is not documented in README and still represents a distinct aggregate-queried-summary composition lane rather than a documented Batch B migration waypoint.
+
+REMAINING BATCH B RECLASSIFICATION
+
+- query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  - canonical replacement: query_stub_execute_register_report_and_index_load_summary + load_query_and_aggregate_execution_result_job_report_collection_summaries
+  - current reference footprint:
+    - live public definition in crates/mimir-export/src/lib.rs
+    - four dedicated wrapper tests in crates/mimir-export/src/lib.rs
+    - one stage47 parity case and one stage47 explicit helper in crates/mimir-export/src/lib.rs
+    - README.md documented migration guidance
+    - referenced by query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+    - historical mentions in executor_stage47_wrapper_parity_audit.txt, executor_stage48_soft_compatibility_audit.txt, executor_stage49_migration_map.txt, executor_stage50_breaking_cleanup_plan.txt, executor_stage53_post_removal_reclassification.txt, and executor_stage54_removed_batch_b_first.txt
+  - README/documented migration role: yes; it is still one of the two explicit post-Stage-54 README migration waypoints
+  - dependency notes: the surviving higher-order Batch B publication wrapper still calls this wrapper directly
+  - updated removal readiness: unchanged
+  - recommended classification: grouped removal candidate
+  - removal difficulty: high
+  - rationale: this wrapper is still a README-visible waypoint and an active dependency of the remaining higher-order Batch B wrapper. Removing it alone would either force that other wrapper to be rewritten against canonical helpers or removed in the same pass.
+
+- query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  - canonical replacement: query_stub_execute_register_report_and_index_load_summary + load_query_and_aggregate_execution_result_job_report_collection_summaries + persist_register_and_index_load_execution_result_job_report_collection_summary
+  - current reference footprint:
+    - live public definition in crates/mimir-export/src/lib.rs
+    - five dedicated wrapper tests in crates/mimir-export/src/lib.rs
+    - one stage47 parity case and one stage47 explicit helper in crates/mimir-export/src/lib.rs
+    - README.md documented migration guidance
+    - historical mentions in executor_stage47_wrapper_parity_audit.txt, executor_stage48_soft_compatibility_audit.txt, executor_stage49_migration_map.txt, executor_stage50_breaking_cleanup_plan.txt, executor_stage53_post_removal_reclassification.txt, and executor_stage54_removed_batch_b_first.txt
+  - README/documented migration role: yes; it is the last README-documented aggregate publication compatibility waypoint
+  - dependency notes: no other surviving wrapper depends on it
+  - updated removal readiness: higher
+  - recommended classification: next removal candidate
+  - removal difficulty: medium
+  - rationale: it no longer feeds any deeper surviving wrapper, and its exact canonical replacement path is already available without adding new helpers or changing runtime semantics. The remaining work is confined to README migration wording and parity/test cleanup for this wrapper itself.
+
+BATCH C STATUS
+
+- query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries remains out of scope for the next breaking pass.
+- It stays separate from Batch B because it is not part of the current README migration map and does not sit on the dependency chain between the two surviving documented Batch B wrappers.
+- What would need to be known before touching it:
+  - whether repo-external callers use the shorter queried-summary aggregate/persist root directly
+  - whether future compatibility cleanup wants to collapse the queried-summary aggregate lane independently of the documented Batch B publication lane
+  - whether any post-removal migration note should point callers to query_stub_execute_register_report_and_index_load_summary + load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary rather than through the Batch B aggregate waypoint
+
+SECOND-REMOVAL READINESS COMPARISON
+
+- Wrapper A: query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  - exact canonical replacement path: query_stub_execute_register_report_and_index_load_summary + load_query_and_aggregate_execution_result_job_report_collection_summaries
+  - repo-local source/test/doc footprint:
+    - public definition in crates/mimir-export/src/lib.rs
+    - four dedicated wrapper tests
+    - one stage47 parity case plus one explicit helper
+    - README documented migration entry
+    - direct call site inside wrapper B
+    - historical stage artifacts listed above
+  - whether removing it would force the other remaining Batch B wrapper to be removed or rewritten first: yes; wrapper B currently calls wrapper A directly, so A cannot be removed cleanly without either rewriting B first or removing both together
+  - whether README migration guidance must change first: yes
+  - whether stage47 parity coverage or explicit helpers would need adjustment: yes; remove A parity coverage and rewrite or remove the B explicit/parity path in the same pass
+  - removal difficulty: high
+
+- Wrapper B: query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  - exact canonical replacement path: query_stub_execute_register_report_and_index_load_summary + load_query_and_aggregate_execution_result_job_report_collection_summaries + persist_register_and_index_load_execution_result_job_report_collection_summary
+  - repo-local source/test/doc footprint:
+    - public definition in crates/mimir-export/src/lib.rs
+    - five dedicated wrapper tests
+    - one stage47 parity case plus one explicit helper
+    - README documented migration entry
+    - historical stage artifacts listed above
+  - whether removing it would force the other remaining Batch B wrapper to be removed or rewritten first: no
+  - whether README migration guidance must change first: yes
+  - whether stage47 parity coverage or explicit helpers would need adjustment: yes; remove B parity coverage and its explicit helper, but A can remain untouched
+  - removal difficulty: medium
+
+- Conclusion:
+  - next safe removal target, if any: query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  - next breaking pass shape: remove one wrapper only, not a grouped pair
+  - grouped pair removal is not the next safest move because wrapper A still functions as the documented intermediate waypoint and wrapper B can be removed without disturbing A
+  - Batch C wrapper should stay out of scope
+
+REPO-LOCAL DOC / ARTIFACT STATUS
+
+- README.md re-checked:
+  - current post-Stage-54 guidance is still accurate
+  - it already states that only two documented Batch B compatibility wrappers remain
+  - no README wording change was required in this pass
+- executor_stage53_post_removal_reclassification.txt:
+  - no substantive rewrite
+  - added a short historical note so its pre-Stage-54 counts and readiness conclusions are not misread as current
+- executor_stage54_removed_batch_b_first.txt:
+  - no substantive rewrite
+  - added a short historical note so it remains a removal record, not the current readiness snapshot
+- No runtime or API semantics were changed in crates/mimir-export/src/lib.rs
+
+RECOMMENDED NEXT BREAKING STEP
+
+- Remove query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary first in the next dedicated compatibility-breaking pass.
+- Keep query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries for that pass so README retains one documented aggregate migration waypoint and the remaining wrapper dependency chain stays stable.
+- Leave query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries out of scope until a separate re-audit proves whether repo-external callers rely on that distinct queried-summary aggregation root.

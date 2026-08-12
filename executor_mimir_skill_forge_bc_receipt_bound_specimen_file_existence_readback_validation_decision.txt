@@ -1,0 +1,137 @@
+executor mimir skill forge bc receipt-bound specimen-file existence/readback validation decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact validation role chosen
+- one low-boost-recovery-specific validation boundary above
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorRealizationResultV1`
+- exact job:
+  - admit only already-realized locator input
+  - revalidate that the realized locator still preserves the exact receipt-bound root/order/path
+    tuple
+  - hard-fail if any realized anchored specimen-file path is missing or is not a file
+  - read back the family-specific specimen JSON only through the existing repo-local helper
+  - verify only the identity tuple this boundary is allowed to audit:
+    - `lane_ordinal`
+    - `specimen_ordinal`
+    - `artifact_id`
+    - `source_raw_state_window_ref`
+  - return one bounded family-specific validation result without raw-state materialization
+
+exact existence/readback shape defined
+- exact entry function:
+  - `validate_low_boost_recovery_bc_receipt_bound_specimen_file_existence_readback_v1(...)`
+- exact readback helper used:
+  - `mimir_io::read_low_boost_recovery_bc_actual_filesystem_emission_specimen_file_v1(...)`
+- exact readback compatibility validator used after deserialization:
+  - `validate_low_boost_recovery_bc_actual_filesystem_emission_specimen_file_for_audit(...)`
+- exact top-level result type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationDispositionV1`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationNoteV1`
+- exact per-specimen result type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationLaneResultV1`
+- exact error type:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationError`
+- exact per-specimen fields kept in output:
+  - `specimen_ordinal`
+  - `preserved_realized_locator`
+  - `specimen_file_exists`
+  - `readback_matches_realized_locator_identity`
+  - `readback_specimen`
+- exact identity checks chosen:
+  - realized relative path must still match the deterministic lane/specimen rule
+  - realized anchored path must still equal
+    `audited_family_root_directory.join(deterministic_bc_specimen_file_relative_path)`
+  - read-back `lane_ordinal` must match the realized locator
+  - read-back `specimen_ordinal` must match the realized locator
+  - read-back `artifact_id` must match the realized locator
+  - read-back `source_raw_state_window_ref` must match the realized locator
+
+exact output / disposition chosen
+- exact disposition:
+  - `ValidatedForReceiptBoundBcSpecimenFileExistenceAndIdentityPreservingReadbackOnly`
+- exact note set:
+  - `ReceiptBoundSpecimenFileAnchoredLocatorRealizationBoundaryPreserved`
+  - `AuditedFamilyRootReferencePreservedAsBcSpecimenTreeAnchor`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ArtifactIdsPreserved`
+  - `SourceRawStateWindowRefsPreserved`
+  - `DeterministicRelativeSpecimenFilePathShapeRevalidated`
+  - `AnchoredBcSpecimenFileExistenceVerified`
+  - `FamilySpecificSpecimenFileReadbackValidated`
+  - `ReadbackIdentityAlignedWithRealizedLocator`
+  - `RawStateMaterializationDeferred`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationStillForbidden`
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_realization_disposition`
+  - ordered `source_realization_notes`
+  - `source_chosen_locator_contract_shape`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `validation_disposition`
+  - ordered `validation_notes`
+
+exact admission / failure decisions chosen
+- Admit only
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorRealizationResultV1`.
+- Require the exact source contract disposition, source contract note set, chosen contract shape,
+  realization disposition, and realization note set already frozen below this boundary.
+- Require counts, lane/specimen order, deterministic relative path shape, anchored join rule, and
+  audited family root basename to remain exact.
+- Require the audited family root to exist as a directory at validation time.
+- Hard fail on degraded realization input.
+- Hard fail on missing file.
+- Hard fail on anchored path that is not a file.
+- Hard fail on path drift.
+- Hard fail on readback deserialization failure.
+- Hard fail on invalid/incompatible readback content.
+- Hard fail on readback identity drift.
+- Hard fail on any attempt to reinterpret the audited family root as raw-state storage.
+- Hard fail on any attempt to widen this pass into raw-state materialization, sidecars,
+  manifests, generic indexing, or `mimir_export`.
+
+what was intentionally excluded
+- any raw-state payload materialization
+- any replay parsing
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family locator/index/export framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+- any readback-based promotion of non-identity fields into new semantics
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationDispositionV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationNoteV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationSpecimenResultV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationLaneResultV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationError`
+  - `validate_low_boost_recovery_bc_receipt_bound_specimen_file_existence_readback_v1(...)`
+- Added only because this pass is supposed to be the first real existence/readback validation
+  boundary above the realized locator, and leaving it as prose only would force the next pass to
+  guess the validated output surface.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The repo now has a machine-verifiable family-specific boundary that proves the realized locator
+  is not just path-shaped but filesystem-true and readback-aligned on the preserved identity
+  tuple.
+- The next pass no longer needs to guess whether the anchored specimen files exist or whether the
+  identity tuple survives readback.
+- The remaining unresolved problem is now narrower and explicit:
+  - whether to reopen the next boundary needed for actual raw-state access behind
+    `source_raw_state_window_ref`

@@ -1,0 +1,35 @@
+executor mimir skill forge bc replay header parser fixture_003 intake readiness next
+
+selected outcome driving next step
+- Outcome A
+
+next pass may
+- generate a fixture_003 structural/header report
+- treat fixture_003 only as PRIVATE_LOCAL_PATH_WITH_HASH input evidence
+- continue preserving exact tuple admission discipline
+
+next pass must not
+- claim parser success for fixture_003
+- add a third supported tuple
+- broaden parser expansion
+- add export/runtime/CLI integration
+- add ReplayInput::File support
+- add wildcard BuildVersion support
+- add all-ReplayVersion = 8 support
+- add future unknown build support
+- add CRC validation
+- read or validate content_crc
+- parse body/raw-state/frame/event data
+- add backend replay parser dependencies
+
+current admitted boundary carried forward
+- parser-success is admitted only for exact allowlisted tuples through ReplayInput::Memory
+- fixture_001 regression is admitted
+- fixture_002 exact happy path is admitted
+- fixture_002 header-only stop-boundary is admitted
+- unknown BuildVersion rejection is admitted
+- broad parser-success is not admitted
+
+required first action in next pass
+- produce a fixture_003 structural/header report from bounded byte evidence only
+- keep parser code untouched until a separate implementation pass explicitly admits a new exact tuple

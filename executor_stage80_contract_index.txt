@@ -1,0 +1,271 @@
+executor stage 80 vertical-slice contract index / test map
+
+scope
+- repo root: `D:\RocketLeague bot\MIMIR`
+- contract family: deterministic vertical-slice runtime + canonical reload + frozen snapshot + explicit negative drift checks
+- primary code locations:
+  - `crates/mimir-cli/src/vertical_slice.rs`
+  - `crates/mimir-cli/src/vertical_slice_result.rs`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs`
+
+A. ENTRYPOINTS
+
+deterministic slice entrypoint(s)
+- production/test runtime entrypoint:
+  - `crates/mimir-cli/src/vertical_slice.rs::run_deterministic_vertical_slice`
+- shared Stage69 test wrapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::run_sample_fixture`
+- shared lane-aware test wrapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::run_fixture_lane`
+- shared lane-aware run + canonical reload wrapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::run_fixture_lane_and_load`
+
+canonical result loader / inspection entrypoint(s)
+- canonical reload entrypoint:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::load_canonical_vertical_slice_result`
+- shared test loader wrapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::load_result`
+- shared test snapshot wrapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::load_snapshot`
+- canonical inspection helpers:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::CanonicalVerticalSliceResult::teacher_branch_targets_in_order`
+  - `crates/mimir-cli/src/vertical_slice_result.rs::CanonicalVerticalSliceResult::golden_snapshot`
+
+B. FIXTURE LANES
+
+Stage69Sample lane identity
+- lane selector:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::VerticalSliceFixtureLane::Stage69Sample`
+- fixture constructor source:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::fixture_for_lane`
+- Stage69 convenience wrapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::sample_fixture`
+- frozen snapshot mapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::expected_stage73_golden_snapshot`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::expected_golden_snapshot_for_lane`
+- frozen identity currently visible in code:
+  - export name: `stage69-vertical-slice`
+  - replay id: `replay-stage69`
+  - anchor id: `anchor-stage69`
+  - branch ids in export order: `anchor-stage69:branch:0`, `anchor-stage69:branch:1`
+  - scoreboard totals in persisted order: `3.5`, `5.0`
+  - teacher targets in persisted ordinal order: `anchor-stage69:branch:1`, `anchor-stage69:branch:0`
+
+Stage77Second lane identity
+- lane selector:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::VerticalSliceFixtureLane::Stage77Second`
+- fixture constructor source:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::fixture_for_lane`
+- frozen snapshot mapper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::expected_golden_snapshot_for_lane`
+- frozen identity currently visible in code:
+  - export name: `stage77-second-vertical-slice`
+  - replay id: `replay-stage77-second`
+  - anchor id: `anchor-stage77-second`
+  - branch ids in export order: `anchor-stage77-second:branch:0`, `anchor-stage77-second:branch:1`
+  - scoreboard totals in persisted order: `6.0`, `2.5`
+  - teacher targets in persisted ordinal order: `anchor-stage77-second:branch:0`, `anchor-stage77-second:branch:1`
+
+C. POSITIVE CONTRACT FAMILY
+
+run succeeds for a deterministic fixture lane
+- shared helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_matches_expected_contract`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_persists_reloadable_outputs`
+  - `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_persists_reloadable_outputs`
+
+canonical reload succeeds
+- shared helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_matches_expected_contract`
+- exact checks inside helper:
+  - `inspect_export_bundle(...)` manifest anchor/branch counts match
+  - `load_export_bundle(...)` round-trips into `consumer_export`
+  - canonical scoreboard artifact schema kind is `Scoreboard`
+  - canonical scoreboard payload equals runtime output scoreboard
+  - canonical teacher artifacts equal runtime output teacher artifacts
+- exercised by:
+  - `deterministic_vertical_slice_persists_reloadable_outputs`
+  - `second_deterministic_vertical_slice_persists_reloadable_outputs`
+
+frozen golden snapshot matches
+- shared helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_matches_expected_contract`
+- frozen snapshot mapping:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::expected_golden_snapshot_for_lane`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`
+  - `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`
+
+repeated runs are identical
+- shared helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_repeated_runs_are_identical`
+- exact checks inside helper:
+  - full `VerticalSliceRunOutput` equality across two output roots
+  - full `CanonicalVerticalSliceResult` equality across two output roots
+  - both derived golden snapshots equal the lane’s expected frozen snapshot
+  - first snapshot equals second snapshot
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_is_identical_across_repeated_runs`
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+  - `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+
+lanes do not collapse to the same golden snapshot
+- shared helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lanes_have_distinct_golden_snapshots`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+
+explicit branch / score / teacher ordering contract
+- explicit Stage69-specific test:
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+- direct helper/entrypoint usage in that test:
+  - `run_sample_fixture`
+  - `load_result`
+  - `CanonicalVerticalSliceResult::teacher_branch_targets_in_order`
+- exact contract edges covered:
+  - export branch labels remain in branch-generator order
+  - scoreboard row branch ids remain in persisted score order
+  - teacher targets remain in persisted teacher ordinal order
+
+D. NEGATIVE CONTRACT FAMILY
+
+missing fake backend
+- direct runtime precondition:
+  - `crates/mimir-cli/src/vertical_slice.rs::run_deterministic_vertical_slice`
+- explicit test:
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_fails_explicitly_without_fake_backend`
+- exact failure string:
+  - `deterministic vertical slice requires deterministic fake backend`
+- note:
+  - intentionally kept explicit, not moved into the lane-agnostic negative harness
+
+scoreboard row count drift
+- shared negative helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_scoreboard_row_count_drift_fails_explicitly`
+- loader failure origin:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::load_canonical_vertical_slice_result`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_result_loader_fails_explicitly_on_scoreboard_row_count_drift`
+  - `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_loader_fails_explicitly_on_scoreboard_row_count_drift`
+
+extra teacher artifact count drift
+- shared negative helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_extra_teacher_artifact_count_drift_fails_explicitly`
+- loader failure origin:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::load_canonical_vertical_slice_result`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_result_loader_fails_explicitly_on_extra_teacher_artifact_drift`
+
+missing teacher artifact drift
+- shared negative helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_missing_teacher_artifact_fails_explicitly`
+- loader failure origin:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::load_canonical_vertical_slice_result`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing`
+
+non-branch teacher target drift
+- shared negative helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_non_branch_teacher_target_drift_fails_explicitly`
+- canonical consumer failure origin:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::CanonicalVerticalSliceResult::teacher_branch_targets_in_order`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_teacher_targets_fail_explicitly_on_non_branch_target_drift`
+
+teacher artifact ordinal/file drift
+- shared negative helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_teacher_artifact_ordinal_file_drift_changes_snapshot`
+- snapshot drift origin:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::CanonicalVerticalSliceResult::golden_snapshot`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+  - `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+
+scoreboard-order drift
+- explicit fixture-specific test:
+  - `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+- supporting tamper helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::rewrite_scoreboard_artifact`
+- supporting loader/snapshot helpers:
+  - `load_result`
+  - `load_snapshot`
+- note:
+  - intentionally left explicit because the visible Stage69 row ordering delta is part of the readability contract
+
+anchor-count drift
+- shared negative helper:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+- snapshot failure origin:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::CanonicalVerticalSliceResult::golden_snapshot`
+- exercised by:
+  - `crates/mimir-cli/src/vertical_slice.rs::canonical_vertical_slice_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+
+E. TEST-ONLY SUPPORT SURFACE
+
+fixture lane selector / fixture constructors
+- `VerticalSliceFixtureLane`
+- `sample_fixture`
+- `fixture_for_lane`
+
+expected snapshot mappers
+- `expected_stage73_golden_snapshot`
+- `expected_golden_snapshot_for_lane`
+
+positive parity helpers
+- `run_sample_fixture`
+- `run_fixture_lane`
+- `run_fixture_lane_and_load`
+- `assert_fixture_lane_matches_expected_contract`
+- `assert_fixture_lane_repeated_runs_are_identical`
+- `assert_fixture_lanes_have_distinct_golden_snapshots`
+
+lane-agnostic negative helpers
+- `assert_fixture_lane_scoreboard_row_count_drift_fails_explicitly`
+- `assert_fixture_lane_extra_teacher_artifact_count_drift_fails_explicitly`
+- `assert_fixture_lane_non_branch_teacher_target_drift_fails_explicitly`
+- `assert_fixture_lane_teacher_artifact_ordinal_file_drift_changes_snapshot`
+- `assert_fixture_lane_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+- `assert_fixture_lane_missing_teacher_artifact_fails_explicitly`
+
+tamper / rewrite helpers
+- `scoreboard_path`
+- `teacher_artifact_path`
+- `rewrite_scoreboard_artifact`
+- `rewrite_teacher_artifact`
+- `rewrite_teacher_target_as_replay`
+
+load / run helpers
+- `load_result`
+- `load_snapshot`
+- `load_snapshot_after_run`
+
+F. EXPLICITLY NON-GENERALIZED AREAS
+
+Stage69-specific ordering readability
+- `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering` stays explicit so branch order, scoreboard order, and teacher target order remain visible at the call site
+- `canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift` stays explicit so the exact Stage69 scoreboard swap remains readable instead of being hidden behind a generic mutation abstraction
+
+runtime fake-backend precondition test
+- `deterministic_vertical_slice_fails_explicitly_without_fake_backend` remains explicit because it is a runtime precondition check, not a lane-agnostic matrix case
+
+fixture identity and frozen snapshots staying visible
+- lane identity stays hard-coded in `fixture_for_lane(...)`
+- frozen expectations stay hard-coded in `expected_golden_snapshot_for_lane(...)`
+- Stage69 keeps the named wrapper `expected_stage73_golden_snapshot()` for readability at existing call sites
+
+no generalized mutation DSL
+- negative cases use narrow rewrite helpers for scoreboard files and teacher artifacts only
+- there is no generalized fixture mutation framework, artifact mutation DSL, or contract-table generator in this pass
+
+no runtime/public API growth
+- no new runtime CLI commands
+- no widened export bundle semantics
+- no change to execution-result cleanup boundaries
+- no public API growth beyond existing crate-internal test support surface
+
+current contract reading order for future work
+1. `crates/mimir-cli/src/vertical_slice.rs`
+2. `crates/mimir-cli/src/vertical_slice_result.rs`
+3. `crates/mimir-cli/src/vertical_slice_test_support.rs`
+4. this file

@@ -1,0 +1,141 @@
+executor mimir skill forge bc replay header parser fixture 003 boolproperty non-selected error-boundary closure decision
+
+selected outcome
+- Outcome A
+
+fixture identities verified
+- yes
+- fixture_001 verified:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+  - byte length: 3001021
+  - SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+  - first four bytes little-endian i32: 13200
+- fixture_002 verified:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+  - byte length: 2632903
+  - SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+  - first four bytes little-endian i32: 11273
+- fixture_003 verified:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+  - byte length: 1638538
+  - SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+  - first four bytes little-endian i32: 11190
+  - extension: .replay
+  - byte length > 8: yes
+  - differs from fixture_001 by SHA-256: yes
+  - differs from fixture_002 by SHA-256: yes
+
+evidence inputs verified
+- yes
+- required report, admission, policy, README, data contract, artifact versioning, Cargo, lockfile,
+  and staged-delivery artifacts were inspected
+- fixture_003 report and structural report remain external/report evidence only
+- neither report is MIMIR parser output
+- neither report is fixture_003 parser-success evidence
+
+current parser behavior inspected
+- yes
+- selected property set:
+  - Id
+  - NumFrames
+  - ReplayName
+  - Date
+  - MapName
+  - ReplayVersion
+  - BuildVersion
+  - MaxChannels
+  - MatchType
+  - TeamSize
+  - RecordFPS
+- bForfeit is not selected
+- non-selected ArrayProperty, FloatProperty, IntProperty, NameProperty, QWordProperty, and
+  StrProperty are skipped by bounded property_size
+- BoolProperty is not an admitted property kind
+- non-selected BoolProperty currently returns unsupported-property
+- existing synthetic test rejects non-selected BoolProperty as unsupported-property
+- selected BoolProperty is not mapped and remains unsupported under current selected parsing
+- a future non-selected BoolProperty skip-only helper is structurally possible without metadata
+  mapping because selected/non-selected dispatch is key-based
+
+FieldValue and mapping policy inspected
+- yes
+- FieldValue::Boolean exists in mimir-types
+- FieldValue::Boolean existence does not authorize replay-header BoolProperty mapping
+- existing replay-header mapping policy admits selected Str/Name to Text, Int to Integer, and
+  finite Float to Float
+- existing replay-header mapping policy does not admit BoolProperty -> FieldValue::Boolean
+- existing fixture_003 mapping admission excludes bForfeit from metadata
+
+bForfeit classification
+- property key: bForfeit
+- kind: BoolProperty
+- structural path: header.properties[1]
+- byte range: [89,128)
+- declared size: 0
+- scanner consumed: 1
+- generated value summary: true
+- selected metadata mapping: excluded
+- ReplayHeader mapping output: excluded
+- evidence status: report-only
+- current parser behavior: unsupported-property
+- future parser implication: non-selected BoolProperty may be planned for skip-only handling, not
+  metadata mapping
+
+selected future policy direction
+- non-selected BoolProperty skip-only future policy direction is admitted/planned
+- this is not current parser behavior
+- implementation is deferred
+- future fixture_003 parser support remains blocked until exact skip-only BoolProperty handling and
+  supported-version tuple implementation are separately added and verified
+
+BoolProperty -> FieldValue::Boolean admitted
+- no
+
+bForfeit metadata mapping admitted
+- no
+
+non-selected BoolProperty skip-only future policy
+- admitted/planned as a future policy direction only
+- parser implementation deferred
+- current parser support not admitted
+
+parser code changed
+- no
+
+parser-success claimed for fixture_003
+- no
+
+fixture_003 supported-version policy admitted
+- no
+
+third supported tuple added
+- no
+
+intentionally not broadened
+- parser-success
+- parser scope
+- supported-version family
+- ReplayVersion = 8 broad support
+- wildcard BuildVersion support
+- ReplayInput::File
+- CRC validation
+- content_crc read/validation in MIMIR parser code
+- body/raw-state/frame/event parsing
+- ReplayHeader metadata key set
+- BoolProperty metadata mapping
+- CLI/runtime/export behavior
+- backend replay parser dependencies
+- path/hash/filename/provenance/artifact-id parser facts
+
+forbidden files/dependencies changed
+- no intended changes
+- no Rust source changes
+- no manifests changed
+- no lockfile changed
+- no dependencies added
+- no backend replay parser dependency added
+
+decision summary
+- Outcome A closes the policy direction for current evidence: bForfeit is a non-selected
+  BoolProperty that may be handled later by exact skip-only parsing, while remaining excluded from
+  metadata and ReplayHeader output.

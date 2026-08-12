@@ -1,0 +1,125 @@
+executor mimir skill forge bc raw-state materialization reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact reopen role chosen
+- one low-boost-recovery-specific reopen-decision boundary above
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+- exact job:
+  - admit only the validated specimen-file existence/readback boundary
+  - revalidate that the admitted boundary still preserves the exact receipt-bound root/order/path
+    and readback-identity tuple
+  - decide whether the remaining missing boundary is now truly raw-state materialization
+  - choose the minimum honest next contract shape only if reopening is justified
+
+exact reopen / no-reopen decision chosen
+- reopen justified
+- exact disposition:
+  - `ReopenJustifiedForReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefMaterializationContract`
+- exact chosen contract shape:
+  - `ReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefMaterializationAttemptOnly`
+
+exact criteria used
+- locator shape had to already be fixed
+- anchored specimen-file realization had to already be fixed
+- specimen-file existence had to already be fixed
+- readback identity alignment had to already be fixed on:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `source_raw_state_window_ref`
+- the remaining unresolved gap had to be the absence of a raw-state materialization boundary, not
+  another locator/readback defect
+- the next boundary had to remain:
+  - low-boost-recovery-specific
+  - receipt-bound
+  - below tensor/control materialization
+  - independent of sidecars/manifests/generic indexing
+  - independent of `mimir_export`
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcRawStateMaterializationReopenDispositionV1`
+- exact note type:
+  - `LowBoostRecoveryBcRawStateMaterializationReopenNoteV1`
+- exact result type:
+  - `LowBoostRecoveryBcRawStateMaterializationReopenDecisionResultV1`
+- exact entry function:
+  - `decide_low_boost_recovery_bc_raw_state_materialization_reopen_from_receipt_bound_specimen_file_existence_readback_validation_v1(...)`
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_validation_disposition`
+  - ordered `source_validation_notes`
+  - `source_chosen_locator_contract_shape`
+  - `audited_family_root_directory`
+  - `decision_disposition`
+  - ordered `decision_notes`
+  - `chosen_materialization_contract_shape`
+- exact note set:
+  - `SpecimenFileExistenceReadbackValidationBoundaryPreserved`
+  - `ValidationInputRevalidated`
+  - `AuditedFamilyRootReferencePreservedAsBcSpecimenTreeAnchor`
+  - `ValidatedSpecimenFileIdentityPreserved`
+  - `SourceRawStateWindowRefsPreserved`
+  - `RemainingGapIsReceiptBoundSourceRawStateWindowRefMaterializationBoundaryOnly`
+  - `ReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefMaterializationContractIsMinimumHonestReopen`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationStillForbidden`
+  - `TensorAndControlMaterializationStillDeferred`
+
+exact admission / failure decisions chosen
+- Admit only
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`.
+- Require the exact source realization disposition, source realization note set, locator contract
+  shape, validation disposition, and validation note set already frozen below this boundary.
+- Require counts, audited family root basename/existence, lane/specimen order, deterministic path
+  shape, anchored join rule, `specimen_file_exists`, `readback_matches_realized_locator_identity`,
+  and read-back identity tuple to remain exact.
+- Hard fail on degraded validation input.
+- Hard fail on count/order/path/root drift.
+- Hard fail if `specimen_file_exists` or
+  `readback_matches_realized_locator_identity` no longer remain true.
+- Hard fail on any read-back identity drift.
+- Hard fail on any attempt to reinterpret the audited family root as raw-state storage.
+- Hard fail on any attempt to widen this pass into actual raw-state materialization, tensors,
+  controls, sidecars, manifests, generic indexing, or `mimir_export`.
+- No separate no-reopen disposition is emitted for admitted inputs in this v1 pass, because once
+  the admitted validation boundary is exact, the remaining unresolved boundary is already the
+  raw-state materialization boundary.
+
+what was intentionally excluded
+- any actual raw-state materialization
+- any replay parsing
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family raw-state/index/export framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcRawStateMaterializationReopenDispositionV1`
+  - `LowBoostRecoveryBcRawStateMaterializationReopenNoteV1`
+  - `LowBoostRecoveryBcRawStateMaterializationContractShapeV1`
+  - `LowBoostRecoveryBcRawStateMaterializationReopenDecisionResultV1`
+  - `LowBoostRecoveryBcRawStateMaterializationReopenDecisionError`
+  - `decide_low_boost_recovery_bc_raw_state_materialization_reopen_from_receipt_bound_specimen_file_existence_readback_validation_v1(...)`
+- Added only because reopening was justified and the repo already uses explicit family-specific
+  decision surfaces for earlier reopen boundaries; leaving this pass as prose only would force the
+  next raw-state materialization contract-definition pass to guess the exact admitted decision
+  semantics.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The project now has one explicit machine-verifiable answer that raw-state materialization must be
+  reopened and the answer is anchored to the validated specimen-file boundary.
+- The next pass no longer needs to guess whether reopening is still under debate.
+- The next immediate task is now obvious and narrow:
+  - define the first receipt-bound low-boost-recovery raw-state materialization contract above the
+    validated specimen-file boundary
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

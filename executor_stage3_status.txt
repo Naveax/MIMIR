@@ -1,0 +1,10 @@
+convenience_execute_helper_added: yes
+helper_name: query_and_execute_execution_result_job_spec
+uses_existing_validators_and_builders: yes
+mimir_export_test_count_from_cargo_test_p_mimir_export_list: 29
+validation_commands_run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

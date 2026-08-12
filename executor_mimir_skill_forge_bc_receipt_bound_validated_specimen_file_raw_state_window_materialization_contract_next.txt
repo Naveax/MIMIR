@@ -1,0 +1,49 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window materialization contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a first actual raw-state materialization-attempt realization pass above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a first actual raw-state materialization-attempt realization pass still without replay parsing, tensor materialization, or control/action extraction
+
+why this is the immediate next pass
+- The validated specimen-file boundary is already explicit.
+- The reopen decision is already explicit.
+- This pass now makes the admitted per-specimen materialization-attempt contract explicit.
+- The next unresolved problem is no longer contract shape.
+- The next unresolved problem is how to realize a truthful materialization-attempt result from that contract without silently widening into replay parsing or tensor/control work.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractV1`
+- the preserved audited family root directory already carried by that contract
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- define the first honest materialization-attempt result surface above the contract
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that `source_raw_state_window_ref` remains the opaque lookup reference unless some narrower honest access path is proven
+- make it explicit whether the current implementation can only emit a truthful non-materialized or failed attempt result
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no replay parsing implementation
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family raw-state/index/export framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no rollout/physics/runtime work
+
+why the next pass is not another narrow contract refinement pass
+- The admitted-specimen surface, attempt input tuple, and attempt output-boundary shape are now explicit.
+- Another contract refinement pass would only restate the same boundary with different wording.
+
+why the next pass is not a broader reopen decision
+- The narrow family-specific reopen was already chosen explicitly.
+- Broadening now would violate the staged-delivery constraint and reopen more than the remaining defect requires.

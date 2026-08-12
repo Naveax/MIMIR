@@ -1,0 +1,31 @@
+executor deterministic-family completion marker
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: pinned completion marker for deterministic-family resume
+date: 2026-04-12
+
+A. STATUS
+
+- The deterministic fake-backend vertical-slice family is strongly closed at its intended narrow scope.
+
+B. START HERE
+
+- Read `executor_deterministic_family_handoff_pack.txt` first.
+- Then read `executor_deterministic_family_closure_summary.txt`.
+
+C. DO NOT USE AS LIVE ROADMAP
+
+- Treat older remaining-gap and roadmap artifacts as historical only.
+- Use `executor_deterministic_family_archive_guide.txt` if you need help classifying older files before planning.
+
+D. REOPEN ONLY IF
+
+- a new failing test appears
+- a contradictory code path is found
+- a concrete artifact drift is observed
+- there is an explicit decision to change semantics or contract boundaries
+
+E. CURRENT PARTIAL / DEFERRED BOUNDARIES
+
+- Partial: `export_name -> teacher label id` only as a separately named Stage77 same-lane proof question.
+- Partial: scoreboard component ordering only as an independently versioned contract question.
+- Deferred: optional/defaulted proposal-field loader tightening, independent branch-payload parity via a distinct implementation, real replay parsing, real rollout/physics/live backend behavior, async/background systems, database work, runtime CLI expansion, snapshot widening, and export-bundle semantic widening.

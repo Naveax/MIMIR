@@ -1,0 +1,44 @@
+executor mimir skill forge bc serialization export next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+next pass
+- first actual low-boost-recovery BC export integration or consumer-wiring boundary pass
+
+milestone note
+- The BC milestone has already been crossed.
+- This pass now defines persisted low-boost-recovery BC artifact semantics.
+- `mimir_export` widening is still forbidden unless explicitly reopened.
+
+exact problem
+- The repo now has a real BC row contract and a real persisted BC artifact boundary for low boost
+  recovery, but nothing yet wires that artifact into an actual export path or a concrete consumer
+  boundary.
+- The next pass must decide one narrow integration point without reopening contract-definition,
+  serialization-boundary, or generic export-framework work.
+
+what the new serialization/export boundary now makes possible
+- Consume one persisted `mimir.low_boost_recovery_bc_artifact` specimen instead of inferring
+  specimen semantics from BC rows or accepted shells.
+- Load and validate low-boost-recovery BC specimens through `mimir-io` without touching
+  `mimir_export`.
+- Build one narrow consumer-wiring or export-integration path on top of fixed artifact identity,
+  fixed observation-window serialization, and fixed target-lineage serialization.
+
+what is still intentionally unresolved
+- any actual `mimir_export` integration
+- any batch export manifest/index behavior for BC artifacts
+- any feature-vector or tensor materialization
+- any action/control target materialization
+- any replay parsing or replay mining
+- any usefulness proof for BC
+- any policy-improvement proof
+
+scope risk
+- high
+- The main risk is letting the first integration pass quietly widen into a generic export
+  framework.
+- The second risk is silently materializing observations or controls in a way that reads like proof
+  instead of a bounded integration step.
+- The third risk is bypassing the persisted BC artifact and reaching back into BC rows or shells
+  directly.

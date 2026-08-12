@@ -1,0 +1,27 @@
+removed wrapper
+- query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+
+canonical replacement lane now recommended
+- query_stub_execute_register_report_and_index_load_summary
+- load_query_and_aggregate_execution_result_job_report_collection_summaries
+
+parity coverage updates performed
+- removed the four dedicated wrapper-only tests from crates/mimir-export/src/lib.rs
+- removed the single stage47 compatibility parity assertion block that compared this wrapper against its explicit canonical composition
+- removed the stage47 explicit helper that existed only to mirror this wrapper
+- preserved the remaining stage47 parity assertions and canonical contract coverage
+
+README/docs updates performed
+- removed the final README-documented compatibility waypoint bullet for the wrapper
+- reduced README migration guidance to canonical-only aggregate lanes
+- README now points aggregate guidance directly to query_stub_execute_register_report_and_index_load_summary and load_query_and_aggregate_execution_result_job_report_collection_summaries
+
+active reference cleanup confirmation
+- no active repo-local source, README, docs, or test references remain for query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+- historical stage artifacts were left intact as history
+
+Batch C note
+- query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries was left untouched in this pass
+
+resulting mimir_export test count
+- cargo test -p mimir-export -- --list => 185 tests, 0 benchmarks

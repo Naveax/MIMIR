@@ -1,0 +1,14 @@
+pass type: canonical-baseline non-breaking internal rewiring pass
+runtime behavior changed: no
+public APIs removed: no
+public APIs renamed: no
+baseline rewired: yes
+rewiring artifact added: yes
+source/docs changed: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 177 tests, 0 benchmarks
+exact validation commands run:
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`

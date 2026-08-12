@@ -1,0 +1,36 @@
+executor mimir skill forge bc export integration next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- low-boost-recovery BC consumer definition refinement pass on top of the persisted-artifact
+  handoff boundary
+
+why this is the immediate next pass
+- This pass already proved one concrete repo-local consumer path:
+  - `mimir-io::read_low_boost_recovery_bc_artifact(...)`
+  - `mimir-skill::handoff_persisted_low_boost_recovery_bc_artifact_v1(...)`
+- The next unresolved question is not raw IO anymore.
+- The next unresolved question is what the first bounded downstream consumer is allowed to do with
+  the validated handoff without silently materializing tensors, controls, or generic export
+  orchestration.
+
+what the next pass should do
+- refine the first downstream low-boost-recovery BC consumer boundary on top of
+  `LowBoostRecoveryBcArtifactConsumerHandoffV1`
+- keep the work specimen-scoped and family-specific
+- define exactly what the consumer may inspect, preserve, or defer
+- avoid batch orchestration unless that narrower consumer definition makes it unavoidable
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family integration framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+
+why export batching/orchestration is not the immediate next pass
+- The current boundary now proves persisted-artifact admission and handoff.
+- A batching/orchestration step before consumer-definition refinement would risk reintroducing
+  generic export machinery before the first bounded consumer contract is explicit.
+

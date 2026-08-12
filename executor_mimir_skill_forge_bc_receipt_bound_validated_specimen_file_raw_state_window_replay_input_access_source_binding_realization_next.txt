@@ -1,0 +1,59 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-input-access source-binding realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-16
+
+next pass
+- a replay-input locator reopen decision above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a replay-input locator reopen decision
+
+why this is the immediate next pass
+- This pass already made the first truthful replay-input-access / replay-source-binding result
+  explicit.
+- That result is still non-located and non-parsed.
+- The remaining unresolved gap is now earlier than parser success:
+  - whether the repo must explicitly reopen replay-input locator work
+- Another contract-only refinement pass would restate the same preserved tuple without changing the
+  truthful realized state.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingRealizationResultV1`
+- the same audited family root directory reference preserved by that realization result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- determine whether replay-input locator work must now be deliberately reopened
+- preserve the invariant that `source_replay` remains opaque lineage
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that deferred observation lineage stays deferred
+- stay below actual replay-input locator implementation
+- stay below actual replay parsing
+- stay below actual raw-state payload, tensor, and control materialization
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no actual replay-input locator implementation
+- no actual replay parsing implementation
+- no actual raw-state payload materialization
+- no tensor materialization
+- no control/action extraction
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is the minimum
+  honest fix
+- no generic multi-family replay/raw-state/index/export/materialization framework
+- no generic manifest/index framework
+- no rollout/physics/runtime work
+
+why the next pass is not a narrower receipt-bound binding refinement pass
+- The contract tuple and the first truthful realization result are now both explicit.
+- The current result already proves the remaining problem is not contract shape.
+- More refinement without a new decision would only restate the same non-located state.
+
+why the next pass is not a parser-success-related pass
+- Parser work is still downstream of locator work.
+- This pass still carries no replay path, replay bytes, or replay frames.
+- Reopening parser-success logic before locator work would skip the still-missing earlier defect.

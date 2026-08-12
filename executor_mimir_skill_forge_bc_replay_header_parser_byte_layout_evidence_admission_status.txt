@@ -1,0 +1,143 @@
+executor mimir skill forge bc replay header parser byte-layout evidence admission status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+pass type
+- byte-layout evidence admission pass
+- evidence admission/planning only
+- docs/artifacts only
+- no parser implementation
+- no parser-success logic
+- no backend dependency addition
+- no ReplayHeader production
+
+selected outcome
+- Outcome B
+- no approved byte-layout evidence exists locally
+- byte-layout evidence remains missing
+- next pass must be external byte-layout evidence supply/admission or approved parser-report
+  generation/admission
+
+runtime behavior changed
+- no
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_BYTE_LAYOUT_EVIDENCE_ADMISSION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_byte_layout_evidence_admission_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_byte_layout_evidence_admission_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_byte_layout_evidence_admission_status.txt
+- Rust/code changes added: no
+- manifests changed: no
+- lockfile changed: no
+- fixture files added: no
+
+fixture identity verified
+- yes
+
+byte-layout evidence admitted
+- no
+
+expected ReplayHeader evidence admitted
+- no
+
+parser implementation may proceed
+- no
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+validation result
+- all listed validation commands completed successfully
+
+forbidden crate boundary check
+- mimir-replay source modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- mimir_export widening: no
+- Cargo.toml modified by this pass: no
+- Cargo.lock modified by this pass: no
+- backend dependency added: no
+- parser implementation added: no
+- parser-success logic added: no
+- fixture files added: no
+- command run: git rev-parse --show-toplevel
+- command result: D:/
+- command run: git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- command result: no tracked file diffs reported
+- command run: git status --short -- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_BYTE_LAYOUT_EVIDENCE_ADMISSION_V1.md executor_mimir_skill_forge_bc_replay_header_parser_byte_layout_evidence_admission_decision.txt executor_mimir_skill_forge_bc_replay_header_parser_byte_layout_evidence_admission_next.txt executor_mimir_skill_forge_bc_replay_header_parser_byte_layout_evidence_admission_status.txt crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- command result before this status artifact was added: the new byte-layout admission docs/artifacts
+  were reported untracked; the broader Git root also reports Cargo.toml, Cargo.lock, and crate
+  directories as untracked
+- workspace caveat: git rev-parse --show-toplevel reports D:/; this MIMIR workspace is inside a
+  broader Git tree. The forbidden-boundary conclusion is based on exact applied patch paths, no
+  tracked diffs under the forbidden crate paths or manifests, no applied edits under forbidden crate
+  paths, and unchanged manifests/lockfile intent from this pass.
+
+evidence search result
+- fixture evidence admitted: yes
+- byte-layout evidence admitted: no
+- expected ReplayHeader admitted: no
+- approved byte-layout documentation present locally: no
+- approved generated parser/tool report present locally: no
+- parser dependency present in Cargo.toml/Cargo.lock: no
+- local byte-layout notes admitted: no
+- prior parser dependency docs admitted as byte-layout evidence: no
+- prior planning skeletons admitted as byte-layout evidence: no
+- private fixture bytes parsed in this pass: no
+
+explicit non-claims
+- no real replay parser was implemented
+- no parser success was claimed or encoded
+- no backend dependency was selected or added
+- no ReplayHeader was produced or synthesized
+- no Rocket League replay byte layout details were invented
+- no fixture bytes were invented, copied, committed, padded, or truncated
+- no expected ReplayHeader was fabricated
+- no replay id derivation was invented
+- no total frame derivation was invented
+- no metadata map was invented
+- no explicit total_frames None policy was admitted
+- no explicit empty metadata policy was admitted
+- no insufficient-byte fixture was derived
+- no malformed-byte fixture was derived
+- no unsupported-format/version fixture was derived
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented
+
+next pass
+- external byte-layout evidence supply/admission or approved parser-report generation/admission
+- parser implementation remains closed
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- mimir_export widening remains forbidden

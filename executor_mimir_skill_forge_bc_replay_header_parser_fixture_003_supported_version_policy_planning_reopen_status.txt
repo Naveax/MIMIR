@@ -1,0 +1,171 @@
+executor mimir skill forge bc replay header parser fixture 003 supported-version policy planning reopen status
+
+pass type
+- docs/artifacts-only supported-version policy planning reopen
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes, docs/executor artifacts only
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+- extension: .replay
+- byte length > 8: yes
+
+fixture_002 identity verified
+- yes
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- extension: .replay
+- byte length > 8: yes
+
+fixture_003 identity verified
+- yes
+- byte length: 1638538
+- SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- first four bytes little-endian i32: 11190
+- extension: .replay
+- byte length > 8: yes
+- differs from fixture_001 by SHA-256: yes
+- differs from fixture_002 by SHA-256: yes
+
+BoolProperty closure input verified
+- yes
+- bForfeit remains report-only / excluded-from-metadata
+- BoolProperty -> FieldValue::Boolean remains closed
+- current parser behavior remains unsupported-property
+- future non-selected BoolProperty skip-only handling remains a prerequisite
+
+current supported-version implementation inspected
+- yes
+- current policy is exact two-tuple allowlist only
+- current variants:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+- current BuildVersion values:
+  - 241206.55345.468477
+  - 250811.43331.492665
+- unknown BuildVersion rejection remains current behavior
+- no Fixture003Exact variant exists now
+- no fixture_003 BuildVersion constant exists now
+- policy does not depend on path/hash/filename/provenance/artifact id/fixture id
+
+selected future policy
+- exact three-tuple allowlist
+- planned future variants:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+  - SupportedReplayHeaderTupleV1::Fixture003Exact
+- planned Fixture003Exact BuildVersion: 251020.62592.500294
+- no wildcard BuildVersion support
+- no broad ReplayVersion = 8 support
+- no future unknown build support
+
+BoolProperty skip-only prerequisite carried
+- yes
+- fixture_003 parser-success remains blocked until exact non-selected BoolProperty skip-only
+  handling is implemented and verified
+- bForfeit remains absent from metadata
+- selected BoolProperty remains unsupported unless separately reopened
+
+future implementation boundary admitted
+- yes
+- allowed future code boundary: crates/mimir-replay/src/lib.rs only
+- no manifest/lockfile/dependency changes
+- no mimir-skill/mimir-types/mimir-export/mimir-io/mimir-cli changes
+- keep ReplayInput::Memory only
+- keep header-only parsing ending at 8 + header_size
+- keep CRC validation closed
+- keep content_crc/body/raw-state/frame/event parsing closed
+- no backend parser dependency
+
+parser behavior changed now
+- no
+
+parser-success claimed for fixture_003 now
+- no
+
+fixture_003 supported-version policy implemented now
+- no
+
+third supported tuple added now
+- no
+
+parser-success admitted broadly
+- no
+
+BoolProperty metadata mapping admitted
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+exact validation commands run
+- cargo check --workspace --all-targets --all-features
+  - result: passed
+- cargo test -p mimir-replay -- --nocapture
+  - result: passed, 20 tests passed plus doc-tests with 0 tests
+- cargo test -p mimir-skill -- --nocapture
+  - result: passed, 273 tests passed plus doc-tests with 0 tests
+- cargo test --workspace --all-targets --all-features
+  - result: passed
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: passed
+- cargo test -p mimir-export -- --list
+  - result: passed, listed 173 tests and 0 benchmarks plus doc-tests with 0 tests
+
+forbidden crate boundary check
+- direct post-validation hashes for forbidden source/manifests matched the pre-edit hashes:
+  - crates/mimir-replay/src/lib.rs:
+    7106A2891322A5121323F00B5EC171E84DA4ABF00D1802FA226FF1B531B027CF
+  - crates/mimir-skill/src/lib.rs:
+    C851DDC128F72189DAC4A6A1E3E7D151A181C1F5B75830378C0E6BAC6CCCE9EB
+  - crates/mimir-types/src/lib.rs:
+    7E97135EBA28E40215E24F3602A8F537E5EFF7472A86351D853A8BFF10AFF29F
+  - Cargo.toml:
+    B815700C45FD84FF860FDFF4526EAA46B5A76F8B213F570C4FA9788CCF689121
+  - Cargo.lock:
+    06D21529D8A307494ECAE8F064DFF019743B3D2C2615C7A8AFF6CC0FD8A2FB57
+- source/manifests search for fixture_003 implementation markers returned no matches:
+  - 251020
+  - Fixture003
+  - fixture_003
+  - sample_003
+  - bForfeit
+  - SUPPORTED_BUILD_VERSION_FIXTURE_003
+- Cargo.lock replay/backend dependency search found only existing MIMIR workspace packages
+- crates/mimir-cli unchanged by this pass: yes
+- crates/mimir-io unchanged by this pass: yes
+- crates/mimir-export unchanged by this pass: yes
+- no MIMIR dependencies added
+- no backend replay parser dependency added
+- no CLI/runtime/export/IO/type behavior changed
+
+recommended next pass
+- fixture_003 exact supported tuple plus non-selected BoolProperty skip-only implementation
+  planning
+- no broad parser expansion yet

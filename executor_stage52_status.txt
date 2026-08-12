@@ -1,0 +1,13 @@
+pass type: Batch A actual breaking removal pass
+runtime behavior changed: no
+wrappers removed: yes
+removed wrapper count: 4
+Batch A removal artifact added: yes
+README changed: no
+mimir_export test count from cargo test -p mimir-export -- --list: 198
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

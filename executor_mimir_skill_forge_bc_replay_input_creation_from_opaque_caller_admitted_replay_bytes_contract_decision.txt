@@ -1,0 +1,66 @@
+executor mimir skill forge bc replay-input creation from opaque caller-admitted replay bytes contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+exact external requirement imposed
+- the current repo-only audited chain did not uniquely justify any single next closed domain
+- this pass explicitly reopens exactly one domain by external architecture/product requirement
+- selected domain: `mimir_replay::ReplayInput` creation from already-realized opaque caller-admitted replay-byte consumer-intake result
+- this is not inferred from repo-only evidence
+
+exact contract-definition role chosen
+- define one low-boost-recovery-specific contract boundary above `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationOpaqueCallerAdmittedReplayByteHandoffConsumerIntakeRealizationResultV1`
+- preserve the exact receipt-bound tuple and opaque replay bytes
+- create only `mimir_replay::ReplayInput::Memory` from those preserved bytes
+- remain below replay parsing, parser-success logic, raw-state payload parsing, carrier discovery, locator logic, and `mimir_export`
+
+exact bridge object shape chosen
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesBridgeV1`
+- carries lane ordinal, specimen ordinal, artifact id, anchored BC specimen path, raw-state-window ref, slice id, source replay lineage, subject, phase id, preserved observation binding, accepted reference window, preserved deferred replay/materialization handle kinds, preserved explicit-admission kind, opaque bytes, bridge kind, and created replay input
+- bridge kind: `MimirReplayMemoryInputFromOpaqueCallerAdmittedReplayBytesOnly`
+- `ReplayInput` semantics: `ReplayInput::Memory { label, bytes }`
+- label: `low_boost_recovery_bc_v1:replay_input:artifact:{artifact_id}:lane:{lane_ordinal}:specimen:{specimen_ordinal}`
+- bytes: exact clone of `opaque_caller_admitted_replay_bytes`
+
+exact admission/failure decisions chosen
+- admit only exact consumer-intake realization disposition, notes, chosen shape, non-empty lanes, ordered lane/specimen ordinals, unique artifact ids, existing `low_boost_recovery_bc_v1` audited root, paths below that root, valid accepted windows, non-empty opaque bytes, and exact preserved deferred handle kinds
+- hard-fail on degraded notes, disposition drift, shape drift, count drift, order drift, duplicate artifact ids, root/path drift, invalid windows, empty bytes, handle-kind drift, consumer-intake input/output drift, path reinterpretation, parser behavior, locator behavior, carrier discovery, actual-materialization implementation, or export widening
+
+why competing domains remain downstream or closed
+- replay-source actual-materialization implementation remains closed because this bridge creates only a memory `ReplayInput` and does not define materialized source success
+- replay-source carrier discovery remains closed because caller-admitted bytes are already present and no discoverable carrier/storage semantics are introduced
+- replay-input locator logic remains closed because no path, storage root, or locator candidate is derived
+- actual replay parsing remains closed because `ReplayInput::Memory` creation does not inspect bytes
+- parser-success logic remains closed because no parser attempt exists
+- raw-state payload parsing remains closed because no parsed replay or parser-success result exists
+- `mimir_export` widening remains forbidden and untouched
+
+what was intentionally excluded
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- actual replay parsing
+- parser-success logic
+- raw-state payload parsing
+- corpus-wide replay ingestion
+- tensor/control materialization
+- real rollout physics
+- async/background systems
+- database code
+- runtime CLI commands
+- execution-result cleanup boundary changes
+- sidecar/manifest realization
+- generic all-family replay/raw-state/index/export/materialization framework creation
+- `mimir_export` integration
+
+Rust/code changes
+- yes, narrow Rust surface was added in `mimir-skill`
+- `mimir-skill` now depends on `mimir-replay` only to use the existing `mimir_replay::ReplayInput` type
+- `mimir-replay` source was not modified
+- `mimir-io`, `mimir-export`, and `mimir-types` were not modified
+- public APIs were added only for the low-boost-recovery ReplayInput-creation contract boundary
+
+why this is enough for the next pass
+- the exact contract, bridge object, boundary input/output, admission rules, and failure rules are now defined
+- the next pass can be the first realization pass for this exact ReplayInput-creation contract
+- no parser, locator, carrier, raw-state, export, or generic framework semantics are silently opened

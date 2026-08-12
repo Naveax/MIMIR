@@ -1,0 +1,179 @@
+executor mimir skill forge bc replay header parser implementation planning reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+exact outcome chosen
+- Outcome A
+- parser implementation planning is explicitly reopened
+- actual parser code remains deferred to the next pass
+- first implementation plan is complete enough for a following code pass
+- next pass may implement only the first minimal ReplayInput::Memory header parser and required
+  tests
+
+whether fixture identity was verified
+- yes
+- fixture path exists: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- observed byte length: 3001021
+- observed SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- fixture identity remains identity/integrity evidence only, not parser fact evidence
+
+whether input artifacts were verified
+- yes
+- prior external parser report exists:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report exists:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission exists:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+- mapping/error-boundary admission exists:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_MAPPING_GAP_ERROR_BOUNDARY_ADMISSION_V1.md
+- non-mapping byte-layout/error-boundary admission exists:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_NON_MAPPING_BYTE_LAYOUT_ERROR_BOUNDARY_ADMISSION_V1.md
+- pre-implementation gap closure exists:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_PRE_IMPLEMENTATION_GAP_CLOSURE_V1.md
+- pre-implementation decision/next/status artifacts exist
+
+whether current Rust surfaces were inspected
+- yes
+- inspected crates/mimir-replay/src/lib.rs
+- inspected crates/mimir-core/src/lib.rs
+- inspected crates/mimir-types/src/lib.rs
+- inspected crates/mimir-skill/src/lib.rs
+- inspected Cargo.toml
+- inspected Cargo.lock
+- inspected crates/mimir-replay/Cargo.toml
+
+current Rust surface recorded
+- ReplayInput variants:
+  - File(PathBuf)
+  - Memory { label: String, bytes: Vec<u8> }
+- ReplayHeader fields:
+  - replay_id: ReplayId
+  - source_label: String
+  - total_frames: Option<u32>
+  - metadata: Metadata
+- ReplayReader trait:
+  - read_header(&self, input: &ReplayInput) -> Result<ReplayHeader>
+- UnsupportedReplayReader:
+  - public zero-sized reader
+  - always returns MimirError::Message through MimirError::message
+  - used by mimir-skill as truthful unsupported parser-attempt evidence
+- MimirError variants:
+  - Io
+  - Json
+  - TomlSerialize
+  - TomlDeserialize
+  - Message
+- mimir-replay dependencies:
+  - mimir-core
+  - mimir-types
+  - serde
+- adding parser code in crates/mimir-replay/src/lib.rs does not require manifest changes
+- parser helper functions can be private module-local functions
+
+chosen public API plan
+- add public zero-sized reader in the next implementation pass:
+  pub struct MinimalReplayHeaderReader;
+- implement ReplayReader for MinimalReplayHeaderReader
+- keep UnsupportedReplayReader unchanged
+- rejected: modifying UnsupportedReplayReader into a parser, because existing name and current
+  mimir-skill usage encode truthful unsupported behavior
+
+chosen implementation file boundary
+- next implementation pass may modify only:
+  crates/mimir-replay/src/lib.rs
+- unit tests must be added in the same file
+- optional test helpers must be private in the same file
+- no new crates
+- no backend parser dependency
+- no Cargo.toml change
+- no Cargo.lock change
+
+chosen parser algorithm plan
+- accept only ReplayInput::Memory
+- reject ReplayInput::File with replay header parse error: unsupported-input
+- reject empty memory label with replay header mapping error
+- read header_size i32 at offset 0
+- read header_crc u32 at offset 4 as layout evidence only
+- do not validate or expose header_crc
+- compute and bound header_end = 8 + header_size
+- read major_version, minor_version, net_version, and game_type from header data
+- enforce exact fixture tuple only:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- scan top-level properties until None terminator
+- reject duplicate top-level property names
+- parse selected scalar properties only
+- skip non-selected admitted property kinds only by bounded property_size
+- skip non-selected top-level ArrayProperty only by bounded property_size
+- reject selected ArrayProperty
+- reject unknown/unencountered property kinds
+- reject UTF-16/negative-length parse_text
+- require terminator end to equal header_end
+- stop at header_end
+- do not read content_crc
+- do not parse body, raw-state payloads, replay frames, footer structures, or semantic replay
+  events
+
+chosen test plan
+- add happy-path fixture memory-input test for rl_replay_header_fixture_001
+- fixture path source:
+  MIMIR_REPLAY_FIXTURE_PATH if set, otherwise
+  D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- assert exact replay_id, source_label, total_frames, and selected metadata values
+- assert complete-header-only byte slice succeeds without body parsing
+- add deterministic synthetic tests for unsupported input, empty label, short prefixes, negative
+  header_size, oversized header_size, unsupported version, missing terminator, duplicate selected
+  property, duplicate top-level property, unknown property kind, unsupported UTF-16/negative text,
+  selected ArrayProperty, non-finite selected float, and CRC non-validation boundary
+- if fixture path is missing, fixture-specific test may skip only with explicit fixture-missing
+  message; deterministic synthetic tests must still run
+
+whether actual parser implementation is reopened for the next pass
+- yes
+- limited exactly to the implementation plan and file boundary above
+
+whether parser implementation code was added now
+- no
+- this pass is planning/admission only
+
+what was intentionally excluded
+- parser implementation now
+- parser-success logic now
+- ReplayHeader production or synthesis now
+- CRC validation
+- backend parser dependencies
+- body parsing
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- nested array semantics
+- UTF-16 support
+- unknown property-kind support
+- ReplayInput::File support
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- mimir_export widening
+- mimir-io changes
+- mimir-export changes
+- mimir-types changes
+- manifest changes
+- lockfile changes
+
+whether Rust/code/manifests/lockfile changes were added, and why or why not
+- Rust source changes added: no
+- Cargo.toml changes added: no
+- Cargo.lock changes added: no
+- backend dependencies added: no
+- reason: this pass only reopens implementation planning; actual parser code remains deferred to
+  the next implementation pass

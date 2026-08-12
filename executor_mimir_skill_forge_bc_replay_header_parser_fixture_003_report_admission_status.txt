@@ -1,0 +1,168 @@
+executor mimir skill forge bc replay header parser fixture_003 report admission status
+
+pass type
+- report admission
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- docs/executor report-admission artifacts only
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_003_REPORT_ADMISSION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_003_report_admission_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_003_report_admission_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_003_report_admission_status.txt
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- extension: .replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+- byte length greater than 8: yes
+
+fixture_002 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- extension: .replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- byte length greater than 8: yes
+
+fixture_003 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+- extension: .replay
+- byte length: 1638538
+- SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- first four bytes little-endian i32: 11190
+- byte length greater than 8: yes
+- differs from fixture_001 by SHA-256: yes
+- differs from fixture_002 by SHA-256: yes
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+generated reports verified
+- yes
+- parser/header report exists: yes
+- parser/header report path: artifacts/replay_header_reports/rl_replay_header_fixture_003_report.txt
+- parser/header report current size: 4167 bytes
+- parser/header report recorded size matched: yes
+- structural report exists: yes
+- structural report path: artifacts/replay_header_reports/rl_replay_header_fixture_003_structural_report.txt
+- structural report current size: 21787 bytes
+- structural report recorded size matched: yes
+- both reports identify fixture_003: yes
+- both reports identify fixture_003 byte length and SHA-256 correctly: yes
+- both reports state generated outside MIMIR: yes
+- both reports state not MIMIR parser output: yes
+- both reports state not parser-success evidence: yes
+- both reports preserve no broad parser-support claim: yes
+- both reports preserve no body/raw-state/frame/event MIMIR evidence claim: yes
+- both reports preserve no export/runtime/CLI integration claim: yes
+
+parser/header report admitted as evidence-only
+- yes
+
+structural report admitted as evidence-only
+- yes
+
+selected property candidate evidence admitted
+- yes
+- admitted only as external/report candidate evidence
+- not admitted as MIMIR parser output
+
+structural byte-layout candidate evidence admitted
+- yes
+- admitted only as external structural/report evidence
+- content_size/content_crc/content_data_start are first body boundary candidates only
+
+BoolProperty evidence admitted as report-only
+- yes
+- top-level bForfeit BoolProperty is report evidence only
+- BoolProperty parser support was not admitted
+
+parser behavior changed
+- no
+
+parser-success claimed for fixture_003
+- no
+
+fixture_003 supported-version policy admitted
+- no
+
+third supported tuple added
+- no
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+ReplayInput::File support added
+- no
+
+content_crc read/validation added in MIMIR parser code
+- no
+
+export/runtime/CLI integration added
+- no
+
+exact validation commands run
+- PASS: cargo check --workspace --all-targets --all-features
+- PASS: cargo test -p mimir-replay -- --nocapture
+  - 20 passed; 0 failed; 0 ignored
+- PASS: cargo test -p mimir-skill -- --nocapture
+  - 273 passed; 0 failed; 0 ignored
+- PASS: cargo test --workspace --all-targets --all-features
+- PASS: cargo clippy --workspace --all-targets --all-features -- -D warnings
+- PASS: cargo test -p mimir-export -- --list
+  - 173 tests, 0 benchmarks
+
+forbidden crate boundary check
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-types/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- git diff for forbidden source/manifest/lockfile paths returned no paths
+- pre/post SHA-256 for guarded files matched:
+  - crates/mimir-replay/src/lib.rs: 7106A2891322A5121323F00B5EC171E84DA4ABF00D1802FA226FF1B531B027CF
+  - crates/mimir-skill/src/lib.rs: C851DDC128F72189DAC4A6A1E3E7D151A181C1F5B75830378C0E6BAC6CCCE9EB
+  - crates/mimir-types/src/lib.rs: 7E97135EBA28E40215E24F3602A8F537E5EFF7472A86351D853A8BFF10AFF29F
+  - Cargo.toml: B815700C45FD84FF860FDFF4526EAA46B5A76F8B213F570C4FA9788CCF689121
+  - Cargo.lock: 06D21529D8A307494ECAE8F064DFF019743B3D2C2615C7A8AFF6CC0FD8A2FB57
+- dependencies added to MIMIR: no
+- backend replay parser dependency added to MIMIR: no
+- forbidden dependency search found no boxcars/backend replay parser dependency in Cargo.toml or Cargo.lock: yes
+- only BoolProperty occurrence in guarded parser boundary remains an unsupported-property test: yes
+
+next stage
+- next pass may be fixture_003 mapping/error-boundary admission
+- no parser expansion yet
+- no parser-success admission for fixture_003 yet
+- no supported-version policy admission for fixture_003 yet

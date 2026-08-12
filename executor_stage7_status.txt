@@ -1,0 +1,10 @@
+execute-persist-load wrapper added: yes
+helper name: query_stub_execute_persist_and_load_execution_result_job_report
+delegates only to existing execute-and-persist + report load helpers: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 39
+validation commands run:
+cargo fmt --all
+cargo check --workspace --all-targets --all-features
+cargo test --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p mimir-export -- --list

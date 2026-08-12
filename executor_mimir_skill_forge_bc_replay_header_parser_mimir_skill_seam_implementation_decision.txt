@@ -1,0 +1,85 @@
+executor mimir skill forge bc replay header parser mimir-skill seam implementation decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+exact outcome chosen
+- Outcome A
+- exact planned narrow parallel mimir-skill minimal-header-attempt seam implemented
+- no parser expansion admitted
+
+whether fixture identity was verified
+- yes
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+whether planning input was verified
+- yes
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_PLANNING_REOPEN_V1.md inspected
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_decision.txt inspected
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_next.txt inspected
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_status.txt inspected
+- readiness handoff/readme/example/audit artifacts were present and considered as planning inputs
+
+whether mimir-skill consumer surface was re-inspected
+- yes
+- existing actual replay parsing contract and unsupported-attempt realization were re-inspected
+- existing ReplayInput::Memory preservation and file-backed rejection helpers were reused through a minimal-header-specific validation wrapper
+
+whether seam implementation succeeded
+- yes
+
+whether fixture/header success path passed
+- yes
+- fixture-backed header-only memory path passed in mimir-skill tests
+
+whether unsupported-attempt behavior remained unchanged
+- yes
+- UnsupportedReplayReader path remains parallel and still records unsupported status and no replay header
+
+whether file input remains unsupported
+- yes
+- file-backed attempt input is rejected before parser invocation
+- ReplayInput::File support was not added
+
+exact files changed
+- crates/mimir-skill/src/lib.rs
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_IMPLEMENTATION_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_status.txt
+
+whether parser behavior changed in mimir-replay
+- no
+
+whether parser-success was broadened
+- no
+
+what was intentionally not broadened
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance proof
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- nested array semantic parsing
+- UTF-16 support
+- broad version-family support
+- unencountered property-kind support
+- CLI/runtime behavior
+- export routing
+- backend replay parser dependency
+
+whether forbidden files/dependencies changed
+- mimir-cli changed: no
+- mimir-io changed: no
+- mimir-export changed: no
+- mimir-types changed: no
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-replay/Cargo.toml changed: no
+- root Cargo.toml changed: no
+- root Cargo.lock changed: no
+- dependencies changed: no
+- backend replay parser dependency added: no

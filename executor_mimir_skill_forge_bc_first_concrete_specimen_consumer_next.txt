@@ -1,0 +1,50 @@
+executor mimir skill forge bc first concrete specimen consumer next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- another continued receipt-bound low-boost-recovery-specific refinement above
+  `LowBoostRecoveryBcFirstConcreteSpecimenConsumerResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+why this is the immediate next pass
+- The repo now has:
+  - one real low-boost-recovery actual filesystem emission boundary
+  - one bounded low-boost-recovery emitted-output audit/readback boundary
+  - one explicit no-sidecar/no-manifest decision above that audited boundary
+  - one inspection-only continued receipt-bound downstream boundary
+  - one first concrete non-audit specimen-level consumed-view boundary
+- The next unresolved problem is no longer what the first concrete consumed specimen view is.
+- The next unresolved problem is whether that consumed specimen view is already sufficient for the
+  first explicit raw-state-window lookup / observation-access planning boundary without
+  materializing tensors or controls.
+
+what the next pass should consume
+- `LowBoostRecoveryBcFirstConcreteSpecimenConsumerResultV1`
+- the same audited family root directory reference preserved by that result
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- test whether the `LowBoostRecoveryBcArtifactConsumerHandoffV1`-shaped consumed specimen view is
+  sufficient for the first explicit raw-state-window lookup / observation-access planning boundary
+- make any remaining insufficiency explicit instead of patching it with speculative emitted files,
+  generic abstractions, tensor materialization, or control extraction
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no sidecar/manifest realization unless a deliberate reopen decision proves it necessary
+- no generic multi-family downstream/export framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout/physics work
+
+classification of the next pass
+- another continued receipt-bound family-specific downstream refinement
+
+why a deliberate reopen decision is not the next pass
+- This pass found one honest narrower consumed specimen view and implemented it.
+- No concrete defect yet proves that `LowBoostRecoveryBcArtifactConsumerHandoffV1` is still
+  insufficient.
+- Reopening `mimir_export` or sidecar/manifest realization now would still be speculative rather
+  than defect-driven.

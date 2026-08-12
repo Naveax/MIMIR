@@ -1,0 +1,90 @@
+executor mimir skill forge bc replay header parser first minimal implementation audit decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+exact outcome chosen
+- Outcome A
+- implementation is admitted as matching the first minimal parser boundary
+
+whether implementation is admitted
+- yes
+- admitted only for the first minimal ReplayInput::Memory header parser boundary
+
+whether parser-success remains admitted only for first minimal boundary
+- yes
+- ReplayInput::Memory only
+- exact fixture-supported tuple only
+- header-only parsing ending at 8 + header_size only
+- parser-success admitted broadly: no
+
+exact admitted implementation facts
+- MinimalReplayHeaderReader exists
+- impl ReplayReader for MinimalReplayHeaderReader exists
+- ReplayInput::File is rejected by MinimalReplayHeaderReader with unsupported-input
+- UnsupportedReplayReader behavior remains unchanged
+- header_size is read at offset 0 as i32 little-endian
+- header_crc is read at offset 4 as u32 little-endian but not validated or exposed
+- header_end is computed as 8 + header_size
+- parser reads only the header region and allows trailing bytes after header_end
+- None terminator end must equal header_end
+- content_crc is not read or validated
+- exact tuple required:
+  major_version=868
+  minor_version=32
+  net_version=10
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- selected scalar mappings are implemented for Id, NumFrames, ReplayName, Date, MapName,
+  ReplayVersion, BuildVersion, MaxChannels, MatchType, TeamSize, and RecordFPS
+- non-selected admitted kinds are skipped only by bounded property_size
+- non-selected top-level ArrayProperty is skipped only by bounded property_size
+- selected ArrayProperty is rejected
+- unknown property kinds are rejected
+- negative-length/UTF-16 text is rejected as unsupported-text
+- fixture happy path passed
+- complete-header-only stop-boundary test passed
+- synthetic error-boundary tests passed
+- CRC non-validation boundary test passed
+
+exact suspicious/partial/rejected facts
+- no suspicious implementation fact was found inside the admitted first minimal boundary
+- lowercase replay Id hex would be accepted, but this is within the admitted ASCII-hex policy and
+  no uppercase-only policy was admitted
+- Windows-1252 behavior beyond the ASCII fixture values remains unbroadened and not corpus-admitted
+- broad replay parser success remains rejected
+
+whether a fix pass is required
+- no
+
+what was intentionally not broadened
+- CRC validation
+- content_crc read or validation
+- body parsing
+- raw-state payload parsing
+- replay frame extraction
+- footer parsing
+- semantic event parsing
+- nested array semantics
+- UTF-16 text support
+- ReplayInput::File support
+- backend parser dependency
+- CLI/runtime code
+- export integration or widening
+- broad replay version-family support
+- additional unencountered property-kind support
+
+whether forbidden files/dependencies changed
+- forbidden Rust source changed by this audit pass: no
+- mimir-io changed by this audit pass: no
+- mimir-export changed by this audit pass: no
+- mimir-types changed by this audit pass: no
+- Cargo.toml changed by this audit pass: no
+- Cargo.lock changed by this audit pass: no
+- backend dependency added: no
+- dependency scan found no boxcars, rattletrap, rrrocket, carball, rlreplay, or subtr-actor
+
+decision
+- implementation admitted for first minimal boundary only
+- next pass may be narrow parser-readiness handoff or integration-planning
+- no broad parser expansion yet

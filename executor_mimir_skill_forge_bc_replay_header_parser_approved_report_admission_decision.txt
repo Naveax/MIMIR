@@ -1,0 +1,139 @@
+executor mimir skill forge bc replay header parser approved report admission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- Outcome B
+
+whether report identity was verified
+- yes
+- report path exists: artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- report references fixture id: rl_replay_header_fixture_001
+- report references tool: boxcars crate
+- report references tool version: 0.11.1
+- report references parser mode: ParserBuilder::new(bytes).never_parse_network_data().parse()
+- report explicitly states it is not MIMIR parser output: yes
+- report explicitly states it is not parser success: yes
+
+whether report was admitted fully, partially, or rejected
+- partially admitted
+- full admission rejected because complete byte-layout evidence and complete expected ReplayHeader
+  evidence are still missing
+- full rejection rejected because the report contains bounded, useful, fixture-specific external
+  parser facts
+
+whether byte-layout evidence was admitted
+- partial only
+- no byte offsets, byte lengths, numeric endianness, string/property encoding rules, header
+  termination rule, body boundary rule, or parser error boundaries were admitted
+
+whether expected ReplayHeader evidence was admitted
+- partial only
+- source_label is admitted only from the admitted future ReplayInput::Memory label:
+  rl_replay_header_fixture_001
+- replay_id remains partial because Id is only an external parser-reported header property
+- total_frames remains partial because NumFrames is only an external parser-reported header
+  property and no mapping policy is admitted
+- metadata remains partial because selected properties are not yet an admitted MIMIR metadata map
+- no complete ReplayHeader is admitted
+
+exact admitted facts
+- report provenance: temporary external Rust crate outside the MIMIR workspace
+- parser/tool provenance: boxcars crate version 0.11.1
+- parser mode provenance: ParserBuilder::new(bytes).never_parse_network_data().parse()
+- report non-claims: not MIMIR parser output, not parser success, not byte-layout admission
+- fixture identity cross-check: rl_replay_header_fixture_001 at
+  D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay, byte length 3001021,
+  SHA-256 F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- report boundary facts: network parse requested Never; no network frames, replay frames,
+  raw-state payloads, or semantic replay events are present in the report
+- future input-label fact: the first admitted input remains ReplayInput::Memory with label
+  rl_replay_header_fixture_001
+
+exact partially admitted report-backed facts
+- external parse success: boxcars_parse_result success
+- external recognition: recognized_as_rocket_league_replay yes, inferred only from boxcars success
+- header_size: 13200
+- header_crc: 2370383193
+- major_version: 868
+- minor_version: 32
+- net_version: Some(10)
+- game_type: TAGame.Replay_Soccar_TA
+- header_property_count: 26
+- property_kind_counts: {"Array": 3, "Float": 3, "Int": 12, "Name": 2, "QWord": 1, "Str": 5}
+- Id: kind=Str, value=7F59297811EFD8B19C444A81FB07660C
+- ReplayName: kind=Str, value=Frestyle double touch but not ball
+- Date: kind=Str, value=2025-01-22 11-10-32
+- MapName: kind=Name, value=Stadium_Winter_P
+- ReplayVersion: kind=Int, value=8
+- BuildVersion: kind=Str, value=241206.55345.468477
+- NumFrames: kind=Int, value=13555
+- MaxChannels: kind=Int, value=2047
+- MatchType: kind=Name, value=Online
+- TeamSize: kind=Int, value=3
+- RecordFPS: kind=Float, value=30.0
+
+exact remaining gaps
+- supported Rocket League replay header admission rule remains missing
+- supported version or version-family policy remains missing
+- header boundary or termination rule remains missing
+- body/raw-state boundary for a minimal header parser remains missing
+- byte offsets or structural paths remain missing
+- field byte lengths remain missing
+- numeric endianness remains missing
+- string and property encoding rules remain missing
+- replay id derivation or explicit blocked policy remains missing
+- total_frames derivation or explicit None policy remains missing
+- metadata key map or explicit empty metadata policy remains missing
+- insufficient-byte boundary remains missing
+- malformed-byte boundary remains missing
+- unsupported-format/version boundary remains missing
+- parser-success logic remains missing and closed
+
+whether parser implementation may proceed or remains blocked
+- parser implementation remains blocked
+- parser-success logic remains blocked
+- parser implementation may proceed only after fixture evidence, complete byte-layout evidence, and
+  complete expected ReplayHeader evidence are admitted by later passes and implementation is
+  explicitly reopened
+
+what was intentionally excluded
+- MIMIR parser implementation
+- parser-success logic
+- ReplayHeader production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- mimir_export widening
+- modifying mimir-io
+- modifying mimir-export
+- modifying mimir-types
+- modifying Cargo.toml
+- modifying Cargo.lock
+- adding backend dependencies
+- adding fixture files
+- treating fixture path, filename, provenance, byte length, or SHA-256 as parser facts
+
+whether Rust/code/manifests/lockfile changes were added, and why or why not
+- Rust source changes added: no
+- Cargo.toml changes added: no
+- Cargo.lock changes added: no
+- MIMIR backend dependencies added: no
+- reason: this pass is evidence admission only, and the report does not satisfy the parser
+  implementation gate
+
+why this is enough for the next pass
+- the report has been admitted only to the extent justified by its own text
+- useful external header/property facts are preserved without pretending they are a complete MIMIR
+  byte-layout map
+- the exact missing evidence is now enumerated
+- the next pass can target the remaining byte-accounting and mapping gaps without reopening parser
+  implementation prematurely

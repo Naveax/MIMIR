@@ -1,0 +1,89 @@
+executor mimir skill forge bc replay header parser external byte-layout evidence or report route decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- Outcome B
+
+whether existing approved byte-layout evidence exists
+- no
+- no approved existing byte-layout artifact or parser/tool report was found before this pass
+
+whether one-off report generation is available
+- yes
+- selected route: temporary external Rust crate outside the MIMIR workspace using boxcars 0.11.1
+- selected parser mode: ParserBuilder::new(bytes).never_parse_network_data().parse()
+- selected route is evidence-only and is not a MIMIR parser implementation
+
+whether a report was generated
+- yes
+
+report path
+- artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+
+whether byte-layout evidence was admitted
+- no
+- the report is generated evidence only and requires a later admission pass
+
+whether expected ReplayHeader evidence was admitted
+- no
+- the report contains external parser-reported header fields, but no MIMIR ReplayHeader mapping or
+  expected output was admitted
+
+whether implementation may proceed or remains blocked
+- implementation remains blocked
+- parser-success logic remains blocked
+- parser implementation may proceed only after fixture evidence, byte-layout evidence, and expected
+  ReplayHeader evidence are all admitted
+
+what was intentionally excluded
+- MIMIR parser implementation
+- parser-success logic
+- ReplayHeader production or synthesis
+- byte-layout admission
+- expected ReplayHeader admission
+- backend dependency addition to MIMIR
+- modifying mimir-io
+- modifying mimir-export
+- modifying mimir-types
+- modifying Cargo.toml
+- modifying Cargo.lock
+- widening mimir_export
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- treating fixture path, filename, provenance, byte length, or SHA-256 as parser facts
+
+whether Rust/code/manifests/lockfile changes were added, and why or why not
+- MIMIR Rust source changes added: no
+- MIMIR Cargo.toml changes added: no
+- MIMIR Cargo.lock changes added: no
+- MIMIR backend dependencies added: no
+- external temporary Rust tool created outside workspace: yes, under D:\Temp
+- reason: this pass permits a bounded external parser/tool report as evidence only, but forbids
+  integrating parser code or dependencies into MIMIR
+
+why this is enough for the next pass
+- the fixture identity was reverified
+- no approved existing byte-layout evidence was found
+- a bounded external parser/tool report was generated from the admitted fixture
+- the generated report is explicitly marked as not MIMIR parser output, not parser success, and not
+  byte-layout admission
+- the next pass can be narrowly scoped to admitting or rejecting the generated parser report
+
+next pass implication
+- next pass must be an approved parser-report admission pass
+- parser implementation remains closed
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- mimir_export widening remains forbidden

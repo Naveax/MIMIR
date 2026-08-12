@@ -1,0 +1,45 @@
+executor mimir skill forge bc stop-or-freeze above explicit admission realization no exact caller form next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+next pass
+- no further pass is justified until new audited evidence or a new explicit external requirement
+  appears above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- no further pass is justified until new evidence arrives
+
+why no immediate next pass is justified
+- The current audited repo proves seam ownership only, not one exact caller-admitted payload.
+- The current audited repo leaves every exact candidate form unproven:
+  - file-path-backed
+  - byte-backed
+  - replay-frame-backed
+  - `mimir_replay::ReplayInput`-backed
+  - provenance-only
+- A contract-definition pass would still invent the object shape.
+- Another reopen-decision pass with no new evidence would only repeat the same answer.
+
+what must exist before any later pass is justified
+- one new audited consumer requirement or one new explicit external requirement that selects one
+  exact caller-admitted source-form class
+- one audited reason that fixes the exact relationship between that caller object and the
+  preserved receipt-bound tuple
+- no reinterpretation of `source_replay`
+- no reinterpretation of `source_replay.provenance_label`
+- no reinterpretation of `audited_family_root_directory`
+- no `mimir_export` widening unless that separate boundary is explicitly reopened
+
+what must remain closed until then
+- artifact semantics remain closed
+- sibling-sidecar semantics remain closed
+- manifest/index semantics remain closed
+- replay-source actual-materialization implementation remains out of scope
+- replay-source carrier discovery remains out of scope
+- replay-input locator logic remains out of scope
+- replay parsing remains out of scope
+- raw-state payload materialization remains out of scope
+- tensor/control materialization remains out of scope
+- rollout/physics/runtime work remains out of scope

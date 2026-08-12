@@ -1,0 +1,117 @@
+executor mimir skill forge bc specimen batching decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact batching/orchestration role chosen
+- one low-boost-recovery-specific ordered batching boundary above
+  `LowBoostRecoveryBcConsumerRefinementResultV1`
+- exact job:
+  - admit only already-refined low-boost-recovery BC specimens
+  - revalidate that each refined specimen still preserves the handoff/refinement invariants
+  - group specimens by shared low-boost-recovery source recovery context
+  - impose deterministic order across groups and within each group
+  - preserve the full refined specimen result unchanged inside the ordered batch output
+
+exact output / disposition chosen
+- exact result type:
+  - `LowBoostRecoveryBcSpecimenBatchingResultV1`
+- exact group type:
+  - `LowBoostRecoveryBcSpecimenBatchGroupV1`
+- exact batch disposition:
+  - `ReadyForLowBoostRecoveryLayoutRefinementOnly`
+- exact output shape:
+  - `specimen_count`
+  - `groups`
+  - `batching_disposition`
+- exact preserved specimen content:
+  - each group's `specimens` field is `Vec<LowBoostRecoveryBcConsumerRefinementResultV1>`
+  - no second specimen DTO was introduced
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcConsumerRefinementResultV1`.
+- Revalidate each refined specimen instead of trusting construction history.
+- Require preserved lineage fields to remain present.
+- Require `artifact_id` to remain derived from `accepted_reference_variant_id`.
+- Require observation binding to remain
+  `accepted_reference_window_from_raw_state_window_ref`.
+- Require supervision window role to remain `accepted_reference_variant_window`.
+- Require `accepted_reference_window` to remain a valid bounded window.
+- Require target binding to remain
+  `accepted_reference_variant_control_target_deferred`.
+- Require confidence to remain `boundary_stable`.
+- Require unresolved assumptions to remain the exact low-boost-recovery carried set.
+- Require `consumer_disposition` to remain `ReadyForSpecimenBatchingOnly`.
+- Require `consumer_notes` to remain the exact low-boost-recovery consumer-refinement note set.
+- Require every `artifact_id` in the batch input slice to be unique.
+
+exact grouping decisions chosen
+- Group by the exact low-boost-recovery source recovery context:
+  - `source_replay.replay_id`
+  - `source_replay.provenance_label`
+  - `source_subject`
+  - `source_slice_id`
+  - `source_raw_state_window_ref`
+  - `source_phase_id`
+- Reason:
+  - this keeps grouping tied to preserved family lineage instead of generic dataset or export
+    semantics
+  - it prevents silently merging refined specimens that disagree on any source recovery-context
+    field
+
+exact ordering decisions chosen
+- Order groups lexicographically by:
+  - `source_replay.replay_id`
+  - `source_replay.provenance_label`
+  - `source_subject`
+  - `source_slice_id`
+  - `source_raw_state_window_ref`
+  - `source_phase_id`
+- Order specimens within a group lexicographically by:
+  - `accepted_reference_window.start`
+  - `accepted_reference_window.end_exclusive`
+  - `accepted_reference_variant_id`
+  - `artifact_id`
+- Represent deterministic group order through `group_ordinal`.
+- Represent deterministic specimen order through concrete `specimens` vector order.
+
+exact failure decisions chosen
+- Empty input fails explicitly.
+- Any malformed refined specimen fails explicitly with its input index.
+- Any duplicate `artifact_id` fails explicitly.
+- No repair, skip, inferred fallback, or silent deduplication was added.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any generic multi-family batching/orchestration framework
+- any new shared persisted DTO in `mimir-types`
+- any `mimir-io` widening
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any speculative metadata bag
+- any usefulness-proof or policy-improvement claim
+
+whether Rust type shaping / narrow implementation were added, and why
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcSpecimenBatchingDispositionV1`
+  - `LowBoostRecoveryBcSpecimenBatchGroupV1`
+  - `LowBoostRecoveryBcSpecimenBatchingResultV1`
+  - `LowBoostRecoveryBcSpecimenBatchingError`
+  - `batch_low_boost_recovery_bc_specimens_v1(...)`
+- Added one local refinement revalidation helper because
+  `LowBoostRecoveryBcConsumerRefinementResultV1` is public and can be manually constructed, so
+  batching cannot trust construction history alone.
+- No `mimir-types` additions were needed because the batch result remains repo-local and the
+  preserved refined specimen already contains the required payload.
+- No `mimir-io` changes were needed because raw artifact IO ownership was already correct.
+- No `mimir-export` changes were made.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess how multiple refined specimens are grouped.
+- The next pass no longer needs to guess the deterministic ordering contract.
+- The next pass no longer needs to invent a second specimen payload shape.
+- The next pass now has one narrow family-specific ordered batch result to refine further without
+  reopening `mimir_export`.

@@ -1,0 +1,154 @@
+executor mimir skill forge bc raw-state-window lookup realization proof decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact proof role chosen
+- one low-boost-recovery-specific proof-of-sufficiency / insufficiency boundary above
+  `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1`
+- exact job:
+  - admit only already-validated raw-state-window lookup / observation-access planning results
+  - revalidate that the preserved planning surface is still intact without reopening filesystem
+    reads or lower planning layers
+  - compare the admitted planning-owned view against one exact sufficiency criterion for actual
+    receipt-bound raw-state-window lookup realization
+  - return one bounded family-specific proof result instead of attempting realization
+
+exact sufficiency / insufficiency decision chosen
+- chosen decision:
+  - insufficient for a first actual receipt-bound raw-state-window lookup realization pass
+- exact reason:
+  - `source_raw_state_window_ref` remains an opaque linkage handle only
+  - no repo-local contract maps that handle to one concrete receipt-bound raw-state lookup source
+  - the preserved family root `low_boost_recovery_bc_v1` is only a BC specimen tree and is not a
+    raw-state storage root
+  - `ReplaySourceRef.provenance_label` remains a bounded provenance label, not a loader-path or
+    parser transcript contract
+
+exact missing piece identified
+- exact missing piece:
+  - `MissingReceiptBoundRawStateWindowLocatorContract`
+- exact problem statement:
+  - the current planning-owned view does not expose one contract that takes admitted planning data
+    and yields one concrete raw-state source for each `source_raw_state_window_ref` without
+    reopening lower boundaries or inventing new storage semantics
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofDispositionV1`
+- exact disposition:
+  - `InsufficientForActualReceiptBoundRawStateWindowLookupRealization`
+- exact note type:
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofNoteV1`
+- exact insufficiency marker type:
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofInsufficiencyMarkerV1`
+- exact insufficiency marker:
+  - `MissingReceiptBoundRawStateWindowLocatorContract`
+- exact specimen result type:
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofLaneResultV1`
+- exact proof result type:
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofResultV1`
+- exact entry function:
+  - `prove_low_boost_recovery_bc_raw_state_window_lookup_realization_sufficiency_from_planning_v1(...)`
+- exact proof result fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_planning_disposition`
+  - `source_planning_notes`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `proof_disposition`
+  - ordered `proof_notes`
+  - `exact_insufficiency_marker`
+- exact lane result fields:
+  - `lane_ordinal`
+  - ordered `ordered_specimen_results`
+- exact specimen result fields:
+  - `specimen_ordinal`
+  - `artifact_id`
+- exact note set:
+  - `RawStateWindowLookupObservationAccessPlanningBoundaryPreserved`
+  - `AuditedFamilyRootReferencePreserved`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ArtifactIdsPreserved`
+  - `SourceRawStateWindowRefRemainsOpaqueLookupReferenceOnly`
+  - `MissingReceiptBoundRawStateWindowLocatorContract`
+  - `AuditedFamilyRootNotInterpretedAsRawStateLookupRoot`
+  - `ActualLookupRealizationDeferred`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationDeferred`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1`.
+- Require `source_consumer_disposition` to remain
+  `ReadyForLowBoostRecoveryConsumedSpecimenViewOnly`.
+- Require `source_consumer_notes` to remain the exact first concrete specimen consumer note set.
+- Require `planning_disposition` to remain
+  `ReadyForLowBoostRecoveryRawStateWindowLookupObservationAccessPlanningOnly`.
+- Require `planning_notes` to remain the exact planning note set.
+- Require the audited family root basename to remain `low_boost_recovery_bc_v1`.
+- Require `group_count > 0` and `specimen_count > 0`.
+- Require lane/specimen order to remain aligned with vector order.
+- Revalidate every planning specimen view against the exact
+  `LowBoostRecoveryBcArtifactConsumerHandoffV1` invariants.
+- Require every `artifact_id` to remain present and unique across the full admitted input.
+- Forbid reopening first concrete specimen consumer, continued receipt-bound downstream,
+  emitted-output audit/readback, actual emission receipts, plans, persisted artifacts, BC rows,
+  shells, or any lower planning boundary.
+
+exact failure / defer decisions chosen
+- Hard fail on malformed or degraded planning input.
+- Hard fail on wrong first-concrete-consumer or planning disposition/note sets.
+- Hard fail on count drift, order drift, invalid handoff content, or duplicate artifact ids.
+- Hard fail on any attempt to reinterpret the preserved family root as a raw-state lookup root.
+- No repair, no receipt regeneration, no filesystem re-audit, no skipping, and no resorting were
+  added.
+- No soft defer path was added.
+- Reason no defer path exists:
+  - for valid admitted input, the current repo-local evidence is already enough to prove
+    insufficiency
+  - adding a softer state would widen semantics instead of making the missing contract explicit
+
+what was intentionally excluded
+- any actual raw-state lookup realization
+- any raw-state locator/index implementation
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family downstream/export framework
+- any generic manifest/index framework
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofDispositionV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofNoteV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofInsufficiencyMarkerV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofSpecimenResultV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofLaneResultV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofResultV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupRealizationProofError`
+  - `prove_low_boost_recovery_bc_raw_state_window_lookup_realization_sufficiency_from_planning_v1(...)`
+- Added minimal tests for valid proof-result production, degraded-input rejection, preserved
+  order/artifact ids, and determinism.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were needed.
+
+why sidecars/manifests/generic indexing were not automatically reopened
+- This proof identifies a missing locator contract, not a proven storage mechanism.
+- Current evidence does not prove that a root-level sidecar, a manifest, or a generic index is the
+  minimum honest fix.
+- `mimir_export` still remains outside the defect path and therefore remains forbidden.
+
+why this is enough for the next pass
+- The next pass no longer has to debate whether the current planning-owned view might already be
+  enough for actual lookup realization.
+- The exact missing contract is now explicit and bounded.
+- Because the defect is now narrowed to one missing receipt-bound locator contract, the next pass
+  can stay small and deliberate instead of widening into speculative implementation.

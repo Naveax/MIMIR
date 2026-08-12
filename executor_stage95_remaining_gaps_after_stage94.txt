@@ -1,0 +1,146 @@
+executor stage 95 remaining-gap reindex after stage 94
+
+scope
+- repo root: `D:\RocketLeague bot\MIMIR`
+- pass intent: refresh the remaining-gap index after Stage 94 without widening runtime behavior, export semantics, cleanup boundaries, CLI surface, or deterministic fixture scope
+- analysis basis:
+  - `executor_stage91_remaining_gaps.txt`
+  - `executor_stage92_export_name_teacher_id_effect.txt`
+  - `executor_stage93_scoreboard_component_schema.txt`
+  - `executor_stage94_stage77_scoreboard_component_drift.txt`
+
+A. GAPS CLOSED SINCE STAGE 91
+
+1. `export_name -> TeacherLabelId` direct-effect gap is now closed
+- Stage 91 left this as the top remaining first-class contract edge:
+  - `VerticalSliceFixture.export_name -> TeacherLabelId::new(format!("{}:teacher:{ordinal}", ...)) -> persisted teacher artifact payload ids`
+- explicitly closed by Stage 92:
+  - artifact: `executor_stage92_export_name_teacher_id_effect.txt`
+  - helper: `persisted_input_artifact_for_lane_with_export_name`
+  - test: `deterministic_vertical_slice_export_name_changes_only_export_name_derived_teacher_ids`
+- closure evidence:
+  - baseline teacher ids and mutated teacher ids were asserted directly
+  - ordinal suffix stability was asserted while only the `export_name`-derived prefix changed
+  - export bundle manifest and canonical consumer manifest `export_name` were asserted across both runs
+  - unrelated surfaces were asserted stable, including replay id, teacher namespace, simulation seed, anchor hint, proposals, scorer weights, anchors, branches, scoreboard payload, and teacher ordering
+
+2. scoreboard component-schema identity is now documented as a named contract surface
+- Stage 91 left this only broadly guarded outside the Stage 90 Stage69 score-signals slice
+- Stage 93 materially reduced that ambiguity by indexing the component path explicitly:
+  - artifact: `executor_stage93_scoreboard_component_schema.txt`
+- Stage 93 named:
+  - persisted source path from `PersistedVerticalSliceProposal.score_signals`
+  - scoring path through `WeightedSumScorer::score(...)`
+  - persisted scoreboard artifact surface
+  - canonical reload surface vs frozen snapshot narrowing
+  - current deterministic key expectations (`coverage`, `stability`)
+  - exact remaining follow-up edge for Stage77 schema drift
+
+3. Stage77 scoreboard component-schema negative drift gap is now closed
+- Stage 91 still carried this as a best next follow-up candidate rather than a first-class failure path
+- explicitly closed by Stage 94:
+  - artifact: `executor_stage94_stage77_scoreboard_component_drift.txt`
+  - helpers: `assert_fixture_lane_scoreboard_component_schema_drift_fails_explicitly`, `assert_scoreboard_component_keys_match`
+  - test: `second_deterministic_vertical_slice_detects_explicit_scoreboard_component_schema_drift`
+- closure evidence:
+  - after a valid `Stage77Second` run, only one persisted scoreboard row was rewritten
+  - row `anchor-stage77-second:branch:0` had `coverage` renamed to `coverage_drifted`
+  - canonical reload still succeeded structurally
+  - failure was asserted with an explicit component-schema mismatch message naming the lane, branch id, expected keys, and observed keys
+  - totals, row count, branch ids, teacher artifacts, and scoreboard readability were preserved so the failure stayed localized to schema drift
+
+B. GAPS PARTIALLY REDUCED BUT STILL NOT FIRST-CLASS
+
+1. Stage85-90 direct-effect proofs are still concentrated on one lane for most edges
+- current state:
+  - Stage 92 closes `export_name` on `Stage69Sample`
+  - Stage 94 closes scoreboard component-schema drift on `Stage77Second`
+  - the remaining Stage85-90 direct-effect closures (`scorer_weights`, `simulation_seed`, `teacher_namespace`, `anchor_hint.metadata`, proposal surface, proposal score_signals`) still live primarily on `Stage69Sample`
+- why this is still not fully first-class:
+  - the family now has better split coverage, but several edge-local proofs still depend on one lane being the only direct-effect witness for that edge
+  - Stage77 still relies on broader parity/contract coverage for most non-scoreboard edges
+
+2. Stage77 scoreboard component values are not enumerated as explicitly as Stage69 values
+- current state:
+  - Stage 94 makes Stage77 component-key drift first-class
+  - Stage 90 already enumerates exact Stage69 component maps and totals before and after mutation
+- why this is still not fully first-class:
+  - Stage77 now has explicit schema-key protection, but not the same value-level component enumeration path used on Stage69
+  - a future defect that preserves keys but perturbs component values on Stage77 would still be caught mainly through broader scoreboard payload assertions, not a dedicated edge-local value proof
+
+3. Component-schema determinism still depends on current `BTreeMap` behavior rather than a separately versioned schema list
+- current state:
+  - Stage 93 documents that component keys flow through `BTreeMap<String, f64>` surfaces
+  - Stage 94 makes key-set drift explicit on Stage77
+- why this is still not fully first-class:
+  - the deterministic family now names and tests expected keys, but ordering determinism still comes from container behavior rather than an independently declared schema/version contract
+  - that is acceptable for the current narrow family, but it remains concentrated in implementation choice plus tests rather than a distinct schema-definition artifact
+
+C. INTENTIONALLY NARROW / SHOULD NOT BE EXPANDED YET
+
+1. deterministic fake-backend vertical slice only
+- real rollout physics, backend diversity, and live orchestration remain out of scope for this contract family
+
+2. no real replay ingestion
+- persisted vertical-slice input remains the trusted boundary
+- replay parsing is still intentionally absent in this pass
+
+3. no export-bundle semantic widening
+- recent helpers and tests remain narrow observability shims
+- this pass should not broaden manifest semantics, exported payload scope, or bundle meaning
+
+4. no runtime CLI or execution-boundary expansion
+- this pass should not add commands, schedulers, retries, queues, network behavior, or execution-result cleanup changes
+
+5. frozen snapshots stay narrower than canonical artifacts
+- snapshot omissions are still intentional and should not be “fixed” by widening snapshot surface area in this pass
+
+D. BEST NEXT FOLLOW-UP CANDIDATES
+
+1. exact edge
+- Stage77 direct-effect proof for `teacher_namespace` or `anchor_hint.metadata`
+- why it still matters:
+  - these are metadata propagation edges that can drift silently while totals and branch identity stay stable
+  - they are still primarily proven on `Stage69Sample`
+- why it is not fully closed yet:
+  - Stage77 currently has the new explicit scoreboard schema negative, but not a matching propagation-focused direct-effect proof for these metadata edges
+- what kind of future pass it should be:
+  - narrow direct-effect test on `Stage77Second`, not a fixture-framework expansion
+
+2. exact edge
+- Stage77 scoreboard component value enumeration, not just key-schema drift
+- why it still matters:
+  - Stage94 proves the key set explicitly, but not a Stage77 value-level mutation with exact before/after component maps
+  - this leaves Stage69 as the only lane with the strongest value-level scoreboard component demonstration
+- why it is not fully closed yet:
+  - current Stage77 protection is schema-local and structural, not a direct component-value mutation proof
+- what kind of future pass it should be:
+  - narrow negative or direct-effect scoreboard-value pass that preserves keys while perturbing one component contribution
+
+3. exact edge
+- document whether scoreboard component ordering should remain an implementation-by-`BTreeMap` property or be promoted to an explicit schema-version contract
+- why it still matters:
+  - Stage93 and Stage94 now make key identity much sharper, but ordering semantics are still implicit
+  - future maintainers could misread lexical ordering as accidental rather than current intended determinism
+- why it is not fully closed yet:
+  - there is no explicit no-change decision artifact that says ordering is intentionally inherited from `BTreeMap` for now
+- what kind of future pass it should be:
+  - documentation/indexing pass first; only consider a test pass if ordering starts to drift or becomes externally consumed
+
+E. NO-CHANGE DECISION
+
+decision
+- this Stage 95 pass is reindex / documentation only
+- no runtime behavior should be considered changed by this pass
+- no test semantics should be considered changed by this pass
+- no feature logic, replay logic, rollout logic, policy training, live orchestration, scheduler/retry/queue behavior, network dependency, public API expansion, export-bundle semantic widening, runtime CLI commands, or execution-result cleanup changes are introduced here
+
+documentary consistency note
+- Stage 91, Stage 92, Stage 93, and Stage 94 artifacts were cross-checked against each other for closure ordering and remaining-gap wording
+- no documentary inconsistency required correction in this pass
+
+bottom line
+- the two concrete Stage 91 follow-up candidates that were still outstanding are now closed:
+  - `export_name -> TeacherLabelId` direct effect
+  - Stage77 scoreboard component-schema drift as an explicit negative
+- what remains is narrower and more diagnostic in nature, not evidence that Stage 92-94 left a known open defect in runtime behavior

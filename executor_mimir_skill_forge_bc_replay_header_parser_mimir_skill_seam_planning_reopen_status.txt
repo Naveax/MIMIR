@@ -1,0 +1,160 @@
+executor mimir skill forge bc replay header parser mimir-skill seam planning reopen status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+pass type
+- mimir-skill seam planning reopen pass
+- docs/artifacts only
+- no implementation in this pass
+- no parser scope expansion
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_PLANNING_REOPEN_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_status.txt
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture identity verified
+- yes
+
+README/readiness handoff input verified
+- yes
+
+mimir-skill consumer surface inspected
+- yes
+
+future mimir-skill seam planning reopened
+- yes
+- reopened only for the exact selected narrow parallel minimal-header-attempt seam
+
+parser behavior changed
+- no
+
+parser-success admitted for first minimal boundary
+- yes
+- existing admitted boundary remains ReplayInput::Memory, exact fixture-supported tuple, and
+  header-only parsing ending at 8 + header_size
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+  - result: success
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+forbidden crate boundary check
+- mimir-skill Rust source modified by this pass: no
+- mimir-cli modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- crates/mimir-replay/src/lib.rs modified by this pass: no
+- crates/mimir-replay/Cargo.toml modified by this pass: no
+- root Cargo.toml modified by this pass: no
+- root Cargo.lock modified by this pass: no
+- dependencies changed: no
+- backend replay parser dependency added: no
+- mimir_export widening: no
+- MinimalReplayHeaderReader currently used in mimir-skill: no
+- direct file edit write set:
+  - docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_PLANNING_REOPEN_V1.md
+  - executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_decision.txt
+  - executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_next.txt
+  - executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_status.txt
+- scoped forbidden tracked diff command:
+  git diff --name-only -- crates/mimir-skill/src/lib.rs crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock
+- scoped forbidden tracked diff result: no tracked file diffs reported
+- parser backend dependency scan command:
+  rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+- parser backend dependency scan result: no matches
+- mimir-skill MinimalReplayHeaderReader scan command:
+  rg -n "MinimalReplayHeaderReader" crates/mimir-skill
+- mimir-skill MinimalReplayHeaderReader scan result: no matches
+- workspace caveat:
+  git rev-parse --show-toplevel reports D:/ as the broader Git root, so broad git status is not
+  useful for MIMIR-only boundary evidence
+
+selected future seam
+- Option B: narrow parallel header-attempt seam in mimir-skill
+- future function must be explicitly named
+- future function must consume only already admitted ReplayInput::Memory bytes and non-empty label
+- future function must call MinimalReplayHeaderReader.read_header(&ReplayInput::Memory { label, bytes })
+- future function must preserve current UnsupportedReplayReader unsupported-attempt semantics
+- success classification: minimal header parse success only
+- failure classification: minimal header parse failure only
+- future implementation file boundary: crates/mimir-skill/src/lib.rs only
+- tests boundary: crates/mimir-skill/src/lib.rs only
+
+what remains closed
+- no parser behavior change now
+- no parser-success broadening now
+- no replay-source materialization
+- no file/path/hash/provenance proof
+- no ReplayInput::File support
+- no CRC validation
+- no content_crc read or validation
+- no body/raw-state/frame/event parsing
+- no nested array semantic parsing
+- no UTF-16 support
+- no broad replay version-family support
+- no unencountered property-kind support
+- no runtime behavior
+- no CLI behavior
+- no export behavior
+- no mimir-io behavior
+- no mimir-types schema change
+- no backend replay parser dependency
+
+next stage
+- next pass may implement only the exact selected mimir-skill seam in crates/mimir-skill/src/lib.rs
+- no broad parser expansion yet

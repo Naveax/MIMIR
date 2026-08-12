@@ -1,0 +1,75 @@
+executor deterministic-family archive guide
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: archive / freeze hygiene guide for future deterministic-family continuations
+date: 2026-04-12
+
+A. READ FIRST
+
+Read these first in almost every future deterministic-family continuation:
+
+1. `executor_deterministic_family_handoff_pack.txt`
+- Current entry point.
+- Fastest truthful statement of what the family is and is not.
+
+2. `executor_deterministic_family_closure_summary.txt`
+- Current compact source of truth for `closed / partial / deferred`.
+
+3. `executor_deterministic_family_contract_index.txt`
+- Surface-by-surface index with current evidence and status.
+
+4. `executor_deterministic_family_matrix_freeze.txt`
+- Post-closure freeze of the main surfaces and reopening risk.
+
+5. `executor_deterministic_family_no_change_locks.txt`
+- Current no-change boundaries that should stop accidental semantics drift.
+
+6. `executor_deterministic_family_historical_map.txt`
+- Use after the five artifacts above if there is any doubt about whether an older file is still live truth or only background.
+
+B. READ ONLY IF NEEDED
+
+Read these only when the task touches that exact surface:
+
+- `executor_stage77_export_name_teacher_id_decision.txt`
+  Only if the task discusses `export_name -> teacher label id` and whether the remaining Stage77 asymmetry is real or merely documentary.
+
+- `executor_scoreboard_component_ordering_boundary.txt`
+  Only if the task discusses scoreboard component ordering, ordering drift, or whether ordering is a first-class contract versus implementation-backed determinism.
+
+- `executor_optional_defaulted_proposal_fields_boundary.txt`
+  Only if the task discusses missing optional/defaulted proposal fields, loader strictness, or whether defaulting should remain unchanged.
+
+- `executor_stage77_closure_batch_audit.txt`
+  Only if the task questions whether a Stage77 closure-batch item is still open, partially closed, or intentionally deferred.
+
+- `executor_stage77_closure_batch_effects.txt`
+  Only if a quick summary of that closure batch is needed after reading the audit artifact.
+
+C. HISTORICAL ONLY
+
+These artifacts remain useful for background but should not drive current planning directly:
+
+- `executor_stage91_remaining_gaps.txt`
+- `executor_stage95_remaining_gaps_after_stage94.txt`
+- `executor_stage77_closure_batch_effects.txt`
+
+Use them to understand how the family reached the current boundary, not to repopulate a live gap list.
+
+D. DO NOT USE AS LIVE ROADMAP
+
+Do not treat these artifacts as current deterministic-family truth or as an active roadmap:
+
+- `executor_master_forward_roadmap.txt`
+- `executor_master_next_stage_prompts.txt`
+- `executor_stage98_next_10_layer.txt`
+- `executor_stage99_next_10_layer.txt`
+- `executor_stage100_next_10_layer.txt`
+- `executor_stage101_next_10_layer.txt`
+
+Those files describe earlier planning horizons that were later overtaken by Stage96-101 evidence, the Stage77 closure batch, and the post-closure canonical set.
+
+E. WHY THIS GUIDE EXISTS
+
+- The deterministic fake-backend vertical-slice family is already strongly closed at its intended narrow scope.
+- The main current risk is not a missing runtime proof. The main risk is stale-gap resurrection, roadmap carry-forward, or confusing historical artifacts with current canonical truth.
+- This guide exists so future work can start from the right freeze set immediately and avoid reopening closed or intentionally deferred surfaces by accident.

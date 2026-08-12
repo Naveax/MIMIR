@@ -1,0 +1,59 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation next
+
+selected outcome driving next step
+- Outcome A
+
+recommended next pass
+- exact supported tuple implementation audit/admission
+
+next pass scope
+- audit the implemented exact two-tuple allowlist in crates/mimir-replay/src/lib.rs
+- admit parser success only for the exact allowlisted tuples if the audit agrees
+- verify fixture_001 regression remains preserved
+- verify fixture_002 exact happy path remains preserved
+- verify fixture_002 header-only stop-boundary remains preserved
+- verify unknown BuildVersion remains rejected
+- verify unsupported-version remains the error category for unsupported tuples
+- verify no path/hash/filename/provenance/artifact-id/fixture-id predicate was added
+- verify no body bytes are inspected by the support predicate
+
+exact allowlist to audit
+- tuple 1:
+  - major_version=868
+  - minor_version=32
+  - net_version=10
+  - game_type=TAGame.Replay_Soccar_TA
+  - ReplayVersion=8
+  - BuildVersion=241206.55345.468477
+- tuple 2:
+  - major_version=868
+  - minor_version=32
+  - net_version=10
+  - game_type=TAGame.Replay_Soccar_TA
+  - ReplayVersion=8
+  - BuildVersion=250811.43331.492665
+
+must remain closed
+- broad parser expansion
+- broad version-family support
+- wildcard BuildVersion support
+- all-ReplayVersion=8 support
+- future unknown build support
+- ReplayInput::File support
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- export/runtime/CLI integration
+- backend replay parser dependency
+
+if audit finds an issue
+- next pass must target the exact implementation issue or ambiguity
+- do not proceed to broad parser expansion
+- do not proceed to export/runtime/CLI integration
+
+if audit admits Outcome A
+- parser-success may remain admitted only for exact allowlisted tuples
+- next planning may consider the next narrow replay-header parser boundary
+- no broad parser expansion is authorized by this artifact

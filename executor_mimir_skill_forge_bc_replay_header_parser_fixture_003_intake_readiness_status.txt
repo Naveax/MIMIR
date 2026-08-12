@@ -1,0 +1,125 @@
+executor mimir skill forge bc replay header parser fixture_003 intake readiness status
+
+pass type
+- fixture/evidence intake and planning
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added fixture_003 intake readiness documentation and executor artifacts
+- copied user-supplied fixture bytes to external_fixtures/sample_003.replay
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity reverified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- extension: .replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+
+fixture_002 identity reverified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- extension: .replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+
+fixture_003 available
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+
+fixture_003 copied
+- yes
+- copied from MIMIR_REPLAY_FIXTURE_003_PATH
+- source path recorded only as user-supplied private local path:
+  C:\Users\navea\Documents\My Games\Rocket League\TAGame\DemosEpic\DF72482811F0B757082C458D84251EFF.replay
+
+fixture_003 identity verified
+- yes
+- fixture id: rl_replay_header_fixture_003
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+- extension: .replay
+- byte length: 1638538
+- SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- first four bytes little-endian i32: 11190
+- byte length greater than 8: yes
+- differs from fixture_001 by SHA-256: yes
+- differs from fixture_002 by SHA-256: yes
+
+parser behavior changed
+- no
+
+parser-success claimed for fixture_003
+- no
+
+parser-success admitted broadly
+- no
+
+wildcard BuildVersion support added
+- no
+
+ReplayInput::File support added
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+exact validation commands run
+- PASS: cargo check --workspace --all-targets --all-features
+- PASS: cargo test -p mimir-replay -- --nocapture
+  - 20 passed; 0 failed; 0 ignored
+- PASS: cargo test -p mimir-skill -- --nocapture
+  - 273 passed; 0 failed; 0 ignored
+- PASS: cargo test --workspace --all-targets --all-features
+- PASS: cargo clippy --workspace --all-targets --all-features -- -D warnings
+- PASS: cargo test -p mimir-export -- --list
+  - 173 tests, 0 benchmarks
+
+forbidden crate boundary check
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-types/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- git diff for forbidden source/manifest/lockfile paths returned no paths
+- pre/post SHA-256 for guarded files matched:
+  - crates/mimir-replay/src/lib.rs: 7106A2891322A5121323F00B5EC171E84DA4ABF00D1802FA226FF1B531B027CF
+  - crates/mimir-skill/src/lib.rs: C851DDC128F72189DAC4A6A1E3E7D151A181C1F5B75830378C0E6BAC6CCCE9EB
+  - crates/mimir-types/src/lib.rs: 7E97135EBA28E40215E24F3602A8F537E5EFF7472A86351D853A8BFF10AFF29F
+  - Cargo.toml: B815700C45FD84FF860FDFF4526EAA46B5A76F8B213F570C4FA9788CCF689121
+  - Cargo.lock: 06D21529D8A307494ECAE8F064DFF019743B3D2C2615C7A8AFF6CC0FD8A2FB57
+- dependencies added: no
+- backend replay parser dependency added: no
+- ReplayInput::File support added: no
+- CRC validation added: no
+- content_crc read/validation added: no
+- body/raw-state/frame/event parsing added: no
+- export/runtime/CLI integration added: no
+
+next stage
+- next pass may generate a fixture_003 structural/header report
+- no parser expansion yet

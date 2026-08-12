@@ -1,0 +1,2 @@
+detector = "manual-hints-only"
+max_anchors_per_replay = 32

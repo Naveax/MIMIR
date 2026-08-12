@@ -1,0 +1,92 @@
+executor mimir skill forge bc replay header parser mimir-skill seam implementation audit decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+exact outcome chosen
+- Outcome A
+
+whether seam implementation is admitted
+- yes
+- admitted only as the narrow explicit mimir-skill minimal-header-attempt seam
+- success means minimal header parse success only
+- failure means minimal header parse failure only
+- ReplayHeader is header-only parser-attempt evidence only
+
+whether fixture identity was verified
+- yes
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+whether actual source content was inspected directly
+- yes
+- crates/mimir-skill/src/lib.rs inspected directly
+- crates/mimir-replay/src/lib.rs inspected directly
+- manifests and relevant Cargo.lock sections inspected directly
+- required planning and implementation artifacts inspected directly
+
+whether seam remains opt-in and parallel
+- yes
+- new function is explicitly named:
+  realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_actual_replay_parsing_minimal_header_attempt_v1
+- existing unsupported-attempt realization remains separate and callable
+
+whether unsupported-attempt path is preserved
+- yes
+- UnsupportedReplayReader implementation path remains present
+- existing unsupported-attempt path still uses UnsupportedReplayReader
+- existing unsupported-attempt path still records unsupported status
+- existing unsupported-attempt path still records no replay header
+
+whether success/failure classifications are admitted
+- yes
+- success classification admitted: minimal header parse success only
+- failure classification admitted: minimal header parse failure only
+
+whether parser-success remains narrow
+- yes
+- parser-success remains admitted only for ReplayInput::Memory, the exact fixture-supported tuple,
+  and header-only parsing ending at 8 + header_size
+- parser-success is not admitted broadly
+
+exact suspicious/partial/rejected facts
+- none found that require Outcome B or Outcome C
+- residual limitations remain closed, but they are not implementation defects for this planned seam
+
+whether a fix pass is required
+- no
+
+what was intentionally not broadened
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- nested array semantic parsing
+- UTF-16 support
+- broad replay version-family support
+- unencountered property-kind support
+- CLI/runtime behavior
+- export behavior
+- backend replay parser dependency
+
+whether forbidden files/dependencies changed
+- crates/mimir-cli changed by this pass: no
+- crates/mimir-io changed by this pass: no
+- crates/mimir-export changed by this pass: no
+- crates/mimir-types changed by this pass: no
+- crates/mimir-replay/src/lib.rs changed by this pass: no
+- crates/mimir-replay/Cargo.toml changed by this pass: no
+- root Cargo.toml changed by this pass: no
+- root Cargo.lock changed by this pass: no
+- dependencies changed by this pass: no
+- backend replay parser dependency added: no
+
+decision
+- Outcome A admitted
+- next pass may move to the next evidence/fixture/parser-readiness target or explicitly plan a
+  later seam
+- no broad parser expansion is admitted

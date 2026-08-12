@@ -1,0 +1,110 @@
+executor mimir skill forge bc real replay parser backend selection status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+pass type
+- real replay parser backend selection decision pass
+- decision-only
+- no parser implementation
+- no parser-success policy
+- no backend dependency addition
+
+selected backend direction
+- Outcome B
+- narrow in-crate `mimir-replay` header parser implementation direction
+- future parser target remains `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- first admitted input remains `ReplayInput::Memory`
+- future valid output remains real `ReplayHeader` for valid supported bytes only
+- future invalid, malformed, insufficient, unsupported, or deferred output remains structured error only
+- no concrete external dependency selected
+
+runtime behavior changed
+- no
+- no CLI, live runtime path, async/background system, database, rollout physics, export path, locator path, carrier path, materialization path, or parser backend was changed
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added `docs/MIMIR_SKILL_FORGE_BC_REAL_REPLAY_PARSER_BACKEND_SELECTION_DECISION_V1.md`
+- added `executor_mimir_skill_forge_bc_real_replay_parser_backend_selection_decision.txt`
+- added `executor_mimir_skill_forge_bc_real_replay_parser_backend_selection_next.txt`
+- added `executor_mimir_skill_forge_bc_real_replay_parser_backend_selection_status.txt`
+- Rust/code changes added: no
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+forbidden crate boundary check
+- `mimir-replay` source modified by this pass: no
+- `mimir-io` modified by this pass: no
+- `mimir-export` modified by this pass: no
+- `mimir-types` modified by this pass: no
+- `mimir_export` widening: no
+- `Cargo.toml` modified by this pass: no
+- `Cargo.lock` modified by this pass: no
+- backend dependency added: no
+- command run: `git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types`
+- command result: no tracked file diffs reported
+- command run: `git diff --name-only`
+- command result: no tracked file diffs reported
+- command run: `git status --short -- docs/MIMIR_SKILL_FORGE_BC_REAL_REPLAY_PARSER_BACKEND_SELECTION_DECISION_V1.md executor_mimir_skill_forge_bc_real_replay_parser_backend_selection_decision.txt executor_mimir_skill_forge_bc_real_replay_parser_backend_selection_next.txt executor_mimir_skill_forge_bc_real_replay_parser_backend_selection_status.txt crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock`
+- command result before this status file was created: new selection decision docs/artifacts reported untracked; broader Git root also reports `Cargo.toml`, `Cargo.lock`, and the crate directories as untracked
+- workspace caveat: `git rev-parse --show-toplevel` reports `D:/`; this MIMIR workspace is inside a broader Git tree, so the forbidden-boundary conclusion is based on exact applied patch paths, no tracked diffs, no applied edits under forbidden crate paths, and unchanged manifests/lockfile content from this pass
+
+candidate audit summary
+- existing workspace dependency/backend: rejected because none exists
+- external Rust dependency `boxcars`: audited as credible but not selected
+- `boxcars` positive evidence: Rust library, MIT license, memory byte input, documented network-skip/header-oriented parsing mode, crates.io version reported as 0.11.1
+- `boxcars` rejection reason: verified public parse path returns a broader `Replay` structure and constructs body-derived replay structures while skipping network frames; selecting it now would not be the narrowest honest minimal-header-only direction
+- external Rust dependency `subtr-actor`: rejected as a broader transformer built on `boxcars`, not a minimal header parser backend
+- stop/no-op: rejected because the audit was sufficient to select the in-crate direction without implementing parser logic
+
+decision summary
+- Outcome B selected
+- no concrete dependency selected
+- no parser implemented
+- no parser-success logic added
+- no `ReplayHeader` produced or synthesized
+- `UnsupportedReplayReader` remains truthful scaffold behavior
+- future real reader must remain distinguishable from `UnsupportedReplayReader`
+- `mimir-skill` may consume a future real reader only through the existing `ReplayReader` contract and current low-boost contract/realization chain
+
+next pass
+- minimal real parser implementation planning pass
+- parser implementation remains closed unless explicitly reopened
+- parser-success logic remains closed unless explicitly reopened
+- raw-state payload parsing remains closed unless explicitly reopened
+- frame/event extraction remains closed unless explicitly reopened
+- replay-source materialization/carrier/locator remain closed unless explicitly reopened
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+explicit non-claims
+- no real replay parser was implemented
+- no backend dependency was selected or added
+- no parser success was claimed or encoded
+- no `ReplayHeader` was produced or synthesized
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented

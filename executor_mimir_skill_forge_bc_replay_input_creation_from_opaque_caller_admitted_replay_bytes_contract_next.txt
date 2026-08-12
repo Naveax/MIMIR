@@ -1,0 +1,46 @@
+executor mimir skill forge bc replay-input creation from opaque caller-admitted replay bytes contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+mimir_export boundary
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no export bundle, sidecar, manifest, index, or runtime export semantics may be silently widened from this pass
+
+next pass type
+- the first realization pass for this exact ReplayInput-creation contract
+
+exact next input
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesContractV1`
+
+exact next responsibility
+- revalidate the contract result
+- revalidate the exact bridge object per specimen
+- revalidate that each created `ReplayInput` is `ReplayInput::Memory`
+- revalidate that each replay-input label is receipt-derived only
+- revalidate that each replay-input byte payload exactly equals the preserved opaque caller-admitted replay bytes
+- emit one truthful realization result for this contract only
+
+still forbidden in the next pass unless explicitly reopened
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- actual replay parsing
+- parser-success logic
+- raw-state payload parsing
+- tensor/control materialization
+- corpus-wide replay ingestion
+- real rollout physics
+- async/background systems
+- database code
+- runtime CLI commands
+- execution-result cleanup boundary changes
+- `mimir_export` widening
+- `mimir-replay` source changes
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+reason this is the next step
+- this pass defined the exact contract boundary and bridge object
+- the next missing proof is realization of that exact contract, not parsing, locating, carrier discovery, source materialization, raw-state parsing, or export

@@ -1,0 +1,63 @@
+executor mimir skill forge v1 next steps
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+1. replay slice ingestor contract
+exact problem
+- Define the bounded replay-slice input contract for one low boost recovery occurrence, including provenance, frame window, subject identity, and family hint, without implementing real replay parsing.
+why it comes in this order
+- Nothing downstream is trustworthy until the seed boundary is explicit and audit-safe.
+pass type
+- contract/spec plus narrow Rust type shaping if required
+scope risk
+- medium, because it is the first place where fake replay semantics could leak in.
+
+2. canonicalizer + event/phase extractor
+exact problem
+- Define and implement the minimum family-specific canonical state, event/contact extraction, and phase segmentation for low boost recovery.
+why it comes in this order
+- Parameter solving is meaningless until normalized state and phase boundaries are explicit.
+pass type
+- narrow implementation pass
+scope risk
+- medium to high, because omitted semantics or guessed normalization would corrupt every later stage.
+
+3. parameter solver + variation engine
+exact problem
+- Solve the minimum reusable recovery parameters and generate bounded variants around the seed without opening generic search infrastructure.
+why it comes in this order
+- Variation should be derived from an explicit solved representation, not invented before the family envelope exists.
+pass type
+- narrow implementation pass
+scope risk
+- medium, because this is where feature sprawl and fake generalization pressure start.
+
+4. skill validator + confidence/abstain
+exact problem
+- Define the validator rules, rejection reasons, confidence output, abstain behavior, and anti-target boundaries for low boost recovery variants.
+why it comes in this order
+- The system must be able to reject or abstain before it starts exporting teaching assets.
+pass type
+- contract plus narrow implementation pass
+scope risk
+- high, because false acceptance would create misleading downstream artifacts.
+
+5. curriculum/export shell
+exact problem
+- Emit the first curriculum spec and the first export shell for the chosen immediate consumer without widening export semantics or building extra adapters.
+why it comes in this order
+- Curriculum and export should only appear after a validated skill object exists.
+pass type
+- narrow implementation pass
+scope risk
+- medium, because consumer pressure can cause premature schema growth.
+
+6. eval harness for the chosen prototype family
+exact problem
+- Build the eval surface that compares baseline versus intervention on low boost recovery, including success/failure, abstain, and recovery-quality metrics.
+why it comes in this order
+- Eval is the stop/go gate that decides whether the first vertical slice is real or just artifact production.
+pass type
+- harness and validation pass
+scope risk
+- medium, because weak metrics would let the project claim progress without proving transferable value.

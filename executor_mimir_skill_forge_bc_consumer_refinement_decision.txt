@@ -1,0 +1,86 @@
+executor mimir skill forge bc consumer refinement decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact first consumer role chosen
+- one specimen-scoped low-boost-recovery BC consumer refinement step
+- exact job:
+  - consume `LowBoostRecoveryBcArtifactConsumerHandoffV1`
+  - preserve the already-validated handoff boundary
+  - mark the specimen ready for future low-boost-recovery specimen batching only
+
+exact refined output / disposition chosen
+- exact result type:
+  - `LowBoostRecoveryBcConsumerRefinementResultV1`
+- exact disposition:
+  - `ReadyForSpecimenBatchingOnly`
+- exact bounded notes:
+  - `HandoffBoundaryPreserved`
+  - `SpecimenScopedBatchingOnly`
+  - `TensorAndControlMaterializationDeferred`
+- preserved fields in the refined result:
+  - `artifact_id`
+  - source lineage
+  - `accepted_reference_variant_id`
+  - observation binding kind
+  - supervision window role
+  - `accepted_reference_window`
+  - target binding kind
+  - carried confidence band
+  - carried unresolved assumptions
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcArtifactConsumerHandoffV1`.
+- Require `artifact_id` to remain derived from `accepted_reference_variant_id`.
+- Require source lineage fields to remain present.
+- Require observation binding to remain
+  `accepted_reference_window_from_raw_state_window_ref`.
+- Require supervision window role to remain `accepted_reference_variant_window`.
+- Require `accepted_reference_window` to remain a valid bounded window.
+- Require target binding to remain
+  `accepted_reference_variant_control_target_deferred`.
+- Require confidence to remain `boundary_stable`.
+- Require unresolved assumptions to remain the exact low-boost-recovery carried set.
+
+exact failure / defer decisions chosen
+- Any admission drift fails explicitly as malformed handoff input.
+- No repair or inferred fallback is allowed.
+- No soft defer path was added.
+- Reason no defer path exists:
+  - this boundary adds no new evidence gate beyond the validated handoff
+  - remaining uncertainty is already carried explicitly in unresolved assumptions
+  - introducing a defer state here would invent semantics instead of narrowing them
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any batching/orchestration implementation
+- any generic multi-family consumer framework
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout work
+- any usefulness-proof or policy-improvement claim
+- any reach-back into BC rows, shells, or persisted artifact envelopes
+
+whether Rust type shaping / narrow implementation were added, and why
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcConsumerRefinementDispositionV1`
+  - `LowBoostRecoveryBcConsumerRefinementNoteV1`
+  - `LowBoostRecoveryBcConsumerRefinementResultV1`
+  - `LowBoostRecoveryBcConsumerRefinementError`
+  - `refine_low_boost_recovery_bc_consumer_definition_v1(...)`
+- Added one local handoff revalidation helper because
+  `LowBoostRecoveryBcArtifactConsumerHandoffV1` is public and can be manually constructed, so the
+  refinement boundary cannot trust construction history alone.
+- No `mimir-types` additions were needed because the refined result is still repo-local and not a
+  persisted or shared cross-crate DTO.
+- No `mimir-io` changes were needed because IO ownership was already correct.
+- No `mimir-export` changes were made.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess what the first consumer is allowed to inspect.
+- The next pass no longer needs to guess what must be preserved from the handoff.
+- The next pass has an explicit family-specific result that says the specimen is only ready for
+  future batching, not materialization.
+- That makes the immediate next step obvious:
+  low-boost-recovery specimen batching/orchestration without reopening `mimir_export`.

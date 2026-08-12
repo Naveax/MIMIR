@@ -1,0 +1,72 @@
+executor mimir skill forge bc actual replay parsing implementation readiness decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+exact outcome chosen
+- Outcome B
+- a first realization pass is justified, but only as an unsupported parser-attempt realization that records unsupported/error behavior truthfully and does not claim parser success
+
+exact reasoning
+- the actual replay parsing contract now preserves a concrete low-boost-recovery receipt-bound `ReplayInput::Memory`
+- the contract names `mimir_replay::ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>` only as a future parser-attempt surface
+- naming that surface does not prove parser readiness
+- the next pass can truthfully attempt the configured reader surface only if it records the actual unsupported/error behavior and keeps parser success closed
+- this is narrower than a real parser implementation pass and more informative than another no-op because it can prove attempt-boundary preservation without claiming parsing success
+
+whether a real parser exists
+- no
+- workspace audit found no real replay parser implementation
+- `mimir-replay` has no parser backend dependency
+- no crate source contains a second `ReplayReader` implementation
+
+whether `UnsupportedReplayReader` is the only available reader
+- yes
+- the only audited `ReplayReader` implementation is `impl ReplayReader for UnsupportedReplayReader`
+- that implementation returns an explicit error saying no replay parser is bundled in the scaffold
+- it does not produce `ReplayHeader`
+- it does not prove parser readiness
+
+whether next pass may realize unsupported parser-attempt behavior
+- yes
+- the next pass may consume `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1`
+- it may revalidate and preserve the receipt-bound attempt input and exact `ReplayInput::Memory`
+- it may invoke `ReplayReader::read_header(&ReplayInput)` only as a configured-reader attempt
+- with the current available reader, the result must be recorded as unsupported/error behavior
+- it must not claim parser success
+- it must not synthesize or produce `ReplayHeader`
+
+what was intentionally excluded
+- replay parsing implementation
+- parser-success logic
+- raw-state payload parsing
+- replay frame extraction
+- semantic event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization from lineage anchors
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- `mimir_export` widening
+- modifications to `mimir-replay`
+- modifications to `mimir-io`
+- modifications to `mimir-export`
+- modifications to `mimir-types`
+
+whether Rust/code changes were added, and why or why not
+- no Rust or code changes were added
+- docs-only is more honest for this pass because the task is an implementation-readiness decision
+- the existing Rust contract already defines the attempt boundary
+- adding realization Rust here would implement the next pass instead of deciding readiness
+- modifying `mimir-replay`, `mimir-io`, `mimir-export`, or `mimir-types` remains forbidden
+
+why this is enough for the next pass
+- the next pass type is now explicit: unsupported parser-attempt realization
+- the allowed result semantics are explicit: attempted configured reader surface plus unsupported/error result, no `ReplayHeader`, no parser-success policy
+- Outcome C is blocked until a real parser exists
+- downstream raw-state, locator, carrier, materialization, and export work remains closed

@@ -1,0 +1,176 @@
+executor mimir skill forge bc replay header parser fixture 002 mapping error boundary admission status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+pass type
+- fixture_002 mapping/error-boundary admission pass
+- docs/artifacts-only policy and evidence admission
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_MAPPING_ERROR_BOUNDARY_ADMISSION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_mapping_error_boundary_admission_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_mapping_error_boundary_admission_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_mapping_error_boundary_admission_status.txt
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+- extension: .replay
+- byte length greater than 8: yes
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+fixture_002 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- differs from fixture_001 by SHA-256: yes
+- extension: .replay
+- byte length greater than 8: yes
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+evidence inputs verified
+- yes
+- artifacts/replay_header_reports/rl_replay_header_fixture_002_report.txt
+- artifacts/replay_header_reports/rl_replay_header_fixture_002_structural_report.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_REPORT_ADMISSION_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_admission_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_admission_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_admission_status.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_REPORT_GENERATION_V1.md
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_INTAKE_READINESS_V1.md
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_IMPLEMENTATION_AUDIT_V1.md
+- crates/mimir-replay/README.md
+- crates/mimir-replay/src/lib.rs
+- crates/mimir-skill/src/lib.rs
+- crates/mimir-types/src/lib.rs
+- Cargo.toml
+- Cargo.lock
+- docs/ARTIFACT_VERSIONING.md
+- docs/DATA_CONTRACTS.md
+- executor_mimir_skill_forge_v1_staged_delivery_rules.txt
+- fixture_001 mapping/error-boundary artifacts inspected
+
+mapping policy carryover admitted
+- yes
+- accepted as candidate mapping policy only
+
+ReplayHeader candidate expected-output evidence admitted
+- yes
+- admitted only as candidate expected-output evidence, not parser output
+
+replay_id policy status
+- admitted
+- admitted as candidate mapping/error-boundary policy only
+
+total_frames policy status
+- admitted
+- admitted as candidate mapping/error-boundary policy only
+
+metadata policy status
+- admitted
+- admitted as candidate mapping/error-boundary policy only
+
+structural/error-boundary policy status
+- partial
+- fixture_002 structural values admitted only as external/report structural candidate evidence
+- fixture_002 supported-version policy remains closed
+- parser behavior remains unchanged and unproven for fixture_002
+
+parser behavior changed
+- no
+
+parser-success claimed for fixture_002
+- no
+
+fixture_002 supported-version policy admitted
+- no
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+exact validation commands run
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test -p mimir-skill -- --nocapture
+  - result: success
+  - mimir-skill unit tests: 273 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+forbidden crate boundary check
+- direct edit boundary:
+  - only the four requested fixture_002 mapping/error-boundary admission artifacts were added
+  - no Rust source, manifest, lockfile, CLI, IO, export, or type crate file was edited by this pass
+- scoped forbidden tracked diff command:
+  - git diff --name-status -- crates/mimir-replay/src/lib.rs crates/mimir-skill/src/lib.rs crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- scoped forbidden tracked diff result:
+  - no output
+  - no forbidden tracked source, manifest, or lockfile diff reported
+- scoped git status caveat:
+  - git rev-parse --show-toplevel reports D:/
+  - git status --short -- forbidden paths reports the MIMIR files as untracked because the Git root is above this repository directory
+  - broad or scoped git status is therefore not useful as a MIMIR-only cleanliness signal in this workspace
+- forbidden crate parser integration scan:
+  - rg -n "mimir_replay|MinimalReplayHeaderReader|ReplayHeader|ReplayInput|content_crc|header_crc|boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types
+  - result: no matches
+- parser backend dependency scan:
+  - rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+  - result: no matches
+- Cargo.lock relevant entries inspected:
+  - mimir-replay depends on mimir-core, mimir-types, serde
+  - mimir-skill depends on mimir-core, mimir-io, mimir-replay, mimir-types, serde, tempfile
+
+exact deferred blockers
+- fixture_002 supported-version policy is not admitted
+- fixture_002 parser behavior is not proven or claimed
+- fixture_002 structural evidence remains external/report evidence only
+- CRC validation remains closed
+- content_crc read/validation remains closed
+- body/raw-state/frame/event parsing remains closed
+- ReplayInput::File, replay-source materialization, export/runtime/CLI integration, and backend
+  parser dependencies remain closed
+
+recommended next pass
+- fixture_002 supported-version policy planning reopen
+- no parser implementation yet

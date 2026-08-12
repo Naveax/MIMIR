@@ -1,0 +1,49 @@
+executor mimir skill forge bc filesystem export emission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- low-boost-recovery-specific actual filesystem emission boundary above
+  `LowBoostRecoveryBcFilesystemExportEmissionPlanResultV1`
+- still without `mimir_export`
+
+why this is the immediate next pass
+- The repo now has:
+  - persisted low-boost-recovery BC artifact IO wrappers
+  - one validated persisted-artifact handoff
+  - one refined downstream consumer result
+  - one deterministic low-boost-recovery specimen batching/orchestration result
+  - one logical low-boost-recovery export-layout/refinement result
+  - one bounded low-boost-recovery downstream export-consumer result
+  - one bounded low-boost-recovery filesystem / export-emission planning result
+- The next unresolved problem is no longer specimen admission, batching, ordering, layout shaping,
+  downstream consumer inspection, or the first deterministic filesystem planning shape.
+- The next unresolved problem is how to materialize that family-specific plan to disk without
+  widening into generic bundle semantics or `mimir_export`.
+
+what the next pass should consume
+- `LowBoostRecoveryBcFilesystemExportEmissionPlanResultV1`
+
+what the next pass should do
+- define one bounded low-boost-recovery-specific actual filesystem emission boundary
+- keep the work family-specific
+- materialize only the deterministic root/lane/specimen planning shape already fixed by this pass
+- preserve lane order and specimen order exactly as planned
+- stay outside `mimir_export`
+- stay downstream of the planning result instead of reopening consumer, layout, batching, or
+  lower artifact boundaries
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family filesystem / export-emission framework
+- no actual `mimir_export` bundle emission
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+
+why a deliberate reopen decision is not the next pass
+- There is no current defect that forces `mimir_export` to reopen.
+- The new planning result now gives the next pass a narrow family-specific filesystem input
+  surface above the downstream export-consumer boundary.
+- Reopening export semantics now would widen the system before the first family-specific actual
+  filesystem emission boundary exists.

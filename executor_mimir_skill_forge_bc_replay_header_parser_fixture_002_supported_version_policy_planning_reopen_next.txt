@@ -1,0 +1,52 @@
+executor mimir skill forge bc replay header parser fixture_002 supported-version policy planning reopen next
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-05
+
+selected outcome driving next step
+- Outcome A
+
+recommended next pass
+- fixture_002 exact supported tuple implementation planning
+
+allowed later implementation target if separately scoped
+- exact two-tuple allowlist only:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+- implementation may modify only crates/mimir-replay/src/lib.rs unless separately reopened
+- implementation must keep ReplayInput::Memory only
+- implementation must keep ReplayInput::File unsupported
+- implementation must keep header-only parsing ending at 8 + header_size
+- implementation must keep CRC non-validation
+- implementation must not read or validate content_crc
+- implementation must not parse body/raw-state/frame/event data
+- implementation must not add backend replay parser dependencies
+- implementation must not add Cargo.toml or Cargo.lock changes
+- implementation must not add export/runtime/CLI behavior
+
+required future tests if implementation is opened
+- fixture_001 regression proving the existing exact tuple still parses
+- fixture_002 happy-path test proving only the exact fixture_002 tuple is newly admitted
+- unsupported-version regression proving an unknown BuildVersion remains rejected
+- existing ReplayInput::File unsupported boundary remains covered
+- existing header-only stop-boundary remains covered
+- existing CRC non-validation boundary remains covered
+
+still closed for the next pass unless explicitly and narrowly reopened
+- broad parser expansion
+- broad parser-success admission
+- broad version-family support
+- wildcard BuildVersion support
+- all ReplayVersion=8 builds
+- future unknown build support
+- ReplayInput::File
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- export/runtime/CLI integration
+
+parser-success status
+- no parser-success is claimed for fixture_002 by this pass
+- fixture_002 is not supported by MinimalReplayHeaderReader yet
+- parser implementation did not happen in this pass

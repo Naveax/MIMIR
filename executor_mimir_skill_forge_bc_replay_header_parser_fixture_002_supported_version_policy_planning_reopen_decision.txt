@@ -1,0 +1,128 @@
+executor mimir skill forge bc replay header parser fixture_002 supported-version policy planning reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-05
+
+exact outcome chosen
+- Outcome A
+
+whether fixture identities were verified
+- yes
+- fixture_001 path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- fixture_001 byte length: 3001021
+- fixture_001 SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- fixture_001 first four bytes little-endian i32: 13200
+- fixture_002 path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- fixture_002 extension: .replay
+- fixture_002 byte length: 2632903
+- fixture_002 SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- fixture_002 first four bytes little-endian i32: 11273
+- fixture_002 byte length greater than 8: yes
+- fixture_002 differs from fixture_001 by SHA-256: yes
+
+whether mapping/error-boundary input was verified
+- yes
+- prior mapping/error-boundary pass selected Outcome A
+- selected fixture_002 mapping candidates remain candidate expected-output evidence only
+- structural evidence remains external/report evidence only
+- no parser-success was claimed by the prior mapping/error-boundary pass
+- fixture_002 supported-version policy remained closed before this pass
+
+whether current supported-version implementation was inspected
+- yes
+- inspected crates/mimir-replay/src/lib.rs
+- inspected crates/mimir-replay/README.md
+- inspected crates/mimir-skill/src/lib.rs
+- inspected crates/mimir-types/src/lib.rs
+- inspected Cargo.toml
+- inspected Cargo.lock
+- current MinimalReplayHeaderReader supports only ReplayInput::Memory
+- current MinimalReplayHeaderReader rejects ReplayInput::File with unsupported-input
+- current MinimalReplayHeaderReader is header-only through 8 + header_size
+- current unsupported-version error is produced after parsing selected properties needed for ReplayVersion and BuildVersion
+- current version policy does not depend on path/hash/filename/provenance/artifact id
+- current BuildVersion policy is one exact string: 241206.55345.468477
+
+exact selected future policy
+- exact two-tuple allowlist only
+- SupportedReplayHeaderTupleV1::Fixture001Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- SupportedReplayHeaderTupleV1::Fixture002Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=250811.43331.492665
+- policy labels are planning labels only; no code was created now
+
+exact rejected policies
+- wildcard BuildVersion support
+- version-range support
+- broad ReplayVersion=8 support
+- all 868/32/net10/soccar/replayversion8 builds
+- future unknown build support
+- parser support based on path/hash/filename/provenance/artifact id
+- backend replay parser dependency
+- broad parser framework
+- ReplayInput::File support
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+
+exact future implementation boundary
+- later implementation pass may modify only crates/mimir-replay/src/lib.rs unless separately reopened
+- no Cargo.toml changes
+- no Cargo.lock changes
+- no mimir-skill changes in the first parser policy implementation pass unless separately reopened
+- no mimir-export/mimir-io/mimir-types/mimir-cli changes
+- replace single supported BuildVersion check with exact supported tuple allowlist or equivalent exact predicate
+- keep ReplayInput::Memory only
+- keep ReplayInput::File unsupported
+- keep header-only parsing ending at 8 + header_size
+- keep CRC non-validation
+- keep content_crc/body/raw-state/frame/event parsing closed
+- add fixture_002 happy-path test only as exact tuple support in a later pass
+- add unsupported-version regression test proving unknown BuildVersion remains rejected in a later pass
+- preserve fixture_001 regression in a later pass
+- no backend dependency
+- no broad parser framework
+
+whether parser code changed now
+- no
+
+whether parser-success was claimed for fixture_002 now
+- no
+
+whether fixture_002 supported-version policy was implemented now
+- no
+
+what was intentionally not broadened
+- parser success for fixture_002
+- broad parser success
+- fixture_002 support by MinimalReplayHeaderReader
+- broad version-family support
+- BuildVersion wildcard support
+- ReplayVersion=8 family support
+- future unknown build support
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body parsing
+- raw-state parsing
+- frame parsing
+- event parsing
+- export/runtime/CLI integration
+
+whether forbidden files/dependencies changed
+- forbidden Rust source files changed now: no
+- root Cargo.toml changed now: no
+- root Cargo.lock changed now: no
+- backend replay parser dependency added now: no
+- MIMIR dependency added now: no

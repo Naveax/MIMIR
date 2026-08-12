@@ -1,0 +1,154 @@
+executor mimir skill forge bc replay header parser fixture 003 boolproperty non-selected error-boundary closure status
+
+pass type
+- docs/artifacts-only policy and evidence closure pass
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes, docs/executor artifacts only
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+
+fixture_002 identity verified
+- yes
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+
+fixture_003 identity verified
+- yes
+- byte length: 1638538
+- SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- first four bytes little-endian i32: 11190
+- extension: .replay
+- byte length > 8: yes
+- differs from fixture_001 by SHA-256: yes
+- differs from fixture_002 by SHA-256: yes
+
+evidence inputs verified
+- yes
+
+current parser behavior inspected
+- yes
+- selected property set excludes bForfeit
+- non-selected ArrayProperty, FloatProperty, IntProperty, NameProperty, QWordProperty, and
+  StrProperty are skipped by bounded property_size
+- BoolProperty is currently unsupported for non-selected properties
+- existing mimir-replay test rejects non-selected BoolProperty as unsupported-property
+- selected BoolProperty mapping is not admitted
+
+FieldValue/mapping policy inspected
+- yes
+- FieldValue::Boolean exists
+- replay-header BoolProperty -> FieldValue::Boolean mapping is not admitted
+- fixture_003 mapping admission excludes bForfeit from metadata
+
+bForfeit classification
+- report-only / excluded-from-metadata
+
+selected future policy direction
+- non-selected BoolProperty skip-only future policy direction may be planned
+- bForfeit remains excluded from selected ReplayHeader metadata
+- BoolProperty metadata mapping remains closed
+- current parser behavior remains unsupported-property
+
+BoolProperty -> FieldValue::Boolean admitted
+- no
+
+bForfeit metadata mapping admitted
+- no
+
+non-selected BoolProperty skip-only future policy
+- admitted/planned as future policy direction only; parser implementation deferred
+
+parser behavior changed
+- no
+
+parser-success claimed for fixture_003
+- no
+
+fixture_003 supported-version policy admitted
+- no
+
+third supported tuple added
+- no
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+exact validation commands run
+- cargo check --workspace --all-targets --all-features
+  - result: passed
+- cargo test -p mimir-replay -- --nocapture
+  - result: passed, 20 tests passed plus doc-tests with 0 tests
+- cargo test -p mimir-skill -- --nocapture
+  - result: passed, 273 tests passed plus doc-tests with 0 tests
+- cargo test --workspace --all-targets --all-features
+  - result: passed
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: passed
+- cargo test -p mimir-export -- --list
+  - result: passed, listed 173 tests and 0 benchmarks plus doc-tests with 0 tests
+
+forbidden crate boundary check
+- crates/mimir-replay/src/lib.rs unchanged: yes
+- crates/mimir-skill/src/lib.rs unchanged: yes
+- crates/mimir-types/src/lib.rs unchanged: yes
+- Cargo.toml unchanged: yes
+- Cargo.lock unchanged: yes
+- crates/mimir-cli unchanged: yes
+- crates/mimir-io unchanged: yes
+- crates/mimir-export unchanged: yes
+- no MIMIR dependencies added
+- no backend replay parser dependency added
+- no CLI/runtime/export/IO/type behavior changed
+
+exact deferred blockers
+- fixture_003 supported-version policy
+- third supported tuple
+- fixture_003 parser-success
+- broad parser-success
+- broad ReplayVersion = 8 support
+- wildcard or family BuildVersion support
+- exact non-selected BoolProperty skip-only parser implementation
+- selected BoolProperty policy if ever needed
+- BoolProperty -> FieldValue::Boolean metadata mapping if ever separately reopened
+- malformed BoolProperty tests
+- fixture_003 happy-path parser test after supported-version and skip-only implementation
+- body/raw-state/frame/event parsing remains closed
+- CRC validation remains closed
+- ReplayInput::File remains closed
+- replay-source materialization remains closed
+- export/runtime/CLI integration remains closed
+
+recommended next pass
+- fixture_003 supported-version policy planning reopen
+- caveat: implementation later must include exact non-selected BoolProperty skip-only parser boundary
+  and must not map bForfeit to metadata

@@ -1,0 +1,91 @@
+MIMIR external parser/tool report for rl_replay_header_fixture_003
+
+REPORT STATUS
+- generated_by: temporary external Rust crate outside MIMIR workspace
+- external_tool: mimir_fixture_003_header_report_v1
+- external_tool_version: 0.1.0
+- parser_tool: boxcars crate
+- parser_tool_version: 0.11.1
+- parser_tool_source: crates.io local cargo registry cache
+- parser_tool_repository: https://github.com/nickbabcock/boxcars
+- parser_mode: ParserBuilder::new(bytes).never_parse_network_data().parse()
+- report_is_mimir_parser_output: no
+- report_is_parser_success: no
+- report_is_fixture_003_parser_success: no
+- report_is_broad_parser_support: no
+- report_is_byte_layout_admission: no
+- report_requires_later_admission_pass: yes
+- replay_header_synthesized_by_mimir: no
+- body_raw_state_frame_event_parsing_claimed: no
+- export_runtime_cli_integration_claimed: no
+
+FIXTURE IDENTITY
+- fixture_id: rl_replay_header_fixture_003
+- input_path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+- expected_byte_length: 1638538
+- observed_byte_length: 1638538
+- expected_sha256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- observed_sha256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- admission_form: PRIVATE_LOCAL_PATH_WITH_HASH
+- fixture_identity_is_parser_fact: no
+
+TOOL RECOGNITION
+- boxcars_parse_result: success
+- recognized_as_rocket_league_replay: yes, inferred only from successful external boxcars parse
+- mimir_supported_replay_claim: no
+- fixture_003_supported_by_mimir_claim: no
+
+BYTE-BACKED EXTERNAL PARSE SUMMARY
+- header_size: 11190
+- header_crc: 3547804793
+- major_version: 868
+- minor_version: 32
+- net_version: Some(10)
+- game_type: "TAGame.Replay_Soccar_TA"
+- header_property_count: 27
+- property_kind_counts: {"Array": 3, "Bool": 1, "Float": 3, "Int": 12, "Name": 2, "QWord": 1, "Str": 5}
+- header_boundary_source: external_boxcars_parse; not admitted into MIMIR in this report
+- selected_properties_source: external_boxcars_header_properties; not admitted into MIMIR in this report
+- Id: kind=Str, value="DF72482811F0B757082C458D84251EFF", source=external_boxcars_header_property
+- ReplayName: kind=Str, value="asdasd", source=external_boxcars_header_property
+- Date: kind=Str, value="2025-11-01 19-20-48", source=external_boxcars_header_property
+- MapName: kind=Name, value="cs_day_p", source=external_boxcars_header_property
+- ReplayVersion: kind=Int, value=8, source=external_boxcars_header_property
+- BuildVersion: kind=Str, value="251020.62592.500294", source=external_boxcars_header_property
+- NumFrames: kind=Int, value=8288, source=external_boxcars_header_property
+- MaxChannels: kind=Int, value=2047, source=external_boxcars_header_property
+- MatchType: kind=Name, value="Online", source=external_boxcars_header_property
+- TeamSize: kind=Int, value=2, source=external_boxcars_header_property
+- RecordFPS: kind=Float, value=30.0, source=external_boxcars_header_property
+
+BODY/FOOTER DATA READ BY EXTERNAL TOOL
+- content_size: 1627332
+- content_crc: 3991282011
+- levels_count: 6
+- keyframes_count: 41
+- debug_info_count: 0
+- tick_marks_count: 16
+- packages_count: 8
+- objects_count: 433
+- names_count: 351
+- class_indices_count: 42
+- net_cache_count: 37
+- body_footer_values_are_mimir_header_evidence: no, diagnostic-only pending separate admission decision
+
+NETWORK / FRAME / EVENT LIMITS
+- network_parse_requested: Never
+- network_frames_present_in_report: false
+- replay_frames_extracted: no
+- raw_state_payload_decoded: no
+- semantic_replay_events_extracted: no
+
+SUFFICIENCY LIMITS
+- sufficient_for_mimir_byte_layout_admission_now: no, this report still requires a later admission pass
+- sufficient_to_implement_mimir_parser_now: no
+- replay_id_policy_admitted: no; Id is only an external parser-reported header property
+- total_frames_policy_admitted: no; NumFrames is only an external parser-reported header property
+- metadata_policy_admitted: no; selected properties are not yet a MIMIR metadata map
+- malformed_or_insufficient_boundaries_admitted: no
+- unsupported_format_or_version_boundary_admitted: no
+- parser_success_for_fixture_003_claimed: no
+- broad_parser_success_claimed: no

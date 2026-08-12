@@ -1,0 +1,11 @@
+report index model added: yes
+helper names: persist_execution_result_job_report_index, load_execution_result_job_report_index, register_execution_result_job_report_in_index
+helpers use explicit file paths only: yes
+auto-discovery or ledger scanning avoided: yes
+mimir_export test count from `cargo test -p mimir-export -- --list`: 45
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

@@ -1,0 +1,170 @@
+executor mimir skill forge bc broader replay-source actual-materialization reopen above carrier-provenance binding realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact reopen role chosen
+- one low-boost-recovery-specific broader replay-source actual-materialization-related
+  reopen-decision boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationResultV1`
+- exact job:
+  - admit only the existing truthful blocked carrier-provenance/source-binding realization result
+  - revalidate the exact receipt-bound root/order/path, per-specimen identity tuple, deferred
+    observation lineage, preserved replay-input-locator handle kind, preserved replay-source-
+    materialization requirement kind, preserved replay-source-actual-materialization handle kind,
+    and preserved carrier-provenance/source-binding handle kind already frozen by that result
+  - decide whether the next missing honest boundary is now broader explicit carrier
+    provenance/source-binding admission rather than another lower replay-source-chain defect
+  - keep replay-source actual-materialization implementation, replay-source carrier discovery,
+    replay-input locator logic, replay parsing, raw-state payload materialization, tensor/control
+    materialization, and `mimir_export` closed in this pass
+
+exact reopen / no-reopen decision chosen
+- exact decision:
+  - reopen justified for one narrow receipt-bound broader replay-source actual-materialization-
+    related boundary
+- exact narrowest next boundary shape:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractV1`
+
+exact criteria used
+- Require the truthful blocked carrier-provenance/source-binding realization result to remain
+  exact on:
+  - `specimen_count`
+  - `group_count`
+  - `source_contract_disposition`
+  - `source_contract_notes`
+  - `source_chosen_locator_contract_shape`
+  - `source_chosen_materialization_contract_shape`
+  - `source_chosen_replay_parsing_contract_shape`
+  - `source_chosen_replay_input_access_contract_shape`
+  - `source_chosen_replay_input_locator_contract_shape`
+  - `source_chosen_replay_input_locator_implementation_contract_shape`
+  - `source_chosen_replay_input_locator_actual_implementation_contract_shape`
+  - `source_chosen_replay_source_materialization_contract_shape`
+  - `source_chosen_replay_source_actual_materialization_contract_shape`
+  - `audited_family_root_directory`
+  - `realization_disposition`
+  - `realization_notes`
+  - `chosen_replay_source_actual_materialization_carrier_provenance_binding_contract_shape`
+- Require every admitted specimen to remain identical on:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+  - `preserved_observation_binding_kind`
+  - `preserved_accepted_reference_window`
+  - `preserved_replay_input_locator_handle_kind`
+  - `preserved_replay_source_materialization_requirement_kind`
+  - `preserved_replay_source_actual_materialization_handle_kind`
+  - `bound_replay_source_actual_materialization_carrier_provenance_binding_handle_kind`
+- Require the preserved replay-input-locator handle kind to remain
+  `FutureParserConsumableReplayHandleOnly`.
+- Require the preserved replay-source-materialization requirement kind to remain
+  `ExplicitReplaySourceMaterializationRequiredBeforeReplayInputOrParsing`.
+- Require the preserved replay-source-actual-materialization handle kind to remain
+  `FutureExplicitReplaySourceCarrierOnly`.
+- Require the preserved carrier-provenance/source-binding handle kind to remain
+  `FutureExplicitReplaySourceCarrierProvenanceBindingOnly`.
+- Require the remaining missing piece to be broader explicit carrier provenance/source-binding
+  admission rather than another lower replay-source-chain defect.
+- Require the next boundary to stay low-boost-recovery-specific, receipt-bound, below replay
+  parsing, below raw-state/tensor/control materialization, and outside `mimir_export`.
+- Require the next boundary to avoid cheating through `source_replay`,
+  `source_replay.provenance_label`, or `audited_family_root_directory`.
+- Require sidecars/manifests/generic indexing to remain unjustified unless the audit proves one of
+  them is the minimum honest next step.
+- Require the repo-surface audit to show no richer existing carrier-provenance/source-binding
+  admission boundary:
+  - `mimir-skill` stops at the truthful blocked carrier-provenance/source-binding realization
+    surface
+  - `mimir-replay` still exposes only `ReplayInput`, `ReplayHeader`, `ReplayReader`, and
+    `UnsupportedReplayReader`
+  - `mimir-io` still exposes artifact/specimen read/write helpers only
+  - `mimir-export` remains unrelated
+  - `mimir-types::ReplaySourceRef` still carries only `replay_id` and `provenance_label`
+
+exact output / disposition chosen
+- exact output:
+  - one broader replay-source-actual-materialization reopen-decision spec artifact above the
+    blocked carrier-provenance/source-binding realization result only
+- exact disposition:
+  - reopen justified for one narrow receipt-bound broader replay-source actual-materialization-
+    related boundary
+- exact reasoning:
+  - the truthful blocked carrier-provenance/source-binding realization already proves the current
+    chain cannot honestly produce any explicit replay-source carrier provenance/source binding,
+    replay path, replay bytes, replay frames, or `mimir_replay::ReplayInput` from admitted fields
+  - replay parsing is therefore still downstream of a missing broader admission boundary for one
+    explicit carrier provenance/source binding input
+  - no current evidence proves that sidecars, manifests, generic indexing, or `mimir_export`
+    belong in the missing defect path
+
+exact admission / failure decisions chosen
+- Admit only the exact truthful blocked carrier-provenance/source-binding realization result
+  already inside the low-boost-recovery receipt-bound chain.
+- Require the exact carrier-provenance/source-binding contract note set, carrier-provenance/
+  source-binding realization note set, chosen shapes, root basename/existence/directory-ness, and
+  exact lane/specimen order.
+- Hard fail on degraded realization input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on duplicate or missing artifact ids.
+- Hard fail on any input/output-boundary identity drift.
+- Hard fail on any attempt to reinterpret `source_replay`, `source_replay.provenance_label`, or
+  the audited family root as replay path or replay storage.
+- Hard fail on any attempt to widen this pass into replay-source actual-materialization
+  implementation, replay-source carrier discovery, replay-input locator logic, replay parsing,
+  raw-state payload materialization, tensor/control materialization, sidecars, manifests, generic
+  indexing, or `mimir_export`.
+- A valid-input `reopen not justified yet` disposition would require either an already-existing
+  honest explicit carrier provenance/source-binding admission boundary or proof that
+  sidecar/manifest reopening is the minimum honest next step.
+- That no-reopen condition was not met in v1.
+
+what was intentionally excluded
+- any replay-source actual-materialization implementation
+- any replay-source carrier discovery
+- any replay-input locator logic
+- any replay parsing implementation
+- any replay file path discovery from `source_replay` or `source_replay.provenance_label`
+- any replay bytes or replay frames materialization
+- any actual `mimir_replay::ReplayInput` materialization
+- any raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any corpus-wide replay ingestion
+- any rollout/physics/runtime work
+- any async/background system
+- any database work
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any `mimir_export` integration or surface edit
+
+whether Rust/code changes were added, and why or why not
+- No.
+- Outcome chosen:
+  - Outcome A: docs + decision only
+- Reason no Rust/code changes were added:
+  - the current repo already has the truthful blocked carrier-provenance/source-binding
+    realization surface in `mimir-skill`
+  - this pass only decides whether a broader boundary must now be reopened above that result
+  - the immediate next pass is the contract-definition pass that must freeze the exact broader
+    admission surface honestly
+  - adding a public reopen-decision DTO here would widen API surface before that next contract
+    pass freezes the exact boundary semantics
+  - the repo pattern still permits reopen-decision passes to remain artifact-level decisions when
+    no machine-verifiable public boundary is required yet
+
+why this is enough for the next pass
+- The repo now has one explicit audited answer to whether broader replay-source
+  actual-materialization work must be reopened above the blocked carrier-provenance/source-binding
+  realization result.
+- The answer is tied directly to the truthful blocked realization, not inferred from lower layers.
+- The next immediate question is no longer whether broader replay-source actual-materialization
+  should be reopened above the current blocked result.
+- The next immediate question is the first narrow contract-definition pass for
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractV1`.
+- `mimir_export` widening remains forbidden unless explicitly reopened.

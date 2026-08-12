@@ -1,0 +1,285 @@
+executor stage 84 vertical-slice contract coverage gap analysis
+
+scope
+- repo root: `D:\RocketLeague bot\MIMIR`
+- pass intent: classify the current deterministic vertical-slice contract family by direct coverage strength, indirect coverage, intentionally narrow areas, and the best next explicit test candidates
+- analysis basis:
+  - `executor_stage80_contract_index.txt`
+  - `executor_stage82_input_contract_index.txt`
+  - `executor_stage83_io_bridge_map.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs`
+  - `crates/mimir-cli/src/vertical_slice_result.rs`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs`
+  - `crates/mimir-io/src/lib.rs`
+  - `crates/mimir-types/src/lib.rs`
+
+A. DIRECTLY GUARDED EDGES
+
+persisted input round-trip
+- directly guarded by:
+  - `crates/mimir-types/src/lib.rs::persisted_vertical_slice_input_artifact_round_trips_through_json`
+  - `crates/mimir-io/src/lib.rs::writes_and_reads_vertical_slice_input_artifact_with_wrapper`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_contract_round_trips_exactly`
+- direct assertion strength:
+  - full persisted envelope/header + payload equality is asserted, not inferred
+
+wrong-kind and schema rejection for persisted input
+- directly guarded by:
+  - `crates/mimir-io/src/lib.rs::vertical_slice_input_wrapper_rejects_wrong_artifact_kind_explicitly`
+  - `crates/mimir-io/src/lib.rs::vertical_slice_input_wrapper_rejects_schema_mismatch_explicitly`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_wrong_kind_fails_explicitly`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_schema_mismatch_fails_explicitly`
+- direct assertion strength:
+  - exact failure boundary is asserted at the canonical artifact read path
+
+persisted input materialization into the frozen snapshot
+- directly guarded by:
+  - `persisted_stage69_vertical_slice_input_materializes_same_frozen_snapshot`
+  - `persisted_stage77_vertical_slice_input_materializes_same_frozen_snapshot`
+- direct assertion strength:
+  - both known lanes are forced through persisted-input write/read -> runtime -> canonical reload -> exact expected snapshot equality
+
+canonical reload parity for export bundle, scoreboard, and teacher artifacts
+- directly guarded by:
+  - `assert_fixture_lane_matches_expected_contract(...)`
+  - reached by both Stage69 and Stage77 positive tests
+- direct assertion strength:
+  - export manifest anchor/branch counts are asserted
+  - reloaded consumer export equals runtime output
+  - canonical scoreboard payload equals runtime scoreboard
+  - canonical teacher artifacts equal runtime teacher artifacts
+
+frozen snapshot equality
+- directly guarded by:
+  - `deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`
+  - `second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`
+  - also transitively through `assert_fixture_lane_matches_expected_contract(...)`
+- direct assertion strength:
+  - exact snapshot equality against lane-specific frozen expectations
+
+repeated-run determinism
+- directly guarded by:
+  - `persisted_vertical_slice_input_repeated_runs_stay_identical`
+  - `deterministic_vertical_slice_is_identical_across_repeated_runs`
+  - `deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+  - `second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+- direct assertion strength:
+  - full runtime output equality
+  - full canonical result equality
+  - both snapshots equal the same frozen expectation
+
+scoreboard row count drift
+- directly guarded by:
+  - `canonical_vertical_slice_result_loader_fails_explicitly_on_scoreboard_row_count_drift`
+  - `second_deterministic_vertical_slice_loader_fails_explicitly_on_scoreboard_row_count_drift`
+- direct assertion strength:
+  - explicit loader failure on export branch count vs scoreboard row count mismatch
+
+teacher artifact count drift
+- directly guarded by:
+  - `canonical_vertical_slice_result_loader_fails_explicitly_on_extra_teacher_artifact_drift`
+  - `canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing`
+- direct assertion strength:
+  - explicit loader failure on scoreboard row count vs teacher file count mismatch
+
+non-branch teacher target drift
+- directly guarded by:
+  - `canonical_vertical_slice_teacher_targets_fail_explicitly_on_non_branch_target_drift`
+- direct assertion strength:
+  - explicit consumer failure when teacher target stops being `TeacherLabelTarget::Branch`
+
+teacher ordinal/file drift
+- directly guarded by:
+  - `canonical_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+  - `second_deterministic_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+- direct assertion strength:
+  - explicit tamper changes snapshot and produces the expected swapped teacher-target order
+
+anchor-count drift
+- directly guarded by:
+  - `canonical_vertical_slice_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+- direct assertion strength:
+  - exact failure boundary at snapshot construction when anchor cardinality is not 1
+
+cross-lane distinctness
+- directly guarded by:
+  - `deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+- direct assertion strength:
+  - both lanes must still equal their own frozen snapshots and differ from each other
+
+Stage69-visible branch / score / teacher ordering
+- directly guarded by:
+  - `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+  - `canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+- direct assertion strength:
+  - branch export order, scoreboard row order, and teacher target order are each checked as separate visible lists
+
+B. INDIRECTLY GUARDED EDGES
+
+simulation_seed influence
+- current guard shape:
+  - only inferred through repeated-run equality across separate output roots
+- why indirect:
+  - no explicit targeted mutation proves that changing `simulation_seed` changes the simulation request lane or downstream observable output
+  - current fake backend stability can mask a broken seed propagation path if outputs remain equal for other reasons
+
+scorer_weights influence
+- current guard shape:
+  - inferred through frozen scoreboard totals and derived teacher ordering
+- why indirect:
+  - no test isolates `scorer_weights` as the changed input while holding proposal score signals constant
+  - current assertions would catch some outcome drift, but not prove the weights are the cause-path being exercised
+
+teacher_namespace propagation
+- current guard shape:
+  - teacher artifact equality inside `assert_fixture_lane_matches_expected_contract(...)`
+- why indirect:
+  - this is broad artifact equality, not a focused assertion on namespace propagation into seed metadata, synthesis request copy metadata, and persisted artifact header metadata
+  - if a future change preserved whole-artifact equality through coupled fixture updates, the specific namespace path would still remain under-explained
+
+anchor metadata propagation
+- current guard shape:
+  - broad export equality and persisted input round-trip
+- why indirect:
+  - frozen snapshots do not include anchor metadata
+  - no dedicated assertion checks that `anchor_hint.metadata` reaches the exported anchor artifact unchanged
+
+proposal actions / legal_hint / metadata observability
+- current guard shape:
+  - broad `consumer_export` equality in the parity helper
+- why indirect:
+  - branch labels are explicitly asserted elsewhere, but `actions`, `legal_hint`, and proposal metadata are not called out by targeted checks
+  - a future regression could be harder to diagnose because the failing evidence would be buried inside full export equality
+
+score component detail versus total-score-only visibility
+- current guard shape:
+  - scoreboard payload equality and golden snapshot totals
+- why indirect:
+  - total scores are explicit in frozen snapshots
+  - score component breakdown is only protected because the whole scoreboard payload is compared, not because component identity/order is asserted directly
+
+teacher label id / ordinal derivation from export_name
+- current guard shape:
+  - teacher artifact equality and frozen teacher file-path ordering
+- why indirect:
+  - no targeted assertion isolates the `TeacherLabelId::new(format!(\"{}:teacher:{ordinal}\", ...))` contract
+  - current coverage would notice broader artifact drift, but not explain the exact broken edge quickly
+
+proposal score_signals influence
+- current guard shape:
+  - inferred through scoreboard totals and teacher ranking order
+- why indirect:
+  - there is no direct mutation showing that changing only one proposal’s score-signals shifts total-score output in the expected narrow way
+
+C. INTENTIONALLY NARROW / NOT CURRENTLY TARGETED
+
+fixture_lane header metadata affecting runtime behavior
+- intentionally narrow today:
+  - header `fixture_lane` is documentary identity on `vertical-slice-input.json`
+  - runtime lane selection stays explicit in test-support constructors, not header-driven
+- this should not be treated as a missing bug
+
+real replay ingestion
+- intentionally out of scope:
+  - the vertical slice still uses deterministic fake input and `HintAnchorDetector.detect_persisted(...)`
+- absence of replay ingestion coverage is deliberate, not a Stage 84 defect
+
+real rollout / real simulation physics
+- intentionally out of scope:
+  - fake backend only
+  - no real rollout physics or backend diversity is part of this contract family
+
+generalized fixture registry or fixture catalog discovery
+- intentionally narrow today:
+  - lane identity remains hard-coded in `persisted_input_artifact_for_lane(...)`
+  - there is no registry abstraction and that is by design in this slice
+
+export bundle inclusion of all test-only metadata
+- intentionally narrow today:
+  - not every persisted-input field is expected to reappear in the export bundle or snapshot
+  - the slice does not promise that test-only documentary metadata becomes public export surface
+
+direct snapshot inclusion of every persisted input field
+- intentionally narrow today:
+  - the frozen snapshot is deliberately smaller than canonical reload
+  - omitted fields include:
+    - `teacher_namespace`
+    - anchor metadata
+    - proposal actions
+    - proposal legal_hint
+    - proposal metadata
+    - scorer weights
+    - fixture header metadata
+
+input artifact reload during canonical output loading
+- intentionally narrow today:
+  - `load_canonical_vertical_slice_result(...)` does not reload `vertical-slice-input.json`
+  - input contract and output contract stay as separate boundaries
+
+D. BEST NEXT EXPLICIT TEST CANDIDATES
+
+1. scorer_weights influence on scoreboard totals
+- under-covered edge:
+  - `PersistedVerticalSliceInput.scorer_weights -> WeightedSumScorer::new(...) -> scoreboard total scores`
+- why current coverage is only indirect:
+  - totals are frozen, but no test mutates only weights and proves the outcome shift comes from that path
+- future direct test shape:
+  - clone one lane artifact, change one weight, run the slice, and assert the scoreboard totals change in the expected narrow direction while branch count/order stays stable
+- best home:
+  - input contract tests plus output snapshot tests
+
+2. simulation_seed propagation into simulation requests
+- under-covered edge:
+  - `PersistedVerticalSliceInput.simulation_seed -> SimulationRequest.seed`
+- why current coverage is only indirect:
+  - repeated-run equality proves determinism, not that the configured seed is actually consumed
+- future direct test shape:
+  - construct two otherwise-identical fixtures with different seeds and assert the fake backend observable output that is seed-derived changes in a controlled way, or expose a test-only parity helper that checks persisted `simulation_id` / step-hash evidence tied to seed usage
+- best home:
+  - parity helpers
+
+3. teacher_namespace propagation across seed, synthesized label, and persisted artifact metadata
+- under-covered edge:
+  - `teacher_namespace` written into seed metadata, synthesis copy metadata, and persisted artifact header metadata
+- why current coverage is only indirect:
+  - whole-teacher-artifact equality covers it, but not with edge-local assertions
+- future direct test shape:
+  - load teacher artifacts after a run and assert the namespace appears exactly where expected and nowhere else is relied upon
+- best home:
+  - output snapshot tests or parity helpers
+
+4. anchor metadata propagation into the exported anchor artifact
+- under-covered edge:
+  - `anchor_hint.metadata -> exported anchor artifact metadata`
+- why current coverage is only indirect:
+  - frozen snapshot omits anchor metadata and no dedicated check calls it out
+- future direct test shape:
+  - run one lane, reload canonical export, and assert the exported anchor metadata matches the persisted input metadata exactly
+- best home:
+  - parity helpers
+
+5. proposal actions / legal_hint / metadata surviving into exported branch artifacts
+- under-covered edge:
+  - `PersistedVerticalSliceProposal.{actions, legal_hint, metadata} -> BranchProposal -> exported branch payload`
+- why current coverage is only indirect:
+  - full consumer-export equality protects the broad object, but the contract edge is not surfaced as an explicit assertion
+- future direct test shape:
+  - focused export reload test asserting one branch’s action list, legal hint, and metadata survive unchanged
+- best home:
+  - output snapshot tests
+
+E. NO-CHANGE DECISION
+
+decision
+- this Stage 84 pass is analysis/documentation only
+- no Rust source changes were required
+- no runtime behavior was changed
+- no test semantics were changed
+
+documentary inconsistency check
+- reviewed Stage 80, Stage 82, and Stage 83 artifacts against the current code paths used by the vertical-slice family
+- no small documentary inconsistency was found that required correction in this pass
+
+residual note
+- the current coverage is already strong on loader cardinality, frozen snapshot identity, persisted input rejection, repeated-run determinism, and cross-lane separation
+- the remaining gaps are mostly edge-local observability gaps, not signs that the current slice is unguarded

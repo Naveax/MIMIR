@@ -1,0 +1,133 @@
+executor mimir skill forge bc replay-input locator actual-implementation reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-17
+
+exact reopen role chosen
+- one low-boost-recovery-specific actual-implementation reopen-decision boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputLocatorImplementationRealizationResultV1`
+- exact job:
+  - admit only the existing truthful blocked replay-input locator implementation realization result
+  - revalidate the exact receipt-bound root/order/path and per-specimen identity tuple already
+    frozen by that realization
+  - decide whether the remaining missing piece is truly actual replay-input locator implementation
+    work
+  - fix the narrowest honest next contract shape only if reopening is justified
+
+exact reopen / no-reopen decision chosen
+- decision:
+  - reopen justified for one narrow receipt-bound replay-input locator actual-implementation
+    boundary
+- reason:
+  - the admitted realization result already proves the current truthful limit is
+    `RealizedForTruthfulBlockedReplayInputLocatorImplementationOnly`
+  - the preserved tuple is already stable enough for one more family-specific, receipt-bound
+    contract-only boundary
+  - no actual-implementation-facing boundary exists yet above that truthful blocked result
+
+exact criteria used
+- The remaining missing piece had to be actual replay-input locator implementation work rather than
+  a lower-layer contract defect.
+- The next boundary had to stay low-boost-recovery-specific.
+- The next boundary had to stay receipt-bound.
+- The next boundary had to avoid sidecars, manifests, and generic indexing.
+- The next boundary had to avoid `mimir_export`.
+- The next boundary had to stay below actual replay parsing.
+- The next boundary had to stay below actual raw-state payload, tensor, and control
+  materialization.
+- The next boundary had to introduce only one actual-implementation-facing handle contract
+  without inventing replay-path semantics absent from the admitted realization result.
+- The next boundary had to preserve:
+  - `source_replay` as opaque lineage only
+  - `audited_family_root_directory` as a BC specimen-tree anchor only
+  - `FutureParserConsumableReplayHandleOnly` as contract-only and not locator success
+- The audited crate surfaces had to remain compatible with that conclusion:
+  - `mimir-skill` already owns the blocked implementation realization boundary
+  - `mimir-replay` still only exposes `ReplayInput`, `ReplayHeader`, `ReplayReader`, and
+    `UnsupportedReplayReader`
+  - `mimir-io` exposes no replay-input locator storage or search framework
+  - `mimir-export` remains unrelated and untouched
+
+exact output / disposition chosen
+- exact decision:
+  - `reopen justified`
+- exact chosen next contract:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputLocatorActualImplementationContractV1`
+- exact chosen contract-shape label reserved by this spec:
+  - `ReceiptBoundReplayInputLocatorActualImplementationOnly`
+- exact repo-local output form:
+  - this decision is recorded in the spec artifact and executor artifacts only
+  - no new Rust reopen-decision DTO or function surface was added in this pass
+
+exact admission / failure decisions chosen
+- Admit only the exact replay-input locator implementation realization result already inside the
+  low-boost-recovery receipt-bound chain.
+- Require the exact replay-input locator implementation contract disposition/note set,
+  implementation realization disposition/note set, source chosen shapes, chosen replay-input
+  locator implementation contract shape, root basename/existence/directory-ness, and exact
+  lane/specimen order.
+- Require every consumed implementation boundary input and preserved implementation output boundary
+  to remain identical across:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+  - `preserved_observation_binding_kind`
+  - `preserved_accepted_reference_window`
+- Require the preserved locator handle kind to remain
+  `FutureParserConsumableReplayHandleOnly`.
+- Hard fail on degraded realization input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on artifact-id drift or duplicate artifact ids.
+- Hard fail on any attempt to reinterpret `source_replay`, `provenance_label`, or the audited
+  family root as an implicit replay locator or replay storage.
+- Hard fail on any attempt to widen this pass into actual replay-input locator implementation,
+  replay parsing, raw-state payload materialization, tensor/control materialization, sidecars,
+  manifests, generic indexing, or `mimir_export`.
+- Produce `no reopen` only if admitted input remains valid but the reopen criteria fail without
+  admitted-input degradation.
+- Produce `reopen justified` only if all admission rules and all reopen criteria hold.
+- In the audited v1 repo state, the valid branch is `reopen justified`.
+
+what was intentionally excluded
+- any actual replay-input locator implementation
+- any actual replay parsing implementation
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- No.
+- No `mimir-skill`, `mimir-types`, `mimir-replay`, `mimir-io`, or `mimir-export` code was
+  changed.
+- Reason code changes were not justified:
+  - the existing
+    `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputLocatorImplementationRealizationResultV1`
+    already machine-verifies the exact admitted tuple, disposition, and receipt-bound invariants
+  - this pass only answers whether to reopen and what the next contract should be
+  - adding another public Rust reopen-decision DTO now would widen API surface without tightening
+    any invariant beyond what the existing realization validator and the new spec artifact already
+    freeze
+  - the next contract-definition pass can consume the existing realization result directly and add
+    code only when the actual contract shape is formally defined
+
+why this is enough for the next pass
+- The repo now has one explicit audited answer to whether replay-input locator actual
+  implementation work must reopen.
+- That answer stays strictly low-boost-recovery-specific and strictly receipt-bound.
+- The next immediate task is now obvious and narrow:
+  - a first contract-definition pass for
+    `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputLocatorActualImplementationContractV1`
+- The next pass is not blocked on a new typed reopen result because the existing implementation
+  realization result already carries the full admitted tuple the contract-definition pass needs.
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

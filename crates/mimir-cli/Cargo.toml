@@ -1,0 +1,27 @@
+[package]
+name = "mimir-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+clap.workspace = true
+mimir-anchor.workspace = true
+mimir-branch.workspace = true
+mimir-config.workspace = true
+mimir-core.workspace = true
+mimir-export.workspace = true
+mimir-io.workspace = true
+mimir-score.workspace = true
+mimir-sim-bridge.workspace = true
+mimir-skill.workspace = true
+mimir-teacher.workspace = true
+mimir-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

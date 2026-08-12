@@ -1,0 +1,46 @@
+executor mimir skill forge v1 first prototype decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+chosen first prototype skill family
+- low boost recovery
+
+why this is the first prototype
+- It is frequent enough to source replay slices without turning data acquisition into the blocker.
+- It is mechanically structured around car-state recovery, ground/air transition control, and resource pressure rather than rare highlight mechanics.
+- It can be canonicalized with less dependence on full ball/opponent tactical semantics than flick-heavy families.
+- It supports clear preconditions, failure modes, abstain boundaries, and recovery hooks.
+- It has obvious downstream value: recovery under low resources is broadly useful and not demo-only.
+- It allows the vertical slice to prove replay slice -> skill object -> curriculum -> export -> eval without needing full real-physics rollout first.
+
+candidate ranking
+1. low boost recovery
+   Why here:
+   broad occurrence, clean staged value, clearer validation and curriculum path, lower semantic coupling.
+2. double wave dash recovery
+   Why second:
+   strong mechanic and still recovery-oriented, but narrower and more timing-sensitive; better as the next family after the first recovery pipeline is proven.
+3. flick escape
+   Why third:
+   more ball-coupled, more context-sensitive, and less suitable for the first narrow replay-slice compiler pass.
+4. rare flick family
+   Why deferred:
+   data sparsity, high tactical-context dependence, wider family ambiguity, and higher risk of fake generalization from isolated clips.
+
+why rare flicks are deferred
+- They are too sparse for a first vertical slice.
+- Canonicalization boundaries are less stable because ball contact, opponent pressure, and tactical intent matter more.
+- Anti-target definition is harder: a near-neighbor mechanic can look similar while demanding different timing and control.
+- The risk of overfitting one replay seed into a misleading "skill" is substantially higher.
+
+what success looks like for low boost recovery
+- A replay slice can be compiled into one reusable low-boost-recovery skill object with explicit provenance.
+- The canonicalizer and phase extractor can explain the seed without inventing missing semantics.
+- The parameter solver can produce bounded recovery parameters that survive into validated variants.
+- The validator can reject unreachable or unsafe variants and surface abstain reasons.
+- A curriculum can be emitted that progresses from easy recovery states to harder low-resource states.
+- An export shell exists for the first consumer path.
+- Eval shows baseline vs intervention metrics for recovery success, time-to-stable-control, and failure-rate reduction on the chosen prototype task.
+
+follow-on implication
+- If the low boost recovery slice proves out cleanly, double wave dash recovery is the next justified family because it reuses much of the same recovery-first architecture while increasing mechanical sharpness.

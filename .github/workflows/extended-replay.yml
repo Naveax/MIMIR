@@ -1,0 +1,36 @@
+name: Extended Replay Regression
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  replay-regression:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          rustup component add rustfmt clippy
+
+      - name: Verify checked-in replay corpus
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_test_corpus.ps1
+
+      - name: Replay crate regression
+        shell: pwsh
+        run: cargo test -p mimir-replay -- --nocapture
+
+      - name: Skill crate regression
+        shell: pwsh
+        run: cargo test -p mimir-skill -- --nocapture

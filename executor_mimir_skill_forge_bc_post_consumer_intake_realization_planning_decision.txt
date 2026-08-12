@@ -1,0 +1,50 @@
+executor mimir skill forge bc post-consumer-intake realization planning decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+exact outcome chosen
+- Outcome A: a no-op planning boundary is still the most honest next step
+- exact boundary name: post_consumer_intake_realization_planning_no_op_v1
+
+exact reasoning
+- the current trusted chain proves receipt-bound opaque caller-admitted replay-byte preservation through consumer-intake realization
+- the current trusted chain does not prove replay-source actual-materialization implementation, carrier discovery, replay-input locator logic, actual replay parsing, parser-success logic, raw-state payload parsing, `mimir_replay::ReplayInput` creation, or export widening
+- `mimir-skill` contains the family-specific consumer-intake contract and realization surfaces
+- `mimir-replay` contains `ReplayInput` and `UnsupportedReplayReader`, but no parser and no justified bridge from the consumer-intake realization result to `ReplayInput`
+- `mimir-io`, `mimir-export`, and `mimir-types` do not contain an opaque caller-admitted replay-byte handoff integration surface
+- the audited artifacts keep `source_replay`, `source_replay.provenance_label`, and `audited_family_root_directory` as lineage or receipt anchors only
+- choosing a contract-definition boundary now would require inventing which closed domain is first
+- choosing a reopen-decision boundary now would still require selecting one closed domain without repo evidence that distinguishes parser, locator, carrier, actual-materialization, raw-state parsing, `ReplayInput`, or export as the uniquely justified next target
+
+what was intentionally excluded
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- actual replay parsing
+- parser-success logic
+- raw-state payload parsing
+- `mimir_replay::ReplayInput` creation
+- corpus-wide replay ingestion
+- tensor/control materialization
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- `mimir_export` widening
+- `mimir-replay` changes
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- deterministic-family closure work
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+Rust/code changes
+- no Rust or code changes were added
+- docs-only is more honest because adding API surface here would imply semantics that remain unproven
+- no public API was added or removed
+- runtime behavior was not changed
+
+why this is enough for the next pass
+- the current stop point is now explicit and auditable
+- the next pass can focus only on whether exactly one closed domain has enough evidence for a reopen decision
+- this pass prevents the consumer-intake realization from being silently treated as replay parsing, replay-source carrier discovery, replay-input locator success, `ReplayInput` creation, or export widening

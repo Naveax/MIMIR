@@ -1,0 +1,71 @@
+executor mimir skill forge bc broader replay-source actual-materialization reopen above explicit carrier provenance/source-binding admission realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact choice among outcome a/b/c
+- Outcome A
+- one new reopen-decision artifact is required before naming the next contract-definition
+  boundary
+
+exact reasoning
+- The blocked realization above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractV1`
+  already proves the current truthful limit:
+  - preserved low-boost-recovery receipt-bound lineage survives
+  - deferred observation lineage survives
+  - preserved replay/materialization handle kinds survive
+  - preserved explicit admission kind survives
+  - no externally admitted explicit carrier provenance/source binding input exists
+- The audited crate surfaces do not expose any honest explicit binding-source object above that
+  blocked result:
+  - `mimir-types::ReplaySourceRef` is still only `replay_id` plus `provenance_label`
+  - the low-boost-recovery BC serialized and emitted specimen file DTOs still carry only
+    `source_replay` lineage, not replay carrier/source-binding input
+  - `mimir-io` exposes only BC artifact/specimen read/write helpers, not a binding-source reader
+  - `mimir-replay` exposes `ReplayInput`, but there is no binding from the preserved receipt-bound
+    tuple to a `ReplayInput`, and no `ReplayInput` usage outside `mimir-replay`
+  - `mimir-export` remains unrelated and forbidden
+- Naming a contract-definition boundary now would require inventing at least one unproven
+  semantic:
+  - carrier/source form
+  - storage/provenance form
+  - sidecar/manifest/artifact necessity
+  - caller-supplied input seam
+- Outcome B is therefore too strong and would fake completeness.
+- Outcome C is too weak because the audited repo state does justify one narrower explicit next
+  question above the blocked realization:
+  - what minimum honest explicit externally admitted carrier provenance/source-binding source form
+    is even available to contract against?
+
+what was intentionally excluded
+- any new contract-definition boundary name
+- any Rust API or DTO in `mimir-skill`
+- any replay-source actual-materialization implementation
+- any replay-source carrier discovery
+- any replay-input locator logic
+- any replay parsing implementation
+- any replay file path derivation from `source_replay` or `source_replay.provenance_label`
+- any replay bytes or replay frames materialization
+- any actual `mimir_replay::ReplayInput` admission or materialization
+- any raw-state payload materialization
+- any tensor/control materialization
+- any sidecar/manifest realization
+- any new artifact family
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any `mimir_export` integration or surface edit
+
+whether Rust/code changes were added, and why or why not
+- No.
+- Docs-only is more honest here.
+- The current repo does not yet justify a machine-verifiable `mimir-skill` surface because the
+  next explicit input form is still unresolved.
+- Adding Rust types now would force the pass to choose source-form semantics that are not proven
+  by the audit.
+
+why this is enough for the next pass
+- The repo now has one explicit audited answer above the blocked explicit-admission realization:
+  the next honest step is still a reopen-decision, not a contract-definition pass.
+- The next immediate question is narrower than before:
+  - determine the minimum honest explicit externally admitted carrier provenance/source-binding
+    source form without cheating through opaque lineage or the audited family root
+- `mimir_export` widening remains forbidden unless explicitly reopened.

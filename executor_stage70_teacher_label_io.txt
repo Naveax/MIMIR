@@ -1,0 +1,29 @@
+canonical helper names added:
+- mimir_io::write_teacher_label_artifact
+- mimir_io::read_teacher_label_artifact
+
+crate(s) touched:
+- crates/mimir-io
+- crates/mimir-cli
+
+Stage 69 vertical-slice rewiring summary:
+- rewired crates/mimir-cli/src/vertical_slice.rs to persist teacher-label artifacts through mimir_io::write_teacher_label_artifact instead of bespoke generic write_artifact wiring
+- rewired teacher-label reloads in the same module to use mimir_io::read_teacher_label_artifact instead of local generic read_artifact_auto wiring
+- kept scoreboard persistence local to the vertical slice
+- kept teacher-label file naming, ordering, header payload structure, and explicit failure expectations unchanged
+
+tests added or updated:
+- crates/mimir-io/src/lib.rs:
+  - writes_and_reads_teacher_label_artifact_with_wrapper
+  - teacher_label_wrapper_rejects_schema_mismatch_explicitly
+  - teacher_label_wrapper_rejects_wrong_artifact_kind_explicitly
+- crates/mimir-io/src/lib.rs:
+  - read_artifact now validates the header envelope before full payload deserialization so wrong-kind failures stay explicit at the canonical artifact boundary
+- crates/mimir-cli/src/vertical_slice.rs:
+  - existing Stage 69 deterministic vertical-slice tests now exercise the canonical teacher-label IO lane
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 173 tests, 0 benchmarks
+
+short note on why export bundle semantics were intentionally left unchanged:
+- this pass canonicalizes persisted teacher-label artifact IO only; export bundle contents remain anchor/branch-only so the trusted export boundary and bundle semantics do not widen in Stage 70

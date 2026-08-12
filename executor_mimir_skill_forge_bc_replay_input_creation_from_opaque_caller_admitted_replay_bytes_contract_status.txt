@@ -1,0 +1,47 @@
+executor mimir skill forge bc replay-input creation from opaque caller-admitted replay bytes contract status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+pass type
+- explicit external-requirement reopen/contract-definition pass
+- selected domain: `mimir_replay::ReplayInput` creation from realized opaque caller-admitted replay-byte consumer-intake result
+- selection source: external architecture/product requirement, not repo-only evidence
+
+runtime behavior changed
+- no
+
+public APIs added
+- yes
+- added low-boost-recovery-specific ReplayInput-creation contract types and function in `mimir-skill`
+- added `mimir-skill` dependency on `mimir-replay` for existing `mimir_replay::ReplayInput`
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added `docs/MIMIR_SKILL_FORGE_BC_REPLAY_INPUT_CREATION_FROM_OPAQUE_CALLER_ADMITTED_REPLAY_BYTES_CONTRACT_V1.md`
+- added decision, next-step, and status artifacts
+- modified `crates/mimir-skill/Cargo.toml`
+- modified `crates/mimir-skill/src/lib.rs`
+
+forbidden crate boundary check
+- `mimir-replay` source modified: no
+- `mimir-io` modified: no
+- `mimir-export` modified: no
+- `mimir-types` modified: no
+- `mimir_export` widening: no
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully

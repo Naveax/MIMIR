@@ -1,0 +1,43 @@
+executor mimir skill forge bc specimen batching next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- low-boost-recovery-specific export-layout/refinement pass above
+  `LowBoostRecoveryBcSpecimenBatchingResultV1`
+- still without `mimir_export`
+
+why this is the immediate next pass
+- The repo now has:
+  - persisted low-boost-recovery BC artifact IO wrappers
+  - one validated persisted-artifact handoff
+  - one refined downstream consumer result
+  - one deterministic low-boost-recovery specimen batching/orchestration result
+- The next unresolved problem is no longer specimen admission, consumer refinement, grouping, or
+  ordering.
+- The next unresolved problem is what the first family-specific layout/refinement boundary above
+  the ordered groups should look like before any deliberate `mimir_export` reopen.
+
+what the next pass should consume
+- `LowBoostRecoveryBcSpecimenBatchingResultV1`
+
+what the next pass should do
+- define one bounded low-boost-recovery-specific layout/refinement contract above the ordered
+  batch groups
+- preserve the ordered groups and preserved refined specimens without widening into tensor or
+  control materialization
+- make explicit what minimal layout structure is justified for the next downstream family step
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family export-layout framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+- no usefulness proof
+
+why a deliberate reopen decision is not the next pass
+- There is no current defect that forces `mimir_export` to reopen.
+- This pass produced the missing family-specific ordered batch boundary.
+- Reopening export semantics now would widen the system before the first low-boost-recovery layout
+  contract above that batch boundary exists.

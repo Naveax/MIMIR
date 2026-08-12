@@ -1,0 +1,31 @@
+pass type: scoreboard component-schema contract index / observability pass
+runtime behavior changed: no
+public APIs added: no
+public APIs removed: no
+scoreboard-component artifact added: yes
+source/docs changed: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 173 tests, 0 benchmarks
+
+artifacts added:
+- executor_stage93_scoreboard_component_schema.txt
+- executor_stage93_status.txt
+
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+validation results observed:
+- `cargo fmt --all`: success
+- `cargo check --workspace --all-targets --all-features`: success
+- `cargo test --workspace --all-targets --all-features`: success
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`: success
+- `cargo test -p mimir-export -- --list`: success
+
+change scope:
+- documentation / indexing only
+- no Rust runtime logic changed
+- no test semantics changed
+- no export bundle semantics widened

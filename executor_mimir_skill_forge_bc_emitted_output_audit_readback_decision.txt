@@ -1,0 +1,156 @@
+executor mimir skill forge bc emitted-output audit/readback decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact emitted-output audit/readback role chosen
+- one low-boost-recovery-specific emitted-output audit/readback boundary above
+  `LowBoostRecoveryBcActualFilesystemEmissionReceiptV1`
+- exact job:
+  - admit only already-emitted low-boost-recovery actual filesystem emission receipts
+  - revalidate the receipt boundary without recreating it from lower layers
+  - verify that the emitted family root, each emitted lane directory, and each emitted specimen
+    file still exist exactly where the receipt says
+  - re-open every emitted specimen JSON file through the existing family-specific `mimir-io`
+    readback helper
+  - verify that each read-back payload still satisfies the emitted specimen contract and still
+    matches the receipt's ordinals and artifact identity
+  - return only one bounded success result when all checks pass
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackDispositionV1`
+- exact disposition:
+  - `ReadyForLowBoostRecoveryEmittedOutputRefinementOnly`
+- exact note type:
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackNoteV1`
+- exact success result type:
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackLaneResultV1`
+- exact specimen result type:
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackSpecimenResultV1`
+- exact success result fields:
+  - `specimen_count`
+  - `group_count`
+  - `emitted_family_root_directory`
+  - `family_root_directory_exists`
+  - ordered `ordered_lane_results`
+  - `audit_disposition`
+  - ordered `audit_notes`
+- exact lane result fields:
+  - `lane_ordinal`
+  - `emitted_lane_directory`
+  - `lane_directory_exists`
+  - ordered `ordered_specimen_results`
+- exact specimen result fields:
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `emitted_specimen_file_path`
+  - `specimen_file_exists`
+  - `readback_matches_receipt_contract`
+  - `readback_specimen`
+- exact audit notes:
+  - `ActualFilesystemEmissionReceiptBoundaryPreserved`
+  - `EmittedRootLaneSpecimenPathsVerified`
+  - `FamilySpecificSpecimenReadbackVerified`
+  - `NoAdditionalSemanticsInferredBeyondEmittedContract`
+  - `TensorAndControlMaterializationDeferred`
+  - `MimirExportIntegrationDeferred`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcActualFilesystemEmissionReceiptV1`.
+- Require the emitted family root basename to remain `low_boost_recovery_bc_v1`.
+- Require ordered lane receipts to be non-empty.
+- Require each `lane_ordinal` to match the concrete lane position.
+- Require each `emitted_lane_directory` to match the deterministic lane-directory path under the
+  emitted family root.
+- Require each lane receipt to contain at least one ordered specimen receipt.
+- Require each `specimen_ordinal` to match the concrete specimen position.
+- Require each `artifact_id` to be present and unique across the full receipt.
+- Require each `emitted_specimen_file_path` to match the deterministic specimen path under its
+  enclosing emitted lane directory.
+- Require the emitted family root directory used for audit/readback to be exactly the directory
+  referenced by the receipt.
+- Forbid silent recreation from plans, layout results, batches, refined specimens, persisted
+  artifacts, BC rows, shells, or lower planning boundaries.
+
+exact audit/readback decisions chosen
+- Filesystem existence verification is explicit and covers:
+  - emitted family root directory
+  - every emitted lane directory
+  - every emitted specimen file
+- Readback is performed only through:
+  - `read_low_boost_recovery_bc_actual_filesystem_emission_specimen_file_v1(...)`
+- Each read-back payload is revalidated against the family-specific emitted specimen contract by
+  reusing the existing low-boost-recovery handoff invariants for:
+  - artifact id derivation from accepted reference variant id
+  - required lineage fields
+  - valid bounded accepted reference window
+  - exact observation binding kind
+  - exact supervision window role
+  - exact target binding kind
+  - exact boundary-stable confidence band
+  - exact unresolved-assumption set
+- Receipt/readback alignment is rechecked for:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+- Lane/specimen order is verified only against the admitted receipt order and the emitted ordinals.
+- No lower planning or specimen sources are reopened.
+
+exact failure decisions chosen
+- Malformed receipt content is a hard fail.
+- Missing emitted family root directory is a hard fail.
+- Missing emitted lane directory is a hard fail.
+- Missing emitted specimen file is a hard fail.
+- Non-directory root/lane paths are a hard fail.
+- Non-file specimen paths are a hard fail.
+- JSON readback failure is a hard fail.
+- Read-back payload that violates the emitted contract is a hard fail.
+- Read-back mismatch on lane ordinal, specimen ordinal, or artifact id is a hard fail.
+- No repair, no recreation, no skipping, no resorting, no inferred manifest/index, and no partial
+  success result were added.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any generic multi-family emitted-output audit/readback framework
+- any generic manifest/index orchestration
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+- any receipt regeneration from lower boundaries
+
+whether Rust type shaping / audit surface / helper validation were added, and why
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs`:
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackDispositionV1`
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackNoteV1`
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackSpecimenResultV1`
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackLaneResultV1`
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`
+  - `LowBoostRecoveryBcEmittedOutputAuditReadbackError`
+  - `audit_readback_low_boost_recovery_bc_emitted_output_v1(...)`
+- Added one local receipt validator because the audit boundary cannot trust a manually constructed
+  receipt to preserve deterministic path/ordering invariants.
+- Added one local emitted-specimen readback validator that reuses the existing handoff contract
+  checks so the audit can prove emitted JSON still matches the family-specific contract without
+  reopening lower planning/specimen boundaries.
+- No `mimir-types` additions were needed because the audit result is a non-persisted
+  family-specific boundary surface in `mimir-skill`, not a shared persisted DTO.
+- No `mimir-io` changes were needed because filesystem read/readback ownership was already correct.
+- No `mimir-export` changes were made.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess whether the actual emitted root/lane/specimen paths still
+  exist.
+- The next pass no longer needs to guess whether the emitted specimen JSON contract can be re-opened
+  honestly through the family-specific readback helper.
+- The next pass now has one explicit audited success result above the actual emission receipt, with
+  counts, ordering, existence verification, and readback payloads preserved in bounded form.
+- That makes the remaining unresolved problem obvious:
+  decide whether the family now needs one emitted-output refinement or sidecar/manifest boundary
+  for later receipt-independent reopening, still without reopening `mimir_export`.

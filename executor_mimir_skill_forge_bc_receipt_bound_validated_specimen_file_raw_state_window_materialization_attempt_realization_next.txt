@@ -1,0 +1,49 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window materialization attempt realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a replay-parsing reopen decision above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a replay-parsing reopen decision
+
+why this is the immediate next pass
+- The materialization-attempt contract is already explicit.
+- This pass now makes the first truthful realization result explicit.
+- The result proves the current repo can only emit a non-materialized attempt result.
+- The remaining unresolved gap is no longer contract shape or attempt-result semantics.
+- The remaining unresolved gap is whether the project must deliberately reopen replay parsing to
+  supply a truthful raw-state source for `source_raw_state_window_ref`.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationResultV1`
+- the preserved audited family root directory already carried by that result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- decide whether replay parsing must now be deliberately reopened
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that `source_raw_state_window_ref` is still opaque unless a new replay-side source contract is deliberately reopened
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no replay parsing implementation yet
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family raw-state/index/export/materialization framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no rollout/physics/runtime work
+
+why the next pass is not another narrow refinement pass
+- This pass already fixes the truthful attempt-result semantics.
+- Another refinement pass would only restate that the current result is non-materialized.
+
+why the next pass is not a more specific observation-access realization pass
+- Jumping to observation access here would bypass the raw-state materialization contract boundary the current pass just closed.
+- The current result still proves that the missing capability is upstream raw-state sourcing, not downstream tensor/control handling.

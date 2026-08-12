@@ -1,0 +1,62 @@
+Helper names added or updated:
+- Updated `persisted_input_artifact_for_lane_with_proposal_surface` to mutate `label` in addition to `actions`, `legal_hint`, and `metadata`.
+
+Crate(s) touched:
+- `mimir-cli`
+
+Mutated Stage77 proposal:
+- Lane: `VerticalSliceFixtureLane::Stage77Second`
+- Proposal index: `1`
+- Baseline label: `candidate-delta`
+- Mutated label: `candidate-delta-stage101`
+
+Exact proposal-surface mutation applied:
+- `label`: `candidate-delta` -> `candidate-delta-stage101`
+- `actions`:
+  - `jump.pressed`: `false` -> `true`
+  - added `jump.stage101_action_tag = "proposal-surface"`
+  - `roll.direction`: `0.75` -> `-0.5`
+- `legal_hint`: `None` -> `Some(true)`
+- `metadata`:
+  - replaced `proposal_source = "fixture-delta"` with `proposal_source = "fixture-delta-mutated"`
+  - added `proposal_contract_tag = "stage101-stage77-proposal-surface"`
+
+Exact exported branch payload surfaces changed:
+- Exported branch `anchor-stage77-second:branch:1`:
+  - `label`
+  - `actions`
+  - `legality_hint`
+  - `metadata`
+
+Unrelated surfaces proven stable:
+- Anchor payload remained identical.
+- Branch ids remained identical: `anchor-stage77-second:branch:0`, `anchor-stage77-second:branch:1`.
+- Unaffected branch payload (`branch:0`) remained identical.
+- Scoreboard component maps remained identical.
+- Scoreboard totals remained identical.
+- Teacher target ordering remained identical.
+- Teacher artifact ids remained identical.
+- Teacher artifact metadata surfaces remained identical.
+- `export_name` remained identical.
+- `replay_id` remained identical.
+- `simulation_seed` remained identical.
+- `scorer_weights` remained identical.
+- Mutated proposal `score_signals` remained identical.
+
+Scores/order stability:
+- Scores stayed stable: yes.
+- Teacher ordering stayed stable: yes.
+- Expected downstream consequence outside the branch payload:
+  - the mutated branch's teacher label text changed from `candidate-delta` to `candidate-delta-stage101` because teacher labels are seeded from exported branch labels.
+  - teacher ids, scores, targets, and metadata did not drift.
+
+Tests added or updated:
+- Updated existing Stage69 helper call sites to pass `label`.
+- Added `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+
+Resulting `mimir_export` test count from `cargo test -p mimir-export -- --list`:
+- `173 tests, 0 benchmarks`
+
+Why this closes the next remaining Stage77 execution-surface propagation edge:
+- It proves one persisted Stage77 proposal can change its exported branch payload `label / actions / legal_hint / metadata` directly and only where intended.
+- It does this without widening runtime semantics, snapshots, canonical loader boundaries, or unrelated Stage69 / execution-result surfaces.

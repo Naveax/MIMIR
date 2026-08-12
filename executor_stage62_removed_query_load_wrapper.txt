@@ -1,0 +1,27 @@
+removed wrapper:
+- query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+
+exact canonical replacement lane now recommended:
+- query_stub_execute_register_report_and_index_load_summary
+- load_and_query_execution_result_job_report_collection_summaries
+
+wrapper-specific test cleanup performed:
+- removed five dedicated wrapper-owned tests from crates/mimir-export/src/lib.rs
+- removed only the tests that existed solely for query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+
+Stage 47 parity/helper cleanup performed:
+- removed the live Stage 47 parity assertion for query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+- removed the explicit Stage 47 replacement helper for query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+- removed the now-dead Stage 47 summary seeding helper that existed only to support that parity lane
+
+active repo-local reference cleanup confirmation:
+- no active repo-local source, README, docs, or test references remain for query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+- historical mentions remain only in preserved stage artifacts outside active source/docs/test surfaces
+
+surviving compatibility helpers left untouched:
+- query_stub_execute_and_persist_execution_result_job_report
+- query_stub_execute_persist_and_load_execution_result_job_report
+- query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 177

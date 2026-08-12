@@ -1,0 +1,37 @@
+helper names added or updated
+- added `persisted_input_artifact_for_lane_with_anchor_metadata`
+- added `deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+
+crate(s) touched
+- `mimir-cli`
+
+which base lane was used
+- `VerticalSliceFixtureLane::Stage69Sample`
+
+exact `anchor_hint.metadata` mutation applied
+- baseline metadata: `{"source": Text("stage69-fixture")}`
+- mutated metadata: `{"anchor_contract_tag": Text("stage88-explicit-propagation"), "anchor_origin": Text("stage69-fixture-mutated")}`
+
+what direct evidence proved anchor-metadata propagation
+- the mutated persisted-input artifact matched the baseline artifact with only `payload.anchor_hint.metadata` replaced
+- after persisted-input reload and canonical export reload, `consumer_export.anchors[0].metadata` equaled the mutated metadata map exactly
+- the baseline run still reloaded with `consumer_export.anchors[0].metadata == {"source": Text("stage69-fixture")}`
+
+what unrelated surfaces remained stable
+- branch ids remained identical between baseline and mutated runs
+- scoreboard totals remained identical between baseline and mutated runs
+- teacher branch target ordering remained identical between baseline and mutated runs
+- anchor id, replay id, frame index, and kind remained identical between baseline and mutated runs
+- canonical reload succeeded for both runs
+- the frozen Stage73 snapshot remained identical between baseline and mutated runs
+
+tests added or updated
+- added `vertical_slice::deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+- updated imports in `crates/mimir-cli/src/vertical_slice.rs`
+- added narrow helper in `crates/mimir-cli/src/vertical_slice_test_support.rs`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this closes an under-covered edge without widening runtime semantics
+- this pass covers the direct persisted-input -> anchor artifact metadata propagation edge explicitly, instead of relying on whole-export equality, and it does so with a test-only persisted-input mutation helper. No runtime semantics, export bundle boundaries, or public surfaces were widened.

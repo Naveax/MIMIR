@@ -1,0 +1,45 @@
+test-support helper names added or updated
+- added `VerticalSliceFixtureLane`
+- added `second_fixture()`
+- added `expected_stage77_second_golden_snapshot()`
+- added `run_second_fixture()`
+- added `run_second_fixture_and_load()`
+- added `run_fixture_lane()`
+- added `run_fixture_lane_and_load()`
+- updated `sample_fixture()` to delegate through the shared lane selector
+- updated `expected_stage73_golden_snapshot()` to delegate through the shared lane selector
+
+crate(s) touched
+- `mimir-cli`
+
+second fixture identity summary
+- export name: `stage77-second-vertical-slice`
+- replay id: `replay-stage77-second`
+- anchor id/frame/kind: `anchor-stage77-second` at frame `256`, `Manual`
+- anchor metadata source: `stage77-second-fixture`
+- fake backend model: unchanged deterministic fake backend
+- proposal labels in generator order: `candidate-gamma`, `candidate-delta`
+- branch ids in order: `anchor-stage77-second:branch:0`, `anchor-stage77-second:branch:1`
+- scoreboard totals in persisted order: `6.0`, `2.5`
+- teacher targets in persisted ordinal order: `anchor-stage77-second:branch:0`, `anchor-stage77-second:branch:1`
+
+second golden snapshot identity summary
+- frozen export name: `stage77-second-vertical-slice`
+- frozen replay id: `replay-stage77-second`
+- frozen anchor identity: `anchor-stage77-second`
+- frozen branch order: `anchor-stage77-second:branch:0`, `anchor-stage77-second:branch:1`
+- frozen scoreboard rows/totals: `anchor-stage77-second:branch:0 => 6.0`, `anchor-stage77-second:branch:1 => 2.5`
+- frozen teacher target order: `anchor-stage77-second:branch:0`, `anchor-stage77-second:branch:1`
+
+tests added or updated
+- added `second_deterministic_vertical_slice_persists_reloadable_outputs`
+- added `second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`
+- added `second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+- added `deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+- existing Stage 69/73/74/75/76 fixture tests remain intact and still run through the shared support surface
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this pass broadens contract confidence without widening runtime semantics
+- The new lane reuses the same deterministic fake backend, the same persisted artifact paths, and the same canonical reload path, but freezes a second distinct replay/anchor/score/teacher ordering example. That increases contract coverage against accidental single-fixture coupling without changing export bundle boundaries, runtime logic, CLI surface, or cleanup semantics.

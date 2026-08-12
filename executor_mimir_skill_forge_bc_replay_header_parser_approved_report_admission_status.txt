@@ -1,0 +1,185 @@
+executor mimir skill forge bc replay header parser approved report admission status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+pass type
+- approved parser-report admission pass
+- evidence admission only
+- docs/artifacts only
+- no parser implementation
+- no parser-success logic
+- no ReplayHeader production
+- no backend dependency addition
+
+selected outcome
+- Outcome B
+- generated external boxcars report is partially admissible only
+- complete byte-layout evidence remains missing
+- complete expected ReplayHeader evidence remains missing
+- next pass must target remaining evidence gaps
+
+runtime behavior changed
+- no
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_APPROVED_REPORT_ADMISSION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_status.txt
+- Rust source changed: no
+- manifests changed: no
+- lockfile changed: no
+- fixture files added: no
+
+fixture identity verified
+- yes
+- path exists: yes
+- byte length matched expected 3001021: yes
+- SHA-256 matched expected F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB: yes
+- fixture identity treated as parser fact: no
+
+report identity verified
+- yes
+- report path exists: yes
+- report references fixture id rl_replay_header_fixture_001: yes
+- report references tool boxcars: yes
+- report references tool version 0.11.1: yes
+- report states report_is_mimir_parser_output no: yes
+- report states report_is_parser_success no: yes
+
+report admitted fully
+- no
+
+report admitted partially
+- yes
+
+report rejected
+- no
+
+byte-layout evidence admitted
+- partial
+- partial fixture-only external facts include header_size 13200, header_crc 2370383193,
+  major_version 868, minor_version 32, net_version Some(10), game_type
+  TAGame.Replay_Soccar_TA, header_property_count 26, and selected external header properties
+- no byte offsets, byte lengths, numeric endianness, string/property encoding rules, header
+  termination rule, body boundary rule, or error boundaries were admitted
+
+expected ReplayHeader evidence admitted
+- partial
+- ReplayHeader.source_label evidence admitted only from the future ReplayInput::Memory label
+  rl_replay_header_fixture_001
+- ReplayHeader.replay_id remains partial only from external Id property evidence
+- ReplayHeader.total_frames remains partial only from external NumFrames property evidence
+- ReplayHeader.metadata remains partial only from selected external property evidence
+- no complete ReplayHeader is admitted
+
+parser implementation may proceed
+- no
+- parser implementation remains blocked until fixture evidence, complete byte-layout evidence, and
+  complete expected ReplayHeader evidence are admitted by later passes and implementation is
+  explicitly reopened
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+report path
+- artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact required validation commands run
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+required validation result
+- all listed required validation commands completed successfully
+
+additional admission verification commands run
+- Get-Item -LiteralPath 'D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay'
+- Get-FileHash -LiteralPath 'D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay' -Algorithm SHA256
+- Select-String -LiteralPath 'artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt' -Pattern 'fixture_id: rl_replay_header_fixture_001','parser_tool: boxcars crate','parser_tool_version: 0.11.1','report_is_mimir_parser_output: no','report_is_parser_success: no'
+- Get-ChildItem -LiteralPath '.' -Recurse -Filter 'Cargo.toml' | Select-String -Pattern 'boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor'
+- Select-String -LiteralPath 'Cargo.lock' -Pattern 'name = "boxcars"','name = "rattletrap"','name = "rrrocket"','name = "carball"','name = "rlreplay"','name = "subtr-actor"'
+- git rev-parse --show-toplevel
+- git diff --name-only -- 'crates/mimir-replay' 'crates/mimir-io' 'crates/mimir-export' 'crates/mimir-types' 'Cargo.toml' 'Cargo.lock'
+- git status --short -- 'docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_APPROVED_REPORT_ADMISSION_V1.md' 'executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_decision.txt' 'executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_next.txt' 'executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_status.txt' 'crates/mimir-replay' 'crates/mimir-io' 'crates/mimir-export' 'crates/mimir-types' 'Cargo.toml' 'Cargo.lock'
+
+forbidden crate boundary check
+- mimir-replay source modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- mimir_export widening: no
+- Cargo.toml modified by this pass: no
+- Cargo.lock modified by this pass: no
+- MIMIR backend dependency added: no
+- parser implementation added: no
+- parser-success logic added: no
+- ReplayHeader production added: no
+- raw-state payload parsing added: no
+- replay frame extraction added: no
+- semantic replay event extraction added: no
+- runtime CLI command added: no
+- dependency scan result for boxcars/rattletrap/rrrocket/carball/rlreplay/subtr-actor in MIMIR
+  manifests and lockfile: no matches
+- command run: git rev-parse --show-toplevel
+- command result: D:/
+- command run: git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- command result: no tracked file diffs reported
+- command run: git status --short -- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_APPROVED_REPORT_ADMISSION_V1.md executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_decision.txt executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_next.txt executor_mimir_skill_forge_bc_replay_header_parser_approved_report_admission_status.txt crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- command result before this status artifact was added: new docs/decision/next artifacts were
+  reported untracked; the broader Git root also reports Cargo.toml, Cargo.lock, and crate
+  directories as untracked
+- workspace caveat: git rev-parse --show-toplevel reports D:/; this MIMIR workspace is inside a
+  broader Git tree. The forbidden-boundary conclusion is based on exact applied patch paths, no
+  tracked diffs under forbidden crate paths or manifests, no dependency matches in MIMIR manifests
+  or lockfile, and no applied edits under forbidden crate paths.
+
+explicit non-claims
+- no real MIMIR replay parser was implemented
+- no MIMIR parser success was claimed or encoded
+- no backend dependency was added to MIMIR
+- no ReplayHeader was produced or synthesized
+- no generated report value was admitted as complete MIMIR byte layout
+- no generated report value was admitted as complete expected MIMIR ReplayHeader output
+- no replay id derivation was admitted
+- no total_frames derivation was admitted
+- no metadata map was admitted
+- no explicit total_frames None policy was admitted
+- no explicit empty metadata policy was admitted
+- no insufficient-byte fixture was derived
+- no malformed-byte fixture was derived
+- no unsupported-format/version fixture was derived
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented
+
+next pass
+- remaining evidence-gap pass for rl_replay_header_fixture_001
+- parser implementation remains closed
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- mimir_export widening remains forbidden

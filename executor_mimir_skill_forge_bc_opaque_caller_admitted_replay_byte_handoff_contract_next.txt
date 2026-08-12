@@ -1,0 +1,27 @@
+executor mimir skill forge bc opaque caller-admitted replay-byte handoff contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-21
+
+next pass
+- the first realization pass for
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationOpaqueCallerAdmittedReplayByteHandoffContractV1`
+
+scope of that next pass only
+- consume the exact opaque replay-byte handoff contract defined in this pass
+- revalidate exact receipt-bound tuple agreement and opaque payload preservation
+- produce the first truthful realization result for this exact opaque caller-admitted replay-byte handoff boundary
+
+what must remain forbidden in that next pass unless explicitly reopened
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- replay-source carrier discovery remains out of scope
+- replay-input locator logic remains out of scope
+- replay parsing remains out of scope
+- raw-state payload parsing remains out of scope
+- tensor/control materialization remains out of scope
+- `mimir_replay::ReplayInput` creation remains out of scope unless explicitly reopened above this boundary
+
+why this is the immediate next pass
+- the exact opaque handoff form is no longer open
+- the exact handoff object shape is no longer open
+- the exact receipt-bound tuple binding target is no longer open
+- the next missing truth is realization of this exact opaque caller-admitted replay-byte handoff contract and nothing broader

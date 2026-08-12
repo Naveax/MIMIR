@@ -1,0 +1,120 @@
+Stage77 closure batch audit
+
+1) Stage77 surfaces already closed before this batch
+
+- `teacher_namespace` propagation on `VerticalSliceFixtureLane::Stage77Second`
+  Status before batch: already closed
+  Evidence: `second_deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+
+- `anchor_hint.metadata` propagation on `VerticalSliceFixtureLane::Stage77Second`
+  Status before batch: already closed
+  Evidence: `second_deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+
+- `score_signals` direct effect on Stage77 scoreboard totals and teacher ordering
+  Status before batch: already closed
+  Evidence: `second_deterministic_vertical_slice_score_signals_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+
+- `scorer_weights` direct effect on Stage77 scoreboard totals and teacher ordering
+  Status before batch: already closed
+  Evidence: `second_deterministic_vertical_slice_scorer_weights_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+
+- `simulation_seed` direct consumption into `SimulationRequest.seed`
+  Status before batch: already closed
+  Evidence: `second_deterministic_vertical_slice_directly_consumes_simulation_seed_without_perturbing_other_contract_edges`
+
+- proposal surface positive propagation into exported Stage77 branch payloads
+  Status before batch: already closed
+  Evidence: `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+
+- branch artifact action ordering proof
+  Status before batch: already closed
+  Why: Stage101 already asserted exact Stage77 `actions` vector equality at the loaded consumer boundary for baseline and mutated branch payloads, so reordering across export/load was already directly covered.
+  Evidence: `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+
+- teacher-label text derivation from exported branch label
+  Status before batch: already closed
+  Why: Stage101 already asserted that mutating only the exported Stage77 branch label changes only the matching teacher-label text while teacher id, score, and metadata stay stable.
+  Evidence: `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+
+- field isolation across sibling proposals/branches
+  Status before batch: already closed
+  Why: Stage101 already asserted Stage77 branch `0` stayed byte-for-byte identical while branch `1` alone changed, with scoreboard totals and teacher ordering held stable.
+  Evidence: `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+
+2) Stage77 surfaces newly closed by this batch
+
+- exported branch payload negative-drift guard
+  Status before batch: still genuinely open
+  Closure added: `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface`
+  Why it matters: exported Stage77 branch payload fields can silently default on reload if the artifact still hashes cleanly after drift.
+  What is now proven: after refreshing the tampered branch hash to bypass the export hash guard, an explicit Stage77 consumer-boundary guard catches missing `label/actions/legality_hint/metadata` drift on the targeted branch while sibling branch payload stays unchanged.
+
+- targeted branch artifact corruption failure path
+  Status before batch: still genuinely open
+  Closure added: `second_deterministic_vertical_slice_rejects_targeted_branch_artifact_corruption_at_canonical_load_boundary`
+  What is now proven: corrupting Stage77 branch `actions` to an invalid type fails explicitly at canonical load rather than degrading into a plausible branch payload.
+
+- branch metadata key preservation / value-shape preservation
+  Status before batch: partially closed
+  Closure added: `second_deterministic_vertical_slice_preserves_branch_metadata_value_shapes_without_perturbing_other_contract_edges`
+  What is now proven: Stage77 branch metadata preserves heterogeneous `FieldValue` shapes (`text`, `integer`, `float`, `boolean`, `string_list`) exactly across export and canonical reload while sibling branch, score rows, and teacher artifacts stay unchanged.
+
+- persisted-input negative drift guard for proposal surface
+  Status before batch: partially closed
+  Closure added: `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+  What is now proven: Stage77 persisted input rejects missing required proposal `label` before runtime materialization.
+
+- simulation-request action-surface consumption proof
+  Status before batch: still genuinely open
+  Closure added: `second_deterministic_vertical_slice_directly_consumes_proposal_actions_into_simulation_requests_without_perturbing_other_contract_edges`
+  What is now proven: mutated Stage77 proposal actions become the exact deterministic fake-backend `SimulationRequest.commands` for the targeted branch only; seeds, sibling request commands, scoreboard scores, and teacher artifacts remain stable.
+
+- manifest/index stability under proposal-surface-only mutation
+  Status before batch: still genuinely open
+  Closure added: `second_deterministic_vertical_slice_keeps_manifest_and_index_stable_except_for_the_mutated_branch_payload_hash`
+  What is now proven: Stage77 proposal-surface-only mutation leaves manifest fields, index ordering, record ids, relative paths, and schema metadata stable; only the mutated branch payload hash changes.
+
+3) Stage77 surfaces intentionally deferred from this batch
+
+- branch payload canonical reload parity proof
+  Status before batch: partially closed but not independently missing
+  Why deferred: current Stage77 runtime output and canonical result both consume the same `load_export_bundle -> adapt_loaded_export_for_consumer` path. Adding a separate “parity” test would mostly restate the same loader output and would not harden a distinct boundary.
+
+- broader persisted-input negative drift for optional/defaulted proposal fields (`actions`, `legal_hint`, `metadata`)
+  Status before batch: partially open
+  Why deferred: current persisted contracts intentionally default those fields on deserialization. Tightening that into a loader failure in this pass would widen semantics beyond a bounded Stage77 closure batch. The batch closed the required-field failure path and the downstream exported-payload negative guard without changing loader semantics.
+
+4) Why each deferred item was deferred
+
+- canonical reload parity was deferred because there is no separate consumer implementation to cross-check; the current runtime and canonical reader already share the same loader, so another parity test would be tautological.
+- optional/defaulted persisted-input proposal-field drift was deferred because changing the defaulting contract would be a contract change, not a narrow closure test.
+
+5) Exact tests/helpers added or updated
+
+Added tests in `crates/mimir-cli/src/vertical_slice.rs`:
+- `second_deterministic_vertical_slice_preserves_branch_metadata_value_shapes_without_perturbing_other_contract_edges`
+- `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface`
+- `second_deterministic_vertical_slice_rejects_targeted_branch_artifact_corruption_at_canonical_load_boundary`
+- `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+- `second_deterministic_vertical_slice_directly_consumes_proposal_actions_into_simulation_requests_without_perturbing_other_contract_edges`
+- `second_deterministic_vertical_slice_keeps_manifest_and_index_stable_except_for_the_mutated_branch_payload_hash`
+
+Added helpers in `crates/mimir-cli/src/vertical_slice.rs`:
+- `read_json_value`
+- `write_json_value`
+- `stage77_branch_artifact_path`
+- `refresh_stage77_branch_index_hash`
+- `simulation_commands_from_actions`
+- `assert_branch_payload_surface_matches`
+
+Updated helpers in `crates/mimir-cli/src/vertical_slice_test_support.rs`:
+- `CapturedSimulationRequest`
+- `RecordingDeterministicFakeBackend::simulate(...)`
+
+6) Why this batch is a credible Stage77 closure pass without broadening runtime semantics
+
+- The pass stayed inside the existing deterministic vertical-slice family.
+- No runtime control flow, export semantics, CLI surface, replay logic, rollout logic, async behavior, or database code changed.
+- The only code movement outside Stage77 assertions was a tiny recorder extension so simulation-request commands could be observed truthfully.
+- Newly added coverage targets the remaining edge-local Stage77 gaps: negative drift, corruption failure, metadata shape preservation, deterministic request consumption, and packaging stability.
+- Redundant work was skipped where repo-local evidence already closed the surface well enough.

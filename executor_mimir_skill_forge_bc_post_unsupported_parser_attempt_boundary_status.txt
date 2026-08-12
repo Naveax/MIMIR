@@ -1,0 +1,75 @@
+executor mimir skill forge bc post unsupported parser-attempt boundary status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+pass type
+- low-boost-recovery-specific post-unsupported parser-attempt boundary decision pass
+- selected input: `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingUnsupportedAttemptRealizationResultV1`
+- selected outcome: Outcome B
+- selected next pass: explicit external requirement pass for real parser implementation
+
+runtime behavior changed
+- no
+- no CLI, live runtime path, async/background system, database, rollout physics, export path, replay path, or parser backend was changed
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added `docs/MIMIR_SKILL_FORGE_BC_POST_UNSUPPORTED_PARSER_ATTEMPT_BOUNDARY_DECISION_V1.md`
+- added `executor_mimir_skill_forge_bc_post_unsupported_parser_attempt_boundary_decision.txt`
+- added `executor_mimir_skill_forge_bc_post_unsupported_parser_attempt_boundary_next.txt`
+- added `executor_mimir_skill_forge_bc_post_unsupported_parser_attempt_boundary_status.txt`
+- Rust/code changes added: no
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+forbidden crate boundary check
+- `mimir-replay` modified by this pass: no
+- `mimir-io` modified by this pass: no
+- `mimir-export` modified by this pass: no
+- `mimir-types` modified by this pass: no
+- `mimir_export` widening: no
+- command run: `git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types`
+- command result: no tracked file diffs reported
+- additional command run: `git diff --name-only -- crates/mimir-skill/src/lib.rs crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml crates/mimir-skill/Cargo.toml crates/mimir-io crates/mimir-export crates/mimir-types`
+- additional command result: no tracked file diffs reported
+- workspace caveat: `git rev-parse --show-toplevel` reports `D:/`; this workspace appears inside a broader Git tree, so the no-forbidden-crate conclusion is based on exact edited files plus the no-diff checks above
+
+decision summary
+- Outcome B was selected because the chain has reached the limit of scaffold-only `UnsupportedReplayReader`
+- a real parser does not exist in the audited workspace
+- unsupported/error behavior does not justify parser success
+- unsupported/error behavior does not justify raw-state payload parsing
+- the next pass must be an explicit external requirement pass for real parser implementation
+
+explicit non-claims
+- no real replay parser was implemented
+- no parser backend integration contract was defined
+- no parser success was claimed or encoded
+- no `ReplayHeader` was produced or synthesized
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented

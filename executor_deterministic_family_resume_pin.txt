@@ -1,0 +1,8 @@
+deterministic-family resume pin
+date: 2026-04-12
+
+- Status: strongly closed at intended narrow fake-backend scope.
+- Read first: `executor_deterministic_family_handoff_pack.txt`, then `executor_deterministic_family_closure_summary.txt`, then `executor_deterministic_family_contract_index.txt`.
+- Do not resurrect stale roadmap or remaining-gap artifacts as live planning inputs.
+- Do not reopen on symmetry-only pressure.
+- Do not disguise semantics changes or contract widening as closure cleanup.

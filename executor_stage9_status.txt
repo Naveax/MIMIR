@@ -1,0 +1,10 @@
+wrapper_added: yes
+helper_name: query_stub_execute_persist_load_and_register_execution_result_job_report
+delegates_only_to_existing_execute_persist_load_and_report_index_register_helpers: yes
+mimir_export_test_count: 49
+validation_commands_run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

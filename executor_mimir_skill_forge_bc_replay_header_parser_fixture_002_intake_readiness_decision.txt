@@ -1,0 +1,85 @@
+executor mimir skill forge bc replay header parser fixture 002 intake readiness decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+exact outcome chosen
+- Outcome A
+
+whether fixture_001 identity was reverified
+- yes
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- matched expected identity: yes
+
+whether fixture_002 exists
+- yes
+- fixture id: rl_replay_header_fixture_002
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+
+whether fixture_002 was copied from MIMIR_REPLAY_FIXTURE_002_PATH
+- yes
+- destination did not exist before copy
+- caller-supplied private local source path:
+  C:\Users\navea\Documents\My Games\Rocket League\TAGame\DemosEpic\D9DA34DA11F0811EAC139A94CBF30AF2.replay
+- source path recorded only as user-supplied private local path, not as parser fact
+- copied destination length and SHA-256 matched source length and SHA-256
+
+fixture_002 byte length and SHA-256
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+whether fixture_002 differs from fixture_001
+- yes
+- differs by SHA-256
+
+fixture_002 safety checks
+- extension is .replay: yes
+- byte length greater than 8: yes
+- first four bytes read as little-endian i32 header_size sanity evidence: 11273
+- first four bytes are bytes-only preliminary sanity evidence
+- no parser success claimed from the first-four-byte check
+
+whether parser code changed
+- no
+
+whether parser-success was claimed
+- no
+- no parser-success was claimed for fixture_002
+- no broad parser-success was claimed
+
+what was intentionally not broadened
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body parsing
+- raw-state parsing
+- frame parsing
+- event parsing
+- broad version-family support
+- export behavior
+- runtime behavior
+- CLI behavior
+- backend replay parser dependency
+
+whether forbidden files/dependencies changed
+- crates/mimir-replay/src/lib.rs changed by this pass: no
+- crates/mimir-skill/src/lib.rs changed by this pass: no
+- crates/mimir-cli changed by this pass: no
+- crates/mimir-io changed by this pass: no
+- crates/mimir-export changed by this pass: no
+- crates/mimir-types changed by this pass: no
+- root Cargo.toml changed by this pass: no
+- root Cargo.lock changed by this pass: no
+- dependencies changed by this pass: no
+- backend replay parser dependency added: no
+
+decision
+- Outcome A admitted
+- fixture_002 target is available and identity is verified
+- next pass may generate or admit a fixture_002 structural/header report
+- no parser expansion is admitted

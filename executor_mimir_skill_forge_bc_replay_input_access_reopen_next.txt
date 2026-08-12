@@ -1,0 +1,60 @@
+executor mimir skill forge bc replay-input-access reopen next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-16
+
+next pass
+- a first narrow contract-definition pass for
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a first narrow contract-definition pass for the replay-input-access / replay-source-binding boundary
+
+why this is the immediate next pass
+- This pass already made the replay-input-access reopen decision explicit.
+- This pass already fixed the narrowest honest contract shape.
+- Actual replay-input locator implementation is still deferred.
+- Actual replay parsing is still deferred.
+- The next unresolved problem is now smaller:
+  - formalize the replay-input-access / source-binding contract itself
+  - keep it receipt-bound, family-specific, and contract-only
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenDecisionResultV1`
+- the same audited family root directory reference preserved by the blocked realization result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- define the contract surface for one replay-input-access / replay-source-binding output per admitted
+  blocked replay-side parse-attempt specimen
+- preserve the invariant that `source_replay` remains opaque lineage until an explicit bound handle
+  contract exists
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that deferred observation lineage stays deferred
+- avoid sidecars, manifests, generic indexing, replay parsing, raw-state payload materialization,
+  tensor materialization, control extraction, and `mimir_export`
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no actual replay-input locator implementation
+- no actual replay parsing implementation
+- no actual raw-state payload materialization
+- no tensor materialization
+- no control/action extraction
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is the minimum
+  honest fix
+- no generic multi-family replay/raw-state/index/export/materialization framework
+- no generic manifest/index framework
+- no rollout/physics/runtime work
+
+why the next pass is not a continued no-reopen proof/refinement pass
+- The parser-success no-reopen pass already isolated the precise blocker.
+- This pass already converts that blocker into one explicit positive reopen decision.
+- More proof about the same blocked state would not define the missing contract.
+
+why the next pass is not another deliberate broader reopen decision
+- The broader reopen question is now closed positively.
+- The next unresolved work is contract definition, not another layer of reopen analysis.

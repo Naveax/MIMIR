@@ -1,0 +1,76 @@
+executor mimir skill forge bc replay header parser remaining mapping gap error boundary admission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+selected outcome driving next step
+- Outcome A
+- ReplayHeader mapping gaps and mapping-specific error boundaries are fully admitted
+- expected ReplayHeader evidence is complete for rl_replay_header_fixture_001
+- parser implementation remains blocked
+- parser-success logic remains blocked
+
+immediate next pass type
+- remaining non-mapping byte-layout and parser error-boundary admission pass
+
+why parser implementation is not the next pass
+- byte-layout evidence remains partial
+- supported-version policy remains missing
+- CRC policy remains missing
+- full property validation policy remains partial
+- parser stop/error behavior remains partial
+- non-mapping insufficient-byte and malformed-byte boundaries remain partial
+- typed replay-specific MIMIR error taxonomy remains missing
+- implementation has not been explicitly reopened
+
+immediate next pass input
+- fixture id: rl_replay_header_fixture_001
+- fixture path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- prior external parser report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+- mapping/error-boundary admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_MAPPING_GAP_ERROR_BOUNDARY_ADMISSION_V1.md
+
+immediate next pass must target
+- complete byte-layout admission for the minimal header reader
+- supported-version policy for the fixture version family
+- CRC policy for header/content CRC fields, including whether validation is enforced or deferred
+- parser stop behavior after minimal header parsing
+- full property validation policy outside selected ReplayHeader mappings
+- insufficient-byte boundaries for top-level prefix, header region, strings, property entries, and
+  selected values
+- malformed-byte boundaries for text, integer, float, property kind, property size, and terminator
+  failures
+- unsupported-version boundary, if distinguishable from malformed/unsupported input
+- whether current MimirError::Message remains sufficient or a typed replay error taxonomy must be
+  explicitly designed before implementation
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only after fixture evidence, complete byte-layout evidence,
+  complete expected output evidence, and required error boundaries are admitted and a later pass
+  explicitly reopens implementation
+
+parser implementation closure
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic closure
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing closure
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction closure
+- replay frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator closure
+- replay-source actual materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- mimir_export widening remains forbidden unless explicitly reopened

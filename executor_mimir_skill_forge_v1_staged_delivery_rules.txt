@@ -1,0 +1,14 @@
+executor mimir skill forge v1 staged-delivery rules
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+- Full Skill Forge vision is accepted.
+- Staged delivery is mandatory.
+- Do not open the whole vision at once.
+- Build one prototype skill family first.
+- Build one replay-slice-to-export vertical slice first.
+- No feature sprawl before eval proof on that slice.
+- No broad metadata growth before a first consumer needs it.
+- No additional adapters before the first concrete consumer exists.
+- Deterministic-family remains closed infrastructure, not active open work.
+- Do not widen replay, rollout, runtime, export-bundle, or orchestration boundaries during v1 spec follow-through unless a later pass explicitly reopens them.

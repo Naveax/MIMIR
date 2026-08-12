@@ -1,0 +1,39 @@
+executor mimir skill forge consumer / bc-planning next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+next pass
+- first real low-boost-recovery BC contract-definition pass
+
+milestone note
+- This next pass is the BC milestone.
+- That milestone must be flagged explicitly in the final output artifacts.
+
+exact problem
+- The project now has a bounded planning-only consumer boundary on top of accepted shell output and
+  bounded eval output.
+- The next pass must define the first real low-boost-recovery BC contract without silently turning
+  planning artifacts into dataset/export machinery or widening `mimir_export`.
+
+what the new planning boundary now makes possible
+- Start BC contract-definition work from one explicit readiness/disposition surface.
+- Preserve slice lineage, phase lineage, accepted-reference lineage, carried confidence, and
+  carried unresolved assumptions without re-opening solver or validator semantics.
+- Keep the BC milestone explicit before any row shape, field ordering, or export semantics are
+  proposed.
+
+what is still intentionally unresolved
+- the real BC row/schema shape
+- serialization/persistence semantics for BC output
+- how a future BC contract will reference windows without widening shell/planning DTOs by accident
+- any proof of low-boost truth, contact truth, recovery success, physics reachability, or BC
+  usefulness
+
+scope risk
+- high
+- The primary risk is letting the first BC contract-definition pass quietly become BC export
+  implementation.
+- The second risk is letting lineage-carrying fields harden into latent dataset semantics without
+  explicit contract review.
+- The third risk is treating `bc_candidate_ready_for_contract_definition` as usefulness proof when
+  it only means the next pass may define the BC contract boundary.

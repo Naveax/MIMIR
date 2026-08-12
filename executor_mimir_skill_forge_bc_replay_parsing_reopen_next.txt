@@ -1,0 +1,55 @@
+executor mimir skill forge bc replay-parsing reopen next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a first narrow contract-definition pass for the replay-side sourcing / parse-attempt boundary
+- exact target contract:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptContractV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a first narrow contract-definition pass for the replay-side sourcing / parse-attempt boundary
+
+why this is the immediate next pass
+- The receipt-bound materialization contract is already explicit.
+- The truthful non-materialized attempt realization boundary is already explicit.
+- This pass now makes the replay-parsing reopen decision explicit.
+- The next unresolved problem is no longer whether replay parsing must be reopened.
+- The next unresolved problem is the exact contract that binds the truthful non-materialized
+  attempt result to one honest replay-side sourcing / parse-attempt boundary.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationResultV1`
+- `LowBoostRecoveryBcReplayParsingReopenDecisionResultV1`
+- the preserved audited family root directory already carried by those boundaries
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- define the narrowest contract-only replay-side sourcing / parse-attempt surface
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that actual replay parsing is still deferred
+- preserve deferred observation lineage only as deferred lineage, not tensor/control materialization
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no actual replay parsing implementation
+- no actual raw-state payload materialization
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family replay/raw-state/index/export framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no rollout/physics/runtime work
+
+why the next pass is not a continued no-reopen proof/refinement pass
+- This pass already fixes the replay-parsing reopen answer explicitly.
+- Another no-reopen refinement pass would only restate the same truthful non-materialized attempt
+  facts.
+
+why the next pass is not a deliberate broader reopen decision
+- The narrow family-specific replay-parsing reopen has already been chosen.
+- Broadening now would violate the staged-delivery rule and reopen more than the remaining defect
+  requires.

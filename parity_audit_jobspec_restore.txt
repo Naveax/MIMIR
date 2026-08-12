@@ -1,0 +1,20 @@
+PRESENT
+- `D:\RocketLeague bot\MIMIR\crates\mimir-export\src\lib.rs` still contains the full audited boundary: export orchestration, manifest/index, staged export hardening, inspect/load, consumer adapt, candidate-request, processing plan, execution-result stub, execution-result persistence/reload, ledger/index, ledger history inspection, selection/query, handoff bundle, run request, and job spec.
+- All required public APIs from the audit list are present, including `export_bundle`, `inspect_export_bundle`, `load_export_bundle`, `plan_candidate_request`, the ledger/history/query functions, the handoff/run-request builders, and both job-spec builders.
+- All six named job-spec tests are present in `lib.rs`, and `.log_archive\clean_current_state_20260330_073601\mimir_export_tests.log` lists those tests with 17 total tests.
+- No forbidden executor/worker/report public surface is present in `lib.rs`; README only references a future worker/executor as downstream context, not as an exposed API.
+- Compared with `D:\RocketLeague bot\MIMIR\.recovery\mimir-export_lib_jobspec_restore.rs`, the current file keeps the same public boundary.
+
+MISSING
+- No obvious job-spec boundary layer is missing versus the restore target.
+- No required public API from the audit list is missing.
+- No named job-spec test from the audit list is missing.
+
+SUSPICIOUS
+- Current `lib.rs` is not byte-identical to the restore copy, but the observed diff is a private `build_manifest` relocation/reordering rather than a boundary reduction.
+- `.log_archive\clean_current_state_20260330_073601\check.log` and `clippy.log` only contain the final `Finished` line, so they do not independently prove the exact command/flag invocation; the stronger evidence is the source audit plus the archived 17-test listing.
+- No obvious code-level simplification or reduction of the intended job-spec boundary was found.
+
+RECOMMENDATION
+- Treat the current `mimir-export` `lib.rs` as at-parity with the intended job-spec boundary.
+- If you want stronger future audit evidence, archive full command lines and full stdout for `cargo check`, `cargo clippy -- -D warnings`, and `cargo test -p mimir-export -- --list` alongside the current source snapshot.

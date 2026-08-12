@@ -1,0 +1,35 @@
+slice entrypoint or composition path:
+- test-only helper: crates/mimir-cli/src/vertical_slice.rs::run_deterministic_vertical_slice
+
+crates actually touched:
+- source modified: mimir-cli
+- composition exercised: mimir-anchor, mimir-branch, mimir-score, mimir-teacher, mimir-sim-bridge, mimir-io, mimir-export, mimir-types
+
+deterministic inputs used:
+- replay_id: replay-stage69
+- anchor hint: anchor-stage69 at frame 128, kind manual, metadata source=stage69-fixture
+- fake backend seed: 69
+- branch proposal 0: candidate-alpha, actions=[jump pressed=true], score signals coverage=2.0 stability=3.0
+- branch proposal 1: candidate-beta, actions=[boost pressed=true, steer direction=0.5], score signals coverage=4.0 stability=2.0
+- scorer weights: coverage=1.0, stability=0.5
+- teacher namespace: stage69.teacher
+
+deterministic outputs produced:
+- export bundle directory export_bundle with 1 persisted anchor artifact and 2 persisted branch artifacts
+- scoreboard.json with 2 persisted score rows, one per generated branch, including deterministic fake-backend step hashes
+- teacher_labels/teacher-label-0.json and teacher_labels/teacher-label-1.json as persisted teacher-label artifacts
+- branch order stays generator order: anchor-stage69:branch:0 then anchor-stage69:branch:1
+- score order stays branch order with totals 3.5 then 5.0
+- teacher artifact order is deterministic ranked order by score descending: anchor-stage69:branch:1 then anchor-stage69:branch:0
+
+tests added:
+- deterministic_vertical_slice_persists_reloadable_outputs
+- deterministic_vertical_slice_is_identical_across_repeated_runs
+- deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering
+- deterministic_vertical_slice_fails_explicitly_without_fake_backend
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 173 tests, 0 benchmarks
+
+short note on why fake backend was intentionally used instead of real replay/rollout complexity:
+- this pass needed a narrow auditable vertical slice across the MIMIR contracts without inventing replay parsing or rollout physics; the existing deterministic fake backend provides stable, inspectable step hashes and an explicit unavailable-backend failure path without widening runtime scope.

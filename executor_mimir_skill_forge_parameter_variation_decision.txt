@@ -1,0 +1,79 @@
+executor mimir skill forge parameter solver + variation decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+exact parameter bundle fields chosen
+- `LowBoostRecoveryParameterBundleV1.slice_id`
+- `LowBoostRecoveryParameterBundleV1.family`
+- `LowBoostRecoveryParameterBundleV1.source_replay`
+- `LowBoostRecoveryParameterBundleV1.subject`
+- `LowBoostRecoveryParameterBundleV1.raw_state_window_ref`
+- `LowBoostRecoveryParameterBundleV1.phase_window_link`
+  - `phase_id`
+  - `phase_label`
+  - `window`
+- `LowBoostRecoveryParameterBundleV1.recovery_window_interpretation = candidate_recovery_window_only`
+- `LowBoostRecoveryParameterBundleV1.observed_window_duration_frames`
+  - exact closed frame-count range copied from the canonical phase window
+- `LowBoostRecoveryParameterBundleV1.boundary_trim_budget_frames`
+  - closed frame-count range bounded to `0..1` per side
+- `LowBoostRecoveryParameterBundleV1.parameter_notes`
+  - `observed_window_derived_from_canonical_phase`
+  - `boundary_variation_limited_to_single_frame_trims`
+- `LowBoostRecoveryParameterBundleV1.unresolved_assumptions`
+  - `low_boost_threshold_unproven`
+  - `contact_truth_unproven`
+  - `recovery_success_unproven`
+  - `replay_orientation_normalization_deferred`
+  - `physics_reachability_unproven`
+
+exact variation fields chosen
+- `LowBoostRecoveryGeneratedVariantV1.variant_id`
+- `LowBoostRecoveryGeneratedVariantV1.source_slice_id`
+- `LowBoostRecoveryGeneratedVariantV1.source_phase_id`
+- `LowBoostRecoveryGeneratedVariantV1.family`
+- `LowBoostRecoveryGeneratedVariantV1.variant_window`
+- `LowBoostRecoveryGeneratedVariantV1.window_override`
+  - `trim_start_frames`
+  - `trim_end_frames`
+- `LowBoostRecoveryGeneratedVariantV1.difficulty_hint`
+  - `reference_seed_window`
+  - `stricter_start_boundary`
+  - `stricter_end_boundary`
+- `LowBoostRecoveryGeneratedVariantV1.generation_reason`
+  - `preserve_observed_window`
+  - `probe_start_boundary_ambiguity`
+  - `probe_end_boundary_ambiguity`
+- `LowBoostRecoveryGeneratedVariantV1.unresolved_assumptions`
+
+what was intentionally excluded
+- guessed boost values or thresholds
+- guessed contact, detach, landing, or stable-control semantics
+- any parameter derived from real replay parsing beyond the canonical frame window
+- rollout-backed scores, feasibility scores, or confidence scores
+- generic family-independent parameter containers
+- optimizer/search loops
+- metadata escape hatches
+- curriculum/export/runtime fields
+
+whether Rust type shaping and narrow implementation were added, and why
+- Yes.
+- Added shared DTO-style contracts in `crates/mimir-types/src/lib.rs` because the parameter bundle
+  and generated variants are plain cross-crate data boundaries that later validator or export work
+  may consume.
+- Added narrow solver/variation logic in `crates/mimir-skill/src/lib.rs` because deriving the
+  bounded parameter surface and deterministic family-specific variants is Skill Forge logic, not a
+  generic type-only concern.
+- The implementation validates canonical bundle consistency before solving so later stages are not
+  handed structurally contradictory provenance.
+
+why this is enough for the next validator + confidence/abstain pass
+- The next pass now receives a bounded parameter contract rather than a vague canonical bundle.
+- The next pass can measure whether one exact observed window or one-frame boundary trims survive
+  validator checks without pretending those trims are proven truths.
+- Confidence/abstain logic can now distinguish:
+  - malformed canonical boundary
+  - structurally valid parameter seed
+  - validator rejection of exact or trimmed variants
+- No generic search infrastructure was introduced, so validator work remains narrowly attached to
+  low boost recovery rather than reopening whole-framework scope.

@@ -1,0 +1,95 @@
+executor mimir skill forge bc actual replay parsing unsupported attempt realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+exact realization role chosen
+- realize `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1` only as an unsupported parser-attempt result
+- preserve the contract-defined receipt-bound parser attempt input, output, and header-attempt object
+- preserve exact `ReplayInput::Memory` labels and bytes
+- record configured-reader unsupported/error behavior truthfully
+- produce no `ReplayHeader`
+- make no parser-success claim
+
+exact unsupported-attempt behavior chosen
+- selected configured reader marker: `UnsupportedReplayReader`
+- selected unsupported attempt status: `ConfiguredUnsupportedReplayReaderReturnedError`
+- selected header outcome: `NoReplayHeaderProduced`
+- selected realization disposition: `RealizedForUnsupportedParserAttemptOnly`
+- per-specimen result stores the returned error message and a deterministic unsupported reason string
+- no success status or success disposition was added
+
+whether `UnsupportedReplayReader` was invoked or modeled, and why
+- `UnsupportedReplayReader` was invoked through `ReplayReader::read_header(&ReplayInput)`
+- invocation is allowed because Outcome B selected unsupported-attempt realization
+- invocation is narrow and truthful because `UnsupportedReplayReader` is the only audited reader implementation
+- the returned error is recorded as unsupported behavior
+- the invocation is not treated as parser readiness, parser success, or header availability
+
+exact admission decisions
+- admit only exact actual replay parsing contract disposition, notes, and selected shape
+- admit only exact lower source contract and realization dispositions, notes, and selected shapes
+- require non-empty ordered lanes and exact lane/specimen ordinals
+- require unique artifact ids
+- require audited root to exist, be a directory, and remain anchored at `low_boost_recovery_bc_v1`
+- require specimen paths below that root and not equal to the root
+- require valid accepted reference windows
+- require non-empty opaque caller-admitted replay bytes
+- require exact deferred handle kinds
+- require exact replay-input creation input, output, and bridge preservation
+- require exact actual replay parsing attempt input, output, and header-attempt object preservation
+- require every attempt input to remain `ReplayInput::Memory`
+- require memory labels and bytes to match the receipt-derived contract
+
+exact failure decisions
+- hard-fail on degraded notes, disposition drift, shape drift, count drift, ordering drift, duplicate artifact ids, root/path drift, invalid windows, empty bytes, handle-kind drift, replay-input creation drift, actual replay parsing attempt drift, file-backed replay inputs, replay-input label drift, replay-input byte drift, or unexpected `ReplayHeader` production
+- no specimen skipping, lane resorting, byte synthesis, path guessing, fallback parser, or unsupported-to-success conversion is allowed
+
+why parser-success remains closed
+- no real parser exists in the audited workspace
+- the only configured reader is `UnsupportedReplayReader`
+- its error is recorded as unsupported behavior, not as success or failure policy
+- no success enum variant or success result was added
+- no `ReplayHeader` is stored in the realization result
+
+why raw-state payload parsing remains closed
+- unsupported reader behavior produces no header, frames, payload schema, or raw-state bytes
+- raw-state parsing would require parser-success evidence that this pass intentionally does not create
+- the realization records `RawStatePayloadParsingStillDeferred`
+
+why locator, carrier, and export remain closed
+- the admitted input is already memory-backed and receipt-bound
+- no replay path is derived from `source_replay`, `source_replay.provenance_label`, or `audited_family_root_directory`
+- no replay-source carrier is discovered or materialized
+- no locator output is produced
+- no export item, manifest, sidecar, index, or consumer-ready widened export surface is produced
+
+what was intentionally excluded
+- real replay parser implementation
+- parser-success policy
+- `ReplayHeader` production
+- raw-state payload parsing
+- replay frame extraction
+- semantic event extraction
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization framework creation
+- `mimir_export` widening
+- modifications to `mimir-replay`, `mimir-io`, `mimir-export`, or `mimir-types`
+
+whether Rust/code changes were added, and why
+- yes
+- narrow Rust surface was added only in `mimir-skill`
+- code was required because this pass is the first realization pass above the actual replay parsing contract
+- the code revalidates the contract, invokes `UnsupportedReplayReader`, records the returned error, and preserves receipt-bound memory input identity
+
+why this is enough for the next pass
+- unsupported configured-reader attempt behavior is now explicit and test-covered
+- parser success remains closed and cannot be inferred from this result
+- the next pass can decide what boundary should follow unsupported-attempt realization without opening parser implementation or raw-state parsing

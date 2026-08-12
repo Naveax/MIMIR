@@ -1,0 +1,45 @@
+/target/
+/.vs/
+/.idea/
+/.vscode/
+
+/.log_archive/
+/.recovery/
+
+/check*.out.txt
+/clippy*.out.txt
+/test*.out.txt
+/export-bc.out.txt
+/loop-fake.out.txt
+
+*.log
+*.tmp
+*.bak
+*.pdb
+*.obj
+*.ilk
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# Local/full corpora and generated heavy data
+/data/
+/datasets/
+/corpus/
+/full_corpus/
+/local_corpus/
+/cache/
+/caches/
+/runs/
+/models/
+/checkpoints/
+/outputs/
+/tmp/
+/temp/
+
+# Generated artifact families are local by default.
+# Keep the currently admitted replay-header evidence.
+/artifacts/*
+!/artifacts/replay_header_reports/
+!/artifacts/replay_header_reports/**

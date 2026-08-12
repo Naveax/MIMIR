@@ -1,0 +1,196 @@
+executor stage 91 vertical-slice remaining-gap reindex / reprioritization pass
+
+scope
+- repo root: `D:\RocketLeague bot\MIMIR`
+- pass intent: refresh the Stage 84 remaining-gap index after Stages 85-90, without widening runtime behavior, export semantics, cleanup boundaries, or CLI surface
+- analysis basis:
+  - `executor_stage84_contract_gaps.txt`
+  - `executor_stage85_scorer_weights_effect.txt`
+  - `executor_stage86_simulation_seed_effect.txt`
+  - `executor_stage87_teacher_namespace_effect.txt`
+  - `executor_stage88_anchor_metadata_effect.txt`
+  - `executor_stage89_proposal_surface_effect.txt`
+  - `executor_stage90_score_signals_effect.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs`
+
+A. GAPS CLOSED SINCE STAGE 84
+
+1. scorer_weights influence on scoreboard totals and teacher ordering
+- Stage 84 candidate:
+  - `PersistedVerticalSliceInput.scorer_weights -> WeightedSumScorer::new(...) -> scoreboard total scores`
+- now explicitly closed by:
+  - `executor_stage85_scorer_weights_effect.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_scorer_weights_directly_change_totals_and_teacher_ordering`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane_with_scorer_weights`
+- closure strength:
+  - weight-only mutation
+  - explicit expected scoreboard-total deltas
+  - explicit teacher-order inversion check
+  - stable neighboring contract edges asserted
+
+2. simulation_seed direct consumption into simulation requests
+- Stage 84 candidate:
+  - `PersistedVerticalSliceInput.simulation_seed -> SimulationRequest.seed`
+- now explicitly closed by:
+  - `executor_stage86_simulation_seed_effect.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_directly_consumes_simulation_seed_from_persisted_input`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane_with_simulation_seed`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::run_persisted_input_artifact_and_capture_simulation_requests`
+- closure strength:
+  - seed-only mutation
+  - direct capture of consumed `SimulationRequest.seed`
+  - seed-derived simulation detail change observed without scoreboard-total drift
+
+3. teacher_namespace explicit propagation across teacher-label surfaces
+- Stage 84 candidate:
+  - `teacher_namespace` written into seed metadata, synthesized copy metadata, and persisted artifact header metadata
+- now explicitly closed by:
+  - `executor_stage87_teacher_namespace_effect.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane_with_teacher_namespace`
+- closure strength:
+  - namespace-only mutation
+  - direct assertions on payload metadata key `teacher_namespace`
+  - direct assertions on synthesized payload metadata key `teacher_namespace_copy`
+  - direct assertions on teacher-artifact header metadata key `teacher_namespace`
+
+4. anchor_hint.metadata propagation into exported anchor artifact
+- Stage 84 candidate:
+  - `anchor_hint.metadata -> exported anchor artifact metadata`
+- now explicitly closed by:
+  - `executor_stage88_anchor_metadata_effect.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane_with_anchor_metadata`
+- closure strength:
+  - metadata-only mutation
+  - direct canonical-reload assertion against `consumer_export.anchors[0].metadata`
+  - stable anchor identity and non-anchor surfaces asserted
+
+5. proposal actions / legal_hint / metadata surviving into exported branch artifacts
+- Stage 84 candidate:
+  - `PersistedVerticalSliceProposal.{actions, legal_hint, metadata} -> BranchProposal -> exported branch payload`
+- now explicitly closed by:
+  - `executor_stage89_proposal_surface_effect.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_explicitly_propagates_proposal_actions_legal_hint_and_metadata_without_perturbing_other_contract_edges`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane_with_proposal_surface`
+- closure strength:
+  - single-proposal surface mutation
+  - direct canonical-reload assertions on `actions`, `legality_hint`, and `metadata`
+  - branch ids, totals, teacher ordering, and frozen snapshot identity kept stable
+
+6. proposal score_signals direct effect on score output and teacher ordering
+- Stage 84 candidate:
+  - `PersistedVerticalSliceProposal.score_signals -> WeightedSumScorer::score(...) -> scoreboard totals / teacher ordering`
+- now explicitly closed by:
+  - `executor_stage90_score_signals_effect.txt`
+  - `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_score_signals_directly_change_score_output_and_teacher_ordering_without_perturbing_other_contract_edges`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane_with_proposal_score_signals`
+- closure strength:
+  - score-signal-only mutation for one proposal
+  - direct component and total assertions on the affected scoreboard row
+  - explicit unchanged assertions on the untouched row and unrelated surfaces
+  - explicit teacher-order inversion check
+
+B. GAPS PARTIALLY REDUCED BUT STILL NOT FIRST-CLASS
+
+1. teacher label id / ordinal derivation from `export_name`
+- current state:
+  - teacher ordering and file ordinal drift are guarded
+  - teacher labels are generated through `TeacherLabelId::new(format!("{}:teacher:{ordinal}", fixture.export_name))`
+- why still not first-class:
+  - there is no edge-local mutation or negative test that isolates `export_name -> teacher label id` derivation
+  - current failures would likely surface as broader artifact drift, not a narrow contract explanation
+
+2. score component schema identity outside the Stage69 targeted score-signals slice
+- current state:
+  - Stage 90 directly asserts component values for one Stage69 proposal mutation
+  - broad canonical scoreboard equality still protects the rest of the surface
+- why still not first-class:
+  - there is no dedicated negative/indexing test that treats scoreboard component-key identity and ordering as its own contract edge across the broader family
+  - the current evidence is strong but still anchored to one targeted mutation path, not an explicit component-schema contract artifact
+
+3. Stage77 lane coverage for the newer edge-local assertions
+- current state:
+  - Stage77 still has strong parity, snapshot, repeated-run, and loader-drift coverage
+  - the Stage85-90 edge-local tests are intentionally concentrated on `Stage69Sample`
+- why still not first-class:
+  - there is no duplicate edge-local proof on the second lane for scorer weights, simulation seed, teacher namespace, anchor metadata, proposal surface, or score signals
+  - this is not a correctness defect by itself, but it is still narrower than “all lanes have direct edge-local proof”
+
+C. INTENTIONALLY NARROW / SHOULD NOT BE EXPANDED YET
+
+1. deterministic fake backend only
+- still by design:
+  - this family is a deterministic fake-backend vertical slice
+  - absence of real rollout physics or backend diversity is intentional in this contract family
+
+2. no real replay ingestion
+- still by design:
+  - persisted vertical-slice input plus `HintAnchorDetector.detect_persisted(...)` remains the trusted boundary
+  - missing replay parsing in this pass is not a gap
+
+3. frozen snapshot smaller than full canonical reload
+- still by design:
+  - the frozen snapshot does not need to expose every persisted-input field or every exported field
+  - omitted fields such as teacher namespace, anchor metadata, proposal actions, proposal legal_hint, proposal metadata, and scorer weights should not be mistaken for missing runtime work
+
+4. no canonical reload of `vertical-slice-input.json`
+- still by design:
+  - input-contract validation and output-contract validation remain separate boundaries
+  - Stage 91 should not widen loader semantics
+
+5. no generalized fixture registry or abstraction expansion
+- still by design:
+  - lane identity remains explicit in test support
+  - lack of registry/discovery machinery is not missing work for this pass
+
+6. no runtime/export/CLI surface widening
+- still by design:
+  - the Stage85-90 helpers are test-local observability shims
+  - Stage 91 should not convert them into public APIs, runtime commands, or bundle-semantic changes
+
+D. BEST NEXT FOLLOW-UP CANDIDATES
+
+1. exact edge
+- `VerticalSliceFixture.export_name -> TeacherLabelId::new(format!("{}:teacher:{ordinal}", ...)) -> persisted teacher artifact payload ids`
+- why it still matters:
+  - label ids are part of artifact identity and drift here can stay semantically subtle until downstream tooling keys on them
+- why it is not fully closed yet:
+  - current coverage catches broader teacher artifact drift, but does not prove this derivation edge in isolation
+- best future pass type:
+  - direct-effect test or narrow negative test
+
+2. exact edge
+- scoreboard component-key identity/order as a documented contract surface, distinct from total-score correctness
+- why it still matters:
+  - Stage 90 proved one mutation path, but component schema drift can still become harder to diagnose if only broad scoreboard equality fails
+- why it is not fully closed yet:
+  - there is no dedicated indexing/doc pass or negative test that names the component schema edge explicitly
+- best future pass type:
+  - indexing/doc pass, optionally followed by a negative test
+
+3. exact edge
+- second-lane recheck for one representative Stage85-90 direct-effect assertion, preferably `teacher_namespace` or `anchor_hint.metadata`
+- why it still matters:
+  - it would reduce the risk that Stage69 is uniquely well-instrumented while Stage77 relies only on broad parity coverage
+- why it is not fully closed yet:
+  - all newer edge-local tests are concentrated on `Stage69Sample`
+- best future pass type:
+  - narrow propagation test on `Stage77Second`, not a framework expansion
+
+E. NO-CHANGE DECISION
+
+decision
+- this Stage 91 pass is reindex / documentation only
+- no runtime behavior should be considered changed by this pass
+- no test semantics should be considered changed by this pass
+- no new feature logic, replay logic, rollout logic, CLI commands, export-bundle semantics, or cleanup-boundary changes were introduced
+
+documentary inconsistency check
+- recent Stage85-90 artifacts and the live `crates/mimir-cli/src/vertical_slice.rs` test names were cross-checked for consistency
+- no tiny documentary inconsistency required correction in this pass
+
+residual note
+- the major Stage 84 edge-local gaps are now explicitly closed
+- the remaining items are mostly indexing/diagnostic sharpness questions or deliberate scope limits, not evidence that the current deterministic vertical-slice family is under-guarded

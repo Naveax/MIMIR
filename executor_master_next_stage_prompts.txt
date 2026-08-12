@@ -1,0 +1,221 @@
+EXECUTOR MASTER NEXT STAGE PROMPTS
+Repository root: D:\RocketLeague bot\MIMIR
+
+Prompt 1
+Stage 97: Stage77 anchor metadata direct-effect propagation pass
+
+Repository root:
+D:\RocketLeague bot\MIMIR
+
+Reasoning setting:
+XHIGH
+
+Hard constraints:
+- Keep Rust as the core.
+- Do NOT invent real Rocket League gameplay logic.
+- Do NOT add real replay parsing in this pass.
+- Do NOT add real rollout physics in this pass.
+- Do NOT add async/background systems.
+- Do NOT add database code.
+- Do NOT widen export bundle semantics in this pass.
+- Do NOT add runtime CLI commands in this pass.
+- Do NOT change execution-result cleanup boundaries in this pass.
+- Keep this pass narrow and deterministic-family only.
+
+Goal:
+Add one narrow Stage77 direct-effect propagation proof for `anchor_hint.metadata` on the deterministic vertical-slice family.
+
+Required work:
+1. Use `VerticalSliceFixtureLane::Stage77Second`.
+2. Add the smallest helper/test support needed to mutate only persisted `anchor_hint.metadata` while keeping all other persisted-input fields unchanged.
+3. Add one focused test that proves:
+- baseline and mutated runs both complete through the existing deterministic fake-backend path,
+- canonical reload succeeds for both runs,
+- exported anchor artifact metadata changes exactly as dictated by the mutated persisted input,
+- branch ids, scoreboard totals/order, teacher target ordering, and unrelated artifact surfaces remain stable.
+4. Do not widen runtime behavior, export semantics, or public APIs.
+5. Add/update only the narrow repo-local Stage 97 artifact files needed for this pass.
+6. Run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+Final chat output:
+DONE: executor_stage97_status.txt
+
+Prompt 2
+Stage 98: Stage77 proposal score_signals direct-effect and component-value pass
+
+Repository root:
+D:\RocketLeague bot\MIMIR
+
+Reasoning setting:
+XHIGH
+
+Hard constraints:
+- Keep Rust as the core.
+- Do NOT invent real Rocket League gameplay logic.
+- Do NOT add real replay parsing in this pass.
+- Do NOT add real rollout physics in this pass.
+- Do NOT add async/background systems.
+- Do NOT add database code.
+- Do NOT widen export bundle semantics in this pass.
+- Do NOT add runtime CLI commands in this pass.
+- Do NOT change execution-result cleanup boundaries in this pass.
+- Keep this pass narrow and deterministic-family only.
+
+Goal:
+Close the remaining Stage77 score observability gap by proving a `score_signals`-only mutation changes Stage77 scoreboard component values, totals, and teacher ordering without changing component-key identity.
+
+Required work:
+1. Use `VerticalSliceFixtureLane::Stage77Second`.
+2. Add the smallest helper/test support needed to mutate only one proposal's persisted `score_signals`.
+3. Add one focused direct-effect test that proves:
+- baseline and mutated runs both complete through the existing deterministic fake-backend path,
+- the affected Stage77 scoreboard row shows the exact expected component-map and total-score change,
+- unaffected rows remain unchanged,
+- component keys remain the expected Stage77 keys,
+- teacher ordering changes only as justified by the score mutation,
+- unrelated surfaces stay stable.
+4. Do not widen runtime behavior, export semantics, or public APIs.
+5. Add/update only the narrow repo-local Stage 98 artifact files needed for this pass.
+6. Run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+Final chat output:
+DONE: executor_stage98_status.txt
+
+Prompt 3
+Stage 99: Stage77 scorer_weights direct-effect pass
+
+Repository root:
+D:\RocketLeague bot\MIMIR
+
+Reasoning setting:
+XHIGH
+
+Hard constraints:
+- Keep Rust as the core.
+- Do NOT invent real Rocket League gameplay logic.
+- Do NOT add real replay parsing in this pass.
+- Do NOT add real rollout physics in this pass.
+- Do NOT add async/background systems.
+- Do NOT add database code.
+- Do NOT widen export bundle semantics in this pass.
+- Do NOT add runtime CLI commands in this pass.
+- Do NOT change execution-result cleanup boundaries in this pass.
+- Keep this pass narrow and deterministic-family only.
+
+Goal:
+Add one Stage77 direct-effect proof that persisted `scorer_weights` materially drive Stage77 scoreboard totals and teacher ordering.
+
+Required work:
+1. Use `VerticalSliceFixtureLane::Stage77Second`.
+2. Add the smallest helper/test support needed to mutate only persisted `scorer_weights`.
+3. Add one focused test that proves:
+- baseline and mutated runs both complete through the existing deterministic fake-backend path,
+- scoreboard totals change in the expected narrow direction,
+- teacher ordering changes only as justified by the weight mutation,
+- branch ids/order, anchor surfaces, and non-score surfaces remain stable.
+4. Do not widen runtime behavior, export semantics, or public APIs.
+5. Add/update only the narrow repo-local Stage 99 artifact files needed for this pass.
+6. Run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+Final chat output:
+DONE: executor_stage99_status.txt
+
+Prompt 4
+Stage 100: Stage77 simulation_seed direct-consumption capture pass
+
+Repository root:
+D:\RocketLeague bot\MIMIR
+
+Reasoning setting:
+XHIGH
+
+Hard constraints:
+- Keep Rust as the core.
+- Do NOT invent real Rocket League gameplay logic.
+- Do NOT add real replay parsing in this pass.
+- Do NOT add real rollout physics in this pass.
+- Do NOT add async/background systems.
+- Do NOT add database code.
+- Do NOT widen export bundle semantics in this pass.
+- Do NOT add runtime CLI commands in this pass.
+- Do NOT change execution-result cleanup boundaries in this pass.
+- Keep this pass narrow and deterministic-family only.
+
+Goal:
+Add one Stage77 direct-effect proof that persisted `simulation_seed` is directly consumed into `SimulationRequest.seed`.
+
+Required work:
+1. Use `VerticalSliceFixtureLane::Stage77Second`.
+2. Reuse the existing narrow capture approach used for Stage69 if possible; do not invent a broader runtime hook.
+3. Add one focused test that proves:
+- two otherwise-identical persisted inputs with different seeds lead to different captured `SimulationRequest.seed` values,
+- the proof is local to the deterministic test path,
+- no runtime semantics, public APIs, or export bundle semantics are widened.
+4. Add/update only the narrow repo-local Stage 100 artifact files needed for this pass.
+5. Run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+Final chat output:
+DONE: executor_stage100_status.txt
+
+Prompt 5
+Stage 101: Stage77 proposal surface propagation pass
+
+Repository root:
+D:\RocketLeague bot\MIMIR
+
+Reasoning setting:
+XHIGH
+
+Hard constraints:
+- Keep Rust as the core.
+- Do NOT invent real Rocket League gameplay logic.
+- Do NOT add real replay parsing in this pass.
+- Do NOT add real rollout physics in this pass.
+- Do NOT add async/background systems.
+- Do NOT add database code.
+- Do NOT widen export bundle semantics in this pass.
+- Do NOT add runtime CLI commands in this pass.
+- Do NOT change execution-result cleanup boundaries in this pass.
+- Keep this pass narrow and deterministic-family only.
+
+Goal:
+Add one Stage77 direct-effect propagation proof for proposal `actions`, `legal_hint`, and `metadata`.
+
+Required work:
+1. Use `VerticalSliceFixtureLane::Stage77Second`.
+2. Add the smallest helper/test support needed to mutate only one persisted proposal's `actions`, `legal_hint`, and `metadata`.
+3. Add one focused test that proves:
+- the mutated proposal surface survives into the exported branch payload exactly,
+- unrelated branch payloads remain unchanged,
+- branch ids/order, scoreboard totals/order, and teacher ordering remain stable unless the proposal mutation is supposed to affect them.
+4. Do not widen runtime behavior, export semantics, or public APIs.
+5. Add/update only the narrow repo-local Stage 101 artifact files needed for this pass.
+6. Run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+Final chat output:
+DONE: executor_stage101_status.txt

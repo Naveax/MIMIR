@@ -1,0 +1,39 @@
+executor mimir skill forge parameter solver + variation next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+next pass
+- validator + confidence/abstain for low boost recovery
+
+exact problem
+- Determine when a structurally valid low-boost-recovery parameter bundle and its bounded generated
+  variants should be:
+  - accepted for further Skill Forge compilation
+  - rejected as malformed
+  - marked abstain because the current replay-derived evidence is too weak
+- The validator must make those decisions without pretending there is already physics proof,
+  contact truth, low-boost proof, or recovery-success proof.
+
+what the new parameter/variation boundary now makes possible
+- Validator logic can score or reject one exact observed window and two bounded one-frame boundary
+  perturbations instead of facing an open-ended search space.
+- Confidence/abstain logic can attach to explicit unresolved assumptions instead of reconstructing
+  them from canonicalizer notes indirectly.
+- Later stages can record whether confidence is destroyed by boundary sensitivity, which is the
+  first meaningful family-specific signal now available.
+
+what is still intentionally unresolved
+- true low-boost threshold confirmation
+- contact truth
+- recovery success proof
+- physics reachability
+- whether one accepted variant is enough to claim the slice is teachable
+- any curriculum/export/runtime consequence
+
+scope risk
+- high
+- The main risk is letting confidence or abstain logic quietly become a fake physics validator.
+- A second risk is accepting the exact-window variant by default and turning validator output into
+  a rubber stamp rather than a real rejection surface.
+- A third risk is widening the validator into generic multi-family infrastructure before low boost
+  recovery acceptance criteria are proven.

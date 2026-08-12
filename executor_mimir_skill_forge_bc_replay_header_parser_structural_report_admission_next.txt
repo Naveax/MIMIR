@@ -1,0 +1,70 @@
+executor mimir skill forge bc replay header parser structural report admission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+selected outcome driving next step
+- Outcome B
+- the structural report is partially admitted only
+- byte-layout evidence is now partial
+- expected ReplayHeader evidence is still partial
+- parser implementation remains blocked
+
+immediate next pass type
+- ReplayHeader mapping policy admission pass
+
+immediate next pass input
+- fixture id: rl_replay_header_fixture_001
+- fixture path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- prior report path: artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report path:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+
+immediate next pass only
+- admit, block, or explicitly defer ReplayHeader field mapping policy
+- preserve admitted byte-layout facts as evidence, not parser output
+- do not implement parser code
+- do not implement parser-success logic
+- do not produce ReplayHeader
+
+required mapping decisions for the next pass
+- whether structural `Id` may map directly to `ReplayHeader.replay_id`
+- whether `ReplayInput::Memory.label` may map to `ReplayHeader.source_label`
+- whether structural `NumFrames` may map to `ReplayHeader.total_frames`
+- whether `total_frames` needs an explicit `None` policy for missing or invalid `NumFrames`
+- whether selected properties may map to `ReplayHeader.metadata`
+- whether metadata uses an admitted key map or an explicit empty metadata policy
+- how missing, duplicate, malformed, or unsupported selected properties should be classified
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only after fixture evidence, complete byte-layout evidence,
+  complete expected ReplayHeader evidence, and required error boundaries are admitted and a later
+  pass explicitly reopens implementation
+
+error-boundary follow-up
+- if the mapping policy pass completes expected ReplayHeader evidence but error boundaries remain
+  incomplete, the following pass must target insufficient-byte, malformed-byte, invalid-property,
+  CRC, and unsupported-version boundary derivation/admission
+
+parser implementation closure
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic closure
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing closure
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction closure
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator closure
+- replay-source materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- mimir_export widening remains forbidden unless explicitly reopened

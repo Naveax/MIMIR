@@ -1,0 +1,135 @@
+EXECUTOR MASTER FORWARD ROADMAP
+Repository root: D:\RocketLeague bot\MIMIR
+Roadmap basis: repo-local artifacts through Stage 96 plus current code/test surface.
+
+Only 10 future stages are justified by current repo-local evidence. Adding more in this pass would be padding rather than a defensible roadmap.
+
+1. Proposed stage title
+- Stage 97: Stage77 anchor metadata direct-effect propagation pass
+exact edge/problem it targets
+- `PersistedVerticalSliceInput.anchor_hint.metadata -> exported anchor artifact metadata` on `VerticalSliceFixtureLane::Stage77Second`.
+why it matters
+- Stage 69 has direct proof for this metadata edge; Stage 77 still relies on broad parity coverage, so silent lane-specific drift would be harder to diagnose.
+why it should come in this order
+- Stage 95 explicitly left `teacher_namespace` or `anchor_hint.metadata` as the next Stage77 metadata follow-up. Stage 96 closed `teacher_namespace`, so anchor metadata is now the highest-value remaining same-class edge.
+recommended pass type
+- propagation test
+expected scope risk
+- low
+
+2. Proposed stage title
+- Stage 98: Stage77 proposal score_signals direct-effect and component-value pass
+exact edge/problem it targets
+- `PersistedVerticalSliceProposal.score_signals -> scoreboard component values -> total score -> teacher ordering` on `Stage77Second`, while preserving component-key identity.
+why it matters
+- Stage 94 proves Stage77 component-key drift explicitly, but Stage77 still lacks the value-level component proof that Stage 69 already has.
+why it should come in this order
+- This is the highest-value scoreboard follow-up after Stage 94 because it closes the main remaining Stage77 asymmetry in score observability.
+recommended pass type
+- direct-effect test
+expected scope risk
+- medium
+
+3. Proposed stage title
+- Stage 99: Stage77 scorer_weights direct-effect pass
+exact edge/problem it targets
+- `PersistedVerticalSliceInput.scorer_weights -> WeightedSumScorer::new(...) -> Stage77 scoreboard totals / teacher ordering`.
+why it matters
+- Weight-driven regressions can stay subtle if totals still look plausible under broad parity checks; Stage 69 already has a direct proof, but Stage 77 does not.
+why it should come in this order
+- It pairs naturally with Stage 98 so both major score-input families (`score_signals` and `scorer_weights`) gain same-lane Stage77 proof before more documentary passes.
+recommended pass type
+- direct-effect test
+expected scope risk
+- medium
+
+4. Proposed stage title
+- Stage 100: Stage77 simulation_seed direct-consumption capture pass
+exact edge/problem it targets
+- `PersistedVerticalSliceInput.simulation_seed -> SimulationRequest.seed` on `Stage77Second`.
+why it matters
+- Seed consumption is easy to break silently when the fake backend remains deterministic for other reasons.
+why it should come in this order
+- After closing the more visible score/metadata edges, this pass sharpens the hidden simulation-request path without expanding runtime semantics.
+recommended pass type
+- direct-effect test
+expected scope risk
+- medium
+
+5. Proposed stage title
+- Stage 101: Stage77 proposal surface propagation pass
+exact edge/problem it targets
+- `PersistedVerticalSliceProposal.actions`, `legal_hint`, and `metadata` surviving into exported branch payloads on `Stage77Second`.
+why it matters
+- Proposal payload drift can remain semantically significant even when branch ids, totals, and ordering stay stable.
+why it should come in this order
+- It completes the main Stage77 parity catch-up for exported branch surfaces after the score and metadata foundations above.
+recommended pass type
+- propagation test
+expected scope risk
+- medium
+
+6. Proposed stage title
+- Stage 102: Stage77 export_name to teacher label id direct-effect pass
+exact edge/problem it targets
+- `export_name -> TeacherLabelId::new(format!("{}:teacher:{ordinal}", ...))` on `Stage77Second`.
+why it matters
+- Teacher label ids are artifact identity, not cosmetic text; downstream tooling may key on them.
+why it should come in this order
+- It finishes the second-lane teacher identity story after Stage 96 covered `teacher_namespace`.
+recommended pass type
+- direct-effect test
+expected scope risk
+- low
+
+7. Proposed stage title
+- Stage 103: teacher-label surface contract index pass
+exact edge/problem it targets
+- Documentary blind spots across teacher label id derivation, namespace propagation, payload/header metadata surfaces, ordering, and snapshot omissions.
+why it matters
+- Current evidence is spread across Stage 87, Stage 92, Stage 96, and code. A single contract index would make future regressions easier to localize.
+why it should come in this order
+- The index is more trustworthy after the second-lane catch-up passes above, so it can document both lanes honestly instead of freezing an asymmetric state.
+recommended pass type
+- indexing/doc pass
+expected scope risk
+- low
+
+8. Proposed stage title
+- Stage 104: scoreboard component ordering no-change decision pass
+exact edge/problem it targets
+- Whether scoreboard component ordering should remain an implementation-by-`BTreeMap` property or be documented as an intentional deterministic contract.
+why it matters
+- Future maintainers could misread lexical ordering as accidental and create avoidable drift or misleading fixes.
+why it should come in this order
+- It belongs after the Stage77 score-focused passes so the documentation reflects the strongest available evidence before wording is frozen.
+recommended pass type
+- indexing/doc pass
+expected scope risk
+- low
+
+9. Proposed stage title
+- Stage 105: cross-lane direct-effect closure matrix pass
+exact edge/problem it targets
+- Lack of a single repo-local matrix showing which deterministic vertical-slice edges have direct Stage69 proof, direct Stage77 proof, broad parity only, or intentional narrowing.
+why it matters
+- Without a closure matrix, future stage planning risks duplicating already-closed work or overstating remaining gaps.
+why it should come in this order
+- This should come after the planned Stage77 catch-up work so the matrix reflects the real post-catch-up state rather than a moving target.
+recommended pass type
+- indexing/doc pass
+expected scope risk
+- low
+
+10. Proposed stage title
+- Stage 106: post-catch-up remaining-gap reindex pass
+exact edge/problem it targets
+- Re-evaluate whether any first-class deterministic-family gaps still remain after the Stage 97-105 cluster.
+why it matters
+- This repo has already shown the cost of stage sprawl and fuzzy completeness. A hard reindex pass is the honest place to stop, continue, or narrow further.
+why it should come in this order
+- It depends on the evidence from the preceding passes and should be the final checkpoint before proposing any wider work.
+recommended pass type
+- indexing/doc pass
+expected scope risk
+- low

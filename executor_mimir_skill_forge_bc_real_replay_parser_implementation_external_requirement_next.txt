@@ -1,0 +1,58 @@
+executor mimir skill forge bc real replay parser implementation external requirement next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+immediate next pass type
+- parser backend integration contract-definition
+
+immediate next pass only
+- define the backend integration contract for the future minimal real header parser
+- keep the target limited to `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- keep the first admitted input limited to `ReplayInput::Memory`
+- define backend ownership, dependency policy, supported-header capability boundary, error taxonomy, and required valid/invalid fixture evidence
+- do not implement the parser in that pass unless explicitly reopened by a later implementation pass
+
+why this is the narrower next pass
+- implementation planning would be broader because it would start selecting concrete implementation steps
+- an integration contract can define the backend boundary while parser implementation remains closed
+- this avoids converting the external requirement into parser readiness or parser success
+
+parser-success logic status
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing status
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction status
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator status
+- replay-source materialization remains closed unless explicitly reopened
+- carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+still forbidden unless explicitly reopened
+- real parser implementation
+- parser-success policy
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual-materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- interpreting `source_replay` as a replay path
+- interpreting `source_replay.provenance_label` as a replay path
+- interpreting `audited_family_root_directory` as replay storage
+- `mimir_export` widening
+

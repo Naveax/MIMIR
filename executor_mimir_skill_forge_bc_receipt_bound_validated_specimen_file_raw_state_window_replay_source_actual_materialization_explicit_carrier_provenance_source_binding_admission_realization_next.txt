@@ -1,0 +1,64 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-source actual-materialization explicit carrier provenance/source-binding admission realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+next pass
+- another replay-source actual-materialization-related reopen/contract pass above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- another replay-source actual-materialization-related reopen/contract pass
+
+why this is the immediate next pass
+- The broader replay-source actual-materialization reopen decision above the blocked carrier-provenance/source-binding realization is already explicit.
+- The explicit carrier provenance/source-binding admission contract above that realization is already explicit.
+- This pass now freezes the truthful blocked realization above that contract.
+- The next unresolved problem is no longer whether the admission contract boundary should exist.
+- The next unresolved problem is no longer what the truthful result above that contract is when no admitted binding input exists.
+- The next unresolved problem is the next explicit reopen/contract boundary that can admit a real explicit carrier provenance/source binding input without cheating through opaque lineage or the audited family root.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionRealizationResultV1`
+- the preserved audited family root directory reference already carried by that realization result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- define only the next honest replay-source actual-materialization-related reopen/contract boundary above the blocked admission realization
+- preserve the invariant that `source_replay` remains opaque lineage unless a later explicit boundary proves more
+- preserve the invariant that `source_replay.provenance_label` is not an implicit replay path
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve that `FutureParserConsumableReplayHandleOnly` is still not replay source
+- preserve that `ExplicitReplaySourceMaterializationRequiredBeforeReplayInputOrParsing` is still a requirement-only boundary
+- preserve that `FutureExplicitReplaySourceCarrierOnly` is still not a realized carrier
+- preserve that `FutureExplicitReplaySourceCarrierProvenanceBindingOnly` is still not a realized carrier provenance/source binding
+- preserve that `FutureAdmittedExplicitReplaySourceCarrierProvenanceSourceBindingOnly` is still only an admission kind until a later boundary actually receives a real admitted explicit carrier provenance/source binding input
+- stay below replay-source actual-materialization implementation
+- stay below replay-source carrier discovery
+- stay below replay-input locator logic
+- stay below replay parsing
+- stay below raw-state payload materialization
+- stay below tensor/control materialization
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no replay-source actual-materialization implementation
+- no replay-source carrier discovery
+- no replay-input locator logic
+- no replay parsing implementation
+- no actual raw-state payload materialization
+- no tensor materialization
+- no control/action extraction
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family replay/raw-state/index/export/materialization framework
+- no rollout/physics/runtime work
+
+why the next pass is not another narrow explicit-admission refinement pass
+- This pass already freezes the truthful blocked realization above the explicit admission contract.
+- Another explicit-admission refinement pass would only restate the same blocked truth without defining the next honest upstream boundary.
+
+why the next pass is not a replay-parsing-related reopen/contract pass
+- Replay parsing is still downstream of a missing honest way to admit a real explicit carrier provenance/source binding input.
+- Reopening replay parsing now would widen scope before the missing upstream admission boundary is defined.

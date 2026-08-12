@@ -1,0 +1,53 @@
+executor mimir skill forge bc emitted-output audit/readback next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- low-boost-recovery-specific emitted-output refinement / sidecar-manifest decision pass
+- still without `mimir_export`
+
+why this is the immediate next pass
+- The repo now has:
+  - persisted low-boost-recovery BC artifact IO wrappers
+  - one validated persisted-artifact handoff
+  - one refined downstream consumer result
+  - one deterministic low-boost-recovery specimen batching/orchestration result
+  - one logical low-boost-recovery export-layout/refinement result
+  - one bounded low-boost-recovery downstream export-consumer result
+  - one bounded low-boost-recovery filesystem / export-emission planning result
+  - one real low-boost-recovery actual filesystem emission boundary and emitted specimen-file
+    contract
+  - one bounded low-boost-recovery emitted-output audit/readback boundary above the actual
+    emission receipt
+- The next unresolved problem is no longer whether emitted output exists or whether emitted specimen
+  JSON can be re-opened honestly through the family-specific readback helper.
+- The next unresolved problem is whether any receipt-independent family-specific emitted-output
+  sidecar or manifest contract is actually needed for the next downstream consumer, and if so what
+  the narrowest family-specific shape is.
+
+what the next pass should consume
+- `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`
+- the already-emitted audited family root directory
+
+what the next pass should do
+- decide whether the first family-specific emitted-output refinement must stay receipt-bound or
+  whether one narrow family-specific sidecar/manifest contract is justified
+- remain strictly low-boost-recovery-specific
+- stay above the emitted-output audit/readback result instead of reopening actual emission plans,
+  downstream consumer results, layout results, batching results, or lower artifact boundaries
+- keep `mimir_export` untouched
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family emitted-output audit/readback framework
+- no generic manifest/index orchestration
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+
+why a deliberate reopen decision is not the next pass
+- There is no current defect that forces `mimir_export` to reopen.
+- The emitted-output audit/readback result now proves the current receipt-boundary and emitted JSON
+  contract are internally auditable without any export-bundle semantics.
+- The remaining decision is still family-specific and emitted-output-local, not a repo-wide export
+  reopen.

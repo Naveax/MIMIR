@@ -1,0 +1,37 @@
+helper names added or updated:
+- none
+
+crate(s) touched:
+- mimir-cli
+
+exact Stage77 teacher_namespace mutation applied:
+- baseline: `stage77.second.teacher`
+- mutated: `stage77.second.teacher.explicit-propagation`
+- lane: `VerticalSliceFixtureLane::Stage77Second`
+
+what direct evidence proved namespace propagation:
+- Added `second_deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges` in `crates/mimir-cli/src/vertical_slice.rs`.
+- The baseline Stage77 run asserts each teacher artifact payload metadata key `teacher_namespace` is `stage77.second.teacher`.
+- The baseline Stage77 run asserts each synthesized label payload metadata key `teacher_namespace_copy` is `stage77.second.teacher`.
+- The baseline Stage77 run asserts each persisted teacher artifact header metadata key `teacher_namespace` is `stage77.second.teacher`.
+- The mutated Stage77 run asserts the same three metadata surfaces all switch to `stage77.second.teacher.explicit-propagation`.
+- The mutated persisted input artifact is proven to differ from baseline only by `payload.teacher_namespace`.
+
+what unrelated surfaces remained stable:
+- branch ids remained identical between baseline and mutated Stage77 runs
+- scoreboard totals remained identical between baseline and mutated Stage77 runs
+- teacher target ordering remained identical between baseline and mutated Stage77 runs
+- consumer export anchor payloads remained identical between baseline and mutated Stage77 runs
+- canonical reload succeeded for both runs
+- snapshot anchor identity remained stable: `anchor_id`, `anchor_frame_index`, `anchor_kind`
+- snapshot path surfaces remained stable: export directory name, scoreboard artifact relative path, teacher artifact relative paths
+- snapshot ordering surfaces remained stable: branch ids in order, scoreboard rows in order, teacher targets in order
+
+tests added or updated:
+- added `second_deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 173 tests, 0 benchmarks
+
+short note on why this closes the Stage77 metadata-propagation follow-up edge without widening runtime semantics:
+- This pass adds one Stage77-only contract test on the existing deterministic vertical-slice path. It proves `teacher_namespace` reaches the currently implemented teacher-label metadata surfaces and that the mutation does not perturb unrelated Stage77 contract edges. No runtime behavior, export bundle boundary, loader semantics, or public API surface was widened.

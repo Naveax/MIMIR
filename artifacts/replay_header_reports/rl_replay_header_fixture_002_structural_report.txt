@@ -1,0 +1,156 @@
+MIMIR external structural byte/layout report for rl_replay_header_fixture_002
+
+REPORT STATUS
+- generated_by: temporary external Rust structural scanner outside MIMIR source/dependency graph
+- scanner_scope: reads fixture bytes for header-only structural offsets plus first body size/CRC boundary fields
+- external_tool: mimir_fixture_002_header_report_v1
+- external_tool_version: 0.1.0
+- parser_tool_source_inspected: local Cargo registry cache for boxcars 0.11.1
+- source_inspection_root: C:\Users\navea\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\boxcars-0.11.1\src
+- report_is_mimir_parser_output: no
+- report_is_parser_success: no
+- report_is_fixture_002_parser_success: no
+- report_is_parser_implementation: no
+- report_is_full_byte_layout_admission: no
+- report_requires_later_structural_admission_pass: yes
+- raw_state_payloads_parsed: no
+- replay_frames_extracted: no
+- semantic_events_extracted: no
+- replay_header_synthesized: no
+- export_runtime_cli_integration_claimed: no
+
+FIXTURE IDENTITY CHECK
+- fixture_id: rl_replay_header_fixture_002
+- input_path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- observed_byte_length: 2632903
+- observed_sha256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- admission_form: PRIVATE_LOCAL_PATH_WITH_HASH
+- fixture_identity_is_parser_fact: no
+
+SOURCE EVIDENCE INPUTS
+- boxcars 0.11.1 Cargo.toml: package name/version/repository at Cargo.toml
+- parser entry/read order: src/parser.rs lines 319-325 and 361-390
+- header parser: src/header.rs lines 45-64 and 81-153
+- header property array parser: src/header.rs lines 160-163
+- primitive/string reads: src/core_parser.rs lines 21-27, 42-52, 69-79, 97-133
+- string decode helpers: src/parsing_utils.rs lines 9-23
+- public replay/header property model: src/models.rs lines 15-31 and 80-96
+- parse error categories: src/errors.rs lines 11-21 and 24-56
+- CRC algorithm source: src/crc.rs lines 39-80
+
+SOURCE-DERIVED STRUCTURAL PATH SUMMARY
+- top_level[0..4): header_size, i32 little-endian, source parser.rs 361-365/core_parser.rs 69-79
+- top_level[4..8): header_crc, u32 little-endian, source parser.rs 362-369/core_parser.rs 75-79
+- header_data region candidate: [8, 8 + header_size), source parser.rs 365-369; parser views this region for CRC but parse_header consumes from the same stream
+- header fields inside header_data: major_version i32 LE, minor_version i32 LE, optional net_version i32 LE when major_version > 865 and minor_version > 17, source header.rs 45-52
+- game_type: parse_text, source header.rs 59-61/core_parser.rs 116-133/parsing_utils.rs 14-23
+- properties: recursive dictionary; key parse_str; key None terminates; kind parse_str; property_size u32 LE then four ignored bytes; value decoded by kind; source header.rs 81-153
+- first body boundary fields after header terminator: content_size i32 LE then content_crc u32 LE, source parser.rs 371-378
+- network_parse Never in the parser/tool report prevents network frame decode, but boxcars parse() still parses body/footer structures before returning Replay; source parser.rs 371-390 and 461-517
+
+FIXTURE STRUCTURAL OFFSETS GENERATED FOR LATER ADMISSION
+- header_size_offset: 0
+- header_size_byte_length: 4
+- header_size_encoding: i32_little_endian
+- header_size_value: 11273
+- header_size_raw_hex: 09 2C 00 00
+- header_crc_offset: 4
+- header_crc_byte_length: 4
+- header_crc_encoding: u32_little_endian
+- header_crc_value: 3202895499
+- header_crc_raw_hex: 8B 4E E8 BE
+- header_data_start_offset: 8
+- header_data_end_exclusive_candidate: 11281
+- major_version_offset: 8
+- major_version_value: 868
+- major_version_raw_hex: 64 03 00 00
+- minor_version_offset: 12
+- minor_version_value: 32
+- minor_version_raw_hex: 20 00 00 00
+- net_version_offset: 16
+- net_version_value: Some(10)
+- net_version_raw_hex: 0A 00 00 00
+- game_type_offset: 20
+- game_type_encoding: windows1252_parse_text_null_terminated
+- game_type_prefix_value: 24
+- game_type_raw_byte_length_excluding_prefix: 24
+- game_type_value: TAGame.Replay_Soccar_TA
+- header_properties_start_offset: 48
+- header_property_count_top_level_generated: 27
+- header_property_kind_counts_generated: Array=3; Float=3; Int=13; Name=2; QWord=1; Str=5
+- header_terminator_key_offset: 11272
+- header_terminator_key_encoding: utf8_parse_str_null_terminated
+- header_terminator_key_prefix_value: 5
+- header_terminator_key_total_byte_length: 9
+- header_terminator_end_offset: 11281
+- header_terminator_matches_header_end: true
+- content_size_offset_candidate: 11281
+- content_size_encoding: i32_little_endian
+- content_size_value: 2621614
+- content_crc_offset_candidate: 11285
+- content_crc_encoding: u32_little_endian
+- content_crc_value: 3734167123
+- content_data_start_candidate: 11289
+- body_boundary_is_parser_implementation_policy: no, report-only candidate pending admission
+
+TOP-LEVEL HEADER PROPERTY STRUCTURAL TABLE
+| ordinal | byte_range | key | kind | key_prefix_offset:value | kind_prefix_offset:value | property_size_offset:value | ignored4_offset:hex | value_range | value_encoding | generated_value_summary | value_hex_if_small |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | [48,89) len=41 | TeamSize | IntProperty | 48:9 | 61:12 | 77:4 | 81:00 00 00 00 | [85,89) len=4 | i32_little_endian_4_bytes | 3 | 03 00 00 00 |
+| 1 | [89,132) len=43 | Team0Score | IntProperty | 89:11 | 104:12 | 120:4 | 124:00 00 00 00 | [128,132) len=4 | i32_little_endian_4_bytes | 2 | 02 00 00 00 |
+| 2 | [132,175) len=43 | Team1Score | IntProperty | 132:11 | 147:12 | 163:4 | 167:00 00 00 00 | [171,175) len=4 | i32_little_endian_4_bytes | 3 | 03 00 00 00 |
+| 3 | [175,228) len=53 | TotalSecondsPlayed | FloatProperty | 175:19 | 198:14 | 216:4 | 220:00 00 00 00 | [224,228) len=4 | f32_little_endian_4_bytes | 422.396 | B0 32 D3 43 |
+| 4 | [228,282) len=54 | MatchStartEpoch | QWordProperty | 228:16 | 248:14 | 266:8 | 270:00 00 00 00 | [274,282) len=8 | u64_little_endian_8_bytes | 1756062465 | 01 63 AB 68 00 00 00 00 |
+| 5 | [282,326) len=44 | WinningTeam | IntProperty | 282:12 | 298:12 | 314:4 | 318:00 00 00 00 | [322,326) len=4 | i32_little_endian_4_bytes | 1 | 01 00 00 00 |
+| 6 | [326,1072) len=746 | Goals | ArrayProperty | 326:6 | 336:14 | 354:710 | 358:00 00 00 00 | [362,1072) len=710 | i32_count_then_repeated_nested_rdict | array_count=5 | <omitted_over_32_bytes> |
+| 7 | [1072,2853) len=1781 | HighLights | ArrayProperty | 1072:11 | 1087:14 | 1105:1740 | 1109:00 00 00 00 | [1113,2853) len=1740 | i32_count_then_repeated_nested_rdict | array_count=8 | <omitted_over_32_bytes> |
+| 8 | [2853,10344) len=7491 | PlayerStats | ArrayProperty | 2853:12 | 2869:14 | 2887:7449 | 2891:00 00 00 00 | [2895,10344) len=7449 | i32_count_then_repeated_nested_rdict | array_count=6 | <omitted_over_32_bytes> |
+| 9 | [10344,10394) len=50 | ReplayName | StrProperty | 10344:11 | 10359:12 | 10375:11 | 10379:00 00 00 00 | [10383,10394) len=11 | windows1252_parse_text_null_terminated | asdasd | 07 00 00 00 61 73 64 61 73 64 00 |
+| 10 | [10394,10440) len=46 | ReplayVersion | IntProperty | 10394:14 | 10412:12 | 10428:4 | 10432:00 00 00 00 | [10436,10440) len=4 | i32_little_endian_4_bytes | 8 | 08 00 00 00 |
+| 11 | [10440,10494) len=54 | ReplayLastSaveVersion | IntProperty | 10440:22 | 10466:12 | 10482:4 | 10486:00 00 00 00 | [10490,10494) len=4 | i32_little_endian_4_bytes | 8 | 08 00 00 00 |
+| 12 | [10494,10538) len=44 | GameVersion | IntProperty | 10494:12 | 10510:12 | 10526:4 | 10530:00 00 00 00 | [10534,10538) len=4 | i32_little_endian_4_bytes | 30 | 1E 00 00 00 |
+| 13 | [10538,10578) len=40 | BuildID | IntProperty | 10538:8 | 10550:12 | 10566:4 | 10570:00 00 00 00 | [10574,10578) len=4 | i32_little_endian_4_bytes | 151471783 | A7 46 07 09 |
+| 14 | [10578,10621) len=43 | Changelist | IntProperty | 10578:11 | 10593:12 | 10609:4 | 10613:00 00 00 00 | [10617,10621) len=4 | i32_little_endian_4_bytes | 492665 | 79 84 07 00 |
+| 15 | [10621,10686) len=65 | BuildVersion | StrProperty | 10621:13 | 10638:12 | 10654:24 | 10658:00 00 00 00 | [10662,10686) len=24 | windows1252_parse_text_null_terminated | 250811.43331.492665 | 14 00 00 00 32 35 30 38 31 31 2E 34 33 33 33 31 2E 34 39 32 36 36 35 00 |
+| 16 | [10686,10735) len=49 | ReserveMegabytes | IntProperty | 10686:17 | 10707:12 | 10723:4 | 10727:00 00 00 00 | [10731,10735) len=4 | i32_little_endian_4_bytes | 4 | 04 00 00 00 |
+| 17 | [10735,10779) len=44 | RecordFPS | FloatProperty | 10735:10 | 10749:14 | 10767:4 | 10771:00 00 00 00 | [10775,10779) len=4 | f32_little_endian_4_bytes | 30 | 00 00 F0 41 |
+| 18 | [10779,10827) len=48 | KeyframeDelay | FloatProperty | 10779:14 | 10797:14 | 10815:4 | 10819:00 00 00 00 | [10823,10827) len=4 | f32_little_endian_4_bytes | 10 | 00 00 20 41 |
+| 19 | [10827,10871) len=44 | MaxChannels | IntProperty | 10827:12 | 10843:12 | 10859:4 | 10863:00 00 00 00 | [10867,10871) len=4 | i32_little_endian_4_bytes | 2047 | FF 07 00 00 |
+| 20 | [10871,10919) len=48 | MaxReplaySizeMB | IntProperty | 10871:16 | 10891:12 | 10907:4 | 10911:00 00 00 00 | [10915,10919) len=4 | i32_little_endian_4_bytes | 10 | 0A 00 00 00 |
+| 21 | [10919,10987) len=68 | Id | StrProperty | 10919:3 | 10926:12 | 10942:37 | 10946:00 00 00 00 | [10950,10987) len=37 | windows1252_parse_text_null_terminated | D9DA34DA11F0811EAC139A94CBF30AF2 | <omitted_over_32_bytes> |
+| 22 | [10987,11062) len=75 | MatchGUID | StrProperty | 10987:10 | 11001:12 | 11017:37 | 11021:00 00 00 00 | [11025,11062) len=37 | windows1252_parse_text_null_terminated | 9E01494A11F0811D5A6E9A947FA316B0 | <omitted_over_32_bytes> |
+| 23 | [11062,11123) len=61 | MapName | NameProperty | 11062:8 | 11074:13 | 11091:24 | 11095:00 00 00 00 | [11099,11123) len=24 | windows1252_parse_text_null_terminated | NeoTokyo_Standard_P | 14 00 00 00 4E 65 6F 54 6F 6B 79 6F 5F 53 74 61 6E 64 61 72 64 5F 50 00 |
+| 24 | [11123,11180) len=57 | Date | StrProperty | 11123:5 | 11132:12 | 11148:24 | 11152:00 00 00 00 | [11156,11180) len=24 | windows1252_parse_text_null_terminated | 2025-08-24 19-16-35 | 14 00 00 00 32 30 32 35 2D 30 38 2D 32 34 20 31 39 2D 31 36 2D 33 35 00 |
+| 25 | [11180,11222) len=42 | NumFrames | IntProperty | 11180:10 | 11194:12 | 11210:4 | 11214:00 00 00 00 | [11218,11222) len=4 | i32_little_endian_4_bytes | 10351 | 6F 28 00 00 |
+| 26 | [11222,11272) len=50 | MatchType | NameProperty | 11222:10 | 11236:13 | 11253:11 | 11257:00 00 00 00 | [11261,11272) len=11 | windows1252_parse_text_null_terminated | Online | 07 00 00 00 4F 6E 6C 69 6E 65 00 |
+
+SELECTED REPLAYHEADER-CANDIDATE PROPERTY ROUTES GENERATED FOR LATER ADMISSION
+- Id: structural_path=header.properties[21], key_offset=10919, kind=StrProperty, value_range=[10950,10987), value_encoding=windows1252_parse_text_null_terminated, generated_value=D9DA34DA11F0811EAC139A94CBF30AF2
+- ReplayName: structural_path=header.properties[9], key_offset=10344, kind=StrProperty, value_range=[10383,10394), value_encoding=windows1252_parse_text_null_terminated, generated_value=asdasd
+- Date: structural_path=header.properties[24], key_offset=11123, kind=StrProperty, value_range=[11156,11180), value_encoding=windows1252_parse_text_null_terminated, generated_value=2025-08-24 19-16-35
+- MapName: structural_path=header.properties[23], key_offset=11062, kind=NameProperty, value_range=[11099,11123), value_encoding=windows1252_parse_text_null_terminated, generated_value=NeoTokyo_Standard_P
+- ReplayVersion: structural_path=header.properties[10], key_offset=10394, kind=IntProperty, value_range=[10436,10440), value_encoding=i32_little_endian_4_bytes, generated_value=8
+- BuildVersion: structural_path=header.properties[15], key_offset=10621, kind=StrProperty, value_range=[10662,10686), value_encoding=windows1252_parse_text_null_terminated, generated_value=250811.43331.492665
+- NumFrames: structural_path=header.properties[25], key_offset=11180, kind=IntProperty, value_range=[11218,11222), value_encoding=i32_little_endian_4_bytes, generated_value=10351
+- MaxChannels: structural_path=header.properties[19], key_offset=10827, kind=IntProperty, value_range=[10867,10871), value_encoding=i32_little_endian_4_bytes, generated_value=2047
+- MatchType: structural_path=header.properties[26], key_offset=11222, kind=NameProperty, value_range=[11261,11272), value_encoding=windows1252_parse_text_null_terminated, generated_value=Online
+- TeamSize: structural_path=header.properties[0], key_offset=48, kind=IntProperty, value_range=[85,89), value_encoding=i32_little_endian_4_bytes, generated_value=3
+- RecordFPS: structural_path=header.properties[17], key_offset=10735, kind=FloatProperty, value_range=[10775,10779), value_encoding=f32_little_endian_4_bytes, generated_value=30
+
+REMAINING UNKNOWNS
+- none from bounded header structural scanner; admission still requires later review
+- CRC validity is not checked by this scanner
+- body/raw-state/frame/event bytes are not parsed by this scanner
+- external boxcars report parses body/footer structures for diagnostics, but those remain non-header evidence
+- supported replay version policy for fixture_002 is not admitted by this report
+
+ADMISSION LIMITS
+- this report narrows structural evidence gaps but is not admitted byte-layout evidence by itself
+- generated offsets require a later fixture_002 report admission pass before parser support can reopen
+- Id remains a candidate replay_id source only; no MIMIR replay_id mapping is admitted here
+- NumFrames remains a candidate total_frames source only; no MIMIR total_frames mapping is admitted here
+- selected properties remain candidate metadata sources only; no metadata key map is admitted here
+- fixture path, filename, byte length, and SHA-256 remain fixture identity facts only, not parser facts
+- no MIMIR code, manifests, lockfile, mimir-io, mimir-export, or mimir-types files were modified by this report generator
+- parser_success_for_fixture_002_claimed: no
+- broad_parser_success_claimed: no

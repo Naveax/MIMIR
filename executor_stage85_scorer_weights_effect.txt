@@ -1,0 +1,37 @@
+helper names added or updated
+- `persisted_input_artifact_for_lane_with_scorer_weights`
+- `run_persisted_input_artifact_and_load`
+- `load_persisted_fixture` extracted from the existing lane loader path
+
+crate(s) touched
+- `crates/mimir-cli`
+
+which base lane was used
+- `Stage69Sample`
+
+exact scorer_weights mutation applied
+- baseline weights: `coverage=1.0`, `stability=0.5`
+- mutated weights: `coverage=1.0`, `stability=2.5`
+- changed entry: `stability` only
+
+expected old totals vs new totals
+- `anchor-stage69:branch:0` old total `3.5` -> new total `9.5`
+- `anchor-stage69:branch:1` old total `5.0` -> new total `9.0`
+- explainable direct deltas from the weight-only change:
+  - branch 0 stability signal `3.0` with `+2.0` weight delta => `+6.0`
+  - branch 1 stability signal `2.0` with `+2.0` weight delta => `+4.0`
+
+whether teacher ordering changed and how
+- yes
+- baseline teacher target order: `anchor-stage69:branch:1`, `anchor-stage69:branch:0`
+- mutated teacher target order: `anchor-stage69:branch:0`, `anchor-stage69:branch:1`
+
+tests added or updated
+- added `vertical_slice::deterministic_vertical_slice_scorer_weights_directly_change_totals_and_teacher_ordering`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this closes a Stage 84 gap without widening runtime semantics
+- The new slice holds the persisted Stage69 lane constant except for `scorer_weights`, runs through the same persisted-input write/read path, and proves the bridge `scorer_weights -> scoreboard totals -> teacher ordering` explicitly.
+- No export bundle semantics, loader boundaries, scoreboard paths, teacher label file patterns, cleanup boundaries, or public runtime surfaces were widened.

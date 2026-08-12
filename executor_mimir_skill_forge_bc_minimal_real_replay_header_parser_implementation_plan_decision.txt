@@ -1,0 +1,75 @@
+executor mimir skill forge bc minimal real replay header parser implementation plan decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- Outcome B
+
+exact implementation-planning result
+- future reader ownership is planned for `mimir-replay`
+- selected future real reader type name is `RocketLeagueReplayHeaderReader`
+- the reader must be a new distinct struct next to `UnsupportedReplayReader`
+- the parser target remains `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- first admitted input remains `ReplayInput::Memory`
+- `ReplayInput::File` must be rejected or deferred with a structured non-memory category until file support is explicitly reopened
+- successful output remains `Ok(ReplayHeader)` for valid supported bytes only
+- all invalid, malformed, insufficient, unsupported, non-memory, or deferred inputs remain structured errors
+- `UnsupportedReplayReader` remains truthful scaffold behavior and must remain distinguishable from any future real reader
+
+whether byte-layout evidence is sufficient or still missing
+- still missing
+- no exact audited Rocket League replay header byte layout was found in the repo/local evidence for this pass
+- no magic bytes, version layout, header termination rule, replay id derivation, total frame derivation, metadata field map, or unsupported-version distinction is proven by local fixture-backed evidence
+- a later pass must obtain or verify those details before parser implementation
+
+whether valid fixture evidence is sufficient or still missing
+- still missing
+- no valid supported `.replay` fixture was found in the audited workspace evidence
+- no fixture-backed expected `ReplayHeader.replay_id`, `ReplayHeader.total_frames`, or metadata map is currently available
+- insufficient, malformed, and unsupported-if-distinguishable fixture categories are also not yet established for the future parser
+
+what was intentionally excluded
+- parser implementation
+- parser-success logic
+- backend dependency addition
+- `ReplayHeader` production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization implementation
+- replay-source carrier discovery implementation
+- replay-input locator implementation
+- `mimir_export` widening
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- interpreting `source_replay` as a replay path
+- interpreting `source_replay.provenance_label` as a replay path
+- interpreting `audited_family_root_directory` as replay storage
+
+whether Rust/code changes were added, and why or why not
+- no Rust/code changes were added
+- this was a planning pass only
+- adding Rust would imply parser implementation, parser-success logic, fixture tests, dependency selection, or parser readiness that the current evidence does not prove
+- no manifests or lockfile were modified
+
+why this is enough for the next pass
+- the future in-crate reader owner and name are bounded
+- the first input and output boundaries are exact
+- byte-accounting requirements are explicit
+- fixture requirements are explicit
+- malformed, insufficient, unsupported, non-memory, invalid-field, internal, and no-fake-header error categories are defined at planning level
+- determinism and `UnsupportedReplayReader` coexistence rules are explicit
+- the real blocker is now isolated to fixture and byte-layout evidence
+- the immediate next pass can therefore be fixture/evidence acquisition planning before implementation
+
+next pass implication
+- parser implementation remains closed
+- next pass must be fixture/evidence acquisition planning before implementation unless the missing evidence is explicitly supplied and implementation is separately reopened

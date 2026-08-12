@@ -1,0 +1,47 @@
+executor mimir skill forge bc actual replay parsing contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+mimir_export boundary
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no export bundle, sidecar, manifest, index, runtime export, raw-state export, replay export, or downstream consumer semantics may be silently widened from this pass
+
+next pass type
+- first realization pass for this exact actual replay parsing contract
+
+exact next input
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1`
+
+exact next responsibility
+- consume the contract-defined header parse-attempt boundary only
+- preserve the receipt-bound tuple
+- preserve the exact `ReplayInput::Memory` label and bytes
+- decide whether invoking `mimir_replay::ReplayReader::read_header(&ReplayInput)` is justified in that realization pass
+- if invoked, keep parser attempt result separate from parser-success policy
+- if not invoked, stop for a narrow implementation-readiness decision and do not fake parser readiness
+
+still forbidden in the next pass unless explicitly reopened
+- parser-success logic
+- raw-state payload parsing
+- replay frame extraction
+- semantic event extraction
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- tensor/control materialization
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- `mimir_export` widening
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+reason this is the immediate next step
+- this pass defined only the contract shape for a header-level parser attempt
+- the next missing proof is realization of that exact contract or an explicit stop/reopen decision if parser execution remains unjustified
+- parser-success, raw-state, locator, carrier, materialization, and export semantics remain downstream

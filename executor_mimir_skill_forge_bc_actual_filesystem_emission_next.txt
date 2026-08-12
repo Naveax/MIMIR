@@ -1,0 +1,52 @@
+executor mimir skill forge bc actual filesystem emission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- family-specific emitted-output audit/readback boundary above the new low-boost-recovery actual
+  filesystem emission result
+- still without `mimir_export`
+
+why this is the immediate next pass
+- The repo now has:
+  - persisted low-boost-recovery BC artifact IO wrappers
+  - one validated persisted-artifact handoff
+  - one refined downstream consumer result
+  - one deterministic low-boost-recovery specimen batching/orchestration result
+  - one logical low-boost-recovery export-layout/refinement result
+  - one bounded low-boost-recovery downstream export-consumer result
+  - one bounded low-boost-recovery filesystem / export-emission planning result
+  - one real low-boost-recovery actual filesystem emission boundary and emitted specimen-file
+    contract
+- The next unresolved problem is no longer what should be planned or what should be written.
+- The next unresolved problem is how to re-open emitted output as an auditable family-specific
+  boundary without widening into generic bundle/index semantics.
+
+what the next pass should consume
+- `LowBoostRecoveryBcActualFilesystemEmissionReceiptV1`
+- the emitted family root directory produced by
+  `emit_low_boost_recovery_bc_actual_filesystem_emission_v1(...)`
+- the existing family-specific readback helper in `mimir-io`
+
+what the next pass should do
+- define one bounded low-boost-recovery-specific emitted-output audit/readback contract
+- verify that every emitted lane directory and specimen file exists exactly where the receipt says
+- re-open emitted specimen JSON files through the family-specific readback helper
+- verify that read-back payloads still match the emitted contract and ordering guarantees
+- stay downstream of actual filesystem emission rather than reopening planning, consumer, layout,
+  batching, or lower artifact boundaries
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family filesystem/export framework
+- no generic manifest/index orchestration
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+
+why a deliberate reopen decision is not the next pass
+- There is no current defect that forces `mimir_export` to reopen.
+- The new actual filesystem emission boundary now provides a concrete family-specific on-disk
+  contract that can be audited directly.
+- Reopening export semantics now would widen the system before the first emitted-output audit
+  boundary exists.

@@ -1,0 +1,66 @@
+executor mimir skill forge bc replay header parser fixture_003 report generation decision
+
+exact outcome chosen
+- Outcome A
+
+whether fixture identities were verified
+- fixture_001 identity verified: yes
+- fixture_002 identity verified: yes
+- fixture_003 identity verified: yes
+
+whether report route was bounded
+- yes
+- route: temporary external Rust crate outside MIMIR workspace/dependency graph
+- external tool path: D:\Temp\mimir_fixture_003_header_report_v1
+- external parser dependency: boxcars 0.11.1
+- external parser mode: ParserBuilder::new(bytes).never_parse_network_data().parse()
+- fixture bytes hard-checked by byte length and SHA-256 before report write
+
+whether external parser/header report was generated
+- yes
+- path: artifacts/replay_header_reports/rl_replay_header_fixture_003_report.txt
+- size: 4167 bytes
+
+whether structural report was generated
+- yes
+- path: artifacts/replay_header_reports/rl_replay_header_fixture_003_structural_report.txt
+- size: 21787 bytes
+
+whether parser code changed
+- no
+
+whether parser-success was claimed for fixture_003
+- no
+
+what was intentionally not broadened
+- no third supported tuple added
+- no broad parser-success admitted
+- no broad ReplayVersion = 8 support added
+- no wildcard BuildVersion support added
+- no future unknown build support added
+- no ReplayInput::File support added
+- no CRC validation added
+- no content_crc read or validation added
+- no body/raw-state/frame/event parsing added
+- no export/runtime/CLI integration added
+- no backend replay parser dependency added
+
+whether forbidden files/dependencies changed
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-types/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- dependencies added to MIMIR: no
+- backend replay parser dependency added to MIMIR: no
+
+decision
+- admit Outcome A
+- generated fixture_003 reports are evidence-only
+- generated fixture_003 reports are not MIMIR parser output
+- generated fixture_003 reports are not parser-success evidence
+- next pass must be fixture_003 report admission
+- no parser expansion is admitted

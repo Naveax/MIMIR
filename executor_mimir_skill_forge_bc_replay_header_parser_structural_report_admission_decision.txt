@@ -1,0 +1,189 @@
+executor mimir skill forge bc replay header parser structural report admission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+exact outcome chosen
+- Outcome B
+
+whether fixture identity was verified
+- yes
+- fixture path exists: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- observed byte length: 3001021
+- observed SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- fixture identity is not admitted as a parser fact
+
+whether prior report identity was verified
+- yes
+- prior report path exists: artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- observed prior report size: 3700 bytes
+- prior report remains external parser/tool report evidence only
+
+whether structural report identity was verified
+- yes
+- structural report path exists:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- observed structural report size: 13790 bytes
+- structural report explicitly states it is not MIMIR parser output: yes
+- structural report explicitly states it is not parser-success evidence: yes
+- structural report explicitly states it is not parser implementation: yes
+- structural report explicitly states it is not full byte-layout admission: yes
+- structural report explicitly states raw-state payloads were not parsed: yes
+- structural report explicitly states replay frames were not extracted: yes
+- structural report explicitly states semantic events were not extracted: yes
+- structural report explicitly states ReplayHeader was not synthesized: yes
+
+whether structural report was admitted fully, partially, or rejected
+- partially admitted
+- full admission rejected because complete expected ReplayHeader mapping evidence, MIMIR mapping
+  policy, supported-version policy, metadata policy, and MIMIR error boundaries remain incomplete
+- full rejection rejected because the report is bounded, source-cited, fixture-backed, and useful
+  for byte-accounting and later parser planning
+
+whether byte-layout evidence is now complete, partial, or missing
+- partial
+- top-level header prefix, header field offsets, primitive encodings, game type encoding,
+  top-level property table accounting, property terminator, selected property ranges, and first
+  body boundary candidates are admitted for the fixture or as source-derived layout candidates
+- complete byte-layout evidence remains blocked by missing supported-version policy, MIMIR
+  property validation policy, CRC policy, parser stop/error behavior, and generalization limits
+
+whether expected ReplayHeader evidence is now complete, partial, or missing
+- partial
+- source_label is admitted only from the future ReplayInput::Memory label contract
+- Id is admitted only as a structural replay_id candidate
+- NumFrames is admitted only as a structural total_frames candidate
+- selected properties are admitted only as metadata candidates
+- no complete ReplayHeader is admitted
+
+exact admitted facts
+- report provenance: temporary external PowerShell structural scanner outside MIMIR source and
+  dependency graph
+- source provenance: cached boxcars 0.11.1 source was inspected from the local Cargo registry
+- report non-claims: not MIMIR parser output, not parser success, not parser implementation, not
+  full byte-layout admission
+- report limits: no raw-state payloads parsed, no replay frames extracted, no semantic events
+  extracted, no ReplayHeader synthesized
+- fixture identity: rl_replay_header_fixture_001 at
+  D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay with byte length 3001021 and SHA-256
+  F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- header_size field layout: offset 0, byte length 4, i32 little-endian, fixture value 13200, raw
+  hex 90 33 00 00
+- header_crc field layout: offset 4, byte length 4, u32 little-endian, fixture value 2370383193,
+  raw hex 59 2D 49 8D
+- header data start offset for this fixture: 8
+- header data end exclusive candidate for this fixture: 13208
+- major_version field candidate: offset 8, i32 little-endian, value 868, raw hex 64 03 00 00
+- minor_version field candidate: offset 12, i32 little-endian, value 32, raw hex 20 00 00 00
+- net_version field candidate: offset 16, i32 little-endian, value Some(10), raw hex 0A 00 00 00
+- game_type field candidate: offset 20, windows1252 parse_text null-terminated encoding, prefix
+  value 24, value TAGame.Replay_Soccar_TA
+- header property table start for this fixture: offset 48
+- top-level generated property count for this fixture: 26
+- top-level generated property kind counts: Array=3, Float=3, Int=12, Name=2, QWord=1, Str=5
+- property terminator candidate: key offset 13199, total key byte length 9, terminator end offset
+  13208, terminator matches header end
+- source-derived property entry shape candidate: key parse_str, None terminator, kind parse_str,
+  property_size u32 little-endian, four ignored bytes, then value by kind
+- selected top-level property byte ranges and value ranges from the structural table are admitted
+  as fixture byte-accounting evidence
+- first body boundary candidates: content_size offset 13208, content_crc offset 13212, content data
+  start candidate 13216
+
+exact partial facts
+- supported Rocket League replay recognition remains partial because external parser success is
+  not a MIMIR admission rule
+- supported version/version-family policy remains partial despite fixture version fields
+- header termination is partial because fixture terminator/header-end agreement does not define
+  full MIMIR termination/error behavior
+- minimal parser stop boundary is partial because first body field offsets are stop candidates, not
+  parser behavior
+- property dictionary policy is partial because encountered fixture/header shape is admitted but
+  complete MIMIR validation behavior is not
+- Array value encoding is partial because array ranges and counts are admitted but nested semantics
+  and expected-output mapping are not
+- CRC evidence is partial because field layout is admitted but CRC validation policy is not
+- Id structural path is partial for ReplayHeader.replay_id:
+  header.properties[20], key offset 12849, kind Str, value range [12880,12917),
+  windows1252_parse_text_null_terminated, value 7F59297811EFD8B19C444A81FB07660C
+- NumFrames structural path is partial for ReplayHeader.total_frames:
+  header.properties[24], key offset 13107, kind Int, value range [13145,13149),
+  i32_little_endian_4_bytes, value 13555
+- selected properties are partial metadata candidates only: ReplayName, Date, MapName,
+  ReplayVersion, BuildVersion, MaxChannels, MatchType, TeamSize, RecordFPS
+- insufficient-byte, malformed-byte, invalid-property, CRC-mismatch, and oversized-list candidates
+  are partial external source candidates only
+
+exact rejected facts
+- fixture path, filename, byte length, and SHA-256 are rejected as parser facts
+- external parser success is rejected as MIMIR parser success
+- structural report generation success is rejected as MIMIR parser success
+- cached boxcars source availability is rejected as a MIMIR backend dependency
+- body/footer counts from the prior report remain rejected as minimal header output evidence
+- first body size/CRC values are rejected as body parsing or raw-state evidence
+- unsupported-format/version boundary is rejected as complete evidence because no MIMIR
+  supported-version policy is admitted
+- selected property values are rejected as complete ReplayHeader output until mapping policy is
+  admitted
+
+exact remaining gaps
+- supported Rocket League replay header admission rule remains incomplete
+- supported version or version-family policy remains missing
+- complete MIMIR header termination/error policy remains missing
+- complete minimal parser stop behavior remains missing
+- CRC validation policy remains missing
+- complete property validation policy remains missing
+- replay id derivation or explicit blocked policy remains missing
+- total_frames derivation or explicit None policy remains missing
+- metadata key map or explicit empty metadata policy remains missing
+- insufficient-byte boundaries remain missing as MIMIR parser boundaries
+- malformed-byte boundaries remain missing as MIMIR parser boundaries
+- unsupported-format/version boundary remains missing, if distinguishable
+- complete expected ReplayHeader evidence remains missing
+
+whether parser implementation may proceed or remains blocked
+- parser implementation remains blocked
+- parser-success logic remains blocked
+- implementation may proceed only after fixture evidence, complete byte-layout evidence, complete
+  expected ReplayHeader evidence, and required error boundaries are admitted and implementation is
+  explicitly reopened
+
+what was intentionally excluded
+- MIMIR parser implementation
+- parser-success logic
+- ReplayHeader production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- mimir_export widening
+- modifying mimir-io
+- modifying mimir-export
+- modifying mimir-types
+- modifying Cargo.toml
+- modifying Cargo.lock
+- adding backend dependencies
+- adding fixture files
+- treating fixture path, filename, provenance, byte length, or SHA-256 as parser facts
+
+whether Rust/code/manifests/lockfile changes were added, and why or why not
+- Rust source changes added: no
+- Cargo.toml changes added: no
+- Cargo.lock changes added: no
+- backend dependencies added: no
+- reason: this is an evidence-admission pass only; parser implementation, dependency integration,
+  and forbidden crate boundaries remain closed
+
+why this is enough for the next pass
+- the structural report has now been admitted only to the extent backed by the report and cached
+  source evidence
+- useful byte-accounting facts are preserved without claiming MIMIR parser success
+- expected ReplayHeader mapping remains the dominant blocker
+- the next pass can target replay_id, source_label, total_frames, and metadata mapping policy
+  without reopening parser implementation prematurely

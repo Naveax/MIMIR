@@ -1,0 +1,136 @@
+executor mimir skill forge bc actual filesystem emission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact actual filesystem emission role chosen
+- one low-boost-recovery-specific actual filesystem emission boundary above
+  `LowBoostRecoveryBcFilesystemExportEmissionPlanResultV1`
+- exact job:
+  - admit only already-planned low-boost-recovery filesystem/export-emission plans
+  - revalidate the plan boundary without reshaping it
+  - create exactly one emitted family root directory under a caller-provided existing parent
+    directory
+  - create exactly one emitted lane directory per planned lane
+  - emit exactly one family-specific specimen JSON file per planned specimen
+  - return only an ordered receipt of what paths were emitted
+
+exact emitted file contract chosen
+- exact emitted root directory:
+  - `low_boost_recovery_bc_v1`
+- exact emitted lane-directory rule:
+  - `recovery_context_lane_{lane_ordinal:04}`
+- exact emitted specimen-file rule:
+  - `specimen_{specimen_ordinal:04}.json`
+- exact emitted specimen payload type:
+  - `LowBoostRecoveryBcActualFilesystemEmissionSpecimenFileV1`
+- exact emitted specimen payload fields:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_raw_state_window_ref`
+  - `source_phase_id`
+  - `accepted_reference_variant_id`
+  - `observation_binding_kind`
+  - `supervision_window_role`
+  - `accepted_reference_window`
+  - `target_binding_kind`
+  - `carried_confidence_band`
+  - `carried_unresolved_assumptions`
+- exact sidecar decision:
+  - no root-level sidecar file
+  - no lane-level sidecar file
+  - no manifest/index file
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcFilesystemExportEmissionPlanResultV1`.
+- Require `source_consumer_disposition` to remain
+  `ReadyForLowBoostRecoveryFilesystemExportEmissionRefinementOnly`.
+- Require `source_consumer_notes` to remain the exact downstream export-consumer note set.
+- Require `specimen_count > 0`.
+- Require `group_count > 0`.
+- Require `planned_family_root_directory` to remain `low_boost_recovery_bc_v1`.
+- Require `planned_recovery_context_lanes` to be non-empty.
+- Require `group_count` to equal the number of planned lanes.
+- Require `refinement_disposition` to remain
+  `ReadyForLowBoostRecoveryFilesystemEmissionBoundaryOnly`.
+- Require `refinement_notes` to remain the exact filesystem/export-emission refinement note set.
+- Require each `lane_ordinal` to match the concrete lane position.
+- Require each `planned_relative_lane_directory` to match the deterministic lane naming rule.
+- Require lanes to remain in the exact preserved downstream order.
+- Require each planned lane to contain at least one preserved refined specimen.
+- Require `ordered_specimen_plans.len()` to match `preserved_lane.specimens.len()`.
+- Require each `specimen_ordinal` to match the concrete specimen position.
+- Require each planned `artifact_id` to match the aligned preserved specimen.
+- Require each `planned_specimen_file_stem` to match the deterministic specimen file-stem rule.
+- Revalidate every preserved specimen instead of trusting construction history.
+- Require every preserved specimen to remain aligned with its enclosing planned lane lineage.
+- Require specimen order within each lane to remain the exact preserved downstream order.
+- Require every `artifact_id` to remain unique across the full plan.
+- Require every planned relative path to remain unique across the full plan.
+- Require `specimen_count` to equal the number of preserved specimens across all planned lanes.
+
+exact emission decisions chosen
+- Emission writes directly under a caller-provided existing parent directory.
+- The emitted family root directory must not already exist.
+- Lane directories are created in planned lane order.
+- Specimen files are written in planned specimen order within each lane.
+- The emitted payload preserves lineage, accepted reference window, binding kinds, confidence,
+  and unresolved assumptions, but does not materialize raw state, tensors, or controls.
+- No sidecar manifest/index semantics were added.
+- No path sanitization layer was added.
+
+exact failure decisions chosen
+- Invalid plan input is a hard fail before any write.
+- Duplicate planned relative paths are a hard fail before any write.
+- Invalid output parent directory is a hard fail before any write.
+- Pre-existing destination root is a hard fail before any write.
+- Lane-directory creation or specimen-file write failure is a hard fail during write.
+- During write failure after root creation, the emitted family root directory tree is removed with
+  best-effort cleanup.
+- If cleanup also fails, the error reports both the write failure path and the cleanup failure
+  path.
+- No repair, fallback, regrouping, resorting, or silent skip was added.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any generic multi-family filesystem/export framework
+- any generic bundle/index/manifest orchestration framework
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust type shaping / actual write surface / readback helper were added, and why
+- Yes.
+- Finalized the family-specific emitted specimen payload in `crates/mimir-types/src/lib.rs`:
+  - `LowBoostRecoveryBcActualFilesystemEmissionSpecimenFileV1`
+- Kept the raw filesystem ownership in `crates/mimir-io/src/lib.rs`:
+  - `write_low_boost_recovery_bc_actual_filesystem_emission_specimen_file_v1(...)`
+  - `read_low_boost_recovery_bc_actual_filesystem_emission_specimen_file_v1(...)`
+- Added the actual boundary and ordered receipt surface in `crates/mimir-skill/src/lib.rs`:
+  - `LowBoostRecoveryBcActualFilesystemEmissionSpecimenReceiptV1`
+  - `LowBoostRecoveryBcActualFilesystemEmissionLaneReceiptV1`
+  - `LowBoostRecoveryBcActualFilesystemEmissionReceiptV1`
+  - `LowBoostRecoveryBcActualFilesystemEmissionError`
+  - `emit_low_boost_recovery_bc_actual_filesystem_emission_v1(...)`
+  - explicit actual-emission plan validation and deterministic `.json` specimen filename derivation
+- The readback helper stayed because it is the smallest honest way to verify emitted on-disk
+  payloads in tests and to support the next family-specific emitted-output audit pass without
+  reopening `mimir_export`.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess what the first real on-disk low-boost-recovery specimen
+  contract is.
+- The next pass no longer needs to guess whether manifests, sidecars, or bundle semantics are part
+  of the first actual emission boundary.
+- The next pass now has one concrete emitted-output receipt plus one concrete emitted specimen-file
+  contract to audit or read back.
+- That makes the immediate next step obvious:
+  one family-specific emitted-output audit/readback boundary, still without reopening
+  `mimir_export`.

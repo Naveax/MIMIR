@@ -1,0 +1,65 @@
+executor mimir skill forge bc post-consumer-intake single-domain reopen prioritization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+exact outcome chosen
+- Outcome A: no single closed domain is yet uniquely justified; remain at a planning/no-op stop again
+- selected domain: none
+
+exact reasoning
+- the trusted chain proves receipt-bound opaque caller-admitted replay-byte preservation through consumer-intake realization only
+- the current chain provides non-empty opaque bytes, but it does not prove parser readiness, replay-file equivalence, carrier discovery semantics, locator semantics, `mimir_replay::ReplayInput` readiness, raw-state payload availability, or export semantics
+- `source_replay`, `source_replay.provenance_label`, and `audited_family_root_directory` remain lineage or receipt anchors only
+- `mimir-skill` owns the current family-specific chain; older blocked/deferred surfaces in that crate do not prove the current post-consumer-intake chain has selected a downstream domain
+- `mimir-replay` exposes `ReplayInput` and `UnsupportedReplayReader`, but no parser and no proven bridge from the consumer-intake realization result
+- `mimir-io` has no opaque replay-byte handoff parser, locator, carrier discovery, or export integration surface
+- `mimir-export` remains export-bundle and execution-result infrastructure and has no low-boost-recovery opaque replay-byte handoff widening surface
+- `mimir-types` has no DTO that converts the current opaque consumer-intake result into parser output, raw-state payload, `ReplayInput`, or export entry semantics
+- current dependency edges do not make one candidate domain uniquely prior
+
+why competing domains lost
+- replay-source actual-materialization implementation lost because opaque bytes do not define the output carrier/source semantics and the domain competes with parser and `ReplayInput` creation choices
+- replay-source carrier discovery lost because the chain has caller-admitted bytes, not discoverable storage, carrier classes, sidecars, manifests, or paths
+- replay-input locator logic lost because there is no replay path, replay storage root, located file, or justified `ReplayInput` bridge
+- actual replay parsing lost because the bytes are explicitly opaque and no parser surface, parser output, or parser-success contract is proven
+- parser-success logic lost because no actual parser attempt result exists in the trusted current chain
+- raw-state payload parsing lost because it is downstream of actual replay parsing and parser-success semantics
+- `mimir_replay::ReplayInput` creation lost because `ReplayInput::Memory` exists but the chain does not justify a label, ownership rule, dependency edge, or creation boundary from the consumer-intake result
+- export widening lost because it is explicitly forbidden and would require `mimir-export` changes plus export payload semantics that do not exist
+
+what was intentionally excluded
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- actual replay parsing
+- parser-success logic
+- raw-state payload parsing
+- `mimir_replay::ReplayInput` creation
+- corpus-wide replay ingestion
+- tensor/control materialization
+- real rollout physics
+- async/background systems
+- database code
+- runtime CLI commands
+- execution-result cleanup boundary changes
+- `mimir_export` widening
+- `mimir-replay` changes
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- deterministic-family closure work
+- sidecar/manifest realization
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+Rust/code changes
+- no Rust or code changes were added
+- docs-only is more honest because this pass selected no domain and Rust API surface would imply a selected contract or realization boundary
+- runtime behavior changed: no
+- public APIs added: no
+- public APIs removed: no
+
+why this is enough for the next pass
+- the single-domain prioritization test is explicit for every still-closed domain
+- the current stopping point remains auditable and receipt-bound
+- the next pass can only stop again or justify exactly one selected domain under a new explicit reopen decision
+- `mimir_export` widening remains forbidden unless explicitly reopened

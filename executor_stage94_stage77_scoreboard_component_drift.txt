@@ -1,0 +1,34 @@
+helper names added or updated
+- added `assert_fixture_lane_scoreboard_component_schema_drift_fails_explicitly`
+- added `assert_scoreboard_component_keys_match`
+
+crate(s) touched
+- `crates/mimir-cli`
+
+exact Stage77 scoreboard component mutation applied
+- after a normal `VerticalSliceFixtureLane::Stage77Second` deterministic run, rewrote only the persisted scoreboard artifact row for branch `anchor-stage77-second:branch:0`
+- renamed scoreboard component key `coverage` -> `coverage_drifted`
+- preserved JSON readability, preserved branch ids, preserved teacher artifacts, preserved row count, preserved scoreboard totals
+
+which row / branch id was drifted
+- row for branch id `anchor-stage77-second:branch:0`
+
+what direct evidence proved the drift was caught as a component-schema issue
+- new test `second_deterministic_vertical_slice_detects_explicit_scoreboard_component_schema_drift`
+- helper first reloaded the canonical result successfully after the persisted scoreboard rewrite
+- helper then compared expected vs observed component-key sets for the drifted Stage77 row and asserted the explicit mismatch message:
+- `vertical-slice scoreboard component schema drift: lane Stage77Second, branch anchor-stage77-second:branch:0, expected component keys ["coverage", "stability"], found ["coverage_drifted", "stability"]`
+
+whether canonical reload still succeeded structurally
+- yes
+
+tests added or updated
+- added Stage77 test `second_deterministic_vertical_slice_detects_explicit_scoreboard_component_schema_drift`
+- updated `crates/mimir-cli/src/vertical_slice_test_support.rs` with the narrow scoreboard component-schema drift helper path
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this closes the top remaining scoreboard-component follow-up edge without widening runtime semantics
+- this pass makes Stage77 scoreboard component-key drift a first-class, edge-local failure instead of relying on broad artifact inequality or total-only snapshot drift
+- normal canonical loader behavior, export bundle semantics, scoreboard pathing, teacher artifact patterns, and runtime behavior remain unchanged

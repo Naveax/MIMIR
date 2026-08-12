@@ -1,0 +1,82 @@
+executor mimir skill forge bc replay header parser fixture_003 intake readiness decision
+
+exact outcome chosen
+- Outcome A
+
+whether fixture_001 identity was reverified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- extension: .replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+
+whether fixture_002 identity was reverified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- extension: .replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+
+whether fixture_003 exists
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+
+whether fixture_003 was copied from MIMIR_REPLAY_FIXTURE_003_PATH
+- yes
+- source path recorded only as user-supplied private local path:
+  C:\Users\navea\Documents\My Games\Rocket League\TAGame\DemosEpic\DF72482811F0B757082C458D84251EFF.replay
+
+fixture_003 byte length and SHA-256
+- byte length: 1638538
+- SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- first four bytes little-endian i32: 11190
+- extension: .replay
+- byte length greater than 8: yes
+
+whether fixture_003 differs from fixture_001 and fixture_002
+- differs from fixture_001 by SHA-256: yes
+- differs from fixture_002 by SHA-256: yes
+
+admission form
+- PRIVATE_LOCAL_PATH_WITH_HASH
+
+whether parser code changed
+- no
+
+whether parser-success was claimed
+- no
+- parser-success was not claimed for fixture_003
+- fixture_003 was not claimed as supported by MinimalReplayHeaderReader
+
+what was intentionally not broadened
+- no third supported tuple added
+- no broad parser-success admitted
+- no broad ReplayVersion = 8 support added
+- no wildcard BuildVersion support added
+- no future unknown build support added
+- no ReplayInput::File support added
+- no CRC validation added
+- no content_crc read or validation added
+- no body/raw-state/frame/event parsing added
+- no export/runtime/CLI integration added
+- no backend replay parser dependency added
+
+whether forbidden files/dependencies changed
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-types/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- dependencies added: no
+- backend replay parser dependency added: no
+
+decision
+- admit Outcome A
+- fixture_003 is admitted only as PRIVATE_LOCAL_PATH_WITH_HASH
+- next pass may generate a fixture_003 structural/header report
+- no parser expansion is admitted

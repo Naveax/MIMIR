@@ -1,0 +1,39 @@
+executor mimir skill forge validator + confidence / abstain next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+next pass
+- curriculum/export shell for low boost recovery
+
+exact problem
+- Convert only provisionally accepted low-boost-recovery validation results into the first narrow
+  curriculum/export shell boundary without widening existing export bundle semantics.
+- The shell must preserve lineage, decision status, confidence band, and unresolved assumptions so
+  downstream consumers can tell accepted candidates from abstains and rejects.
+
+what the new validator boundary now makes possible
+- Curriculum/export shell logic can now consume one bounded validation result instead of guessing
+  from raw parameter bundles and generated variants.
+- The shell can explicitly refuse to emit teaching material for:
+  - malformed candidates
+  - rejected candidates
+  - abstained candidates
+- The shell can preserve the exact accepted variant lineage and bounded confidence band for the
+  first export consumer without inventing physics-backed certainty.
+
+what is still intentionally unresolved
+- true low-boost confirmation
+- contact truth
+- recovery success proof
+- physics reachability
+- any broader multi-family curriculum or export design
+- any change to existing export bundle semantics beyond the first low-boost-recovery shell
+
+scope risk
+- medium-high
+- The main risk is quietly turning the shell into a generic export framework instead of a narrow
+  low-boost-recovery consumer boundary.
+- Another risk is letting `accept_candidate` read like proof instead of provisional bounded
+  acceptance.
+- A third risk is allowing abstain or reject cases to leak through as exportable candidates by
+  default.

@@ -1,0 +1,39 @@
+canonical helper names added
+- `write_scoreboard_artifact`
+- `read_scoreboard_artifact`
+- `scoreboard_artifact_path`
+
+new canonical persisted scoreboard/score type names added
+- `PersistedScoreboardArtifact`
+- `ScoreboardArtifactPayload`
+- `PersistedScoreboard`
+- `PersistedScoreRow`
+- `PersistedScoreVector`
+- `ArtifactKind::Scoreboard`
+- `SCOREBOARD_ARTIFACT_SCHEMA`
+- `SCOREBOARD_ARTIFACT_SCHEMA_NAME`
+- `SCOREBOARD_ARTIFACT_SCHEMA_VERSION`
+
+crate(s) touched
+- `crates/mimir-types`
+- `crates/mimir-io`
+- `crates/mimir-cli`
+
+Stage 69/70 vertical-slice rewiring summary
+- moved the persisted scoreboard contract out of `crates/mimir-cli/src/vertical_slice.rs` into canonical `mimir-io` types
+- replaced bespoke `serde_json` scoreboard file write/read in the vertical slice with `write_scoreboard_artifact` / `read_scoreboard_artifact`
+- kept `scoreboard.json` as the local vertical-slice artifact path via `scoreboard_artifact_path`
+- kept fake backend usage, teacher-label artifact lane, deterministic row ordering, and export bundle behavior unchanged
+
+tests added or updated
+- added `mimir-io` tests:
+  - `writes_and_reads_scoreboard_artifact_with_wrapper`
+  - `scoreboard_wrapper_rejects_schema_mismatch_explicitly`
+  - `scoreboard_wrapper_rejects_wrong_artifact_kind_explicitly`
+- updated Stage 69 vertical-slice coverage in `crates/mimir-cli/src/vertical_slice.rs` to assert canonical scoreboard artifact reload and schema identity
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why export bundle semantics were intentionally left unchanged
+- this pass canonicalized only the local persisted scoreboard artifact used by the Stage 69/70 test-only vertical slice; the scoreboard artifact is still not part of the export bundle manifest/index, so bundle semantics and public consumer/export behavior remain unchanged by design

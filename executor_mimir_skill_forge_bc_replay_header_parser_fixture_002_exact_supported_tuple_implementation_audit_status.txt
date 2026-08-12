@@ -1,0 +1,126 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation audit status
+
+pass type
+- audit/admission
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+parser code changed in audit pass
+- no
+
+Rust source changed in audit pass
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- extension: .replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+
+fixture_002 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- extension: .replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- differs from fixture_001 by SHA-256: yes
+- byte length greater than 8: yes
+
+implementation input verified
+- yes
+- implementation artifacts present and inspected
+- planning artifacts present and inspected
+- relevant policy/admission docs inspected
+
+exact tuple predicate inspected
+- yes
+
+exact two-tuple allowlist admitted
+- yes
+
+fixture_001 regression admitted
+- yes
+
+fixture_002 exact happy path admitted
+- yes
+
+fixture_002 header-only stop-boundary admitted
+- yes
+
+unknown BuildVersion rejection admitted
+- yes
+
+helper/env override behavior status
+- admitted
+- no global env override found in load_fixture_bytes_or_skip
+
+parser-success admitted for exact allowlisted tuples
+- yes
+
+parser-success admitted broadly
+- no
+
+wildcard BuildVersion support added
+- no
+
+ReplayInput::File support added
+- no
+
+CRC validation added
+- no
+
+content_crc read/validation added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+backend dependency added
+- no
+
+exact validation commands run
+- PASS: cargo fmt --all
+- PASS: cargo check --workspace --all-targets --all-features
+- PASS: cargo test -p mimir-replay -- --nocapture
+  - 20 passed; 0 failed; 0 ignored
+- PASS: cargo test -p mimir-skill -- --nocapture
+  - 273 passed; 0 failed; 0 ignored
+- PASS: cargo test --workspace --all-targets --all-features
+- PASS: cargo clippy --workspace --all-targets --all-features -- -D warnings
+- PASS: cargo test -p mimir-export -- --list
+  - 173 tests, 0 benchmarks
+
+forbidden boundary check
+- crates/mimir-replay/src/lib.rs changed by audit pass: no
+- crates/mimir-skill/src/lib.rs changed by audit pass: no
+- crates/mimir-types/src/lib.rs changed by audit pass: no
+- crates/mimir-cli changed by audit pass: no
+- crates/mimir-io changed by audit pass: no
+- crates/mimir-export changed by audit pass: no
+- Cargo.toml changed by audit pass: no
+- Cargo.lock changed by audit pass: no
+- dependencies added: no
+- backend replay parser dependency added: no
+- ReplayInput::File support added: no
+- CRC validation added: no
+- content_crc read/validation added: no
+- body/raw-state/frame/event parsing added: no
+- export/runtime/CLI integration added: no
+
+recommended next pass
+- plan the next narrow replay-header parser boundary
+- no broad parser expansion yet
+- no export/runtime/CLI integration yet

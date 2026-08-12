@@ -1,0 +1,107 @@
+executor mimir skill forge bc replay header parser fixture 002 report admission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+exact outcome chosen
+- Outcome A
+
+whether fixture identities were verified
+- yes
+- fixture_001 verified:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+  - byte length: 3001021
+  - SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+  - first four bytes little-endian i32: 13200
+  - extension .replay: yes
+  - byte length greater than 8: yes
+- fixture_002 verified:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+  - byte length: 2632903
+  - SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+  - first four bytes little-endian i32: 11273
+  - differs from fixture_001 by SHA-256: yes
+  - extension .replay: yes
+  - byte length greater than 8: yes
+
+whether generated reports were verified
+- yes
+- parser/header report:
+  - path: artifacts/replay_header_reports/rl_replay_header_fixture_002_report.txt
+  - current size: 4167 bytes
+  - fixture identity matched fixture_002
+  - report states generated outside MIMIR
+  - report states not MIMIR parser output
+  - report states not parser-success evidence
+- structural report:
+  - path: artifacts/replay_header_reports/rl_replay_header_fixture_002_structural_report.txt
+  - current size: 13885 bytes
+  - fixture identity matched fixture_002
+  - report states generated outside MIMIR
+  - report states not MIMIR parser output
+  - report states not parser-success evidence
+
+whether parser/header report was admitted as evidence-only
+- yes
+
+whether structural report was admitted as evidence-only
+- yes
+
+whether selected property candidate evidence was admitted
+- yes
+- admitted only as external/report candidate mapping evidence
+- not admitted as MIMIR parser output
+- not admitted as full fixture_002 ReplayHeader output
+
+whether structural byte-layout candidate evidence was admitted
+- yes
+- admitted only as external structural/report evidence
+- content_size/content_crc/content_data_start admitted only as first body boundary candidates
+- CRC validation remains closed
+
+whether parser code changed
+- no
+
+whether parser-success was claimed for fixture_002
+- no
+
+whether fixture_002 supported-version policy was admitted
+- no
+
+what was intentionally not broadened
+- parser success for fixture_002
+- broad parser success
+- fixture_002 support by MinimalReplayHeaderReader
+- supported replay version policy
+- broad version-family support
+- ReplayHeader mapping as MIMIR parser output for fixture_002
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body parsing
+- raw-state parsing
+- frame parsing
+- event parsing
+- export behavior
+- runtime behavior
+- CLI behavior
+- backend replay parser dependency
+
+whether forbidden files/dependencies changed
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- crates/mimir-types changed: no
+- root Cargo.toml changed: no
+- root Cargo.lock changed: no
+- MIMIR dependencies changed: no
+- backend replay parser dependency added to MIMIR: no
+
+decision
+- Outcome A admitted for report admission only
+- fixture_002 external parser/header report is evidence-only
+- fixture_002 external structural report is evidence-only
+- no parser expansion yet

@@ -1,0 +1,98 @@
+executor mimir skill forge bc serialization export decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+exact serialized artifact/schema fields chosen
+- top-level persisted artifact kind: `ArtifactKind::LowBoostRecoveryBcArtifact`
+- schema name: `mimir.low_boost_recovery_bc_artifact`
+- schema version: `1`
+- payload type: `LowBoostRecoveryBcSerializedArtifactV1`
+- payload fields:
+  - `artifact_id`
+  - `family`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_raw_state_window_ref`
+  - `source_phase_id`
+  - `accepted_reference_variant_id`
+  - `observation`
+  - `target`
+  - `carried_confidence_band`
+  - `carried_unresolved_assumptions`
+  - `artifact_notes`
+- deterministic artifact identity:
+  - `artifact_id = "<accepted_reference_variant_id>:bc_artifact_v1"`
+
+exact observation serialization choice
+- Observation payload type: `LowBoostRecoveryBcObservationV1`
+- Observation payload fields:
+  - `binding_kind`
+  - `supervision_window_role`
+  - `accepted_reference_window`
+- The payload materializes the concrete accepted supervision window only.
+- The payload does not inline replay state, feature vectors, normalization, clipping, or tensor
+  layout.
+- The accepted shell remains authoritative for the concrete reference-window materialization, while
+  the artifact preserves `source_raw_state_window_ref` as the auditable raw-state linkage.
+
+exact target serialization choice
+- Target payload type: `LowBoostRecoveryBcTargetV1`
+- Target payload fields:
+  - `binding_kind`
+  - `accepted_reference_variant_id`
+  - `accepted_reference_window`
+- The payload fixes target lineage and target window while keeping actual control-target
+  materialization deferred.
+- The payload does not inline action labels, logits, or any control sequence.
+
+exact persistence and IO choice
+- Persist the artifact through the existing `ArtifactEnvelope<T>` plus `ArtifactHeader` boundary.
+- Add one narrow `mimir-io` write wrapper:
+  - `write_low_boost_recovery_bc_artifact(...)`
+- Add one narrow `mimir-io` read wrapper:
+  - `read_low_boost_recovery_bc_artifact(...)`
+- Schema mismatch, wrong-kind, and invalid content fail explicitly through the existing
+  `mimir-io` schema/version validation path.
+- `mimir_export` remains untouched.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any batch-export framework work
+- any generic multi-family BC export framework
+- any generic dataset machinery
+- any replay parsing or replay mining
+- any rollout/physics truth upgrade
+- any action/control extraction
+- any tensor or normalization implementation
+- any DAgger or PPO auxiliary export
+- any runtime bridge work
+- any usefulness-proof or policy-improvement claim
+- any speculative metadata bag
+
+whether Rust type shaping / IO wrapper / narrow implementation were added, and why
+- Yes.
+- Added family-specific plain data contracts in `crates/mimir-types/src/lib.rs`:
+  - `LowBoostRecoveryBcObservationV1`
+  - `LowBoostRecoveryBcTargetV1`
+  - `LowBoostRecoveryBcArtifactNoteV1`
+  - `LowBoostRecoveryBcSerializedArtifactV1`
+  - `LowBoostRecoveryBcArtifactId`
+  - `ArtifactKind::LowBoostRecoveryBcArtifact`
+  - `PersistedLowBoostRecoveryBcArtifact`
+- Added one narrow constructor plus one narrow error surface in `crates/mimir-skill/src/lib.rs`:
+  - `serialize_low_boost_recovery_bc_artifact_v1(...)`
+  - `LowBoostRecoveryBcSerializationExportError`
+- Added one narrow persisted read/write surface in `crates/mimir-io/src/lib.rs`:
+  - `write_low_boost_recovery_bc_artifact(...)`
+  - `read_low_boost_recovery_bc_artifact(...)`
+- This was justified because the pass had to define a real persisted BC specimen boundary without
+  widening into generic export orchestration or touching `mimir_export`.
+
+why this is enough for the next actual export-integration or consumer-wiring pass
+- The repo now has one persisted low-boost-recovery BC artifact contract instead of only a row
+  contract.
+- The next pass does not need to guess artifact identity, observation window materialization, or
+  target lineage.
+- The next pass can stay narrowly focused on actual export integration or consumer wiring.
+- `mimir_export` widening is still forbidden unless explicitly reopened.

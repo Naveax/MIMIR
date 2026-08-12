@@ -1,0 +1,171 @@
+executor mimir skill forge bc replay header parser mimir-skill seam implementation status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+pass type
+- mimir-skill seam implementation pass
+- exact planned narrow parallel minimal-header-attempt seam only
+- no parser expansion admitted
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_IMPLEMENTATION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_status.txt
+- modified crates/mimir-skill/src/lib.rs
+
+Rust source changed
+- yes
+- only crates/mimir-skill/src/lib.rs
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture identity verified
+- yes
+
+planning input verified
+- yes
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_PLANNING_REOPEN_V1.md inspected
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_decision.txt inspected
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_next.txt inspected
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_planning_reopen_status.txt inspected
+
+mimir-skill consumer surface inspected
+- yes
+- actual replay parsing contract inspected
+- existing unsupported-attempt realization inspected
+- ReplayInput::Memory label/byte preservation path inspected
+- file-backed ReplayInput rejection path inspected
+
+seam implementation added
+- yes
+- function:
+  realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_actual_replay_parsing_minimal_header_attempt_v1
+
+MinimalReplayHeaderReader used in mimir-skill
+- yes
+- imported from mimir_replay
+- instantiated only in the explicit minimal-header-attempt seam
+- invoked only after matching attempt_replay_input as ReplayInput::Memory
+
+unsupported-attempt realization preserved
+- yes
+- existing function remains parallel:
+  realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_actual_replay_parsing_unsupported_attempt_v1
+- existing path still uses UnsupportedReplayReader
+- existing path still records unsupported status
+- existing path still records no replay header
+
+parser behavior changed in mimir-replay
+- no
+
+parser-success admitted for first minimal boundary
+- yes
+- only through explicit mimir-skill seam calling existing MinimalReplayHeaderReader
+- success classification: minimal header parse success only
+- success carries ReplayHeader only as header-only parser-attempt evidence
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+  - result: success
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-skill -- --nocapture
+  - result: success
+  - mimir-skill unit tests: 273 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+additional pre-artifact sanity command run
+- cargo test -p mimir-skill -- --nocapture
+  - result: success
+  - reason: targeted compile/test check after editing crates/mimir-skill/src/lib.rs before artifacts were finalized
+
+forbidden crate boundary check
+- direct Rust edit file: crates/mimir-skill/src/lib.rs
+- mimir-cli modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- crates/mimir-replay/src/lib.rs modified by this pass: no
+- crates/mimir-replay/Cargo.toml modified by this pass: no
+- root Cargo.toml modified by this pass: no
+- root Cargo.lock modified by this pass: no
+- dependencies changed: no
+- backend replay parser dependency added: no
+- parser backend dependency scan command:
+  rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+- parser backend dependency scan result: no matches
+- scoped forbidden tracked diff command:
+  git diff --name-only -- crates/mimir-skill/src/lib.rs crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock
+- scoped forbidden tracked diff result: no tracked file diffs reported
+- workspace caveat:
+  git rev-parse --show-toplevel reports D:/ as the broader Git root, so broad git status is not useful for MIMIR-only boundary evidence
+
+scope intentionally not broadened
+- no ReplayInput::File support
+- no file reading in the seam
+- no parser facts derived from path/hash/filename/provenance/artifact id
+- no replay-source materialization
+- no raw-state availability claim
+- no frame availability claim
+- no event availability claim
+- no export readiness claim
+- no CLI behavior
+- no runtime behavior
+- no content_crc read or validation
+- no body/raw-state/frame/event parsing
+- no nested array semantic parsing
+- no UTF-16 support
+- no broad version-family support
+- no unencountered property-kind support
+
+next stage
+- seam implementation audit/admission pass
+- no broad parser expansion yet
+- no export/runtime/CLI integration yet

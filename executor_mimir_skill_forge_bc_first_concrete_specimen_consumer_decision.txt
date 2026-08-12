@@ -1,0 +1,162 @@
+executor mimir skill forge bc first concrete specimen consumer decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact first concrete specimen-level consumer role chosen
+- one low-boost-recovery-specific specimen-level consumer boundary above
+  `LowBoostRecoveryBcContinuedReceiptBoundDownstreamResultV1`
+- exact job:
+  - admit only already-validated continued receipt-bound downstream results
+  - revalidate the preserved downstream surface without reopening filesystem reads or lower
+    planning layers
+  - narrow each admitted `readback_specimen` into the first concrete consumed specimen view
+  - preserve only the audited family root reference plus ordered lane/specimen structure needed by
+    the next receipt-bound family-specific pass
+
+exact specimen-level consumed-view decision chosen
+- do not keep `readback_specimen` intact as the consumed specimen-level view
+- narrow it to the exact family-specific field set already represented by
+  `LowBoostRecoveryBcArtifactConsumerHandoffV1`
+- exact consumed-view fields preserved:
+  - `artifact_id`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_raw_state_window_ref`
+  - `source_phase_id`
+  - `accepted_reference_variant_id`
+  - `observation_binding_kind`
+  - `supervision_window_role`
+  - `accepted_reference_window`
+  - `target_binding_kind`
+  - `carried_confidence_band`
+  - `carried_unresolved_assumptions`
+- exact payload fields intentionally dropped:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+- exact lower-boundary transport references intentionally not preserved in the new specimen-level
+  output surface:
+  - `emitted_lane_directory`
+  - `emitted_specimen_file_path`
+
+why that consumed-view decision was chosen
+- The repo already had one exact local family-specific semantic subset with this field shape:
+  `LowBoostRecoveryBcArtifactConsumerHandoffV1`.
+- The emitted-specimen audit validator already rebuilds and validates that same subset from
+  `LowBoostRecoveryBcActualFilesystemEmissionSpecimenFileV1`.
+- No current repo-local need requires carrying lane/specimen placement inside the consumed payload
+  once ordering is preserved outside the payload.
+- Keeping `readback_specimen` intact would preserve duplicated transport placement without adding a
+  proven specimen-level invariant.
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerDispositionV1`
+- exact disposition:
+  - `ReadyForLowBoostRecoveryConsumedSpecimenViewOnly`
+- exact note type:
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerNoteV1`
+- exact specimen result type:
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerLaneResultV1`
+- exact success result type:
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerResultV1`
+- exact entry function:
+  - `consume_low_boost_recovery_bc_continued_receipt_bound_downstream_for_first_concrete_specimen_consumer_v1(...)`
+- exact success result fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_downstream_disposition`
+  - `source_downstream_notes`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `consumer_disposition`
+  - ordered `consumer_notes`
+- exact lane result fields:
+  - `lane_ordinal`
+  - ordered `ordered_specimen_results`
+- exact specimen result fields:
+  - `specimen_ordinal`
+  - `consumed_specimen_view`
+- exact note set:
+  - `ContinuedReceiptBoundDownstreamBoundaryPreserved`
+  - `AuditedFamilyRootReferencePreserved`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ConsumedSpecimenViewNarrowedToArtifactConsumerHandoff`
+  - `TensorAndControlMaterializationDeferred`
+  - `MimirExportIntegrationDeferred`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcContinuedReceiptBoundDownstreamResultV1`.
+- Require `source_audit_disposition` to remain
+  `ReadyForLowBoostRecoveryEmittedOutputRefinementOnly`.
+- Require `source_audit_notes` to remain the exact emitted-output audit/readback note set.
+- Require `downstream_disposition` to remain
+  `ReadyForLowBoostRecoveryAuditedSpecimenInspectionOnly`.
+- Require `downstream_notes` to remain the exact continued receipt-bound downstream note set.
+- Require the audited family root basename to remain `low_boost_recovery_bc_v1`.
+- Require `group_count > 0` and `specimen_count > 0`.
+- Require lane/specimen order to remain aligned with vector order.
+- Require emitted lane/specimen paths to remain the deterministic receipt-bound paths preserved by
+  the continued downstream result.
+- Revalidate every `readback_specimen` against the emitted specimen contract.
+- Require every `readback_specimen` lane/specimen ordinal and `artifact_id` to remain aligned
+  with the enclosing preserved lane/specimen result.
+- Require every `artifact_id` to remain present and unique across the full admitted input.
+- Forbid reopening emitted-output audit/readback, actual filesystem emission, plans, layouts,
+  batches, persisted artifacts, BC rows, shells, or any lower planning boundary.
+
+exact failure / defer decisions chosen
+- Hard fail on malformed or degraded continued downstream input.
+- Hard fail on wrong source-audit or continued-downstream disposition/note sets.
+- Hard fail on count drift, order drift, path drift, duplicate artifact ids, or mismatched
+  `readback_specimen` payloads.
+- No repair, no receipt regeneration, no filesystem re-audit, no skipping, and no resorting were
+  added.
+- No soft defer path was added.
+- Reason no defer path exists:
+  - this boundary adds no new evidence gate beyond the already-preserved receipt-bound surface
+  - remaining uncertainty is already carried in `carried_unresolved_assumptions`
+  - inventing a defer state here would widen semantics instead of narrowing them
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family downstream/export framework
+- any generic manifest/index framework
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerDispositionV1`
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerNoteV1`
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerSpecimenResultV1`
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerLaneResultV1`
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerResultV1`
+  - `LowBoostRecoveryBcFirstConcreteSpecimenConsumerError`
+  - `consume_low_boost_recovery_bc_continued_receipt_bound_downstream_for_first_concrete_specimen_consumer_v1(...)`
+- Reused the already-existing family-specific `LowBoostRecoveryBcArtifactConsumerHandoffV1`
+  shape as the concrete consumed specimen view instead of inventing a second semantically
+  identical DTO.
+- Added one shared emitted-specimen-to-consumed-view builder so audit validation and the new
+  consumer boundary narrow the payload the same way.
+- Added minimal tests for admission, rejection, ordering/artifact-id preservation, and
+  determinism.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were needed.
+
+why this is enough for the next pass
+- The next pass no longer has to decide whether `readback_specimen` is itself the consumed
+  specimen contract.
+- The next pass can now start from one explicit family-specific consumed specimen view and test
+  whether that view is sufficient for the first explicit raw-state-window lookup /
+  observation-access planning boundary.
+- `mimir_export` widening remains forbidden unless explicitly reopened, so the next pass is still
+  forced to stay receipt-bound and family-specific.

@@ -1,0 +1,13 @@
+pass type: single-wrapper breaking removal pass for query_load_and_summarize_execution_result_job_reports
+runtime behavior changed: no
+wrappers removed: yes
+removed wrapper count: 1
+Stage 60 removal artifact added: yes
+README changed: no
+mimir_export test count from cargo test -p mimir-export -- --list: 182 tests, 0 benchmarks
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

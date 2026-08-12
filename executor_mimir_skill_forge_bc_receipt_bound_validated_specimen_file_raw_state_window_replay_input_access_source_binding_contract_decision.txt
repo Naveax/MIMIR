@@ -1,0 +1,145 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-input-access source-binding contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-16
+
+exact contract-definition role chosen
+- one low-boost-recovery-specific contract-definition boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessReopenDecisionResultV1`
+- exact job:
+  - admit only the existing truthful blocked replay-side parse-attempt realization result plus the replay-input-access reopen decision
+  - revalidate that those admitted inputs still preserve the exact receipt-bound root/order/path and per-specimen identity tuple
+  - define the first contract-only replay-input-access / replay-source-binding surface above that blocked result
+  - stay strictly below replay-input locator implementation, replay parsing, and raw-state/tensor/control materialization
+
+exact contract shape defined
+- exact top-level contract type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractV1`
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractDispositionV1`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractNoteV1`
+- exact handle-kind type:
+  - `LowBoostRecoveryBcReceiptBoundReplayInputAccessSourceBindingHandleKindV1`
+- exact boundary-input type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingBoundaryInputV1`
+- exact output-boundary type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingOutputBoundaryV1`
+- exact per-specimen result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractLaneResultV1`
+- exact error type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingContractDefinitionError`
+- exact entry function:
+  - `define_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_input_access_source_binding_contract_v1(...)`
+
+exact per-specimen admitted and exposed semantics chosen
+- Admit exactly:
+  - `admitted_replay_side_parse_attempt_input`
+  - `admitted_replay_side_parse_attempt_output_boundary`
+- Define exactly one new per-specimen boundary input tuple preserving:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+  - `preserved_observation_binding_kind`
+  - `preserved_accepted_reference_window`
+- Define exactly one new per-specimen output boundary preserving that tuple and adding:
+  - `bound_replay_input_access_source_binding_handle_kind`
+- Exact handle kind chosen:
+  - `FutureParserConsumableReplayHandleOnly`
+- Exact meaning of that new element:
+  - this exact preserved receipt-bound tuple requires exactly one future parser-consumable replay handle to be bound at a later explicit boundary
+- Exact non-meaning:
+  - no replay path exists yet
+  - no replay bytes exist yet
+  - no replay parsing exists yet
+
+exact output / disposition chosen
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_realization_disposition`
+  - ordered `source_realization_notes`
+  - `source_reopen_decision_disposition`
+  - ordered `source_reopen_decision_notes`
+  - `source_chosen_locator_contract_shape`
+  - `source_chosen_materialization_contract_shape`
+  - `source_chosen_replay_parsing_contract_shape`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `contract_disposition`
+  - ordered `contract_notes`
+  - `chosen_replay_input_access_contract_shape`
+- exact per-specimen output fields:
+  - `specimen_ordinal`
+  - `admitted_replay_side_parse_attempt_input`
+  - `admitted_replay_side_parse_attempt_output_boundary`
+  - `replay_input_access_source_binding_boundary_input`
+  - `replay_input_access_source_binding_output_boundary`
+- exact disposition:
+  - `ContractDefinedForReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputAccessSourceBindingOnly`
+- exact chosen shape:
+  - `ReceiptBoundReplayInputAccessSourceBindingOnly`
+
+exact admission / failure decisions chosen
+- Admit only the exact blocked replay-side parse-attempt realization result plus the exact replay-input-access reopen decision result.
+- Require the exact blocked replay-side parse-attempt realization disposition/note set, the exact locator/materialization/replay-parsing shapes, the exact replay-input-access reopen disposition/note set, the exact chosen replay-input-access contract shape, the exact audited family root basename/existence/directory-ness, and exact lane/specimen order.
+- Require realization/reopen count parity and source-field parity across:
+  - `specimen_count`
+  - `group_count`
+  - `source_realization_disposition`
+  - `source_realization_notes`
+  - `source_chosen_locator_contract_shape`
+  - `source_chosen_materialization_contract_shape`
+  - `source_chosen_replay_parsing_contract_shape`
+  - `audited_family_root_directory`
+- Hard fail on degraded realization input.
+- Hard fail on degraded replay-input-access reopen decision input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on artifact-id drift or duplicate artifact ids.
+- Hard fail on any attempt to reinterpret `source_replay` or `provenance_label` as an implicit replay locator.
+- Hard fail on any attempt to reinterpret the audited family root as replay storage.
+- Hard fail on any attempt to widen this pass into actual replay-input locator implementation, replay parsing, raw-state payload materialization, tensor/control materialization, sidecars, manifests, generic indexing, or `mimir_export`.
+
+what was intentionally excluded
+- any actual replay-input locator implementation
+- any actual replay parsing implementation
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - the new replay-input-access / source-binding contract DTOs
+  - the new contract-only future handle-kind enum
+  - the contract-definition error surface
+  - the strict contract-definition validators for this boundary
+  - `define_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_input_access_source_binding_contract_v1(...)`
+  - narrow tests covering valid semantics, degraded realization rejection, degraded reopen rejection, cross-input mismatch rejection, and determinism
+- Added because the repo already treats the previous blocked replay-side parse-attempt and reopen-decision boundaries as machine-verifiable admitted layers. Leaving this pass as prose only would force the next pass to infer the contract semantics from documentation instead of consuming an explicit family-specific contract result.
+- No `mimir-types`, `mimir-replay`, `mimir-io`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The repo now has one explicit machine-verifiable replay-input-access / replay-source-binding contract artifact.
+- That artifact stays strictly low-boost-recovery-specific and strictly receipt-bound.
+- The next pass no longer needs to guess:
+  - what the admitted per-specimen input tuple is
+  - what the output boundary preserves
+  - what the new handle kind is allowed to mean
+- The next immediate task is now obvious and narrow:
+  - realize the first truthful result above this contract without yet implementing replay-input locator logic or replay parsing
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

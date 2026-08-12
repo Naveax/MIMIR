@@ -1,0 +1,53 @@
+executor mimir skill forge bc receipt-bound specimen-file-anchored raw-state-window locator realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a first BC specimen-file existence/readback validation pass above
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+why this is the immediate next pass
+- The reopen decision is already explicit.
+- The specimen-file-anchored contract is already explicit.
+- This pass now makes the anchored locator path explicit.
+- The next unresolved problem is no longer locator shape.
+- The next unresolved problem is whether the realized anchored specimen-file paths actually exist
+  and can be read back without crossing into raw-state materialization.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorRealizationResultV1`
+- the preserved audited family root directory already carried by that realized locator result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- verify only filesystem existence and narrow contract-preserving readback behavior above the
+  realized locator
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that raw-state materialization is still deferred
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family downstream/export framework
+- no generic manifest/index framework
+- no raw-state payload materialization
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout/physics work
+
+classification of the next pass
+- a first BC specimen-file existence/readback validation pass above the realized locator
+
+why the next pass is not a raw-state materialization reopen decision
+- The newly added locator realization is still path-only.
+- No filesystem truth has been validated yet at this boundary.
+- Reopening raw-state materialization before existence/readback validation would skip the next
+  smallest unresolved defect.
+
+why the next pass is not another refinement pass
+- The contract and the anchored locator shape are already frozen.
+- Another refinement pass would restate the same path semantics instead of resolving the next real
+  uncertainty.

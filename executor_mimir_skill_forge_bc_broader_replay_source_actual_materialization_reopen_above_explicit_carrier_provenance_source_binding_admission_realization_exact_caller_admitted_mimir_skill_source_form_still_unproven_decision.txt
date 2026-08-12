@@ -1,0 +1,66 @@
+executor mimir skill forge bc broader replay-source actual-materialization reopen above explicit carrier provenance/source-binding admission realization exact caller-admitted mimir-skill source form still unproven decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact choice among outcome a/b/c
+- Outcome A
+- another reopen-decision is still required because the caller-supplied `mimir-skill` seam does
+  not yet justify one exact caller-admitted source form
+
+exact reasoning
+- The audited repo still proves seam ownership, but not seam payload.
+- `mimir-skill` is still the only honest ownership location for a new caller seam on this
+  low-boost-recovery receipt-bound defect path:
+  - the blocked explicit-admission chain lives there
+  - the highest public functions on this path still stop at the explicit admission
+    contract/realization pair
+  - `mimir-skill` already accepts one family-specific caller-provided filesystem input through
+    `emit_low_boost_recovery_bc_actual_filesystem_emission_v1(..., output_parent_directory)`
+- The repo still does not justify one exact caller-admitted source form:
+  - `ReplaySourceRef` remains opaque lineage only
+  - low-boost-recovery serialized artifacts and emitted specimen files still carry only
+    `source_replay: ReplaySourceRef`, not path/bytes/frames/carrier semantics
+  - `mimir-io` still exposes no caller-binding loader or replay-source binding reader
+  - `mimir-replay::ReplayInput` exists, but only inside `mimir-replay`; workspace audit still
+    shows no use outside that crate
+  - `mimir-skill` does not currently depend on `mimir-replay`, so `ReplayInput` is not an
+    already-established seam type on this path
+  - current `mimir-skill` note surfaces still keep multiple future carrier classes open:
+    file-backed, byte-backed, replay-frame-backed, or `mimir_replay::ReplayInput`
+  - the explicit admission contract notes still refuse to promise carrier class, locator,
+    storage, bytes, frames, or `mimir_replay::ReplayInput`
+- Outcome B is therefore not honest:
+  - freezing one exact contract-definition boundary now would invent payload semantics
+- Outcome C is too weak:
+  - this pass does more than generic docs refinement
+  - it proves that the seam ownership location remains `mimir-skill`
+  - it also proves that exact file-backed, bytes-backed, replay-frame-backed,
+    `ReplayInput`-backed, and provenance-only forms are each still unproven
+
+what was intentionally excluded
+- any new contract-definition boundary name
+- any Rust API or DTO in `mimir-skill`
+- any replay-source actual-materialization implementation
+- any replay-source carrier discovery
+- any replay-input locator logic
+- any replay parsing implementation
+- any replay file path derivation from `source_replay` or `source_replay.provenance_label`
+- any replay bytes or replay frames materialization
+- any actual `mimir_replay::ReplayInput` admission or materialization
+- any raw-state payload materialization
+- any tensor/control materialization
+- any artifact, sibling-sidecar, or manifest/index reopening
+- any `mimir_export` integration or surface edit
+
+whether Rust/code changes were added, and why or why not
+- No.
+- Docs-only is more honest here.
+- The audit proves only the seam ownership location, not one exact caller-admitted object.
+- Adding Rust now would force an unverified payload choice and would fake completeness.
+
+why this is enough for the next pass
+- The next missing problem is now exact and narrow:
+  - prove or reject one exact caller-admitted source form inside a new `mimir-skill` seam
+- The next pass no longer needs to revisit artifact, sibling-sidecar, or manifest/index classes
+  unless genuinely new audited evidence appears.
+- `mimir_export` widening remains forbidden unless explicitly reopened.

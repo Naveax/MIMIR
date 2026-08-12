@@ -1,0 +1,40 @@
+helper names added or updated:
+- `persisted_input_artifact_for_lane_with_teacher_namespace`
+- `deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+
+crate(s) touched:
+- `mimir-cli`
+
+which base lane was used:
+- `VerticalSliceFixtureLane::Stage69Sample`
+
+exact `teacher_namespace` mutation applied:
+- baseline: `stage69.teacher`
+- mutated: `stage69.teacher.explicit-propagation`
+
+what direct evidence proved namespace propagation:
+- the mutated persisted input artifact differed from the baseline only at `payload.teacher_namespace`
+- every baseline teacher-label record kept payload metadata `teacher_namespace = "stage69.teacher"`
+- every mutated teacher-label record exposed payload metadata `teacher_namespace = "stage69.teacher.explicit-propagation"`
+- every baseline teacher-label record kept synthesized payload metadata `teacher_namespace_copy = "stage69.teacher"`
+- every mutated teacher-label record exposed synthesized payload metadata `teacher_namespace_copy = "stage69.teacher.explicit-propagation"`
+- every baseline teacher-label artifact header kept metadata `teacher_namespace = "stage69.teacher"`
+- every mutated teacher-label artifact header exposed metadata `teacher_namespace = "stage69.teacher.explicit-propagation"`
+
+what unrelated surfaces remained stable:
+- branch ids remained identical between baseline and mutated runs
+- scoreboard totals remained identical between baseline and mutated runs
+- teacher target ordering remained identical between baseline and mutated runs
+- canonical reload succeeded for both baseline and mutated runs through the existing loader path
+
+tests added or updated:
+- added `vertical_slice::deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+- updated imports in `crates/mimir-cli/src/vertical_slice.rs`
+- added `persisted_input_artifact_for_lane_with_teacher_namespace` in `crates/mimir-cli/src/vertical_slice_test_support.rs`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- `173 tests, 0 benchmarks`
+
+short note on why this closes an under-covered edge without widening runtime semantics:
+- previous coverage compared teacher artifacts broadly, but it did not isolate the direct `teacher_namespace` propagation edge against stable neighboring contract surfaces
+- this pass proves the intended namespace flow at the exact seed-label, synthesized-label, and persisted-header surfaces while leaving export contents, loader behavior, and artifact boundaries unchanged

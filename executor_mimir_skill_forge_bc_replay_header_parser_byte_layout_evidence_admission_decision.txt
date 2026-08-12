@@ -1,0 +1,96 @@
+executor mimir skill forge bc replay header parser byte-layout evidence admission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- Outcome B
+
+exact byte-layout evidence result
+- no approved byte-layout evidence exists locally for rl_replay_header_fixture_001
+- byte-layout evidence remains missing
+- no supported Rocket League replay header admission rule was admitted
+- no supported version or version family was admitted
+- no header boundary or header termination rule was admitted
+- no field encodings were admitted
+- no numeric endianness was admitted
+- no string/property encoding rules were admitted
+- no body/raw-state boundary was admitted
+- no replay id derivation was admitted
+- no total_frames byte source or explicit admitted None policy was admitted
+- no metadata key map or explicit admitted empty metadata policy was admitted
+- no insufficient, malformed, or unsupported-if-distinguishable error boundaries were admitted
+
+whether admitted fixture identity was verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+whether byte-layout evidence was admitted
+- no
+
+whether expected ReplayHeader evidence was admitted
+- no
+
+whether implementation may proceed or remains blocked
+- implementation remains blocked
+- parser-success logic remains blocked
+- parser implementation may not proceed because fixture identity alone does not prove byte layout,
+  expected ReplayHeader output, or structured parser error boundaries
+
+what was intentionally excluded
+- parser implementation
+- parser-success logic
+- backend dependency addition
+- ReplayHeader production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization implementation
+- replay-source carrier discovery implementation
+- replay-input locator implementation
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- mimir_export widening
+- modifying mimir-io
+- modifying mimir-export
+- modifying mimir-types
+- modifying Cargo.toml
+- modifying Cargo.lock
+- adding backend dependencies
+- adding fixture files
+- treating fixture path, filename, provenance, byte length, or SHA-256 as parser facts
+
+whether Rust/code changes were added, and why or why not
+- no Rust/code changes were added
+- no manifests were modified
+- no lockfile was modified
+- no fixture files were added
+- this pass is evidence admission only
+- without byte-layout evidence and expected ReplayHeader evidence, Rust parser code or
+  parser-success tests would create false completeness
+
+why this is enough for the next pass
+- fixture identity is verified and remains admitted as private-local future ReplayInput::Memory
+  evidence
+- local evidence search found no approved byte-layout artifact and no approved parser/tool report
+- the next pass is therefore narrowed to supplying/admitting external byte-layout evidence or
+  generating/admitting an approved parser report
+- parser implementation remains closed until fixture evidence, byte-layout evidence, and expected
+  ReplayHeader evidence are all admitted
+
+next pass implication
+- next pass must be external byte-layout evidence supply/admission or approved parser-report
+  generation/admission
+- parser implementation remains closed
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- mimir_export widening remains forbidden

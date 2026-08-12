@@ -1,0 +1,103 @@
+executor mimir skill forge bc real replay parser backend integration contract status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+pass type
+- parser backend integration contract-definition pass
+- contract-definition only
+- no parser implementation
+- no parser-success policy
+- no backend dependency selection
+
+selected backend integration scope
+- Outcome A
+- contract only for a real header reader integrated into `mimir-replay`
+- concrete backend/dependency selection deferred
+- future parser target remains `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- first admitted input remains `ReplayInput::Memory`
+- future valid output remains real `ReplayHeader` for valid supported bytes only
+- future invalid/malformed/unsupported output remains structured error only
+
+runtime behavior changed
+- no
+- no CLI, live runtime path, async/background system, database, rollout physics, export path, locator path, carrier path, materialization path, or parser backend was changed
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added `docs/MIMIR_SKILL_FORGE_BC_REAL_REPLAY_PARSER_BACKEND_INTEGRATION_CONTRACT_V1.md`
+- added `executor_mimir_skill_forge_bc_real_replay_parser_backend_integration_contract_decision.txt`
+- added `executor_mimir_skill_forge_bc_real_replay_parser_backend_integration_contract_next.txt`
+- added `executor_mimir_skill_forge_bc_real_replay_parser_backend_integration_contract_status.txt`
+- Rust/code changes added: no
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+forbidden crate boundary check
+- `mimir-replay` modified by this pass: no
+- `mimir-io` modified by this pass: no
+- `mimir-export` modified by this pass: no
+- `mimir-types` modified by this pass: no
+- `mimir_export` widening: no
+- command run: `git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types`
+- command result: no tracked file diffs reported
+- command run: `git status --short -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types`
+- command result: broader Git root reports these crate directories as untracked
+- workspace caveat: `git rev-parse --show-toplevel` reports `D:/`; this MIMIR workspace is inside a broader Git tree, so the forbidden-boundary conclusion is based on the exact applied patch paths, the no tracked-diff check, and no edits to forbidden crate paths
+
+audit summary
+- `crates/mimir-replay/src/lib.rs` exposes `ReplayInput`, `ReplayHeader`, `ReplayReader`, and `UnsupportedReplayReader`
+- `UnsupportedReplayReader` remains the only audited `ReplayReader` implementation
+- `crates/mimir-replay/Cargo.toml` contains no parser backend dependency
+- workspace manifest and lockfile search found no existing concrete replay parser backend dependency
+- `mimir-skill` currently consumes the replay reader surface only for unsupported-attempt realization through `UnsupportedReplayReader`
+
+decision summary
+- Outcome A selected
+- backend ownership contract assigned to `mimir-replay`
+- concrete backend/dependency selection deferred
+- `UnsupportedReplayReader` remains truthful scaffold behavior
+- future real reader must be distinguishable from `UnsupportedReplayReader`
+- `mimir-skill` may consume a future real reader only through the existing `ReplayReader` contract and current low-boost contract/realization chain
+
+next pass
+- backend selection decision pass
+- parser implementation remains closed unless explicitly reopened
+- parser-success logic remains closed unless explicitly reopened
+- raw-state payload parsing remains closed unless explicitly reopened
+- frame/event extraction remains closed unless explicitly reopened
+- replay-source materialization/carrier/locator remain closed unless explicitly reopened
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+explicit non-claims
+- no real replay parser was implemented
+- no backend dependency was selected or added
+- no parser success was claimed or encoded
+- no `ReplayHeader` was produced or synthesized
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented
+

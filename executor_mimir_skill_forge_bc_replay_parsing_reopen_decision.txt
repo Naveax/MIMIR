@@ -1,0 +1,132 @@
+executor mimir skill forge bc replay-parsing reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact reopen role chosen
+- one low-boost-recovery-specific replay-parsing reopen-decision boundary above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationResultV1`
+- exact job:
+  - admit only the truthful non-materialized materialization-attempt realization boundary
+  - revalidate that the admitted boundary still preserves the exact receipt-bound root/order/path
+    and per-specimen input/output identity tuple
+  - decide whether the remaining missing boundary is now truly replay-side raw-state sourcing
+  - choose the minimum honest next replay-side parse-attempt contract shape only if reopening is
+    justified
+
+exact reopen / no-reopen decision chosen
+- reopen justified
+- exact disposition:
+  - `ReopenJustifiedForReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefReplaySideParseAttemptContract`
+- exact chosen contract shape:
+  - `ReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefReplaySideParseAttemptOnly`
+
+exact criteria used
+- the source contract shape had to already be fixed
+- the truthful non-materialized attempt realization boundary had to already be fixed
+- the locator contract shape had to remain `ReceiptBoundSpecimenFileAnchored`
+- the materialization contract shape had to remain
+  `ReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefMaterializationAttemptOnly`
+- the audited family root had to remain only a BC specimen-tree anchor
+- the remaining unresolved gap had to be replay-side raw-state sourcing above the truthful
+  non-materialized attempt result, not another locator/materialization defect
+- the next boundary had to remain:
+  - low-boost-recovery-specific
+  - receipt-bound
+  - below tensor/control materialization
+  - independent of sidecars/manifests/generic indexing
+  - independent of `mimir_export`
+- the audited crate surfaces had to remain compatible with that conclusion:
+  - `mimir-replay` still only exposes `ReplayInput`, `ReplayHeader`, `ReplayReader`, and
+    `UnsupportedReplayReader`
+  - no replay-side parse-attempt contract already exists above the current realization result
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcReplayParsingReopenDispositionV1`
+- exact note type:
+  - `LowBoostRecoveryBcReplayParsingReopenNoteV1`
+- exact result type:
+  - `LowBoostRecoveryBcReplayParsingReopenDecisionResultV1`
+- exact entry function:
+  - `decide_low_boost_recovery_bc_replay_parsing_reopen_from_receipt_bound_validated_specimen_file_raw_state_window_materialization_attempt_realization_v1(...)`
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_realization_disposition`
+  - ordered `source_realization_notes`
+  - `source_chosen_locator_contract_shape`
+  - `source_chosen_materialization_contract_shape`
+  - `audited_family_root_directory`
+  - `decision_disposition`
+  - ordered `decision_notes`
+  - `chosen_replay_parsing_contract_shape`
+- exact note set:
+  - `ReceiptBoundValidatedSpecimenFileMaterializationAttemptRealizationBoundaryPreserved`
+  - `RealizationInputRevalidated`
+  - `AuditedFamilyRootReferencePreservedAsBcSpecimenTreeAnchor`
+  - `TruthfulNonMaterializedAttemptBoundaryPreserved`
+  - `SourceRawStateWindowRefsPreserved`
+  - `RemainingGapIsReplaySideRawStateSourcingBoundaryOnly`
+  - `ReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefReplaySideParseAttemptContractIsMinimumHonestReopen`
+  - `ReplayParsingImplementationStillDeferredInDecisionPass`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationStillForbidden`
+  - `TensorAndControlMaterializationStillDeferred`
+
+exact admission / failure decisions chosen
+- Admit only
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptRealizationResultV1`.
+- Require the exact source contract disposition, source contract note set, locator contract shape,
+  realization disposition, realization note set, and materialization contract shape already frozen
+  below this boundary.
+- Require counts, audited family root basename/existence, lane/specimen order, anchored path
+  binding, per-specimen input/output identity alignment, and truthful non-materialized attempt
+  disposition to remain exact.
+- Hard fail on degraded realization input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on any per-specimen input/output identity drift.
+- Hard fail on any attempt to reinterpret the audited family root as replay storage or raw-state
+  storage.
+- Hard fail on any attempt to widen this pass into actual replay parsing, raw-state payload
+  materialization, tensors, controls, sidecars, manifests, generic indexing, or `mimir_export`.
+- No separate no-reopen disposition is emitted for admitted inputs in this v1 pass, because once
+  the admitted truthful non-materialized attempt boundary remains exact, the remaining missing
+  boundary is already replay-side raw-state sourcing / parse-attempt contract shape.
+
+what was intentionally excluded
+- any actual replay parsing
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcReplayParsingReopenDispositionV1`
+  - `LowBoostRecoveryBcReplayParsingReopenNoteV1`
+  - `LowBoostRecoveryBcReplayParsingContractShapeV1`
+  - `LowBoostRecoveryBcReplayParsingReopenDecisionResultV1`
+  - `LowBoostRecoveryBcReplayParsingReopenDecisionError`
+  - `decide_low_boost_recovery_bc_replay_parsing_reopen_from_receipt_bound_validated_specimen_file_raw_state_window_materialization_attempt_realization_v1(...)`
+  - narrow tests covering valid semantics, degraded realization rejection, identity-drift
+    rejection, and determinism
+- Added because the repo already treats reopen decisions as machine-verifiable admitted boundaries,
+  and leaving this pass as prose only would force the next replay-side parse-attempt
+  contract-definition pass to infer the decision semantics from documentation instead of consuming
+  an explicit family-specific decision result.
+- No `mimir-types`, `mimir-io`, `mimir-replay`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The repo now has one explicit machine-verifiable answer that replay parsing must be reopened, and
+  that answer is anchored to the truthful non-materialized materialization-attempt result.
+- The next pass no longer needs to guess whether replay parsing is still under debate.
+- The next immediate task is now obvious and narrow:
+  - define the first receipt-bound low-boost-recovery replay-side parse-attempt contract above the
+    truthful non-materialized attempt result
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

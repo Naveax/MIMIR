@@ -1,0 +1,11 @@
+top-level execute->report-index->summary-query/aggregate wrapper added: yes
+helper name: query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+delegates only to existing stage25 + stage30 helpers: yes
+avoids directory scanning and extra persistence/index mutation: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 160
+exact validation commands run:
+cargo fmt --all
+cargo check --workspace --all-targets --all-features
+cargo test --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p mimir-export -- --list

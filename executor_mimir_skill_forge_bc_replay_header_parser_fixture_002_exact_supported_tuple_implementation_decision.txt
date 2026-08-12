@@ -1,0 +1,71 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation decision
+
+pass type
+- exact supported tuple implementation
+
+exact outcome chosen
+- Outcome A
+
+whether fixture identities were verified
+- yes
+- fixture_001: length 3001021, sha256 F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB, first_i32_le 13200
+- fixture_002: length 2632903, sha256 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6, first_i32_le 11273
+
+whether implementation planning input was verified
+- yes
+- required planning docs and planning decision/next/status artifacts were present and selected Outcome A
+
+whether exact two-tuple allowlist was implemented
+- yes
+- implemented in crates/mimir-replay/src/lib.rs
+
+whether fixture_001 regression passed
+- yes
+- cargo test -p mimir-replay -- --nocapture passed
+- fixture_001 happy path and header-only stop-boundary passed
+
+whether fixture_002 exact happy path passed
+- yes
+- cargo test -p mimir-replay -- --nocapture passed
+- fixture_002 full-memory exact header test passed
+
+whether unknown BuildVersion rejection passed
+- yes
+- synthetic otherwise-supported tuple with BuildVersion 250812.43331.492665 rejected with unsupported-version
+
+whether parser-success is now admitted only for exact allowlisted tuples
+- yes
+- exact tuple predicate admits only:
+  - major_version=868, minor_version=32, net_version=10, game_type=TAGame.Replay_Soccar_TA, ReplayVersion=8, BuildVersion=241206.55345.468477
+  - major_version=868, minor_version=32, net_version=10, game_type=TAGame.Replay_Soccar_TA, ReplayVersion=8, BuildVersion=250811.43331.492665
+
+whether broad parser-success was admitted
+- no
+
+whether parser scope was broadened
+- no
+- only one additional exact BuildVersion tuple was admitted
+
+exact files changed
+- crates/mimir-replay/src/lib.rs
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_EXACT_SUPPORTED_TUPLE_IMPLEMENTATION_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_status.txt
+
+forbidden files/dependencies changed
+- no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- crates/mimir-types changed: no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- dependency added: no
+- backend replay parser dependency added: no
+
+decision
+- admit Outcome A for this implementation pass
+- next pass must be exact supported tuple implementation audit/admission
+- no broad parser expansion yet

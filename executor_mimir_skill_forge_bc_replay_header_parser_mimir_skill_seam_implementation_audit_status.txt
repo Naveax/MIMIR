@@ -1,0 +1,195 @@
+executor mimir skill forge bc replay header parser mimir-skill seam implementation audit status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+pass type
+- audit/admission pass
+- mimir-skill narrow parallel minimal-header-attempt seam
+- docs/artifacts only for this pass
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_IMPLEMENTATION_AUDIT_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_audit_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_audit_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_audit_status.txt
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture identity verified
+- yes
+
+implementation input verified
+- yes
+- implementation artifact inspected
+- implementation decision/next/status artifacts inspected
+- planning reopen doc and decision/next/status artifacts inspected
+- readiness handoff inspected
+- first minimal implementation audit inspected
+- crates/mimir-replay/README.md inspected
+- docs/ARTIFACT_VERSIONING.md inspected
+- docs/DATA_CONTRACTS.md inspected
+- executor_mimir_skill_forge_v1_staged_delivery_rules.txt inspected
+
+actual source inspected directly
+- yes
+- crates/mimir-skill/src/lib.rs inspected directly
+- crates/mimir-replay/src/lib.rs inspected directly
+- relevant manifests and Cargo.lock sections inspected directly
+
+seam implementation admitted
+- yes
+
+MinimalReplayHeaderReader use admitted in mimir-skill
+- yes
+- admitted only inside the explicit minimal-header-attempt seam
+- not admitted as a global/default reader change
+
+unsupported-attempt realization preserved
+- yes
+- existing unsupported-attempt realization remains parallel
+- existing path still uses UnsupportedReplayReader
+- existing path still records unsupported status
+- existing path still records no replay header
+
+success classification admitted
+- yes
+- minimal header parse success only
+
+failure classification admitted
+- yes
+- minimal header parse failure only
+
+parser behavior changed in mimir-replay
+- no
+
+parser-success admitted for first minimal boundary
+- yes
+- only ReplayInput::Memory
+- exact fixture-supported tuple
+- header-only parsing ending at 8 + header_size
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+  - result: success
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-skill -- --nocapture
+  - result: success
+  - mimir-skill unit tests: 273 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+forbidden crate boundary check
+- direct content inspection:
+  - crates/mimir-skill/src/lib.rs
+  - crates/mimir-skill/Cargo.toml
+  - crates/mimir-replay/src/lib.rs
+  - crates/mimir-replay/Cargo.toml
+  - Cargo.toml
+  - Cargo.lock
+  - crates/mimir-cli/Cargo.toml
+  - crates/mimir-io/Cargo.toml
+  - crates/mimir-export/Cargo.toml
+  - crates/mimir-types/Cargo.toml
+- forbidden crate parser integration scan:
+  rg -n "mimir_replay|MinimalReplayHeaderReader|ReplayHeader|ReplayInput|content_crc|header_crc|boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types
+- forbidden crate parser integration scan result: no matches
+- parser backend dependency scan:
+  rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+- parser backend dependency scan result: no matches
+- MinimalReplayHeaderReader usage scan:
+  rg -n "MinimalReplayHeaderReader" crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types crates/mimir-replay crates/mimir-skill Cargo.toml Cargo.lock
+- MinimalReplayHeaderReader usage scan result:
+  - mimir-replay owner crate
+  - mimir-replay README/tests
+  - mimir-skill import, new explicit seam, seam result notes/tests
+  - no forbidden crate usage
+- scoped forbidden tracked diff command:
+  git diff --name-status -- crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock
+- scoped forbidden tracked diff result: no tracked file diffs reported
+- scoped mimir-skill tracked diff command:
+  git diff --name-status -- crates/mimir-skill/src/lib.rs
+- scoped mimir-skill tracked diff result: no tracked file diffs reported after required cargo fmt
+
+git boundary caveat
+- git rev-parse --show-toplevel reports D:/
+- broad git status reports unrelated files outside D:\RocketLeague bot\MIMIR
+- broad git status is not useful for MIMIR-only boundary evidence
+- actual source content was inspected directly
+- forbidden files were checked by direct file content and scoped command output
+
+admitted seam boundary
+- explicit mimir-skill minimal-header-attempt seam only
+- opt-in and parallel to UnsupportedReplayReader
+- consumes only LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1
+- invokes MinimalReplayHeaderReader only after ReplayInput::Memory is required
+- success means minimal header parse success only
+- failure means minimal header parse failure only
+- ReplayHeader is only header-only parser-attempt evidence
+
+remaining limitations
+- no ReplayInput::File support
+- no replay-source materialization
+- no path/hash/filename/provenance/artifact-id parser facts
+- no CRC validation
+- no content_crc read or validation
+- no body/raw-state/frame/event parsing
+- no nested array semantic parsing
+- no UTF-16 support
+- no broad version-family support
+- no unencountered property-kind support
+- no export/runtime/CLI integration
+- no backend replay parser dependency
+
+next stage
+- next pass may move to the next evidence/fixture/parser-readiness target or explicitly plan a later seam
+- no broad parser expansion yet
+- no export/runtime/CLI integration yet

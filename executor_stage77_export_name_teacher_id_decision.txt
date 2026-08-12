@@ -1,0 +1,69 @@
+Stage77 export_name -> teacher label id decision / re-audit
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+current classification of the edge before this pass
+- `export_name -> teacher label id` was already classified as family-level closed but Stage77-partial.
+- Source: `executor_deterministic_family_closure_summary.txt`
+- Source: `executor_deterministic_family_contract_index.txt`
+
+exact repo-local evidence inspected
+- `executor_deterministic_family_closure_summary.txt`
+- `executor_deterministic_family_contract_index.txt`
+- `executor_stage92_export_name_teacher_id_effect.txt`
+- `executor_stage101_stage77_proposal_surface_effect.txt`
+- `executor_stage96_stage77_teacher_namespace_effect.txt`
+- `executor_stage98_stage77_score_signals_effect.txt`
+- `executor_stage99_stage77_scorer_weights_effect.txt`
+- `executor_stage100_stage77_simulation_seed_effect.txt`
+- `executor_stage77_closure_batch_audit.txt`
+- `crates/mimir-cli/src/vertical_slice.rs`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs`
+
+path chosen
+- Path A: no new code
+
+why this choice is correct
+- The exact derivation path is repo-local and shared across lanes: `teacher_seed_label(...)` constructs `TeacherLabelId::new(format!("{}:teacher:{ordinal}", fixture.export_name))` in `crates/mimir-cli/src/vertical_slice.rs`.
+- Stage69 already has the direct mutation proof for this exact edge in `deterministic_vertical_slice_export_name_changes_only_export_name_derived_teacher_ids`, documented by `executor_stage92_export_name_teacher_id_effect.txt`.
+- Stage77 does not have a separately named export-name-only mutation test, but current Stage77 tests already prove the teacher-id surface is stable under every other currently relevant same-lane mutation:
+  - `second_deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+  - `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+  - `second_deterministic_vertical_slice_score_signals_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+  - `second_deterministic_vertical_slice_scorer_weights_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+  - `second_deterministic_vertical_slice_directly_consumes_simulation_seed_without_perturbing_other_contract_edges`
+- Those Stage77 tests show that teacher ids do not drift when proposal surfaces, namespace, scoring inputs, teacher ordering, or hidden deterministic inputs change. The only named unproven point is an export-name-only mutation on Stage77.
+- A Stage77-only export-name mutation test would execute the same `persisted_input_artifact_for_lane_with_export_name(...) -> fixture_from_persisted_input(...) -> teacher_seed_label(...)` implementation chain already directly proven on Stage69. It would add same-lane symmetry, but not an independent implementation cross-check or a new behavioral boundary.
+- Because the derivation code is not lane-specific and because Stage77 already has broad same-lane teacher-artifact stability coverage, the remaining gap is mostly documentary naming, not a materially missing safety guarantee.
+
+why the existing evidence is sufficient
+- The family-level direct-effect proof exists and is narrow: mutating only `export_name` changes only export-name-derived teacher ids while preserving unrelated surfaces.
+- The Stage77 lane already proves teacher ids are stable when:
+  - branch payload label, actions, legal hint, and metadata change
+  - teacher namespace changes
+  - score signals change and teacher ordering flips
+  - scorer weights change and teacher ordering flips
+  - simulation seed changes
+- That combination is enough to support the current family claim in the matrix: the edge is closed enough for deterministic-family closure and only partial as an intentionally not-separately-first-class Stage77 same-lane proof.
+
+why a Stage77-only proof would be redundant or low value
+- It would reuse the same teacher-id constructor and persisted-input mutation helper pattern already proven by Stage69.
+- It would not widen the trusted boundary, add an independent consumer path, or harden a distinct loader/runtime seam.
+- It would primarily satisfy lane symmetry aesthetics in the matrix rather than close a different failure mode.
+- Current repo-local closure summaries already warn against reopening closed deterministic-family work for symmetry alone.
+
+answers to the re-audit questions
+- Is the Stage77-specific edge actually unproven, or only not separately named?
+  - Only not separately named as a Stage77 export-name mutation proof. The underlying derivation path is already directly proven at family level and exercised on Stage77 through stability checks.
+- Would a Stage77-only export_name mutation test add a real new guarantee?
+  - No material new guarantee. It would restate the same shared derivation on a second fixture lane.
+- Would such a test stay narrow and non-redundant?
+  - It would stay narrow, but it would still be redundant because it does not probe a lane-specific implementation boundary.
+- Would it meaningfully strengthen the current matrix, or mostly satisfy symmetry aesthetics?
+  - Mostly symmetry aesthetics.
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short conclusion
+- still partial by design

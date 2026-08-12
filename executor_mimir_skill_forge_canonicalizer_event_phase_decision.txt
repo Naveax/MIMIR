@@ -1,0 +1,69 @@
+executor mimir skill forge canonicalizer + event/phase decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+exact canonical state fields chosen
+- `LowBoostRecoveryCanonicalStateV1.slice_id`
+- `LowBoostRecoveryCanonicalStateV1.source_replay`
+- `LowBoostRecoveryCanonicalStateV1.subject`
+- `LowBoostRecoveryCanonicalStateV1.frame_window`
+- `LowBoostRecoveryCanonicalStateV1.raw_state_window_ref`
+- `LowBoostRecoveryCanonicalStateV1.orientation_note = subject_anchored_window_only`
+- `LowBoostRecoveryCanonicalStateV1.subject_state_envelope`
+  - `subject`
+  - `frame_window`
+  - `semantics = raw_state_window_reference_only`
+- `LowBoostRecoveryCanonicalStateV1.environment_state_envelope`
+  - `frame_window`
+  - `semantics = raw_state_window_reference_only`
+- `LowBoostRecoveryCanonicalStateV1.canonicalization_notes`
+  - `boost_amount_unresolved`
+  - `contact_truth_unresolved`
+  - `recovery_success_unresolved`
+  - `replay_orientation_normalization_deferred`
+
+exact event/contact graph fields chosen
+- `LowBoostRecoveryEventContactGraphV1.slice_id`
+- `LowBoostRecoveryEventContactGraphV1.frame_window`
+- `LowBoostRecoveryEventContactGraphV1.nodes`
+  - node 0: `slice_window_start`
+  - node 1: `slice_window_end_exclusive`
+- `LowBoostRecoveryEventContactGraphV1.edges`
+  - edge 0->1: `observed_slice_window`
+- `LowBoostRecoveryEventContactGraphV1.contact_semantics = unresolved_from_replay_slice_contract`
+
+exact phase representation chosen
+- `LowBoostRecoveryPhasePlanV1.slice_id`
+- `LowBoostRecoveryPhasePlanV1.phases`
+  - phase 0: `candidate_recovery_window`
+    - `start = frame_window.start`
+    - `end_exclusive = frame_window.end_exclusive`
+
+what was intentionally excluded
+- real replay state materialization
+- coordinate transforms that pretend orientation truth is already known
+- floor/wall/ball contact claims
+- low-boost threshold claims
+- recovery success/failure claims
+- multi-phase detach/land/stabilize decomposition
+- tactic-wide or opponent-wide semantics
+- generic all-family canonicalization abstractions
+- persistence or export schema growth
+
+whether Rust type shaping and narrow implementation were added, and why
+- Yes.
+- Added shared DTO-like contracts in `crates/mimir-types/src/lib.rs` because later solver,
+  validator, or adjacent crates may need to consume the canonical/event/phase boundary as plain
+  data.
+- Added narrow family-specific transformation logic in `crates/mimir-skill/src/lib.rs` because
+  the work is Skill Forge logic, not replay parsing and not shared runtime orchestration.
+- No new crate was created because the existing crate split already matches the ownership
+  boundary.
+
+why this is enough for the next parameter-solver/variation pass
+- The next pass now receives one explicit, deterministic low-boost-recovery seed boundary instead
+  of a vague replay slice plus implied semantics.
+- Solver work can start from a fixed subject/window/provenance linkage and one candidate phase
+  window without pretending contact or low-boost truth is already solved.
+- Variation work can stay bounded to that same family-specific candidate window and does not need
+  to reopen canonicalizer ownership.

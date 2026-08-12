@@ -1,0 +1,69 @@
+executor mimir skill forge bc replay header parser fixture evidence acquisition plan next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+immediate next pass type
+- fixture materialization/admission contract pass
+
+immediate next pass only
+- admit or materialize at least one real valid supported Rocket League replay fixture as `ReplayInput::Memory`
+- record fixture provenance, byte length, hash, source, permission status, and storage/admission rule
+- acquire or admit exact byte-layout evidence for the minimal supported header boundary
+- document byte-accounting map entries for every future parsed field
+- document expected `ReplayHeader.replay_id` evidence
+- document expected `ReplayHeader.source_label` as copied from `ReplayInput::Memory.label`
+- document expected `ReplayHeader.total_frames` evidence, or explicitly require `None`
+- document expected `ReplayHeader.metadata` evidence, or explicitly require empty metadata
+- derive an insufficient-byte fixture from the valid fixture only after the valid fixture exists
+- derive or admit a malformed-byte fixture only with a documented mutation or validation rule
+- admit an unsupported-format/version fixture only if distinguishability from malformed bytes is proven
+- create no fake binary fixtures
+- implement no parser code
+
+if evidence is not supplied
+- if no real fixture bytes or approved external byte-layout evidence are supplied, the immediate next pass must be an external fixture supply/admission contract pass
+- it must not become a parser implementation pass
+
+parser implementation status
+- parser implementation remains closed unless explicitly reopened after the evidence gate is satisfied
+
+parser-success logic status
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing status
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction status
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator status
+- replay-source materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+still forbidden unless explicitly reopened
+- parser implementation
+- backend dependency addition
+- parser-success policy
+- `ReplayHeader` production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- interpreting `source_replay` as a replay path
+- interpreting `source_replay.provenance_label` as a replay path
+- interpreting `audited_family_root_directory` as replay storage
+- `mimir_export` widening

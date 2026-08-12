@@ -1,0 +1,58 @@
+executor mimir skill forge bc replay-parsing success reopen next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a deliberate broader reopen decision for one receipt-bound replay-input-access /
+  replay-source-binding boundary above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a deliberate broader reopen decision
+
+why this is the immediate next pass
+- This pass closes the parser-success / parser-implementation reopen question negatively.
+- The current blocked replay-side parse-attempt realization result still carries no replay file
+  path, replay bytes, or admitted `ReplayInput` handle.
+- The remaining unresolved problem is no longer whether parser work should be reopened directly.
+- The remaining unresolved problem is whether one narrower receipt-bound replay-input-access /
+  replay-source-binding boundary can be introduced honestly above the blocked result.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- the preserved audited family root directory already carried by that result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- decide whether one parser-consumable replay input handle can be introduced above the blocked
+  replay-side parse-attempt result without inventing semantics
+- decide whether `source_replay` provenance can be bound to `ReplayInput` or another equally narrow
+  parser-consumable handle without reinterpreting the audited family root as replay storage
+- decide whether sidecars/manifests/generic indexing remain unnecessary or must be explicitly
+  reopened before any parser work can be honest
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no actual replay parsing implementation
+- no actual raw-state payload materialization
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family replay/raw-state/index/export/materialization framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no rollout/physics/runtime work
+
+why the next pass is not a first parser-success contract-definition pass
+- The current admitted blocked result still lacks the replay-input handle a parser-success
+  contract would need.
+- Defining a parser-success contract now would either duplicate the blocked replay-side attempt
+  boundary or invent replay-input-access semantics.
+
+why the next pass is not a continued no-reopen proof/refinement pass
+- This pass already isolates the precise blocking issue:
+  - no receipt-bound replay input handle exists above the blocked replay-side parse-attempt result
+- The next unresolved work is therefore a broader decision, not more proof about the same blocked
+  state.

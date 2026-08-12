@@ -1,0 +1,181 @@
+executor mimir skill forge bc replay header parser replayheader mapping policy admission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+exact outcome chosen
+- Outcome B
+- ReplayHeader mapping policy is partially admissible
+- parser implementation remains closed
+- parser-success logic remains closed
+
+whether fixture identity was verified
+- yes
+- fixture path exists: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- observed byte length: 3001021
+- observed SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- fixture identity is not admitted as a parser fact
+
+whether prior report identity was verified
+- yes
+- prior report path exists: artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- observed prior report size: 3700 bytes
+- prior report remains external parser/tool report evidence only
+
+whether structural report/admission identity was verified
+- yes
+- structural report path exists:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- observed structural report size: 13790 bytes
+- structural admission artifact exists:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+- structural report/admission remain partial evidence only
+
+whether ReplayHeader type was inspected
+- yes
+- source inspected: crates/mimir-replay/src/lib.rs
+- replay_id field type: mimir_types::ReplayId
+- source_label field type: String
+- total_frames field type: Option<u32>
+- metadata field type: mimir_types::Metadata
+- relevant mimir_types definitions inspected: ReplayId string newtype, Metadata, FieldValue
+- FieldValue variants visible: Text(String), Integer(i64), Float(f64 finite), Boolean(bool),
+  StringList(Vec<String>)
+
+exact admitted mappings
+- ReplayInput::Memory.label -> ReplayHeader.source_label for the first admitted memory input
+  boundary
+- fixture expected source_label: rl_replay_header_fixture_001
+- same-name selected metadata key policy is admitted as a candidate key map for the selected
+  fixture properties only
+- selected fixture Str and Name metadata values can use FieldValue::Text
+- selected fixture Int metadata values can use FieldValue::Integer
+- selected fixture finite Float metadata values can use FieldValue::Float
+
+exact partial mappings
+- Id -> ReplayHeader.replay_id is partial
+  - source property: Id
+  - structural path: header.properties[20]
+  - kind: Str
+  - value range: [12880,12917)
+  - encoding: windows1252_parse_text_null_terminated
+  - fixture value candidate: 7F59297811EFD8B19C444A81FB07660C
+  - destination candidate: ReplayId::new("7F59297811EFD8B19C444A81FB07660C")
+  - blocked by incomplete replay id failure/error-boundary policy
+- NumFrames -> ReplayHeader.total_frames is partial
+  - source property: NumFrames
+  - structural path: header.properties[24]
+  - kind: Int
+  - source type: signed i32
+  - value range: [13145,13149)
+  - encoding: i32_little_endian_4_bytes
+  - fixture value candidate: 13555
+  - destination candidate: Some(13555)
+  - positive signed-to-unsigned conversion for the exact fixture value is admitted
+  - blocked by incomplete missing/invalid/negative None-versus-error policy
+- selected properties -> ReplayHeader.metadata is partial
+  - selected keys: ReplayName, Date, MapName, ReplayVersion, BuildVersion, MaxChannels,
+    MatchType, TeamSize, RecordFPS
+  - destination keys: same case-sensitive property names only
+  - fixture value candidates:
+    - ReplayName = Text("Frestyle double touch but not ball")
+    - Date = Text("2025-01-22 11-10-32")
+    - MapName = Text("Stadium_Winter_P")
+    - ReplayVersion = Integer(8)
+    - BuildVersion = Text("241206.55345.468477")
+    - MaxChannels = Integer(2047)
+    - MatchType = Text("Online")
+    - TeamSize = Integer(3)
+    - RecordFPS = Float(30.0)
+  - blocked by incomplete omission/default/empty and mapping-failure policy
+
+exact rejected/deferred mappings
+- replay_id derivation from fixture id/path/filename/provenance/byte length/SHA-256: rejected
+- source_label derivation from path/filename/provenance/byte length/SHA-256: rejected
+- total_frames derivation from body frame extraction, footer/body counts, byte length, or external
+  parser success: rejected
+- metadata from arrays, body/footer data, raw-state payloads, replay frames, or semantic events:
+  rejected
+- ReplayInput::File label mapping: deferred/rejected for the first admitted parser input boundary
+- normalized metadata key names: rejected in this pass
+- complete missing Id policy: partial/deferred
+- complete duplicate Id policy: partial/deferred
+- complete malformed Id policy: partial/deferred
+- complete missing NumFrames None policy: deferred
+- complete wrong-kind or negative NumFrames policy: partial/deferred
+- complete selected metadata omission/default/empty policy: deferred
+- complete duplicate/wrong-kind/malformed selected metadata policy: partial/deferred
+
+expected fixture ReplayHeader evidence status
+- partial
+- replay_id candidate: ReplayId::new("7F59297811EFD8B19C444A81FB07660C")
+- source_label admitted for memory input: "rl_replay_header_fixture_001"
+- total_frames candidate: Some(13555)
+- metadata candidate: selected same-name map listed above
+- no complete ReplayHeader is admitted
+- no MIMIR parser output is admitted
+- no parser-success evidence is admitted
+
+remaining gaps
+- complete expected ReplayHeader output admission
+- exact MIMIR error boundary for missing Id
+- exact MIMIR error boundary for duplicate Id
+- complete replay id malformed-shape policy
+- exact None versus error policy for missing NumFrames
+- exact None versus error policy for wrong-kind, negative, or malformed NumFrames
+- exact metadata omission/default/empty policy
+- exact duplicate selected metadata property policy
+- exact wrong-kind or malformed selected metadata property policy
+- supported-version policy
+- CRC policy
+- full property validation policy
+- parser stop/error behavior
+- complete byte-layout evidence
+- complete MIMIR error taxonomy
+
+whether parser implementation may proceed or remains blocked
+- parser implementation remains blocked
+- parser-success logic remains blocked
+- implementation may proceed only after fixture evidence, complete byte-layout evidence, complete
+  expected output evidence, and required error boundaries are admitted and implementation is
+  explicitly reopened
+
+what was intentionally excluded
+- parser implementation
+- parser-success logic
+- ReplayHeader production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- mimir_export widening
+- modifying mimir-io
+- modifying mimir-export
+- modifying mimir-types
+- modifying Cargo.toml
+- modifying Cargo.lock
+- adding backend dependencies
+- adding fixture files
+- treating fixture path, filename, provenance, byte length, or SHA-256 as parser facts
+
+whether Rust/code/manifests/lockfile changes were added, and why or why not
+- Rust source changes added: no
+- Cargo.toml changes added: no
+- Cargo.lock changes added: no
+- backend dependencies added: no
+- reason: this is a policy/evidence admission pass only; parser implementation, dependency
+  integration, and forbidden crate boundaries remain closed
+
+why this is enough for the next pass
+- source_label is admitted for the memory input boundary
+- replay_id, total_frames, and selected metadata now have exact fixture-backed candidate mappings
+- remaining blockers are narrowed to specific missing/invalid/duplicate/malformed and MIMIR error
+  boundary decisions
+- the next pass can target remaining mapping gaps or error-boundary derivation without reopening
+  parser implementation prematurely

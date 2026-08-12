@@ -1,0 +1,57 @@
+executor mimir skill forge bc actual replay parsing implementation readiness status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+pass type
+- low-boost-recovery-specific actual replay parsing implementation-readiness decision pass
+- selected outcome: Outcome B
+- next pass selected: unsupported parser-attempt realization
+
+runtime behavior changed
+- no
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added `docs/MIMIR_SKILL_FORGE_BC_ACTUAL_REPLAY_PARSING_IMPLEMENTATION_READINESS_DECISION_V1.md`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_implementation_readiness_decision.txt`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_implementation_readiness_next.txt`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_implementation_readiness_status.txt`
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+forbidden crate boundary check
+- `mimir-replay` modified by this pass: no
+- `mimir-io` modified by this pass: no
+- `mimir-export` modified by this pass: no
+- `mimir-types` modified by this pass: no
+- `mimir_export` widening: no
+- Rust/code changes added: no
+- `git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types` returned no tracked file diffs
+- `git status --short -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types` is not a reliable forbidden-boundary delta in this workspace because these crate directories appear as untracked from the current Git view
+- forbidden-boundary conclusion is based on the exact files edited in this pass and the no-diff check above
+
+readiness findings
+- real parser exists: no
+- `UnsupportedReplayReader` is the only available reader: yes
+- next pass may realize unsupported parser-attempt behavior: yes
+- next pass may claim parser success: no
+- next pass may produce `ReplayHeader`: no
+- next pass may parse raw-state payloads: no

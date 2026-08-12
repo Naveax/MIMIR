@@ -1,0 +1,41 @@
+executor mimir skill forge bc replay header parser mimir-skill seam implementation next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+selected outcome driving next step
+- Outcome A
+- exact narrow parallel mimir-skill minimal-header-attempt seam implemented
+- no broad parser expansion admitted
+
+next pass
+- seam implementation audit/admission pass
+
+required next-pass boundaries
+- audit only the implemented mimir-skill seam and its tests
+- verify the seam remains opt-in and parallel to UnsupportedReplayReader
+- verify success means only minimal header parse success only
+- verify failure means only minimal header parse failure only
+- verify ReplayHeader is header-only parser-attempt evidence
+- verify no replay-source materialization, export routing, CLI/runtime behavior, or File support was added
+
+closed in the next pass
+- no broad parser expansion
+- no mimir-cli integration
+- no mimir-io integration
+- no mimir-export integration
+- no mimir-types schema movement
+- no crates/mimir-replay parser changes
+- no root Cargo.toml or Cargo.lock changes
+- no backend replay parser dependency
+- no CRC validation
+- no content_crc read or validation
+- no body/raw-state/frame/event parsing
+- no nested array semantic parsing
+- no UTF-16 support
+- no broad replay version-family support
+- no unencountered property-kind support
+
+no export/runtime/CLI integration yet
+- export integration remains forbidden
+- runtime behavior remains unchanged
+- CLI behavior remains unchanged

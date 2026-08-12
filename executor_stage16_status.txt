@@ -1,0 +1,13 @@
+summary persistence helper added: yes
+summary load helper added: yes
+helper names: persist_execution_result_job_report_collection_summary, load_execution_result_job_report_collection_summary
+explicit file paths only: yes
+summary validation helper added: yes
+summary validation helper name: validate_execution_result_job_report_collection_summary
+mimir_export test count: 86
+validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

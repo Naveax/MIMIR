@@ -1,0 +1,111 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-source actual-materialization carrier-provenance binding realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact realization role chosen
+- one low-boost-recovery-specific realization boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingContractV1`
+- exact job:
+  - admit only the existing replay-source actual-materialization carrier-provenance/source-binding contract
+  - revalidate the exact receipt-bound root/order/path, admitted replay-source actual-materialization tuple, deferred observation lineage, preserved replay-input-locator handle kind, preserved replay-source-materialization requirement kind, preserved replay-source-actual-materialization handle kind, and preserved carrier-provenance/source-binding handle kind already frozen by that contract
+  - realize the first truthful result above that contract
+  - keep replay-source actual-materialization implementation, replay-source carrier discovery, replay parsing, raw-state payload materialization, tensor/control materialization, and `mimir_export` closed in this pass
+
+exact result shape defined
+- exact disposition enum:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationDispositionV1`
+  - chosen variant:
+    `RealizedForTruthfulBlockedReplaySourceActualMaterializationCarrierProvenanceBindingOnly`
+- exact note enum:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationNoteV1`
+- exact per-specimen result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationLaneResultV1`
+- exact top-level realization type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationResultV1`
+- exact error type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationError`
+- exact entry function:
+  - `realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_source_actual_materialization_carrier_provenance_binding_v1(...)`
+
+exact output / disposition chosen
+- exact top-level disposition:
+  - `RealizedForTruthfulBlockedReplaySourceActualMaterializationCarrierProvenanceBindingOnly`
+- exact per-specimen realization contents:
+  - `specimen_ordinal`
+  - `consumed_replay_source_actual_materialization_carrier_provenance_binding_boundary_input`
+  - `preserved_replay_source_actual_materialization_carrier_provenance_binding_output_boundary`
+  - `replay_source_actual_materialization_carrier_provenance_binding_disposition`
+- exact meaning:
+  - one truthful blocked replay-source actual-materialization carrier-provenance/source-binding contract specimen may realize only a blocked / unavailable result above the contract
+  - the preserved lineage/root fields still do not admit a real explicit carrier provenance/source binding
+  - `FutureExplicitReplaySourceCarrierProvenanceBindingOnly` remains a handle kind only and not a realized binding
+  - this realization does not say what a future explicit carrier provenance/source binding is
+  - this realization does not say where a future explicit carrier provenance/source binding lives
+
+exact admission / failure decisions chosen
+- Admit only the exact replay-source actual-materialization carrier-provenance/source-binding contract already inside the low-boost-recovery receipt-bound chain.
+- Require the exact replay-source actual-materialization contract note set, replay-source actual-materialization realization note set, carrier-provenance/source-binding contract note set, chosen shapes, root basename/existence/directory-ness, and exact lane/specimen order.
+- Require every admitted specimen to remain identical on:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+  - `preserved_observation_binding_kind`
+  - `preserved_accepted_reference_window`
+  - `preserved_replay_input_locator_handle_kind`
+  - `preserved_replay_source_materialization_requirement_kind`
+  - `preserved_replay_source_actual_materialization_handle_kind`
+  - `bound_replay_source_actual_materialization_carrier_provenance_binding_handle_kind`
+- Require the admitted replay-source actual-materialization disposition to remain `RealizedForTruthfulBlockedReplaySourceActualMaterializationOnly`.
+- Require the preserved replay-input-locator handle kind to remain `FutureParserConsumableReplayHandleOnly`.
+- Require the preserved replay-source-materialization requirement kind to remain `ExplicitReplaySourceMaterializationRequiredBeforeReplayInputOrParsing`.
+- Require the preserved replay-source-actual-materialization handle kind to remain `FutureExplicitReplaySourceCarrierOnly`.
+- Require the preserved carrier-provenance/source-binding handle kind to remain `FutureExplicitReplaySourceCarrierProvenanceBindingOnly`.
+- Hard fail on degraded contract input.
+- Hard fail on count/order/root/path/artifact drift.
+- Hard fail on any attempt to reinterpret `source_replay` or `source_replay.provenance_label` as an implicit replay path or replay source.
+- Hard fail on any attempt to reinterpret the audited family root as replay storage.
+- Hard fail on any attempt to widen this pass into replay-source actual-materialization implementation, replay-source carrier discovery, replay parsing, actual raw-state payload materialization, or tensor/control materialization.
+
+what was intentionally excluded
+- any replay-source actual-materialization implementation
+- any replay-source carrier discovery
+- any replay-input locator logic
+- any replay file path derivation from `source_replay` or `source_replay.provenance_label`
+- any replay bytes or replay frames materialization
+- any actual `mimir_replay::ReplayInput` materialization
+- any replay parsing implementation
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration or surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - the replay-source actual-materialization carrier-provenance/source-binding realization disposition and note enums
+  - the replay-source actual-materialization carrier-provenance/source-binding realization DTOs
+  - the replay-source actual-materialization carrier-provenance/source-binding realization error surface
+  - strict validation for replay-source actual-materialization carrier-provenance/source-binding contracts entering realization
+  - `realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_source_actual_materialization_carrier_provenance_binding_v1(...)`
+  - narrow tests covering valid blocked semantics, degraded-contract rejection, identity-drift rejection, and determinism
+- No `mimir-replay`, `mimir-io`, `mimir-types`, or `mimir-export` changes were added.
+- Reason code changes were justified:
+  - the repo already treats family contract/realization boundaries as machine-verifiable `mimir-skill` surfaces
+  - this pass had to freeze the first truthful result above the carrier-provenance/source-binding contract instead of leaving that blocked truth as documentation-only
+
+why this is enough for the next pass
+- The repo now has one explicit machine-verifiable replay-source actual-materialization carrier-provenance/source-binding realization boundary above the contract.
+- The exact next missing problem is no longer whether the carrier-provenance/source-binding contract shape exists.
+- The exact next missing problem is no longer what the truthful result shape above that contract is.
+- The next immediate gap is whether another replay-source actual-materialization-related boundary must now be reopened above this blocked realization to admit an explicit carrier provenance/source binding input honestly.
+- `mimir_export` widening remains forbidden unless explicitly reopened.

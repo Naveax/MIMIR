@@ -1,0 +1,51 @@
+executor stage 81 canonical vertical-slice input artifact / fixture decoupling pass
+
+new type/helper names added
+- `mimir_types::ArtifactKind::VerticalSliceInput`
+- `mimir_types::VERTICAL_SLICE_INPUT_ARTIFACT_SCHEMA`
+- `mimir_types::VERTICAL_SLICE_INPUT_ARTIFACT_SCHEMA_NAME`
+- `mimir_types::VERTICAL_SLICE_INPUT_ARTIFACT_SCHEMA_VERSION`
+- `mimir_types::PersistedVerticalSliceAnchorHint`
+- `mimir_types::PersistedVerticalSliceProposal`
+- `mimir_types::PersistedVerticalSliceInput`
+- `mimir_types::VerticalSliceInputArtifactPayload`
+- `mimir_types::PersistedVerticalSliceInputArtifact`
+- `mimir_io::write_vertical_slice_input_artifact(...)`
+- `mimir_io::read_vertical_slice_input_artifact(...)`
+- `mimir_io::vertical_slice_input_artifact_path(...)`
+- `mimir_cli::vertical_slice_test_support::persisted_input_artifact_for_lane(...)`
+- `mimir_cli::vertical_slice_test_support::vertical_slice_input_header(...)`
+- `mimir_cli::vertical_slice_test_support::fixture_from_persisted_input(...)`
+- `mimir_cli::vertical_slice_test_support::load_persisted_fixture_for_lane(...)`
+
+crate(s) touched
+- `crates/mimir-types`
+- `crates/mimir-io`
+- `crates/mimir-cli`
+
+how Stage69Sample and Stage77Second are now materialized
+- `Stage69Sample` and `Stage77Second` remain explicit in `crates/mimir-cli/src/vertical_slice_test_support.rs` as lane-specific `PersistedVerticalSliceInputArtifact` constructors.
+- `run_fixture_lane(...)` now writes the canonical lane artifact to `vertical-slice-input.json`, reloads it through `mimir_io::read_vertical_slice_input_artifact(...)`, and only then maps it into the runtime `VerticalSliceFixture`.
+- `sample_fixture()` and `fixture_for_lane(...)` now materialize from the persisted contract shape instead of directly constructing the runtime fixture structs.
+
+tests added or updated
+- `crates/mimir-types/src/lib.rs`
+  - `persisted_vertical_slice_input_artifact_round_trips_through_json`
+- `crates/mimir-io/src/lib.rs`
+  - `writes_and_reads_vertical_slice_input_artifact_with_wrapper`
+  - `vertical_slice_input_wrapper_rejects_schema_mismatch_explicitly`
+  - `vertical_slice_input_wrapper_rejects_wrong_artifact_kind_explicitly`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs`
+  - `persisted_vertical_slice_input_contract_round_trips_exactly`
+  - `persisted_stage69_vertical_slice_input_materializes_same_frozen_snapshot`
+  - `persisted_stage77_vertical_slice_input_materializes_same_frozen_snapshot`
+  - `persisted_vertical_slice_input_repeated_runs_stay_identical`
+  - `persisted_vertical_slice_input_wrong_kind_fails_explicitly`
+  - `persisted_vertical_slice_input_schema_mismatch_fails_explicitly`
+- existing Stage 69 / Stage 77 parity, repeated-run, and negative harness tests were preserved and now execute through the persisted input contract path because `run_fixture_lane(...)` was rewired.
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this pass increases adapter-readiness without widening runtime semantics
+- The deterministic lane inputs now have one explicit persisted contract that an adapter could emit later, but the runtime still consumes the same `VerticalSliceFixture`, produces the same export bundle/scoreboard/teacher artifacts, and keeps the same fake-backend-only behavior. This decouples fixture definition from in-memory constructors without adding replay ingestion, rollout logic, CLI surface, or broader export semantics.

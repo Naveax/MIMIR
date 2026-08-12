@@ -1,0 +1,237 @@
+executor deterministic-family closure summary
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: post-Stage77-closure-batch deterministic-family reindex / closure-summary only
+
+1) OVERALL STATE
+
+current state
+- The deterministic fake-backend vertical-slice family is now strongly closed at its current intended scope.
+
+justification
+- The base lane/runtime chain, canonical reload boundary, frozen snapshots, repeated-run determinism, and explicit negative-drift family were already established across Stages 69-79.
+- The persisted-input and direct-effect family was then extended through Stage69 proofs in Stages 81, 85-90, and 92.
+- The main Stage77 asymmetries identified in Stage95 and the forward-roadmap cluster were then closed by Stage94 and Stages 96-101, plus the Stage77 closure batch tests now present in `crates/mimir-cli/src/vertical_slice.rs`.
+- What remains open is mostly intentional narrowing, shared-path tautology avoidance, or "not yet separately first-class" documentation shape, not an identified missing deterministic-family runtime edge.
+
+2) SURFACES GENUINELY CLOSED
+
+runtime and canonical result boundary
+- Deterministic fake-backend vertical-slice execution is closed as a narrow contract family.
+  Evidence: `executor_stage69_vertical_slice.txt`, `executor_stage73_vertical_slice_contract_freeze.txt`, `executor_stage80_contract_index.txt`, current `run_deterministic_vertical_slice`.
+- Canonical reload of export bundle + scoreboard + teacher artifacts is closed at the current boundary.
+  Evidence: Stage69/73/80 artifacts and current positive tests:
+  - `deterministic_vertical_slice_persists_reloadable_outputs`
+  - `second_deterministic_vertical_slice_persists_reloadable_outputs`
+- Repeated-run determinism and lane-distinct snapshots are closed.
+  Evidence: current tests:
+  - `deterministic_vertical_slice_is_identical_across_repeated_runs`
+  - `second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+  - `deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+
+direct-effect propagation surfaces
+- Stage69 `teacher_namespace` direct propagation is closed.
+  Evidence: `executor_stage87_teacher_namespace_effect.txt`, current `deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+- Stage77 `teacher_namespace` direct propagation is closed.
+  Evidence: `executor_stage96_stage77_teacher_namespace_effect.txt`, current `second_deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+- Stage69 `anchor_hint.metadata` propagation into exported anchor payload is closed.
+  Evidence: `executor_stage88_anchor_metadata_effect.txt`, current `deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+- Stage77 `anchor_hint.metadata` propagation into exported anchor payload is closed.
+  Evidence: `executor_stage97_stage77_anchor_metadata_effect.txt`, current `second_deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+- Proposal-surface propagation into exported branch payloads is closed on both lanes at the current scope.
+  Evidence:
+  - Stage69: `executor_stage89_proposal_surface_effect.txt`, current `deterministic_vertical_slice_explicitly_propagates_proposal_actions_legal_hint_and_metadata_without_perturbing_other_contract_edges`
+  - Stage77: `executor_stage101_stage77_proposal_surface_effect.txt`, current `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+- Stage77 proposal `actions` direct consumption into `SimulationRequest.commands` is closed.
+  Evidence: `executor_stage77_closure_batch_audit.txt`, current `second_deterministic_vertical_slice_directly_consumes_proposal_actions_into_simulation_requests_without_perturbing_other_contract_edges`
+
+score-input and hidden deterministic-input surfaces
+- Stage69 `scorer_weights` direct effect on component values / totals / teacher ordering is closed.
+  Evidence: `executor_stage85_scorer_weights_effect.txt`, current `deterministic_vertical_slice_scorer_weights_directly_change_totals_and_teacher_ordering`
+- Stage77 `scorer_weights` direct effect on component values / totals / teacher ordering is closed.
+  Evidence: `executor_stage99_stage77_scorer_weights_effect.txt`, current `second_deterministic_vertical_slice_scorer_weights_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+- Stage69 proposal `score_signals` direct effect on component values / totals / teacher ordering is closed.
+  Evidence: `executor_stage90_score_signals_effect.txt`, current `deterministic_vertical_slice_score_signals_directly_change_score_output_and_teacher_ordering_without_perturbing_other_contract_edges`
+- Stage77 proposal `score_signals` direct effect on component values / totals / teacher ordering is closed.
+  Evidence: `executor_stage98_stage77_score_signals_effect.txt`, current `second_deterministic_vertical_slice_score_signals_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+- Stage69 `simulation_seed -> SimulationRequest.seed` direct consumption is closed.
+  Evidence: `executor_stage86_simulation_seed_effect.txt`, current `deterministic_vertical_slice_directly_consumes_simulation_seed_from_persisted_input`
+- Stage77 `simulation_seed -> SimulationRequest.seed` direct consumption is closed.
+  Evidence: `executor_stage100_stage77_simulation_seed_effect.txt`, current `second_deterministic_vertical_slice_directly_consumes_simulation_seed_without_perturbing_other_contract_edges`
+
+teacher identity / ordering / metadata surfaces
+- `export_name -> teacher label id` derivation is closed for the deterministic family at the current trusted boundary.
+  Evidence: `executor_stage92_export_name_teacher_id_effect.txt`, current `deterministic_vertical_slice_export_name_changes_only_export_name_derived_teacher_ids`
+- Branch order, scoreboard row order, and teacher ordering are closed as current contract behavior.
+  Evidence: `executor_stage73_vertical_slice_contract_freeze.txt`, `executor_stage80_contract_index.txt`, current ordering tests.
+- Teacher metadata surfaces tied to namespace propagation are closed.
+  Evidence: Stage87 + Stage96 artifacts and their corresponding tests.
+
+negative drift and corruption guards
+- Missing fake backend precondition is closed with explicit failure.
+- Scoreboard row-count drift is closed with explicit canonical-load failure on both lanes.
+- Extra/missing teacher artifact count drift is closed with explicit canonical-load failure.
+- Non-branch teacher target drift is closed with explicit failure.
+- Teacher artifact ordinal-file drift is closed at the frozen snapshot boundary on both lanes.
+- Anchor-count drift is closed with explicit snapshot failure.
+- Scoreboard component-schema drift is closed as a first-class explicit guard on Stage77.
+  Evidence: `executor_stage94_stage77_scoreboard_component_drift.txt`, current `second_deterministic_vertical_slice_detects_explicit_scoreboard_component_schema_drift`
+- Exported Stage77 branch payload negative drift is closed.
+  Evidence: `executor_stage77_closure_batch_audit.txt`, current `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface`
+- Targeted Stage77 branch artifact corruption rejection is closed.
+  Evidence: Stage77 closure batch artifact, current `second_deterministic_vertical_slice_rejects_targeted_branch_artifact_corruption_at_canonical_load_boundary`
+- Stage77 persisted-input required-field rejection for missing proposal label is closed.
+  Evidence: Stage77 closure batch artifact, current `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+
+packaging / manifest / index stability
+- Stage77 proposal-surface-only mutation now has explicit manifest/index stability proof.
+  Evidence: Stage77 closure batch artifact, current `second_deterministic_vertical_slice_keeps_manifest_and_index_stable_except_for_the_mutated_branch_payload_hash`
+- Export-bundle boundary remains closed and intentionally unchanged: scoreboard and teacher artifacts stay outside the bundle manifest/index.
+  Evidence: `executor_stage73_vertical_slice_contract_freeze.txt`
+
+metadata value-shape preservation
+- Stage77 branch metadata heterogeneous `FieldValue` shape preservation is closed.
+  Evidence: Stage77 closure batch artifact, current `second_deterministic_vertical_slice_preserves_branch_metadata_value_shapes_without_perturbing_other_contract_edges`
+
+3) SURFACES PARTIALLY CLOSED
+
+shared-path parity surfaces
+- Branch-payload canonical reload parity is only partially closed as a separately named surface.
+  Why partial:
+  - Positive Stage77 branch-payload propagation is proven.
+  - Negative drift and corruption failure are proven.
+  - But runtime output and canonical result still traverse the same `load_export_bundle -> adapt_loaded_export_for_consumer` path, so there is no independent implementation cross-check.
+  - Repo-local evidence says a dedicated "parity" pass here would mostly restate the same shared path.
+
+teacher-id same-lane symmetry
+- `export_name -> teacher label id` is closed for the deterministic family, but only partially closed as a same-lane Stage77 direct-effect proof.
+  Why partial:
+  - The family has a direct Stage69 proof plus broad Stage77 branch/teacher stability tests.
+  - There is no separate Stage77-only mutation test for this edge.
+  - Current evidence is sufficient for family closure, but not for "both lanes have independent direct proofs for every identity edge."
+
+scoreboard component ordering as an explicit first-class contract
+- Scoreboard component determinism is partially closed.
+  Why partial:
+  - Component-key identity drift now has an explicit Stage77 guard.
+  - Value-level score-input effects are proven on both lanes.
+  - Ordering determinism still comes from `BTreeMap` behavior plus tests rather than a separately versioned schema/ordering contract.
+
+optional/defaulted persisted-input proposal fields
+- Optional/defaulted proposal-field drift is partially closed.
+  Why partial:
+  - Downstream exported-payload propagation and negative drift are covered.
+  - Required-field rejection for missing proposal `label` is covered.
+  - Optional/defaulted `actions`, `legal_hint`, and `metadata` still intentionally deserialize with defaults, so missing-field rejection is not part of the current contract.
+
+4) INTENTIONALLY DEFERRED SURFACES
+
+real replay parsing
+- Deferred on purpose.
+  Why deferred:
+  - The deterministic-family contract intentionally starts from persisted vertical-slice input, not from replay ingestion.
+  - Closing this would require widening the trusted boundary into real replay parsing semantics.
+
+real rollout / real physics / backend diversity
+- Deferred on purpose.
+  Why deferred:
+  - The family is explicitly fake-backend-only.
+  - Closing this would require real rollout or RocketSim/live backend semantics, which would be a different contract family.
+
+async/background/runtime-orchestration systems
+- Deferred on purpose.
+  Why deferred:
+  - No async queues, retries, reconnect flows, or background workers belong in this deterministic-family slice.
+  - Closing these would require runtime-system semantics outside the current test-only deterministic lane.
+
+input-loader rejection for optional/defaulted proposal fields
+- Deferred on purpose.
+  Why deferred:
+  - Current persisted-input contracts intentionally default optional `actions`, `legal_hint`, and `metadata`.
+  - Making missing optional fields fail would be a semantics change, not a documentary closure pass.
+
+independent branch-payload parity cross-check
+- Deferred on purpose.
+  Why deferred:
+  - Repo-local evidence in `executor_stage77_closure_batch_audit.txt` says the current runtime and canonical reload share the same consumer adaptation path.
+  - Closing this in a non-tautological way would require a genuinely distinct consumer implementation or a different independent read path.
+
+snapshot widening
+- Deferred on purpose.
+  Why deferred:
+  - Frozen snapshots intentionally omit many fields.
+  - Promoting omitted fields into snapshot scope would widen documentary/bundle semantics rather than close a proven defect.
+
+5) REDUNDANT / SUPERSEDED ROADMAP ITEMS
+
+superseded by later direct evidence
+- Older roadmap items claiming Stage77 still lacked same-lane proof for `teacher_namespace`, `anchor_hint.metadata`, `score_signals`, `scorer_weights`, `simulation_seed`, and proposal-surface propagation are now superseded by Stage94 and Stages 96-101 plus the Stage77 closure batch tests.
+- Stage95 remaining-gap wording is historically accurate for its time, but no longer live truth for those surfaces.
+- Stage98-100 "next layer" items that queued Stage77 score/seed/proposal follow-ups are now redundant as work items because those proofs exist in current code/tests.
+
+should not be revived as new work without new evidence
+- Stage77 branch action-order proof as a separate item is redundant.
+  Reason: Stage101 already asserted exact loaded `actions` equality on the mutated branch payload.
+- Stage77 teacher-label text derivation from exported branch label as a separate item is redundant.
+  Reason: Stage101 already proved label-only mutation changes the matching teacher-label text while id/score/metadata remain stable.
+- Stage77 field isolation across sibling proposals/branches as a separate item is redundant.
+  Reason: Stage101 and the closure-batch negative tests already hold sibling branch stability explicitly.
+- Stage77 branch-payload canonical-reload parity as a "missing closure" item is misleading if presented as open work.
+  Reason: the repo-local evidence explicitly marks it as intentionally tautological under the shared path.
+
+6) BEST NEXT STEPS
+
+1. title
+- Freeze a post-closure deterministic-family matrix
+exact edge/problem
+- There is still no single current matrix that marks each main deterministic-family surface as `closed / partial / deferred` using the post-Stage77-closure-batch evidence set.
+why it still matters
+- Without a current matrix, future passes can reuse stale Stage95 or roadmap wording and reopen already-closed work.
+why it should come in this order
+- The proof work is already done. Freezing the matrix first reduces duplicate planning immediately.
+pass type
+- documentary / index freeze
+scope risk
+- low
+
+2. title
+- Document the scoreboard component-ordering boundary explicitly
+exact edge/problem
+- Current component ordering determinism depends on `BTreeMap` and tests, but the no-change decision is not frozen in a final post-closure artifact.
+why it still matters
+- Future maintainers could misread lexical ordering as accidental drift instead of current intended behavior.
+why it should come in this order
+- It is the highest-value remaining partial surface that can be clarified without widening semantics.
+pass type
+- documentary contract clarification
+scope risk
+- low
+
+3. title
+- Decide whether Stage77 needs an independent teacher-id direct-effect proof
+exact edge/problem
+- Family-level closure is already strong, but `export_name -> teacher label id` still lacks a Stage77-specific direct mutation proof.
+why it still matters
+- This is one of the few remaining asymmetries that is not purely intentional narrowing.
+why it should come in this order
+- It should come only after the documentary matrix exists, so the team can decide from a truthful closed/partial map instead of vague symmetry pressure.
+pass type
+- narrow re-audit decision pass, not automatic code work
+scope risk
+- low to medium
+
+4. title
+- Keep optional proposal-field default semantics as an explicit no-change decision
+exact edge/problem
+- Missing optional `actions`, `legal_hint`, and `metadata` still default on load, which can be mistaken later for an accidental under-tested gap.
+why it still matters
+- The repo should not drift into a fake "closure" push that silently changes persisted-input semantics.
+why it should come in this order
+- It follows naturally after the partial/deferred matrix is frozen.
+pass type
+- documentary no-change lock
+scope risk
+- low
+
+bottom line
+- The deterministic-family vertical-slice system is strongly closed at its intended narrow scope.
+- Remaining work is mostly about preventing stale-gap resurrection and clarifying intentional boundaries, not about patching an identified missing runtime contract edge.

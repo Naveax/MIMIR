@@ -1,0 +1,29 @@
+HISTORICAL NOTE
+
+- This artifact records only the first Batch B removal performed in Stage 54.
+- It remains accurate as a removal record, but it is not the current readiness classification for the surviving wrappers.
+- See executor_stage55_second_removal_readiness.txt for the post-Stage-54 reclassification and second-removal readiness comparison.
+
+removed wrapper:
+- query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+
+canonical replacement lane now recommended:
+- query_stub_execute_persist_load_and_register_execution_result_job_report
+- load_indexed_execution_result_job_report
+
+parity coverage updates performed:
+- removed the dedicated stage47 compatibility parity case for the removed wrapper
+- removed the stage47 explicit helper that existed only to mirror the removed wrapper
+- retained parity coverage for the remaining supported wrappers in the stage47 cluster
+- left canonical helper, canonical end-to-end, canonical failure-path, and canonical mutation/schema/repeatability coverage intact
+
+migration/docs updates performed:
+- updated README.md migration guidance to stop recommending the removed wrapper
+- README.md now points indexed-reload callers directly to query_stub_execute_persist_load_and_register_execution_result_job_report + load_indexed_execution_result_job_report
+- README.md now states that two documented Batch B compatibility wrappers remain after this pass
+
+active reference cleanup confirmation:
+- no active repo-local source/docs/test references remain in crates/mimir-export/src/lib.rs, README.md, docs/, or tests/
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 194

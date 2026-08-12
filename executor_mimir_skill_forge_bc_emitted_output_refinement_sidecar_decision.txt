@@ -1,0 +1,93 @@
+executor mimir skill forge bc emitted-output refinement / sidecar-manifest decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact decision taken
+- remain strictly receipt-bound above `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`
+- do not introduce any low-boost-recovery sidecar or manifest contract in this pass
+
+exact criteria used
+- A sidecar/manifest would be justified only if the immediate next family-specific downstream step
+  required deterministic receipt-independent reopening from the emitted family root alone.
+- That missing reopen information would need to be absent from
+  `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`.
+- The added contract would need to stay family-specific, deterministic, and strictly above the
+  emitted-output audit/readback boundary.
+- The added contract would need to avoid `mimir_export`, generic manifest/index semantics,
+  tensors, controls, speculative metadata, or lower-boundary reopening.
+- After re-audit, those criteria were not met.
+
+why the criteria were not met
+- `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1` already preserves:
+  - audited family root path
+  - ordered lane directories
+  - ordered specimen file paths
+  - counts
+  - artifact ids
+  - read-back specimen payloads
+  - proof that read-back payloads still match the emitted contract
+- No immediate downstream consumer requirement in the current repo forces receipt-independent
+  reopening from the family root alone.
+- Any new sidecar/manifest in this pass would only duplicate already-audited path/order/identity
+  information or mirror existing read-back specimen data.
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`.
+- Require `audit_disposition` to remain
+  `ReadyForLowBoostRecoveryEmittedOutputRefinementOnly`.
+- Require `audit_notes` to remain the exact emitted-output audit/readback note set.
+- Require `family_root_directory_exists` to remain `true`.
+- Require emitted family root basename to remain `low_boost_recovery_bc_v1`.
+- Require `group_count > 0` and `specimen_count > 0`.
+- Require every lane/specimen ordinal to remain aligned with vector order.
+- Require every lane/specimen existence flag to remain `true`.
+- Require every `readback_matches_receipt_contract` flag to remain `true`.
+- Require every `artifact_id` to remain present and unique.
+- Forbid reopening actual emission receipts, plans, layouts, batches, specimens, artifacts, rows,
+  or shells.
+
+exact failure decisions chosen
+- Hard fail on malformed or degraded audited input.
+- Hard fail on wrong disposition or wrong note set.
+- Hard fail on missing/invalid audited family root directory.
+- Hard fail on count drift, order drift, duplicate/missing artifact ids, or any false existence /
+  readback-match flag inside the admitted audit result.
+- Hard fail on any attempt to regenerate or repair the audited input from lower boundaries.
+- Conclude `no sidecar/manifest justified` only when the admitted audited result is fully valid and
+  already sufficient for the immediate next family-specific downstream step.
+
+exact no-change decisions chosen
+- No root-level sidecar file.
+- No lane-level sidecar file.
+- No manifest file.
+- No new family-specific reopen contract.
+- No new Rust DTOs, functions, parsers, or filesystem helpers.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any generic multi-family emitted-output refinement framework
+- any generic manifest/index framework
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- No.
+- The current audited boundary already carries the exact bounded data this pass can honestly trust.
+- No missing family-specific invariant was identified that required a new DTO, new helper, or new
+  emitted file.
+- Adding code in this pass would have widened the surface without closing a proven defect.
+
+why this is enough for the next pass
+- The next pass no longer needs to spend effort re-deciding whether receipt-independent reopening
+  is mandatory.
+- The next pass is now forced to stay receipt-bound and family-specific until a concrete consumer
+  proves otherwise.
+- That makes the immediate next step clear:
+  one continued receipt-bound low-boost-recovery downstream step above
+  `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`, with `mimir_export` widening still
+  forbidden unless explicitly reopened.

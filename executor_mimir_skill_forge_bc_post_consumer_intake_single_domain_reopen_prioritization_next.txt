@@ -1,0 +1,40 @@
+executor mimir skill forge bc post-consumer-intake single-domain reopen prioritization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+mimir_export boundary
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no export bundle, sidecar, manifest, index, or runtime export semantics may be silently widened from this pass
+
+next pass type after this one
+- another planning/no-op stop
+- not one reopen-decision pass for a selected domain
+- not one contract-definition pass for a selected domain
+
+scope of that next pass only
+- consume docs/MIMIR_SKILL_FORGE_BC_POST_CONSUMER_INTAKE_SINGLE_DOMAIN_REOPEN_PRIORITIZATION_V1.md
+- preserve the current low-boost-recovery receipt-bound consumer-intake realization boundary
+- re-check whether new explicit evidence or an explicit external requirement selects exactly one still-closed domain
+- if no such evidence exists, stop again with no selected domain
+
+still forbidden in the next pass unless explicitly reopened
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- actual replay parsing
+- parser-success logic
+- raw-state payload parsing
+- tensor/control materialization
+- corpus-wide replay ingestion
+- `mimir_replay::ReplayInput` creation
+- `mimir_export` widening
+- `mimir-replay` changes
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+reason this is the next step
+- this pass selected Outcome A and no domain
+- the current evidence still does not uniquely prioritize one closed domain
+- choosing a reopen or contract-definition pass now would create fake precision

@@ -1,0 +1,25 @@
+removed wrapper:
+- query_load_and_summarize_execution_result_job_reports
+
+exact canonical replacement lane now recommended:
+- query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports
+- summarize_execution_result_job_reports
+
+wrapper-specific test/parity/helper cleanup performed:
+- removed the wrapper definition from crates/mimir-export/src/lib.rs
+- removed 3 dedicated wrapper-only tests from crates/mimir-export/src/lib.rs:
+- query_load_and_summarize_execution_result_job_reports_matches_explicit_pipeline
+- query_load_and_summarize_execution_result_job_reports_latest_only_summarizes_one_loaded_report
+- query_load_and_summarize_execution_result_job_reports_full_history_summarizes_all_matches_in_index_order
+- no stage47 parity helper updates were required because the active parity cluster did not reference this wrapper
+- no explicit helper updates were required beyond removing the wrapper symbol itself
+
+active repo-local source/docs/test reference status:
+- confirmed no active repo-local source/docs/test references remain in crates/mimir-export/src/lib.rs, README.md, docs/, or repo-local tests
+- historical mentions remain only in preserved stage artifact files
+
+batch c scope note:
+- query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries was left untouched in this pass
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 182 tests, 0 benchmarks

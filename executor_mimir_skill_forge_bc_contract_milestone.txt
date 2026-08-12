@@ -1,0 +1,8 @@
+executor mimir skill forge bc contract milestone
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+- This pass is the BC milestone.
+- BC contract definition is now allowed for low boost recovery.
+- BC export or integration is still not allowed in this pass.
+- The next pass must be the first low-boost-recovery BC serialization/export boundary pass.

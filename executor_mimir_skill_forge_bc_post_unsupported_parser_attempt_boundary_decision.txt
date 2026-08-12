@@ -1,0 +1,78 @@
+executor mimir skill forge bc post unsupported parser-attempt boundary decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+exact outcome chosen
+- Outcome B
+- a new explicit external requirement is needed for real replay parser implementation
+
+exact reasoning
+- the current trusted result is `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingUnsupportedAttemptRealizationResultV1`
+- that result proves only unsupported configured-reader behavior from `UnsupportedReplayReader`
+- the actual replay parsing contract was consumed and the receipt-bound memory input was preserved
+- `ReplayReader::read_header(&ReplayInput)` was invoked only through `UnsupportedReplayReader`
+- the reader returned unsupported/error behavior
+- no `ReplayHeader` was produced
+- no parser-success signal was produced
+- the audited `mimir-replay` crate still contains no real parser backend and no alternate `ReplayReader` implementation
+- any useful parser progress now requires explicit architecture/product authorization for a real parser implementation
+
+whether a real parser exists
+- no
+- `mimir-replay` still exposes only `UnsupportedReplayReader` as the available audited reader implementation
+- `UnsupportedReplayReader` returns an explicit scaffold error and does not parse replay bytes
+
+whether unsupported-attempt result justifies parser-success
+- no
+- unsupported/error behavior is not parser-success input
+- unsupported/error behavior is not parser failure policy
+- no success variant, header payload, or parser output exists to classify
+
+whether unsupported-attempt result justifies raw-state parsing
+- no
+- no `ReplayHeader` exists
+- no replay frames exist
+- no raw-state payload schema or parsed payload exists
+- opening raw-state parsing now would depend on fake parser readiness
+
+whether external parser implementation requirement is needed
+- yes
+- the chain has reached the limit of scaffold-only `UnsupportedReplayReader`
+- real parser implementation must be deliberately authorized before parser-backend integration, parser-success policy, `ReplayHeader` production, raw-state parsing, frame extraction, semantic event extraction, or export widening
+
+what was intentionally excluded
+- stop/no-op as the selected next step
+- parser-backend integration contract definition
+- unsupported-attempt diagnostic/reporting contract definition
+- real replay parser implementation
+- parser-success logic
+- `ReplayHeader` production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI command addition
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- `mimir_export` widening
+- modifications to `mimir-replay`
+- modifications to `mimir-io`
+- modifications to `mimir-export`
+- modifications to `mimir-types`
+
+whether Rust/code changes were added, and why or why not
+- no Rust or code changes were added
+- docs/artifacts only is the narrow correct output for Outcome B
+- adding Rust would prematurely encode parser integration, duplicate unsupported-attempt reporting, or imply parser readiness that the audit does not support
+
+why this is enough for the next pass
+- the next pass type is explicit: an external real-parser implementation requirement pass
+- parser-success logic remains closed until explicitly reopened after real parser capability exists
+- raw-state payload parsing remains closed until explicitly reopened after real parser output exists
+- replay-source actual-materialization, carrier discovery, replay-input locator logic, and `mimir_export` widening remain closed unless separately reopened

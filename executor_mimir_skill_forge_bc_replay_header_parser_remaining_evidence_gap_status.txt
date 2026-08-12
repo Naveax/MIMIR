@@ -1,0 +1,205 @@
+executor mimir skill forge bc replay header parser remaining evidence gap status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+pass type
+- remaining evidence-gap pass
+- evidence/report/docs only
+- no parser implementation
+- no parser-success logic
+- no ReplayHeader production
+- no backend dependency addition
+
+selected outcome
+- Outcome B
+- remaining gaps require a narrower external structural report
+- a new structural report was generated for later admission
+
+runtime behavior changed
+- no
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_EVIDENCE_GAP_V1.md
+- added artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_status.txt
+- Rust source changed: no
+- manifests changed: no
+- lockfile changed: no
+- fixture files added: no
+
+fixture identity verified
+- yes
+- path exists: yes
+- byte length matched expected 3001021: yes
+- SHA-256 matched expected F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB: yes
+- fixture identity treated as parser fact: no
+
+prior report identity verified
+- yes
+- report path exists: yes
+- report path: artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- report size: 3700 bytes
+- report remains external boxcars report evidence only
+- report is not MIMIR parser output
+- report is not parser-success evidence
+
+local source inspection available
+- yes
+- cached boxcars 0.11.1 Rust source files found: 17
+- source root:
+  C:\Users\navea\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\boxcars-0.11.1\src
+- inspected parser.rs, core_parser.rs, header.rs, parsing_utils.rs, models.rs, errors.rs, crc.rs,
+  and cached crate Cargo.toml
+
+structural report generated
+- yes
+
+structural report path
+- artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+
+structural report size
+- 13790 bytes
+
+structural report route
+- temporary external PowerShell structural scanner outside MIMIR source/dependency graph
+- inspected cached boxcars source and the admitted fixture
+- generated header-only structural offsets plus first body size/CRC boundary candidates
+- did not parse raw-state payloads
+- did not extract replay frames
+- did not extract semantic events
+- did not synthesize ReplayHeader
+- report is generated for later admission only
+
+byte-layout evidence status
+- partial
+- prior report facts remain partial external facts
+- new structural report contains generated candidates only
+- complete byte-layout evidence is not admitted by this pass
+
+expected ReplayHeader evidence status
+- partial
+- source_label evidence remains limited to future ReplayInput::Memory label
+- Id is a generated replay_id candidate only
+- NumFrames is a generated total_frames candidate only
+- selected properties are generated metadata candidates only
+- no complete ReplayHeader is admitted
+
+parser implementation may proceed
+- no
+- parser implementation remains blocked
+- parser-success logic remains blocked
+- implementation requires later admission of fixture evidence, complete byte-layout evidence, and
+  complete expected ReplayHeader evidence, plus explicit implementation reopen
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+report paths
+- prior external parser report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- new structural report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact required validation commands run
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+required validation result
+- all listed required validation commands completed successfully
+
+additional verification commands run
+- Get-Item -LiteralPath 'D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay'
+- Get-FileHash -LiteralPath 'D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay' -Algorithm SHA256
+- Get-Item -LiteralPath 'artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt','artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt'
+- Get-ChildItem -Path "$env:USERPROFILE\.cargo\registry\src" -Recurse -Filter '*.rs' |
+  Where-Object { $_.FullName -like '*boxcars-0.11.1\src\*.rs' } | Measure-Object
+- rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+- git diff --name-only -- 'crates/mimir-replay' 'crates/mimir-io' 'crates/mimir-export' 'crates/mimir-types' 'Cargo.toml' 'Cargo.lock'
+- git status --short -- 'docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_EVIDENCE_GAP_V1.md' 'artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt' 'executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_decision.txt' 'executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_next.txt' 'executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_status.txt' 'crates/mimir-replay' 'crates/mimir-io' 'crates/mimir-export' 'crates/mimir-types' 'Cargo.toml' 'Cargo.lock'
+- git rev-parse --show-toplevel
+
+forbidden crate boundary check
+- mimir-replay source modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- mimir_export widening: no
+- Cargo.toml modified by this pass: no
+- Cargo.lock modified by this pass: no
+- MIMIR backend dependency added: no
+- parser implementation added: no
+- parser-success logic added: no
+- ReplayHeader production added: no
+- raw-state payload parsing added: no
+- replay frame extraction added: no
+- semantic replay event extraction added: no
+- runtime CLI command added: no
+- dependency scan result for boxcars/rattletrap/rrrocket/carball/rlreplay/subtr-actor in MIMIR
+  manifests and lockfile: no matches
+- command run: git rev-parse --show-toplevel
+- command result: D:/
+- command run: git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export
+  crates/mimir-types Cargo.toml Cargo.lock
+- command result: no tracked file diffs reported
+- command run: git status --short -- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_EVIDENCE_GAP_V1.md artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_decision.txt executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_next.txt executor_mimir_skill_forge_bc_replay_header_parser_remaining_evidence_gap_status.txt crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- command result: reports new docs/report/executor artifacts as untracked; the broader Git root also
+  reports Cargo.toml, Cargo.lock, and crate directories as untracked
+- workspace caveat: git rev-parse --show-toplevel reports D:/; this MIMIR workspace is inside a
+  broader Git tree. The forbidden-boundary conclusion is based on exact changed paths, no tracked
+  diffs under forbidden crate paths or manifests, and no dependency matches in MIMIR manifests or
+  lockfile.
+
+explicit non-claims
+- no real MIMIR replay parser was implemented
+- no MIMIR parser success was claimed or encoded
+- no backend dependency was added to MIMIR
+- no ReplayHeader was produced or synthesized
+- no generated structural report value was admitted as complete MIMIR byte layout
+- no generated structural report value was admitted as complete expected MIMIR ReplayHeader output
+- no replay id derivation was admitted
+- no total_frames derivation was admitted
+- no metadata map was admitted
+- no explicit total_frames None policy was admitted
+- no explicit empty metadata policy was admitted
+- no insufficient-byte fixture was derived
+- no malformed-byte fixture was derived
+- no unsupported-format/version fixture was derived
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented
+
+next pass
+- structural report admission pass for rl_replay_header_fixture_001
+- next pass input:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- parser implementation remains closed
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- mimir_export widening remains forbidden

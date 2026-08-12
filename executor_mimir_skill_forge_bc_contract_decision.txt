@@ -1,0 +1,78 @@
+executor mimir skill forge bc contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+exact bc row/schema fields chosen
+- `family`
+- `source_slice_id`
+- `source_replay`
+- `source_subject`
+- `source_raw_state_window_ref`
+- `source_phase_id`
+- `accepted_reference_variant_id`
+- `supervision_window_role`
+- `observation_binding_kind`
+- `target_binding_kind`
+- `carried_confidence_band`
+- `carried_unresolved_assumptions`
+- `bc_contract_notes`
+
+exact binding decisions chosen
+- Observation source stays reference-only.
+- Observation binding is `accepted_reference_window_from_raw_state_window_ref`.
+- The row does not inline an observation tensor, phase window payload, or accepted reference
+  window payload.
+- Target source stays reference-only.
+- Target binding is `accepted_reference_variant_control_target_deferred`.
+- The row does not inline action labels, action logits, or any control serialization.
+- Accepted reference-window lineage is carried by `accepted_reference_variant_id` plus
+  `supervision_window_role = accepted_reference_variant_window`, with the aligned accepted shell
+  remaining authoritative for the concrete time window.
+
+exact admission rules chosen
+- Emit a BC row only when
+  `disposition == bc_candidate_ready_for_contract_definition`.
+- Require `eval_readiness_status == shell_ready_for_future_consumer`.
+- Require `accepted_reference_variant_id` to be present in the planning result.
+- Require planning/shell alignment for slice, replay, subject, raw-state-window ref, phase id,
+  accepted-reference-variant id, carried confidence, and carried unresolved assumptions.
+- Require the shell to still satisfy the accepted low-boost-recovery boundary:
+  `accept_candidate`, `provisional_candidate_accepted`, `boundary_stable`, `eval_harness_only`,
+  accepted-only shell notes, and structurally consistent reference/phase windows.
+- Treat readiness without alignment as a contract failure, not as a deferred row.
+
+what was intentionally excluded
+- serialized observation payloads
+- serialized target payloads
+- inlined phase-window payloads
+- inlined accepted-reference-window payloads
+- evaluated-variant lists
+- export files
+- persistence semantics
+- any `mimir_export` integration
+- any DAgger or PPO auxiliary export
+- any runtime bridge work
+- any generic BC or dataset framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust type shaping and narrow implementation were added, and why
+- Yes.
+- Added family-specific DTOs in `crates/mimir-types/src/lib.rs`:
+  - `LowBoostRecoveryBcSupervisionWindowRoleV1`
+  - `LowBoostRecoveryBcObservationBindingKindV1`
+  - `LowBoostRecoveryBcTargetBindingKindV1`
+  - `LowBoostRecoveryBcContractNoteV1`
+  - `LowBoostRecoveryBcRowV1`
+- Added one narrow constructor plus one narrow error surface in `crates/mimir-skill/src/lib.rs`:
+  - `define_low_boost_recovery_bc_contract_row_v1`
+  - `LowBoostRecoveryBcContractDefinitionError`
+- This was justified because the repo already uses family-specific DTOs in `mimir-types` plus one
+  narrow constructor per Skill Forge boundary in `mimir-skill`, and the first BC contract needed
+  one real row surface without widening into export implementation.
+
+why this is enough for the next BC serialization/export boundary pass
+- The next pass now has one real low-boost-recovery BC row contract and one strict admission rule.
+- It does not need to guess which lineage and carried-boundary fields are canonical.
+- It can define serialization/persistence semantics next without reopening planning, eval, shell,
+  or validator contracts.
+- It still cannot widen `mimir_export` unless that is explicitly reopened.

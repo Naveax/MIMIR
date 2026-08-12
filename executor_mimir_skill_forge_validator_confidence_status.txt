@@ -1,0 +1,24 @@
+pass type: MIMIR Skill Forge v1 validator + confidence/abstain pass
+runtime behavior changed: no
+public APIs added: yes
+public APIs removed: no
+validator-confidence artifact added: yes
+decision artifact added: yes
+next-step artifact added: yes
+source/docs changed: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 173 tests, 0 benchmarks
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+validation notes:
+- The first `cargo clippy --workspace --all-targets --all-features -- -D warnings` run failed on
+  `clippy::question_mark` in `crates/mimir-skill/src/lib.rs`.
+- The validator classifier was corrected to use `?`, then the full required validation sequence was
+  rerun clean.

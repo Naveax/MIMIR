@@ -1,0 +1,39 @@
+executor mimir skill forge bc consumer refinement next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- low-boost-recovery specimen batching/orchestration without `mimir_export`
+
+why this is the immediate next pass
+- The repo now has:
+  - persisted low-boost-recovery BC artifact IO wrappers
+  - one validated persisted-artifact handoff
+  - one refined downstream consumer result that preserves lineage, accepted reference window,
+    confidence, unresolved assumptions, and an explicit batching-only disposition
+- The next unresolved problem is no longer specimen admission or consumer definition.
+- The next unresolved problem is how multiple refined low-boost-recovery specimens should be grouped
+  and ordered for downstream family-specific consumption without widening into `mimir_export`.
+
+what the next pass should consume
+- `LowBoostRecoveryBcConsumerRefinementResultV1`
+
+what the next pass should do
+- define one bounded low-boost-recovery specimen batching/orchestration surface
+- keep the work family-specific
+- keep the work downstream of the refined consumer result instead of re-opening raw artifacts,
+  rows, or shells
+- preserve the batching-only disposition instead of silently materializing tensors or controls
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family batching framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+
+why a reopen decision is not the next pass
+- There is no current defect that requires reopening `mimir_export`.
+- The new refinement result now gives the next pass a narrow consumer-owned input surface.
+- Reopening export semantics now would widen the system before the first family-specific batching
+  boundary exists.

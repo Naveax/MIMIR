@@ -1,0 +1,70 @@
+helper names added or updated:
+- None added.
+- Reused existing helper: `persisted_input_artifact_for_lane_with_scorer_weights`
+
+crate(s) touched:
+- `crates/mimir-cli`
+
+exact `scorer_weights` mutation applied:
+- lane: `VerticalSliceFixtureLane::Stage77Second`
+- baseline persisted `scorer_weights`: `{"coverage": 1.0, "stability": 0.5}`
+- mutated persisted `scorer_weights`: `{"coverage": 1.0, "stability": -4.0}`
+- only `stability` changed
+- unchanged on both runs: `replay_id`, `export_name`, `teacher_namespace`, `simulation_seed`, `anchor_hint`, proposals, proposal labels, proposal actions, proposal `legal_hint`, proposal metadata, proposal `score_signals`
+
+exact affected component values before/after:
+- `anchor-stage77-second:branch:0`
+  - before: `{"coverage": 5.0, "stability": 1.0}`
+  - after: `{"coverage": 5.0, "stability": -8.0}`
+- `anchor-stage77-second:branch:1`
+  - before: `{"coverage": 2.0, "stability": 0.5}`
+  - after: `{"coverage": 2.0, "stability": -4.0}`
+- component keys stayed identical on both runs for both rows: `["coverage", "stability"]`
+- `coverage` component values stayed unchanged on both rows; only `stability` contributions changed
+
+exact affected total scores before/after:
+- `anchor-stage77-second:branch:0` total: `6.0 -> -3.0`
+- `anchor-stage77-second:branch:1` total: `2.5 -> -2.0`
+
+whether teacher ordering changed and how:
+- yes
+- baseline teacher targets in order: `["anchor-stage77-second:branch:0", "anchor-stage77-second:branch:1"]`
+- mutated teacher targets in order: `["anchor-stage77-second:branch:1", "anchor-stage77-second:branch:0"]`
+- baseline teacher artifact ids in file order: `["stage77-second-vertical-slice:teacher:0", "stage77-second-vertical-slice:teacher:1"]`
+- mutated teacher artifact ids in file order: `["stage77-second-vertical-slice:teacher:1", "stage77-second-vertical-slice:teacher:0"]`
+- ordering flipped because the shared `stability` penalty pushed branch `0` from `6.0` to `-3.0` and branch `1` from `2.5` to `-2.0`, leaving branch `1` higher than branch `0`
+
+what unrelated surfaces remained stable:
+- canonical reload succeeded for baseline and mutated runs
+- branch ids stayed `["anchor-stage77-second:branch:0", "anchor-stage77-second:branch:1"]`
+- exported anchor payload stayed identical between runs
+- exported branch actions, `legal_hint`, and metadata stayed identical between runs for both branches
+- teacher artifact surfaces unrelated to score consequences stayed stable per branch target:
+  - `payload.id`
+  - `payload.label`
+  - `payload.metadata.ordinal`
+  - `payload.metadata.teacher_namespace`
+  - `payload.metadata.teacher_namespace_copy`
+  - `header.metadata.teacher_namespace`
+- frozen snapshot identity/path surfaces stayed stable:
+  - `export_name`
+  - `replay_id`
+  - `anchor_id`
+  - `anchor_frame_index`
+  - `anchor_kind`
+  - export directory name
+  - scoreboard artifact relative path
+  - teacher artifact relative paths
+  - branch ids in order
+- frozen snapshot score consequences changed only where expected:
+  - scoreboard totals changed to `-3.0` and `-2.0`
+  - teacher target ordering flipped exactly to `["anchor-stage77-second:branch:1", "anchor-stage77-second:branch:0"]`
+
+tests added or updated:
+- Added `second_deterministic_vertical_slice_scorer_weights_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- `173 tests, 0 benchmarks`
+
+short note on why this closes the next remaining Stage77 score-input observability edge without widening runtime semantics:
+- This pass gives `Stage77Second` the missing value-level proof for `PersistedVerticalSliceInput.scorer_weights -> WeightedSumScorer::new(...) -> scoreboard component values -> total score -> teacher ordering`. It reuses the existing deterministic fake-backend path, keeps the component schema fixed, proves non-score surfaces stay stable, and adds no runtime behavior, export-bundle semantics, loader semantics, CLI surface, or public API.

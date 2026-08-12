@@ -1,0 +1,93 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation planning decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-05
+
+exact outcome chosen
+- Outcome A
+
+decision
+- exact supported tuple implementation planning is complete
+- the next pass may implement only the exact two-tuple allowlist in crates/mimir-replay/src/lib.rs
+- no parser-success is claimed now
+- no parser code changes occur now
+- no broad parser expansion is admitted
+
+verified fixture identities
+- fixture_001 path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- fixture_001 byte length: 3001021
+- fixture_001 SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- fixture_001 first four bytes little-endian i32: 13200
+- fixture_002 path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- fixture_002 byte length: 2632903
+- fixture_002 SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- fixture_002 first four bytes little-endian i32: 11273
+- fixture_002 differs from fixture_001 by SHA-256: yes
+
+current implementation inspected
+- MinimalReplayHeaderReader is in crates/mimir-replay/src/lib.rs
+- accepted input remains ReplayInput::Memory only
+- ReplayInput::File remains unsupported-input
+- parser boundary remains header-only through 8 + header_size
+- header_crc is read only as layout and not validated
+- content_crc is not read or validated
+- body/raw-state/frame/event parsing is not implemented
+- current supported tuple is fixture_001 exact only
+- current BuildVersion support is exactly 241206.55345.468477
+
+planned exact two-tuple allowlist
+- SupportedReplayHeaderTupleV1::Fixture001Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- SupportedReplayHeaderTupleV1::Fixture002Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=250811.43331.492665
+
+later implementation file boundary
+- allowed file: crates/mimir-replay/src/lib.rs
+- no Cargo.toml change
+- no Cargo.lock change
+- no crates/mimir-skill/src/lib.rs change
+- no crates/mimir-types/src/lib.rs change
+- no mimir-cli change
+- no mimir-io change
+- no mimir-export change
+- no new MIMIR dependency
+- no backend replay parser dependency
+
+later required tests
+- fixture_001 regression
+- fixture_002 exact happy path using admitted candidate expected output
+- unknown BuildVersion rejection
+- existing ReplayInput::File unsupported-input boundary preserved
+- existing header-only stop boundary preserved
+- existing CRC non-validation boundary preserved
+
+rejected implementation policies
+- wildcard BuildVersion support
+- broad ReplayVersion=8 support
+- all 868/32/net10/soccar/replayversion8 builds
+- future unknown build support
+- path/hash/filename/provenance/artifact-id parser facts
+- ReplayInput::File support
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- export/runtime/CLI integration
+- backend parser dependency
+
+parser behavior changed now
+- no
+
+parser-success claimed for fixture_002 now
+- no
+
+fixture_002 supported by MinimalReplayHeaderReader now
+- no

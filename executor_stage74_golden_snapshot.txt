@@ -1,0 +1,35 @@
+executor stage 74 golden snapshot enforcement
+
+golden snapshot helpers and struct names added
+- `crates/mimir-cli/src/vertical_slice_result.rs::VerticalSliceGoldenSnapshot`
+- `crates/mimir-cli/src/vertical_slice_result.rs::VerticalSliceGoldenScoreboardRow`
+- `crates/mimir-cli/src/vertical_slice_result.rs::CanonicalVerticalSliceResult::golden_snapshot`
+- `crates/mimir-cli/src/vertical_slice.rs::expected_stage73_golden_snapshot`
+
+crates touched
+- `mimir-cli`
+
+tests added or updated
+- added `deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`
+- added `deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+- added `canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+- retained existing Stage 73 coverage, including reload, repeated-run parity, explicit ordering, missing-artifact failure, and fake-backend failure tests
+
+exact frozen fields enforced by the snapshot
+- export name
+- replay id
+- anchor id
+- anchor frame index
+- anchor kind
+- export directory name
+- scoreboard artifact relative path
+- teacher artifact relative paths in persisted ordinal order
+- branch ids in export order
+- scoreboard row branch ids and total scores in persisted order
+- teacher target branch ids in persisted ordinal order
+
+resulting mimir_export test count from `cargo test -p mimir-export -- --list`
+- `173 tests, 0 benchmarks`
+
+short note
+- this pass converts the Stage 73 documented vertical-slice contract into an exact ordered golden snapshot derived from `load_canonical_vertical_slice_result`, so contract drift now fails in tests without widening runtime semantics, export semantics, or CLI surface

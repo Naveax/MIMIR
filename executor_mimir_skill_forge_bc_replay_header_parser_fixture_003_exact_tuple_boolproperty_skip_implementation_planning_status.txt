@@ -1,0 +1,206 @@
+executor mimir skill forge bc replay header parser fixture 003 exact tuple boolproperty skip implementation planning status
+
+pass type
+- docs/artifacts-only implementation planning
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes, docs/executor artifacts only
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+- extension: .replay
+- byte length > 8: yes
+
+fixture_002 identity verified
+- yes
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- extension: .replay
+- byte length > 8: yes
+
+fixture_003 identity verified
+- yes
+- byte length: 1638538
+- SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- first four bytes little-endian i32: 11190
+- extension: .replay
+- byte length > 8: yes
+- differs from fixture_001 by SHA-256: yes
+- differs from fixture_002 by SHA-256: yes
+
+supported-version policy planning input verified
+- yes
+- prior supported-version policy planning reopen selected Outcome A
+- selected future policy is exact three-tuple allowlist only
+- Fixture003Exact remains planned only, not implemented now
+- no parser-success was claimed by that input
+
+current implementation inspected
+- yes
+- current parser remains ReplayInput::Memory only
+- current ReplayInput::File behavior remains unsupported-input
+- current enum variants:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+- current constants:
+  - SUPPORTED_MAJOR_VERSION = 868
+  - SUPPORTED_MINOR_VERSION = 32
+  - SUPPORTED_NET_VERSION = 10
+  - SUPPORTED_GAME_TYPE = TAGame.Replay_Soccar_TA
+  - SUPPORTED_REPLAY_VERSION = 8
+  - SUPPORTED_BUILD_VERSION_FIXTURE_001 = 241206.55345.468477
+  - SUPPORTED_BUILD_VERSION_FIXTURE_002 = 250811.43331.492665
+- no SUPPORTED_BUILD_VERSION_FIXTURE_003 exists in source
+- no Fixture003Exact exists in source
+- current selected property set excludes bForfeit
+- current BoolProperty behavior remains unsupported-property
+- current CRC behavior remains header_crc layout-read only and non-validating
+
+exact future tuple code plan admitted
+- yes
+- future code file: crates/mimir-replay/src/lib.rs only
+- add SUPPORTED_BUILD_VERSION_FIXTURE_003 = "251020.62592.500294"
+- add SupportedReplayHeaderTupleV1::Fixture003Exact
+- extend supported_replay_header_tuple_v1(...) with exactly one new BuildVersion allowlist arm
+- preserve exact major/minor/net/game_type/ReplayVersion gates
+- preserve unsupported-version for non-allowlisted tuples
+- do not use path/hash/filename/provenance/artifact id/fixture id/label/body bytes as predicates
+
+exact future BoolProperty skip-only code plan admitted
+- yes
+- future code file: crates/mimir-replay/src/lib.rs only
+- add top-level non-selected BoolProperty skip-only handling
+- required layout:
+  - declared property_size = 0
+  - ignored field remains read by existing parser flow
+  - consume exactly one value byte
+  - accept only 0 or 1
+  - invalid value byte fails malformed or equivalent existing error
+  - missing value byte fails insufficient or equivalent existing error
+- do not add bForfeit to selected metadata
+- do not add BoolProperty -> FieldValue::Boolean mapping
+- selected BoolProperty remains unsupported unless separately reopened
+
+exact future test plan admitted
+- yes
+- fixture_001 regression and header-only stop-boundary
+- fixture_002 regression and header-only stop-boundary
+- fixture_003 exact happy path
+- fixture_003 header-only stop-boundary at 8 + 11190 = 11198
+- bForfeit absent from fixture_003 metadata
+- synthetic non-selected BoolProperty skip-only regression
+- selected BoolProperty unsupported regression
+- malformed BoolProperty tests for nonzero declared size, missing value byte, and invalid value byte
+- unknown BuildVersion rejection
+- ReplayInput::File unsupported boundary
+- CRC non-validation boundary
+- no content_crc/body/raw-state/frame/event parsing tests or claims
+
+direct implementation safe next
+- yes
+
+parser behavior changed now
+- no
+
+parser-success claimed for fixture_003 now
+- no
+
+fixture_003 tuple implemented now
+- no
+
+BoolProperty skip implemented now
+- no
+
+bForfeit metadata mapping admitted
+- no
+
+BoolProperty -> FieldValue::Boolean admitted
+- no
+
+parser-success admitted broadly
+- no
+
+wildcard BuildVersion support added
+- no
+
+ReplayInput::File support added
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+exact validation commands run
+- cargo check --workspace --all-targets --all-features
+  - result: passed
+- cargo test -p mimir-replay -- --nocapture
+  - result: passed, 20 tests passed plus doc-tests with 0 tests
+- cargo test -p mimir-skill -- --nocapture
+  - result: passed, 273 tests passed plus doc-tests with 0 tests
+- cargo test --workspace --all-targets --all-features
+  - result: passed
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: passed
+- cargo test -p mimir-export -- --list
+  - result: passed, listed 173 tests and 0 benchmarks plus doc-tests with 0 tests
+
+forbidden crate boundary check
+- direct post-validation hashes for forbidden source/manifests matched the pre-edit hashes:
+  - crates/mimir-replay/src/lib.rs:
+    7106A2891322A5121323F00B5EC171E84DA4ABF00D1802FA226FF1B531B027CF
+  - crates/mimir-skill/src/lib.rs:
+    C851DDC128F72189DAC4A6A1E3E7D151A181C1F5B75830378C0E6BAC6CCCE9EB
+  - crates/mimir-types/src/lib.rs:
+    7E97135EBA28E40215E24F3602A8F537E5EFF7472A86351D853A8BFF10AFF29F
+  - Cargo.toml:
+    B815700C45FD84FF860FDFF4526EAA46B5A76F8B213F570C4FA9788CCF689121
+  - Cargo.lock:
+    06D21529D8A307494ECAE8F064DFF019743B3D2C2615C7A8AFF6CC0FD8A2FB57
+- source/manifests search returned no fixture_003 implementation markers in crates/Cargo files:
+  - 251020
+  - Fixture003
+  - fixture_003
+  - sample_003
+  - bForfeit
+  - SUPPORTED_BUILD_VERSION_FIXTURE_003
+- Cargo manifest/lock backend replay dependency search returned no matches for:
+  - boxcars
+  - rattletrap
+  - rrrocket
+  - replay-parser
+  - replay_parser
+- crates/mimir-cli unchanged by this pass: yes
+- crates/mimir-io unchanged by this pass: yes
+- crates/mimir-export unchanged by this pass: yes
+- no MIMIR dependencies added
+- no backend replay parser dependency added
+- no CLI/runtime/export/IO/type behavior changed
+
+recommended next pass
+- direct exact Fixture003Exact plus exact non-selected BoolProperty skip-only implementation in
+  crates/mimir-replay/src/lib.rs, with required implementation artifacts and validations
+- no broad parser expansion yet

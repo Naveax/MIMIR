@@ -1,0 +1,210 @@
+executor mimir skill forge bc replay header parser remaining mapping gap error boundary admission status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+pass type
+- remaining ReplayHeader mapping gap and mapping-specific error-boundary admission pass
+- policy/evidence admission only
+- docs/artifacts only
+- no parser implementation
+- no parser-success logic
+- no ReplayHeader production
+- no backend dependency addition
+
+selected outcome
+- Outcome A
+- mapping gaps admitted fully
+- mapping-specific error boundaries admitted fully on the current Result<ReplayHeader> surface
+- expected ReplayHeader evidence status: complete
+- byte-layout evidence status: partial
+- error-boundary evidence status: partial overall because non-mapping boundaries remain incomplete
+- parser implementation remains blocked
+
+runtime behavior changed
+- no
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_MAPPING_GAP_ERROR_BOUNDARY_ADMISSION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_remaining_mapping_gap_error_boundary_admission_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_remaining_mapping_gap_error_boundary_admission_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_remaining_mapping_gap_error_boundary_admission_status.txt
+- Rust source changed: no
+- manifests changed: no
+- lockfile changed: no
+- fixture files added: no
+
+fixture identity verified
+- yes
+- path exists: yes
+- byte length matched expected 3001021: yes
+- SHA-256 matched expected F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB: yes
+- fixture identity treated as parser fact: no
+
+report identities verified
+- yes
+- prior external parser report exists: yes
+- structural report exists: yes
+- ReplayHeader mapping policy admission artifact exists: yes
+
+ReplayHeader mapping policy input verified
+- yes
+- inspected:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REPLAYHEADER_MAPPING_POLICY_ADMISSION_V1.md
+- previous selected outcome: Outcome B
+- previous partial mapping gaps were re-audited before this admission
+
+current error surface inspected
+- yes
+- mimir_core::Result<T> is std::result::Result<T, MimirError>
+- current MimirError variants inspected: Io, Json, TomlSerialize, TomlDeserialize, Message
+- current replay implementation inspected: UnsupportedReplayReader returns MimirError::message
+- mapping failures admitted as hard Err(MimirError::Message(_)) boundaries
+- typed replay-specific error taxonomy added: no
+
+mapping/error policy admitted fully
+- yes
+- scope: ReplayHeader field mapping and mapping-specific missing, duplicate, wrong-kind,
+  malformed, omission/default, and None-versus-error behavior only
+
+mapping/error policy admitted partially
+- no for ReplayHeader mapping-specific policy
+- yes for overall parser error-boundary evidence because non-mapping byte-layout, version, CRC,
+  parser-stop, insufficient-byte, malformed-byte, and typed taxonomy gates remain incomplete
+
+expected ReplayHeader evidence status
+- complete
+- replay_id: ReplayId::new("7F59297811EFD8B19C444A81FB07660C")
+- source_label: "rl_replay_header_fixture_001"
+- total_frames: Some(13555)
+- metadata:
+  - ReplayName = FieldValue::Text("Frestyle double touch but not ball")
+  - Date = FieldValue::Text("2025-01-22 11-10-32")
+  - MapName = FieldValue::Text("Stadium_Winter_P")
+  - ReplayVersion = FieldValue::Integer(8)
+  - BuildVersion = FieldValue::Text("241206.55345.468477")
+  - MaxChannels = FieldValue::Integer(2047)
+  - MatchType = FieldValue::Text("Online")
+  - TeamSize = FieldValue::Integer(3)
+  - RecordFPS = FieldValue::Float(30.0)
+- expected-output evidence only: yes
+- MIMIR parser output admitted: no
+- parser-success evidence admitted: no
+
+byte-layout evidence status
+- partial
+- inherited from structural admission Outcome B
+- remaining blockers: complete byte-layout admission, supported-version policy, CRC policy, full
+  property validation policy, parser stop/error behavior
+
+error-boundary evidence status
+- partial
+- mapping-specific error boundaries: complete for this pass
+- non-mapping insufficient-byte boundaries: partial
+- non-mapping malformed-byte boundaries: partial
+- unsupported-version boundary: missing if distinguishable
+- typed replay-specific MIMIR error taxonomy: missing
+
+parser implementation may proceed
+- no
+- parser implementation remains blocked
+- parser-success logic remains blocked
+- implementation requires later admission of complete byte-layout evidence, remaining non-mapping
+  error boundaries, supported-version policy, CRC policy, parser stop behavior, and explicit
+  implementation reopen
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+report paths
+- prior external parser report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+- prior ReplayHeader mapping policy admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REPLAYHEADER_MAPPING_POLICY_ADMISSION_V1.md
+- new mapping/error-boundary admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_MAPPING_GAP_ERROR_BOUNDARY_ADMISSION_V1.md
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+required validation result
+- all listed required validation commands completed successfully
+
+forbidden crate boundary check
+- mimir-replay source modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- mimir_export widening: no
+- Cargo.toml modified by this pass: no
+- Cargo.lock modified by this pass: no
+- MIMIR backend dependency added: no
+- parser implementation added: no
+- parser-success logic added: no
+- ReplayHeader production added: no
+- raw-state payload parsing added: no
+- replay frame extraction added: no
+- semantic replay event extraction added: no
+- runtime CLI command added: no
+- dependency scan result for boxcars/rattletrap/rrrocket/carball/rlreplay/subtr-actor in MIMIR
+  manifests and lockfile: no matches
+- command run: git rev-parse --show-toplevel
+- command result: D:/
+- command run: git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export
+  crates/mimir-types Cargo.toml Cargo.lock
+- command result: no tracked file diffs reported
+- command run after validation: git status --short -- target admission paths and forbidden
+  crate/manifest paths
+- command result after validation: the broader Git root reports Cargo.toml, Cargo.lock, and crate
+  directories as untracked, and reports the new mapping admission docs/decision/next/status
+  artifacts among the target admission paths
+- workspace caveat: git rev-parse --show-toplevel reports D:/, so this MIMIR workspace is inside a
+  broader Git tree. The forbidden-boundary conclusion is based on exact applied patch paths, no
+  tracked diffs under forbidden crate paths or manifests, no dependency matches in MIMIR manifests
+  or lockfile, and no intentional edits outside the new docs/artifact files.
+
+explicit non-claims
+- no real MIMIR replay parser was implemented
+- no MIMIR parser success was claimed or encoded
+- no backend dependency was added to MIMIR
+- no ReplayHeader was produced or synthesized
+- no raw-state payload was parsed
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented
+
+next pass
+- remaining non-mapping byte-layout and parser error-boundary admission pass for
+  rl_replay_header_fixture_001
+- parser implementation remains closed
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- mimir_export widening remains forbidden

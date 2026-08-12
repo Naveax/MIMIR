@@ -1,0 +1,38 @@
+executor mimir skill forge bc replay header parser mimir-skill seam implementation audit next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+selected outcome driving next step
+- Outcome A
+- implemented mimir-skill seam admitted
+- seam remains opt-in and parallel to UnsupportedReplayReader
+- parser-success remains narrow
+
+next pass
+- may move to the next evidence/fixture/parser-readiness target
+- may explicitly plan a later seam if separately reopened
+
+still closed
+- no export integration yet
+- no runtime integration yet
+- no CLI integration yet
+- no broad parser expansion yet
+- no ReplayInput::File support
+- no replay-source materialization
+- no path/hash/filename/provenance/artifact-id parser facts
+- no CRC validation
+- no content_crc read or validation
+- no body/raw-state/frame/event parsing
+- no nested array semantic parsing
+- no UTF-16 support
+- no broad replay version-family support
+- no unencountered property-kind support
+- no backend replay parser dependency
+
+required framing for any next parser-readiness pass
+- success through the admitted mimir-skill seam means only minimal header parse success only
+- failure through the admitted mimir-skill seam means only minimal header parse failure only
+- ReplayHeader remains header-only parser-attempt evidence
+- parser-success remains admitted only for ReplayInput::Memory, the exact fixture-supported tuple,
+  and header-only parsing ending at 8 + header_size
+- parser-success is not admitted broadly

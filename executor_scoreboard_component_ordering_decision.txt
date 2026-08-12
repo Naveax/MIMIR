@@ -1,0 +1,21 @@
+executor scoreboard component ordering decision
+repo root: D:\RocketLeague bot\MIMIR
+
+current classification
+- partial
+
+why it is not open
+- ordering is deterministic today under the current implementation
+- `BTreeMap`-backed component maps yield stable lexical ordering
+- existing tests and scoreboard payload checks already observe that stability
+
+why it is not fully first-class versioned
+- component-key/schema identity has an explicit guard
+- value-level score behavior has explicit proofs
+- component ordering still lacks a separately versioned schema-order contract artifact or distinct ordering contract decision
+
+recommended future handling
+- do not reopen this surface casually as if determinism were missing
+- do not silently promote current behavior into stronger ordering semantics
+- only revisit if an explicit contract-promotion decision is wanted
+- until then, describe the surface as implementation-backed deterministic ordering with partial contract status

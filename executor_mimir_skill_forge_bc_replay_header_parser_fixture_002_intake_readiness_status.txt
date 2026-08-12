@@ -1,0 +1,164 @@
+executor mimir skill forge bc replay header parser fixture 002 intake readiness status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+pass type
+- fixture/evidence readiness planning pass
+- next replay header fixture target intake after rl_replay_header_fixture_001
+- docs/artifacts plus private local fixture copy only
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_INTAKE_READINESS_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_intake_readiness_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_intake_readiness_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_intake_readiness_status.txt
+
+fixture files changed
+- yes
+- copied caller-supplied private local replay file to D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity reverified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- matched expected identity: yes
+
+fixture_002 available
+- yes
+
+fixture_002 copied
+- yes
+- copied from MIMIR_REPLAY_FIXTURE_002_PATH
+- caller-supplied private local source path:
+  C:\Users\navea\Documents\My Games\Rocket League\TAGame\DemosEpic\D9DA34DA11F0811EAC139A94CBF30AF2.replay
+- source path is not a parser fact
+
+fixture_002 identity verified
+- yes
+- fixture id: rl_replay_header_fixture_002
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- differs from fixture_001 by SHA-256: yes
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+fixture_002 safety checks
+- extension is .replay: yes
+- byte length greater than 8: yes
+- first four bytes read as little-endian i32 header_size sanity evidence: 11273
+- first four bytes are bytes-only preliminary sanity evidence
+- parser success not claimed from this check
+
+parser behavior changed
+- no
+
+parser-success claimed for fixture_002
+- no
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+ReplayInput::File support added
+- no
+
+content_crc read or validation added
+- no
+
+export/runtime/CLI integration added
+- no
+
+exact validation commands run
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test -p mimir-skill -- --nocapture
+  - result: success
+  - mimir-skill unit tests: 273 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+re-audit inputs inspected
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_audit_status.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_audit_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_mimir_skill_seam_implementation_audit_next.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_IMPLEMENTATION_AUDIT_V1.md
+- crates/mimir-replay/README.md
+- crates/mimir-replay/src/lib.rs
+- crates/mimir-skill/src/lib.rs
+- Cargo.toml
+- Cargo.lock
+- docs/ARTIFACT_VERSIONING.md
+- docs/DATA_CONTRACTS.md
+- executor_mimir_skill_forge_v1_staged_delivery_rules.txt
+
+forbidden crate boundary check
+- direct source inspection:
+  - crates/mimir-replay/src/lib.rs
+  - crates/mimir-skill/src/lib.rs
+  - Cargo.toml
+  - Cargo.lock
+- Cargo.lock relevant entries inspected:
+  - mimir-replay depends on mimir-core, mimir-types, serde
+  - mimir-skill depends on mimir-replay as previously admitted
+- scoped forbidden tracked diff command:
+  git diff --name-status -- crates/mimir-replay/src/lib.rs crates/mimir-skill/src/lib.rs crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- scoped forbidden tracked diff result:
+  - no output
+  - no forbidden source, manifest, or lockfile diff reported
+- forbidden crate parser integration scan:
+  rg -n "mimir_replay|MinimalReplayHeaderReader|ReplayHeader|ReplayInput|content_crc|header_crc|boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types
+- forbidden crate parser integration scan result:
+  - no matches
+- parser backend dependency scan:
+  rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+- parser backend dependency scan result:
+  - no matches
+
+git boundary caveat
+- git rev-parse --show-toplevel previously reports D:/
+- broad git status reports unrelated files outside D:\RocketLeague bot\MIMIR
+- broad git status is not useful as MIMIR-only boundary evidence
+- this pass uses direct file inspection, explicit fixture hashes, scoped diffs, and scoped scans
+
+admitted result
+- fixture_002 target is available and identity is verified
+- fixture_002 is admitted only as PRIVATE_LOCAL_PATH_WITH_HASH
+- no parser-success is claimed for fixture_002
+- next pass may generate or admit a fixture_002 structural/header report
+- no parser expansion yet

@@ -1,0 +1,247 @@
+BATCH A WRAPPERS
+
+1. query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+2. query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+3. query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+4. query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+
+CANONICAL REPLACEMENTS
+
+1. query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+   immediate replacement path for a Batch A-only breaking pass:
+   - query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+   - load_and_query_execution_result_job_report_collection_summaries
+   fully expanded canonical lane:
+   - query_stub_execute_register_report_and_index_load_summary
+   - load_query_and_aggregate_execution_result_job_report_collection_summaries
+   - persist_register_and_index_load_execution_result_job_report_collection_summary
+   - load_and_query_execution_result_job_report_collection_summaries
+
+2. query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+   immediate replacement path for a Batch A-only breaking pass:
+   - query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+   - summarize_execution_result_job_report_collection_summaries
+   fully expanded canonical lane:
+   - query_stub_execute_register_report_and_index_load_summary
+   - load_query_and_aggregate_execution_result_job_report_collection_summaries
+   - persist_register_and_index_load_execution_result_job_report_collection_summary
+   - load_and_query_execution_result_job_report_collection_summaries
+   - summarize_execution_result_job_report_collection_summaries
+
+3. query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+   immediate replacement path for a Batch A-only breaking pass:
+   - query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+   - persist_register_and_index_load_execution_result_job_report_collection_summary
+   fully expanded canonical lane:
+   - query_stub_execute_register_report_and_index_load_summary
+   - load_query_and_aggregate_execution_result_job_report_collection_summaries
+   - persist_register_and_index_load_execution_result_job_report_collection_summary
+   - load_and_query_execution_result_job_report_collection_summaries
+   - summarize_execution_result_job_report_collection_summaries
+   - persist_register_and_index_load_execution_result_job_report_collection_summary
+
+4. query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+   immediate replacement path for a Batch A-only breaking pass:
+   - query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+   - load_and_query_execution_result_job_report_collection_summaries
+   fully expanded canonical lane:
+   - query_stub_execute_register_report_and_index_load_summary
+   - load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary
+   - load_and_query_execution_result_job_report_collection_summaries
+
+REPO-LOCAL IMPACT BY WRAPPER
+
+1. query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+   canonical replacement:
+   - query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary + load_and_query_execution_result_job_report_collection_summaries
+   repo-local reference footprint:
+   - crates/mimir-export/src/lib.rs: production definition at line 2604
+   - crates/mimir-export/src/lib.rs: downstream wrapper dependency at line 2666 from the Batch A aggregate-after-query-load wrapper
+   - crates/mimir-export/src/lib.rs: dedicated compatibility parity tests at lines 10647, 10730, 10801, 10930, 10973
+   - crates/mimir-export/src/lib.rs: broader test dependency inside later Batch A wrapper tests at lines 11168 and 11496
+   - crates/mimir-export/src/lib.rs: broader contract/parity cluster usage at lines 16900, 17246, 17301
+   - README.md: no references
+   - docs/: no references
+   - repo tests outside lib.rs: no references under tests/
+   test impact:
+   - delete the five dedicated wrapper tests
+   - rewrite the later Batch A tests that currently use this wrapper as the explicit comparison lane
+   - rewrite the stage47 parity cluster to compare the wrapper caller against the explicit canonical composition directly, or drop the Batch A stage47 case entirely
+   docs impact:
+   - none required before removal; there is no repo-local README/docs mention
+   dependency notes:
+   - production dependency of wrapper 2
+   - test-only dependency of stage47 explicit helper for the final-load parity case
+   independent vs grouped removal recommendation:
+   - grouped with wrappers 2 and 3
+   removal difficulty:
+   - medium
+   rationale:
+   - the wrapper is undocumented, but it is still a live dependency of wrapper 2 and of multiple test helpers, so removing it in isolation would force two rounds of test churn
+
+2. query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+   canonical replacement:
+   - query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries + summarize_execution_result_job_report_collection_summaries
+   repo-local reference footprint:
+   - crates/mimir-export/src/lib.rs: production definition at line 2649
+   - crates/mimir-export/src/lib.rs: downstream wrapper dependency at line 2712 from the Batch A final-persist wrapper
+   - crates/mimir-export/src/lib.rs: dedicated compatibility parity tests at lines 11129, 11211, 11285, 11398
+   - crates/mimir-export/src/lib.rs: broader test dependency inside wrapper 3 tests at lines 11608 and 12004
+   - crates/mimir-export/src/lib.rs: broader contract/parity cluster usage at lines 16937, 17284, 17341
+   - README.md: no references
+   - docs/: no references
+   - repo tests outside lib.rs: no references under tests/
+   test impact:
+   - delete the four dedicated wrapper tests
+   - rewrite wrapper 3 tests so their explicit lane uses a direct canonical composition instead of this wrapper
+   - rewrite the stage47 parity cluster final-aggregate case or drop that Batch A case
+   docs impact:
+   - none required before removal; there is no repo-local README/docs mention
+   dependency notes:
+   - production dependency of wrapper 3
+   - test-only dependency of the stage47 explicit helper for the final-aggregate and final-publish parity cases
+   independent vs grouped removal recommendation:
+   - grouped with wrappers 1 and 3
+   removal difficulty:
+   - medium
+   rationale:
+   - this wrapper is a pure re-aggregation alias, but wrapper 3 and the stage47 helper family still route through it today
+
+3. query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+   canonical replacement:
+   - query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries + persist_register_and_index_load_execution_result_job_report_collection_summary
+   repo-local reference footprint:
+   - crates/mimir-export/src/lib.rs: production definition at line 2693
+   - crates/mimir-export/src/lib.rs: dedicated compatibility parity tests at lines 11563, 11657, 11735, 11853, 11899
+   - crates/mimir-export/src/lib.rs: broader contract/parity cluster usage at lines 16974 and 17323
+   - README.md: no references
+   - docs/: no references
+   - repo tests outside lib.rs: no references under tests/
+   test impact:
+   - delete the five dedicated wrapper tests
+   - rewrite or remove the stage47 parity cluster final-publish case
+   docs impact:
+   - none required before removal; there is no repo-local README/docs mention
+   dependency notes:
+   - no production wrapper depends on it
+   - test-only dependency of the stage47 final-publish explicit helper
+   independent vs grouped removal recommendation:
+   - grouped with wrappers 1 and 2
+   removal difficulty:
+   - low
+   rationale:
+   - the wrapper is the deepest cartesian-product endpoint, so once wrappers 1 and 2 are gone it becomes a leaf with only dedicated tests and one stage47 parity case
+
+4. query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+   canonical replacement:
+   - query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries + load_and_query_execution_result_job_report_collection_summaries
+   repo-local reference footprint:
+   - crates/mimir-export/src/lib.rs: production definition at line 2741
+   - crates/mimir-export/src/lib.rs: dedicated compatibility parity tests at lines 12479, 12562, 12632, 12761, 12807
+   - README.md: no references
+   - docs/: no references
+   - repo tests outside lib.rs: no references under tests/
+   test impact:
+   - delete the five dedicated wrapper tests
+   - no stage47 parity-cluster edits are required because this wrapper is not included there
+   docs impact:
+   - none required before removal; there is no repo-local README/docs mention
+   dependency notes:
+   - no Batch A wrapper depends on it
+   - it still routes through a retained non-Batch-A compatibility wrapper: query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+   independent vs grouped removal recommendation:
+   - removable independently, but still reasonable to include in the same Batch A breaking patch to collapse one wrapper-only test block
+   removal difficulty:
+   - low
+   rationale:
+   - isolated, undocumented, and only exercised by its own dedicated tests
+
+TEST UPDATE PLAN
+
+1. Delete wrapper-specific tests for each removed API.
+   - wrapper 1: remove the five tests starting at lines 10647, 10730, 10801, 10930, 10973
+   - wrapper 2: remove the four tests starting at lines 11129, 11211, 11285, 11398
+   - wrapper 3: remove the five tests starting at lines 11563, 11657, 11735, 11853, 11899
+   - wrapper 4: remove the five tests starting at lines 12479, 12562, 12632, 12761, 12807
+
+2. Update downstream test scaffolding before removing definitions.
+   - wrapper 1 is used as an explicit comparison lane inside wrapper 2 tests
+   - wrapper 2 is used as an explicit comparison lane inside wrapper 3 tests
+   - stage47 explicit helper functions at lines 17246, 17284, 17323 currently mirror Batch A semantics; future parity coverage must either inline canonical helper chains there or delete those Batch A stage47 cases
+
+3. Preserve trusted surface coverage after deletions.
+   - keep canonical helper tests and the retained compatibility-wrapper parity tests unchanged
+   - after Batch A removal, stage47 should only exercise the still-supported wrapper set plus explicit canonical compositions
+
+DOC UPDATE PLAN
+
+1. No README update is required before a Batch A-only removal.
+   - current README migration guidance does not mention any Batch A target
+   - current README already says likely legacy wrappers are retained until a dedicated compatibility-breaking pass
+
+2. No docs/ update is required before a Batch A-only removal.
+   - repo-local search found no Batch A references under docs/
+
+3. Optional source/docs touch for this dry-run:
+   - not recommended
+   - the existing README wording already states that no compatibility-breaking removal has happened yet, so another note would add noise without reducing risk
+
+DEPENDENCY / ORDERING GRAPH
+
+Production wrapper edges:
+- wrapper 2 -> wrapper 1
+- wrapper 3 -> wrapper 2
+- wrapper 4 -> query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+
+Test-only helper edges:
+- stage47 explicit final-load helper -> wrapper 1 semantics
+- stage47 explicit final-aggregate helper -> wrapper 2 semantics
+- stage47 explicit final-publish helper -> wrapper 3 semantics
+
+Removal ordering implication:
+- wrappers 1, 2, and 3 are a chain and should be planned together
+- wrapper 4 is not in the chain and can move independently
+
+SAFE REMOVAL SEQUENCE
+
+1. First patch in the future breaking pass: remove Batch A test references before or alongside API deletions.
+   - delete wrapper-specific tests for wrappers 1 through 4
+   - rewrite wrapper 2 and wrapper 3 tests so their explicit path does not call wrappers scheduled for deletion
+   - rewrite or drop the Batch A stage47 parity cases
+
+2. Remove chained wrappers in reverse dependency order.
+   - remove wrapper 3 definition
+   - remove wrapper 2 definition
+   - remove wrapper 1 definition
+   reason:
+   - this prevents an intermediate commit from leaving a surviving wrapper calling a deleted wrapper
+
+3. Remove wrapper 4 in the same patch or a separate follow-up patch.
+   - it is independent of wrappers 1 through 3
+   - if the goal is one clean Batch A API reduction, include it in the same breaking patch
+   - if the goal is minimal blast radius per commit, split it after the chain removal
+
+4. Re-run the full validation suite and confirm the mimir_export test list no longer includes the removed wrapper tests.
+
+DRY-RUN RISKS
+
+1. Repo-local analysis cannot prove absence of downstream external users of these public APIs.
+2. The immediate replacement path for wrappers 1 through 4 still crosses retained non-Batch-A compatibility helpers in some cases, so Batch A removal alone does not fully canonicalize call sites.
+3. The stage47 parity cluster is part of the trusted compatibility boundary; deleting Batch A without reworking that cluster would reduce audited parity coverage unintentionally.
+4. Wrapper 4 depends on a retained Batch C helper, so a later Batch C decision can still affect the long-term migration story even if Batch A is removed cleanly first.
+5. This dry-run does not prove consumer migration cost outside the repository because no external reverse-dependency search was performed.
+
+RECOMMENDED BREAKING PASS CHECKLIST
+
+1. Confirm the pass scope is Batch A only and that Batch B/C wrappers remain public.
+2. Rewrite or delete Batch A-specific tests before removing any public definitions.
+3. Update the stage47 parity cluster so only retained wrappers remain under parity audit.
+4. Remove wrapper 3, then wrapper 2, then wrapper 1, then wrapper 4.
+5. Re-run:
+   - cargo fmt --all
+   - cargo check --workspace --all-targets --all-features
+   - cargo test --workspace --all-targets --all-features
+   - cargo clippy --workspace --all-targets --all-features -- -D warnings
+   - cargo test -p mimir-export -- --list
+6. Verify no Batch A symbol names remain in crates/mimir-export/src/lib.rs, README.md, docs/, or repo tests.
+7. Verify the remaining public migration guidance still points only at supported wrappers and canonical helpers.

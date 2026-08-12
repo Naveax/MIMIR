@@ -1,0 +1,3 @@
+project_name = "MIMIR"
+artifact_root = "artifacts"
+replay_root = "replays"

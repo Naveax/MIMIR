@@ -1,0 +1,246 @@
+executor mimir skill forge bc replay header parser fixture 002 report admission status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+pass type
+- fixture_002 report admission pass
+- evidence-only admission of generated external parser/header report and external structural report
+- docs/artifacts only
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_REPORT_ADMISSION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_admission_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_admission_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_admission_status.txt
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+- extension: .replay
+- byte length greater than 8: yes
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+fixture_002 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- differs from fixture_001 by SHA-256: yes
+- extension: .replay
+- byte length greater than 8: yes
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+generated reports verified
+- yes
+- parser/header report:
+  - path: artifacts/replay_header_reports/rl_replay_header_fixture_002_report.txt
+  - current size: 4167 bytes
+  - fixture id matched: yes
+  - byte length matched: yes
+  - SHA-256 matched: yes
+  - generated outside MIMIR: yes
+  - not MIMIR parser output: yes
+  - not parser-success evidence: yes
+  - no broad parser support admitted: yes
+  - no body/raw-state/frame/event parsing claimed as MIMIR evidence: yes
+  - no export/runtime/CLI integration claimed: yes
+- structural report:
+  - path: artifacts/replay_header_reports/rl_replay_header_fixture_002_structural_report.txt
+  - current size: 13885 bytes
+  - fixture id matched: yes
+  - byte length matched: yes
+  - SHA-256 matched: yes
+  - generated outside MIMIR: yes
+  - not MIMIR parser output: yes
+  - not parser-success evidence: yes
+  - no broad parser success admitted: yes
+  - no body/raw-state/frame/event parsing claimed as MIMIR evidence: yes
+  - no export/runtime/CLI integration claimed: yes
+
+parser/header report admitted as evidence-only
+- yes
+
+structural report admitted as evidence-only
+- yes
+
+selected property candidate evidence admitted
+- yes
+- admitted only as external/report candidate mapping evidence
+- Id candidate: D9DA34DA11F0811EAC139A94CBF30AF2
+- source_label candidate: rl_replay_header_fixture_002
+- total_frames candidate from NumFrames: 10351
+- candidate metadata:
+  - ReplayName = Text("asdasd")
+  - Date = Text("2025-08-24 19-16-35")
+  - MapName = Text("NeoTokyo_Standard_P")
+  - ReplayVersion = Integer(8)
+  - BuildVersion = Text("250811.43331.492665")
+  - MaxChannels = Integer(2047)
+  - MatchType = Text("Online")
+  - TeamSize = Integer(3)
+  - RecordFPS = Float(30.0)
+
+structural byte-layout candidate evidence admitted
+- yes
+- header_size offset/value candidate admitted as external/report evidence only
+- header_crc offset/value candidate admitted as external/report evidence only
+- header data range candidate admitted as external/report evidence only: [8, 11281)
+- version/game_type offset/value candidates admitted as external/report evidence only
+- property table start candidate admitted as external/report evidence only: 48
+- top-level property count candidate admitted as external/report evidence only: 27
+- selected property routes and ranges admitted as external/report evidence only
+- terminator offset/end/matches-header-end candidate admitted as external/report evidence only: 11272 / 11281 / true
+- content_size/content_crc/content_data_start admitted only as first body boundary candidates: 11281 / 11285 / 11289
+
+parser behavior changed
+- no
+
+parser-success claimed for fixture_002
+- no
+
+fixture_002 supported-version policy admitted
+- no
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+ReplayInput::File support added
+- no
+
+content_crc read or validation added in MIMIR parser code
+- no
+
+export/runtime/CLI integration added
+- no
+
+fixture_001 vs fixture_002 implication
+- fixture_002 appears structurally similar at report level
+- fixture_002 has the same report-level major/minor/net/game_type as fixture_001
+- fixture_002 has the same report-level ReplayVersion = 8 as fixture_001
+- fixture_002 has a different BuildVersion:
+  - fixture_001: 241206.55345.468477
+  - fixture_002: 250811.43331.492665
+- current MinimalReplayHeaderReader policy remains fixture_001 exact supported tuple only
+- fixture_002 is not admitted as supported by MinimalReplayHeaderReader
+- future fixture_002 support requires separate version-policy or implementation-planning reopen
+
+exact validation commands run
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test -p mimir-skill -- --nocapture
+  - result: success
+  - mimir-skill unit tests: 273 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+re-audit inputs inspected
+- artifacts/replay_header_reports/rl_replay_header_fixture_002_report.txt
+- artifacts/replay_header_reports/rl_replay_header_fixture_002_structural_report.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_REPORT_GENERATION_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_generation_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_generation_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_report_generation_status.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_INTAKE_READINESS_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_intake_readiness_status.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_MIMIR_SKILL_SEAM_IMPLEMENTATION_AUDIT_V1.md
+- crates/mimir-replay/README.md
+- crates/mimir-replay/src/lib.rs
+- crates/mimir-replay/Cargo.toml
+- crates/mimir-skill/src/lib.rs
+- crates/mimir-skill/Cargo.toml
+- crates/mimir-cli/Cargo.toml
+- crates/mimir-io/Cargo.toml
+- crates/mimir-export/Cargo.toml
+- crates/mimir-types/Cargo.toml
+- Cargo.toml
+- Cargo.lock
+- docs/ARTIFACT_VERSIONING.md
+- docs/DATA_CONTRACTS.md
+- executor_mimir_skill_forge_v1_staged_delivery_rules.txt
+
+forbidden crate boundary check
+- direct source inspection:
+  - crates/mimir-replay/src/lib.rs
+  - crates/mimir-skill/src/lib.rs
+  - Cargo.toml
+  - Cargo.lock
+  - crates/mimir-cli/Cargo.toml
+  - crates/mimir-io/Cargo.toml
+  - crates/mimir-export/Cargo.toml
+  - crates/mimir-types/Cargo.toml
+- Cargo.lock relevant entries inspected:
+  - mimir-replay depends on mimir-core, mimir-types, serde
+  - mimir-skill depends on mimir-core, mimir-io, mimir-replay, mimir-types, serde, tempfile
+- scoped forbidden tracked diff command:
+  git diff --name-status -- crates/mimir-replay/src/lib.rs crates/mimir-skill/src/lib.rs crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- scoped forbidden tracked diff result:
+  - no output
+  - no forbidden tracked source, manifest, or lockfile diff reported
+- forbidden crate parser integration scan:
+  rg -n "mimir_replay|MinimalReplayHeaderReader|ReplayHeader|ReplayInput|content_crc|header_crc|boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" crates/mimir-cli crates/mimir-io crates/mimir-export crates/mimir-types
+- forbidden crate parser integration scan result:
+  - no matches
+- parser backend dependency scan:
+  rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g Cargo.toml
+- parser backend dependency scan result:
+  - no matches
+
+git boundary caveat
+- git rev-parse --show-toplevel reports D:/
+- broad git status reports unrelated files outside D:\RocketLeague bot\MIMIR
+- broad git status is not useful as MIMIR-only boundary evidence
+- this pass uses direct file inspection, explicit fixture hashes, scoped diffs, scoped scans, and exact allowed output paths
+
+admitted result
+- fixture_002 external parser/header report admitted as evidence-only
+- fixture_002 external structural report admitted as evidence-only
+- selected property evidence admitted only as candidate mapping evidence
+- structural byte-layout evidence admitted only as external structural/report evidence
+- no parser-success is claimed for fixture_002
+- no broad parser-success is admitted
+- no parser expansion yet
+
+next stage
+- next pass may be fixture_002 mapping/error-boundary admission
+- fixture_002 supported-version policy planning may be done instead only if explicitly reopened
+- fixture_002 mapping/error-boundary admission is preferred first

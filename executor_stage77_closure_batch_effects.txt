@@ -1,0 +1,36 @@
+crates touched
+
+- `mimir-cli`
+
+exact tests added or updated
+
+- Added `second_deterministic_vertical_slice_preserves_branch_metadata_value_shapes_without_perturbing_other_contract_edges`
+- Added `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface`
+- Added `second_deterministic_vertical_slice_rejects_targeted_branch_artifact_corruption_at_canonical_load_boundary`
+- Added `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+- Added `second_deterministic_vertical_slice_directly_consumes_proposal_actions_into_simulation_requests_without_perturbing_other_contract_edges`
+- Added `second_deterministic_vertical_slice_keeps_manifest_and_index_stable_except_for_the_mutated_branch_payload_hash`
+
+exact helper names added or updated
+
+- Added `read_json_value`
+- Added `write_json_value`
+- Added `stage77_branch_artifact_path`
+- Added `refresh_stage77_branch_index_hash`
+- Added `simulation_commands_from_actions`
+- Added `assert_branch_payload_surface_matches`
+- Updated `CapturedSimulationRequest`
+- Updated `RecordingDeterministicFakeBackend::simulate(...)`
+
+newly closed Stage77 edges
+
+- Exported Stage77 branch payload negative drift is now caught explicitly even when artifact hashes are refreshed to match the drifted content.
+- Targeted Stage77 branch artifact corruption now proves canonical load fails explicitly on invalid branch payload shape.
+- Stage77 branch metadata now has same-lane proof for heterogeneous `FieldValue` shape preservation across export and canonical reload.
+- Stage77 persisted input now has an explicit missing-proposal-label failure path before runtime materialization.
+- Stage77 proposal actions now have a direct deterministic request-consumption proof at the `SimulationRequest.commands` boundary.
+- Stage77 proposal-surface-only mutation now has packaging stability proof: manifest/index structure stays fixed and only the mutated branch hash changes.
+
+resulting mimir_export test count from `cargo test -p mimir-export -- --list`
+
+- `173 tests, 0 benchmarks`

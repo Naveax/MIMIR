@@ -1,0 +1,132 @@
+EXECUTOR MASTER AUDIT CURRENT STATE
+Repository root: D:\RocketLeague bot\MIMIR
+Audit scope: earliest repo-local executor stage artifacts through Stage 96, plus current code/test surface cross-checks in crates/mimir-export, crates/mimir-cli, crates/mimir-io, crates/mimir-types, and README.md.
+
+1. OVERALL PROJECT STATE
+
+currently stable
+- The execution-result family is currently frozen at the narrowed Stage 68 boundary: current code in `crates/mimir-export/src/lib.rs` still exposes four live top-level wrappers, with three treated as retained canonical baselines and one intentionally retained compatibility edge.
+- The deterministic fake-backend vertical-slice family is live and code-backed: persisted input can be materialized into deterministic runtime output, persisted export/scoreboard/teacher artifacts, canonical reload, and frozen snapshots, with explicit negative drift checks.
+- Later vertical-slice direct-effect coverage is code-backed through current tests in `crates/mimir-cli/src/vertical_slice.rs` and helpers in `crates/mimir-cli/src/vertical_slice_test_support.rs`.
+
+currently well-tested
+- Stages 1-46 built the execution-result report/index/summary family and raised `mimir-export` test coverage from 21 listed tests at Stage 1 to 216 listed tests at Stage 46, before later cleanup removals reduced the count along with the public surface.
+- Stages 39-46 added canonical contract tests, pipeline tests, end-to-end tests, failure-path tests, mutation-boundary tests, serialization/schema-stability tests, and deterministic repeatability tests for the execution-result family.
+- Stages 69-79 established positive-path, golden-snapshot, repeated-run, cross-lane, and explicit negative-drift coverage for the deterministic vertical slice.
+- Stages 81, 85-90, 92, 94, and 96 added or extended persisted-input, direct-effect, and schema-drift proofs in the vertical-slice family.
+
+still intentionally narrow
+- No real replay parsing.
+- No real rollout physics.
+- No real RocketSim/live backend integration in this slice.
+- No async/background systems.
+- No database/storage layer beyond explicit artifact files.
+- No runtime CLI expansion beyond the existing narrow surface.
+- No reopening of execution-result cleanup boundaries without new external evidence.
+
+documentary-only vs code/test verified
+- Code/test verified with current repo-local evidence:
+  - Stage 1-46 execution-result helper/test build-out.
+  - Stage 52, 54, 56, 58, 60, 62, and 66 breaking removals.
+  - Stage 65 internal rewiring.
+  - Stage 69-79 deterministic vertical-slice runtime/test chain.
+  - Stage 81 input artifact support.
+  - Stage 85-90, 92, 94, and 96 direct-effect or narrow drift tests.
+- Documentary/indexing/audit only:
+  - Stage 38.
+  - Stage 47-51.
+  - Stage 53, 55, 57, 59, 61, 63, 64, 67, 68.
+  - Stage 80, 82, 83, 84, 91, 93, 95.
+  - This master audit sweep.
+
+2. STAGE CHAINS / THEMES
+
+execution-result surface build-out
+- Stages 1-37 progressively built the explicit report/index/query/summary helper family plus several higher-order compatibility wrappers.
+- Repo-local support is primarily the status chain itself for these early stages, but later continuity is reinforced by Stage 38 surface auditing and the later removal records.
+
+execution-result canonicalization and audit hardening
+- Stage 38 audited the large public wrapper surface.
+- Stages 39-46 converted the family from "available helpers" into a canonically documented and heavily tested surface.
+- Stages 47-49 added parity, soft-compatibility, and migration-map artifacts to prepare later cleanup without pretending the broad wrapper set was canonical.
+
+execution-result breaking cleanup and freeze
+- Stages 50-51 planned cleanup only.
+- Stages 52, 54, 56, 58, 60, 62, and 66 removed specific wrapper groups or single wrappers.
+- Stages 53, 55, 57, 59, 61, 63, and 67 reclassified the surviving surface after those removals.
+- Stage 64 audited rewiring readiness, Stage 65 performed a narrow internal rewiring, and Stage 68 explicitly froze the cleanup boundary.
+- Current code search supports the Stage 68 freeze claim: the remaining live wrapper surface in `crates/mimir-export/src/lib.rs` matches the documented four-wrapper endpoint.
+
+deterministic vertical-slice runtime and I/O contract work
+- Stage 69 introduced the deterministic fake-backend vertical slice.
+- Stages 70-72 moved teacher-label I/O, scoreboard I/O, and canonical result loading onto named helpers.
+- Stages 73-79 froze the contract, enforced golden snapshots, extracted negative harnesses, and added the second deterministic fixture lane.
+- Stage 81 decoupled deterministic fixtures through a persisted vertical-slice input artifact.
+
+vertical-slice indexing, bridge mapping, and gap analysis
+- Stage 80 indexed the contract/test map.
+- Stage 82 indexed the input contract and lane manifest.
+- Stage 83 mapped input/output bridge continuity.
+- Stage 84 classified direct coverage, indirect coverage, and intentionally narrow areas.
+- Stage 91 and Stage 95 reindexed the remaining gaps after later direct-effect passes.
+
+direct-effect propagation, component-schema work, and later closure
+- Stages 85-90 closed most of the Stage 84 edge-local gaps on `Stage69Sample`.
+- Stage 92 closed the `export_name -> teacher label id` direct-effect gap.
+- Stage 93 documented scoreboard component-schema flow and observability.
+- Stage 94 made Stage 77 scoreboard component-key drift first-class.
+- Stage 96 closed the Stage 77 `teacher_namespace` propagation follow-up edge.
+
+artifact cleanup/documentation continuity
+- Many mid/late artifacts intentionally mark earlier artifacts as historical snapshots rather than rewriting history.
+- This is the correct continuity pattern for this repo: older artifacts stay as pass-time records, later artifacts or current code determine live truth.
+
+3. CLOSED ITEMS
+
+- Execution-result cleanup is genuinely closed at the current repo-local boundary.
+  - Evidence: Stage 68 freeze artifact, earlier removal chain, and current code search showing four remaining live wrappers.
+- Canonical execution-result report/index/summary lanes are genuinely closed at the current scope.
+  - Evidence: Stage 39-46 contract tests and the canonical-only README migration guidance.
+- Deterministic fake-backend vertical-slice runtime plus canonical reload is genuinely closed as a narrow contract family.
+  - Evidence: Stages 69-79 and current `mimir-cli` test/support modules.
+- Persisted vertical-slice input artifact contract is genuinely closed at the current scope.
+  - Evidence: Stage 81 plus current `mimir-io` and `mimir-cli` schema/wrong-kind rejection tests.
+- The original Stage 84 top direct-effect candidates are materially closed.
+  - Closed edges: `scorer_weights`, `simulation_seed`, `teacher_namespace` on Stage 69, `anchor_hint.metadata` on Stage 69, proposal `actions/legal_hint/metadata`, proposal `score_signals`, and later `export_name -> teacher label id`.
+- Scoreboard component-key drift is now first-class enough to diagnose.
+  - Evidence: Stage 93 component-schema index plus Stage 94 Stage77 narrow drift test.
+- Stage 77 `teacher_namespace` propagation is now explicitly closed.
+  - Evidence: Stage 96 artifact plus current `second_deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`.
+
+4. PARTIALLY CLOSED ITEMS
+
+- Stage 77 direct-effect coverage is still asymmetric relative to Stage 69.
+  - Explicit Stage 77 closure exists for scoreboard component-key drift and `teacher_namespace`, but Stage 77 still lacks same-lane direct-effect proofs for `anchor_hint.metadata`, `scorer_weights`, `simulation_seed`, proposal surface propagation, proposal `score_signals`, and `export_name -> teacher label id`.
+- Stage 77 scoreboard value-level observability is still weaker than Stage 69.
+  - Component-key drift is explicit on Stage 77, but exact before/after component-value enumeration remains strongest on the Stage 69 `score_signals` path.
+- Scoreboard component ordering is documented but not separately versioned.
+  - Current determinism comes from `BTreeMap` behavior plus tests, not from a distinct schema-version artifact or explicit ordering contract.
+- There is no dedicated post-Stage-96 lane-coverage index artifact yet.
+  - Stage 95 is accurate for its own pass, but Stage 96 supersedes one of its remaining follow-up items. Live cross-lane truth now depends on Stage 95 plus Stage 96 and this master ledger.
+
+5. KNOWN DOCUMENTARY-ONLY DEFECTS FIXED IN THIS SWEEP
+
+- `executor_stage85_status.txt`
+  - fixed `scorer-weights artifact added: no` -> `yes` because `executor_stage85_scorer_weights_effect.txt` exists repo-locally.
+- `executor_stage88_status.txt`
+  - fixed `anchor-metadata artifact added: no` -> `yes` because `executor_stage88_anchor_metadata_effect.txt` exists repo-locally.
+- `executor_stage96_status.txt`
+  - fixed `teacher-namespace artifact added: no` -> `yes` because `executor_stage96_stage77_teacher_namespace_effect.txt` exists repo-locally.
+- Mojibake/encoding sweep result
+  - searched repo-local stage artifact text files and README for obvious mojibake patterns; no clearly broken punctuation/encoding text was found, so no encoding edits were required.
+
+6. INTENTIONALLY NARROW AREAS
+
+- The deterministic vertical slice remains fake-backend-only by design.
+- Real replay ingestion remains out of scope by design.
+- Real rollout physics remains out of scope by design.
+- The canonical vertical-slice loader intentionally does not reload `vertical-slice-input.json`; input-contract validation and output-contract validation remain separate boundaries.
+- Frozen snapshots intentionally omit many persisted-input and artifact details; omission is not a bug by itself.
+  - Examples intentionally omitted from snapshots include `teacher_namespace`, anchor metadata, proposal actions, proposal legal hints, proposal metadata, and scorer weights.
+- Fixture lanes remain explicit rather than registry/discovery driven.
+- The remaining execution-result compatibility wrapper is intentionally frozen in place absent new external-consumer or deprecation evidence.

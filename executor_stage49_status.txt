@@ -1,0 +1,14 @@
+pass type: canonical migration examples / usage-contract pass
+runtime behavior changed: no
+new wrappers added: no
+wrappers removed: no
+rustdoc migration guidance expanded: yes
+README changed: yes
+migration map artifact added: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 217
+exact validation commands run:
+cargo fmt --all
+cargo check --workspace --all-targets --all-features
+cargo test --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p mimir-export -- --list

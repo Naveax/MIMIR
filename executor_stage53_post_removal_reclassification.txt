@@ -1,0 +1,85 @@
+HISTORICAL NOTE
+
+- This artifact is the post-Stage-52 snapshot taken before Stage 54 removed the first Batch B wrapper.
+- Its wrapper counts and Batch B readiness conclusions are no longer the live state.
+- See executor_stage54_removed_batch_b_first.txt for the actual first Batch B removal record and executor_stage55_second_removal_readiness.txt for the current surviving-wrapper audit.
+
+CURRENT CANONICAL BASELINES
+
+- Current surviving public execution-result wrapper count in crates/mimir-export/src/lib.rs: 11
+- Current surviving compatibility-wrapper count in crates/mimir-export/src/lib.rs: 8
+- Current canonical baseline set:
+  - query_stub_execute_persist_load_and_register_execution_result_job_report
+  - query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports
+  - query_stub_execute_register_report_and_index_load_summary
+- Canonical lower-level baseline lanes remain unchanged from the pre-removal audits:
+  - report publication: persist_execution_result_job_report + register_execution_result_job_report_in_index + load_indexed_execution_result_job_report
+  - report retrieval: load_and_query_execution_result_job_reports
+  - summary publication: persist_execution_result_job_report_collection_summary + register_execution_result_job_report_collection_summary_in_index + load_indexed_execution_result_job_report_collection_summary
+  - summary retrieval/aggregation: load_and_query_execution_result_job_report_collection_summaries + load_query_and_aggregate_execution_result_job_report_collection_summaries
+
+REMAINING COMPATIBILITY WRAPPERS
+
+- Compatibility convenience wrappers retained outside Batch B:
+  - query_stub_execute_and_persist_execution_result_job_report
+  - query_stub_execute_persist_and_load_execution_result_job_report
+  - query_load_and_summarize_execution_result_job_reports
+  - query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+- Remaining Batch B candidates:
+  - query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+  - query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  - query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+- Remaining prior Batch C candidate:
+  - query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+
+BATCH B RECLASSIFICATION
+
+- query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+  - canonical replacement: query_stub_execute_persist_load_and_register_execution_result_job_report + load_indexed_execution_result_job_report
+  - current reference footprint: live source definition and direct tests in crates/mimir-export/src/lib.rs; README migration-map mention; historical mentions in stage47/stage48/stage49/stage50 artifacts
+  - still documented in README or not: yes
+  - still needed as migration waypoint or not: yes, as the shallowest documented indexed-reload compatibility bridge
+  - updated removal readiness: higher
+  - recommended classification: next removal candidate
+  - rationale: Batch A removal shortened the overlap ladder behind it, and this wrapper no longer feeds deeper surviving wrappers. The remaining pressure is documentation plus direct compatibility tests, not downstream wrapper dependency.
+
+- query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  - canonical replacement: query_stub_execute_register_report_and_index_load_summary + load_query_and_aggregate_execution_result_job_report_collection_summaries
+  - current reference footprint: live source definition, one surviving downstream wrapper call, direct tests in crates/mimir-export/src/lib.rs, README migration-map mention, and historical mentions in stage47/stage48/stage49/stage50 artifacts
+  - still documented in README or not: yes
+  - still needed as migration waypoint or not: yes
+  - updated removal readiness: unchanged
+  - recommended classification: re-audit later
+  - rationale: it is still both a README-visible migration target and the immediate replacement lane named for the stage32 publication bridge wrapper. Batch A removal did not eliminate that dependency chain.
+
+- query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  - canonical replacement: query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries + persist_register_and_index_load_execution_result_job_report_collection_summary
+  - current reference footprint: live source definition, direct tests in crates/mimir-export/src/lib.rs, README migration-map mention, and historical mentions in stage47/stage48/stage49/stage50 artifacts
+  - still documented in README or not: yes
+  - still needed as migration waypoint or not: yes, but only as the last README-documented aggregate-persist publication bridge
+  - updated removal readiness: unchanged
+  - recommended classification: re-audit later
+  - rationale: Batch A removal removed the deeper wrappers that used to sit beyond this one, but README still points at it and the current documented replacement lane still routes through the surviving aggregate wrapper above.
+
+POST-BATCH-A CHANGES IN REMOVAL READINESS
+
+- Batch A removal reduced the surviving overlap family from 12 audited wrappers in stage47 to 8 remaining compatibility wrappers in lib.rs.
+- query_stub_execute_persist_load_register_and_index_load_execution_result_job_report became more removable because the deeper post-aggregate wrappers that once extended the overlap family are gone.
+- query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries did not materially change in readiness because it still anchors the documented replacement lane for the stage32 publication bridge wrapper.
+- query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary is narrower than before because no deeper surviving wrappers now depend on it, but its README migration role still keeps its readiness effectively unchanged for this pass.
+- Prior Batch C classification change: no change recommended. query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries remains re-audit later because repo-local evidence still cannot prove whether external callers rely on the shorter aggregate-persist root.
+
+REPO-LOCAL DOC / ARTIFACT STATUS
+
+- README.md updated to reflect that, after stage52, the documented compatibility migration waypoints are limited to the three surviving Batch B wrappers.
+- executor_stage47_wrapper_parity_audit.txt updated with a historical note so its pre-removal count is not misread as the current state.
+- executor_stage48_soft_compatibility_audit.txt updated with a historical note pointing to the post-removal stage53 artifact.
+- executor_stage49_migration_map.txt updated with a historical note clarifying that its canonical lanes remain valid but its compatibility list predates stage52 removal.
+- executor_stage50_breaking_cleanup_plan.txt updated with a historical note clarifying that Batch A has already been executed and that stage53 is the current readiness snapshot.
+- No source semantics were changed in crates/mimir-export/src/lib.rs in this pass.
+
+RECOMMENDED NEXT CLEANUP STEP
+
+- If a dedicated compatibility-breaking pass is approved later, remove query_stub_execute_persist_load_register_and_index_load_execution_result_job_report first.
+- Keep query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries and query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary for a later re-audit after README migration guidance is reduced to canonical lanes only.
+- Re-audit query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries only after external-consumer impact is checked, because repo-local evidence still does not prove whether that shorter aggregate-persist compatibility root has downstream callers.

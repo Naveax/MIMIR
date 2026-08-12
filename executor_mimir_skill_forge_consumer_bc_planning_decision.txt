@@ -1,0 +1,58 @@
+executor mimir skill forge consumer / bc-planning decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+exact planning output fields chosen
+- `source_slice_id`
+- `source_replay`
+- `source_subject`
+- `source_raw_state_window_ref`
+- `source_phase_id`
+- `accepted_reference_variant_id`
+- `eval_readiness_status`
+- `carried_confidence_band`
+- `carried_unresolved_assumptions`
+- `disposition`
+- `planning_notes`
+
+exact planning dispositions chosen
+- `not_bc_candidate`
+- `bc_candidate_deferred`
+- `bc_candidate_ready_for_contract_definition`
+
+exact bc milestone boundary chosen
+- The BC milestone is now treated as an explicit threshold between shell/eval readiness work and
+  the first real low-boost-recovery BC contract-definition pass.
+- `shell_ready_for_future_consumer` remains a bounded readiness signal only.
+- No BC-facing dataset or export semantics are allowed to harden before that next pass.
+
+what was intentionally excluded
+- any real BC dataset row
+- any BC export payload or adapter
+- any `mimir_export` semantic widening
+- any generic consumer framework
+- any generic metrics framework
+- any replay parsing, mining, rollout, or physics additions
+- any runtime bridge work
+- any usefulness-proof or policy-improvement claim
+- phase-window and reference-window payloads in the planning DTO, to avoid the DTO reading like a
+  latent training row
+
+whether Rust type shaping and narrow implementation were added, and why
+- Yes.
+- Added family-specific DTOs in `crates/mimir-types/src/lib.rs`:
+  - `LowBoostRecoveryConsumerPlanningDispositionV1`
+  - `LowBoostRecoveryConsumerPlanningNoteV1`
+  - `LowBoostRecoveryConsumerPlanningResultV1`
+- Added one narrow constructor in `crates/mimir-skill/src/lib.rs`:
+  - `plan_low_boost_recovery_consumer_bc_boundary_v1`
+- This was justified because the repo already uses family-specific DTOs plus narrow constructor
+  functions for each Skill Forge boundary, and the next pass benefits from a tiny explicit planning
+  surface instead of re-deriving BC-readiness from shell/eval internals.
+
+why this is enough for the next BC contract-definition pass
+- The next pass now has one explicit planning-only boundary that preserves lineage, carried
+  confidence, carried unresolved assumptions, and a strict disposition.
+- It also has an explicit BC milestone flag that prevents accidental widening into export work.
+- That is enough to define the first real low-boost-recovery BC contract without pretending that BC
+  usefulness, dataset semantics, or export semantics already exist.

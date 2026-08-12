@@ -1,0 +1,48 @@
+executor mimir skill forge bc replay header parser byte-layout evidence admission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+immediate next pass type
+- external byte-layout evidence supply/admission or approved parser-report generation/admission
+
+immediate next pass only
+- supply or generate approved byte-layout evidence for fixture id rl_replay_header_fixture_001
+- evidence must identify the supported Rocket League replay header admission rule
+- evidence must identify supported version or version family if version-gated
+- evidence must identify header boundary or header termination rule
+- evidence must identify field encodings, numeric endianness, and string/property encoding rules if
+  used
+- evidence must identify the body/raw-state boundary where header parsing stops
+- evidence must define replay id derivation or explicitly keep replay id policy blocked under an
+  admitted policy
+- evidence must define total_frames as byte-backed Some(u32) or an explicit admitted None policy
+- evidence must define metadata as key-by-key byte-backed metadata or an explicit admitted empty
+  metadata policy
+- evidence must define insufficient, malformed, and unsupported-if-distinguishable error boundaries
+  before parser-success logic can reopen
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only after fixture evidence, byte-layout evidence, and expected
+  output evidence are admitted
+
+parser implementation closure
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic closure
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing closure
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction closure
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator closure
+- replay-source materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- mimir_export widening remains forbidden unless explicitly reopened

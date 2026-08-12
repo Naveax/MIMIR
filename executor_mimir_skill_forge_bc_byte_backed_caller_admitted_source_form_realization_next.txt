@@ -1,0 +1,20 @@
+executor mimir skill forge bc byte-backed caller-admitted source-form realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+what remains forbidden unless explicitly reopened
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- replay-source carrier discovery remains out of scope
+- replay-input locator logic remains out of scope
+- replay parsing remains out of scope
+- raw-state payload parsing remains out of scope
+- tensor/control materialization remains out of scope
+
+next pass type
+- the contract-definition pass for an exact receipt-bound opaque caller-admitted replay-byte handoff below `mimir_replay::ReplayInput`
+
+why that is the immediate next pass
+- the caller-byte form is no longer open
+- the receipt-bound tuple binding is no longer open
+- the new missing truth is not caller-byte admission itself
+- the new missing truth is the narrowest honest contract above that admission while still remaining below replay parsing and below `mimir_replay::ReplayInput`

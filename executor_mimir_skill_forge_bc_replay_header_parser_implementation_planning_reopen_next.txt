@@ -1,0 +1,102 @@
+executor mimir skill forge bc replay header parser implementation planning reopen next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+selected outcome driving next step
+- Outcome A
+- parser implementation planning is explicitly reopened
+- actual parser code remains deferred to the next pass
+- parser-success logic remains closed in this pass
+
+next pass may implement
+- the first minimal ReplayInput::Memory replay header parser
+- public reader:
+  MinimalReplayHeaderReader
+- implementation of ReplayReader for MinimalReplayHeaderReader
+- private module-local parser helpers in crates/mimir-replay/src/lib.rs
+- required unit tests in crates/mimir-replay/src/lib.rs
+
+next pass file boundary
+- may modify only:
+  crates/mimir-replay/src/lib.rs
+- must not modify:
+  mimir-io
+  mimir-export
+  mimir-types
+  Cargo.toml
+  Cargo.lock
+  CLI
+  runtime code
+  MIMIR export code
+
+next pass parser boundary
+- parser surface remains:
+  ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>
+- first supported input remains:
+  ReplayInput::Memory
+- ReplayInput::File remains unsupported-input
+- first supported tuple remains exact fixture tuple only:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- parser stops at:
+  header_data_end_exclusive = 8 + header_size
+- trailing bytes after header end are allowed
+- content_crc must not be read or validated
+
+next pass required tests
+- happy-path fixture test for rl_replay_header_fixture_001 using ReplayInput::Memory
+- exact expected ReplayHeader assertions
+- complete-header-only stop-boundary assertion
+- deterministic synthetic error-boundary tests for:
+  unsupported-input
+  empty memory label
+  fewer than 4 bytes
+  fewer than 8 bytes
+  negative header_size
+  header_size larger than bytes
+  unsupported version tuple
+  missing terminator
+  duplicate selected property
+  duplicate top-level property
+  unknown property kind
+  UTF-16/negative text
+  selected ArrayProperty
+  selected non-finite float
+  CRC non-validation boundary
+
+next pass forbidden work
+- CRC validation
+- replay parser backend dependency
+- body parsing
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- nested array semantic parsing
+- UTF-16 support
+- unknown property-kind support
+- ReplayInput::File support
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- mimir_export widening
+- mimir-io changes
+- mimir-export changes
+- mimir-types changes
+- manifest changes
+- lockfile changes
+
+if next pass reopens a deferred topic
+- parser implementation must remain blocked until that deferred topic is separately admitted
+- deferred topics include CRC enforcement, nested arrays, UTF-16, additional property kinds,
+  ReplayInput::File, broad version families, body parsing, raw-state parsing, frame extraction,
+  event extraction, replay-source materialization, replay-input locator logic, export widening, and
+  manifest or lockfile changes

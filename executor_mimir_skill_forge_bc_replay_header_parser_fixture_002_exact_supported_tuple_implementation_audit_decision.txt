@@ -1,0 +1,74 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation audit decision
+
+exact outcome chosen
+- Outcome A
+
+whether implementation is admitted
+- yes
+
+whether fixture identities were verified
+- yes
+- fixture_001: length 3001021, SHA-256 F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB, first_i32_le 13200
+- fixture_002: length 2632903, SHA-256 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6, first_i32_le 11273
+- fixture_002 differs from fixture_001 by SHA-256: yes
+
+whether exact predicate was inspected
+- yes
+- private predicate: supported_replay_header_tuple_v1
+- private enum: SupportedReplayHeaderTupleV1
+- admitted variants:
+  - Fixture001Exact
+  - Fixture002Exact
+
+whether fixture_001 regression was verified
+- yes
+- test verified: minimal_reader_parses_rl_replay_header_fixture_001_and_header_only_slice
+
+whether fixture_002 happy path was verified
+- yes
+- test verified: minimal_reader_parses_rl_replay_header_fixture_002_exact_happy_path
+
+whether fixture_002 header-only stop-boundary was verified
+- yes
+- test verified: minimal_reader_parses_rl_replay_header_fixture_002_header_only_slice
+- admitted fixture_002 header-only slice length: 11281 bytes
+
+whether unknown BuildVersion rejection was verified
+- yes
+- test verified: minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple
+- rejected unknown BuildVersion: 250812.43331.492665
+- error category: replay header parse error: unsupported-version
+
+whether helper/env override behavior is safe/admitted/partial/rejected
+- admitted
+- load_fixture_bytes_or_skip uses the explicit default_path argument only
+- no MIMIR_REPLAY_FIXTURE_PATH or global fixture override is used
+- both fixture files were present and identity-verified before tests ran
+
+whether parser-success remains exact allowlist only
+- yes
+- exact allowlist:
+  - major_version=868, minor_version=32, net_version=10, game_type=TAGame.Replay_Soccar_TA, ReplayVersion=8, BuildVersion=241206.55345.468477
+  - major_version=868, minor_version=32, net_version=10, game_type=TAGame.Replay_Soccar_TA, ReplayVersion=8, BuildVersion=250811.43331.492665
+
+whether broad parser-success was admitted
+- no
+
+whether forbidden files/dependencies changed
+- no
+- crates/mimir-skill/src/lib.rs changed by audit pass: no
+- crates/mimir-types/src/lib.rs changed by audit pass: no
+- crates/mimir-cli changed by audit pass: no
+- crates/mimir-io changed by audit pass: no
+- crates/mimir-export changed by audit pass: no
+- Cargo.toml changed by audit pass: no
+- Cargo.lock changed by audit pass: no
+- backend replay parser dependency added: no
+
+exact issue if Outcome B/C
+- not applicable
+
+decision
+- admit Outcome A
+- parser success is admitted only for exact allowlisted tuples through ReplayInput::Memory
+- broad parser expansion remains closed

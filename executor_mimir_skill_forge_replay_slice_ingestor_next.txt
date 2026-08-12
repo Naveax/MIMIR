@@ -1,0 +1,26 @@
+executor mimir skill forge replay slice ingestor next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+next pass
+- canonicalizer + event/phase extractor for low boost recovery
+
+exact problem
+- Define and implement the minimum family-specific transformation from `ReplaySliceRef` into a canonical low-boost-recovery state boundary, then extract the minimum event/contact facts and phase segmentation needed for seed interpretation.
+
+what this new replay slice contract now makes possible
+- The next pass can consume one explicit seed object instead of inventing its own replay boundary.
+- Canonicalizer ownership is now clean: it receives identity, provenance, frame window, subject handle, family hint, and bounded raw-state linkage.
+- Event/contact extraction and phase segmentation can now be designed against one stable input contract instead of a vague replay narrative.
+
+what is still intentionally unresolved
+- how raw-state-window references are materialized
+- low-boost threshold semantics
+- contact and landing semantics
+- coordinate normalization and orientation choices
+- abstain logic for semantically weak but contract-valid slices
+- any persistence/export surface for replay slices
+
+scope risk
+- medium to high
+- The main risk is smuggling inferred replay semantics or universal normalization assumptions into the canonicalizer/extractor boundary before the family-specific evidence needs are explicitly proven.

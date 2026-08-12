@@ -1,0 +1,42 @@
+executor mimir skill forge bc actual replay parsing unsupported attempt realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+immediate next pass only
+- narrow post-unsupported-attempt boundary decision pass
+
+exact next input
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingUnsupportedAttemptRealizationResultV1`
+
+exact next responsibility
+- decide what boundary, if any, is justified after truthful unsupported configured-reader behavior has been recorded
+- preserve the unsupported/error result honestly
+- keep parser success separate from unsupported-attempt plumbing
+
+closed in the next pass
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- replay-source actual-materialization remains closed
+- carrier discovery remains closed
+- replay-input locator logic remains closed
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+the next pass must not be
+- parser-success implementation
+- real replay parser implementation
+- raw-state parsing
+- frame extraction
+- semantic event extraction
+- replay-source carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization implementation
+- corpus-wide replay ingestion
+- runtime CLI command addition
+- async/background system addition
+- database addition
+- export widening
+
+reason this is the immediate next step
+- this pass records only unsupported behavior from `UnsupportedReplayReader`
+- no parser readiness, `ReplayHeader`, raw-state payload, frame, event, carrier, locator, materialization, or export evidence exists
+- a decision pass is required before any boundary can be reopened above unsupported-attempt realization

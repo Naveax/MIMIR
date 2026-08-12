@@ -1,0 +1,10 @@
+default_stub_wrapper_added: yes
+helper_name: query_and_stub_execute_execution_result_job_spec
+delegates_to_existing_generic_helper: yes
+mimir_export_test_count: 30
+validation_commands_run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

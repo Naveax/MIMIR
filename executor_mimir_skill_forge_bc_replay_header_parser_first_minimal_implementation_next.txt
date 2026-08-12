@@ -1,0 +1,38 @@
+executor mimir skill forge bc replay header parser first minimal implementation next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+selected outcome driving next step
+- Outcome A
+- first minimal parser implementation succeeded
+- parser-success is admitted only for the first minimal ReplayInput::Memory header boundary
+
+next pass if successful
+- parser implementation admission/audit pass
+- audit MinimalReplayHeaderReader against the admitted byte-layout and mapping artifacts
+- audit error category stability
+- audit that UnsupportedReplayReader remains unchanged
+- audit that no forbidden crates, manifests, lockfile, backend dependencies, CLI/runtime code, or
+  export semantics were modified
+- audit that CRC validation, body parsing, raw-state parsing, frame extraction, event extraction,
+  nested arrays, UTF-16, file input, additional property kinds, and broad version-family support
+  remain closed
+
+next pass if a later issue is found
+- target the exact failing parser ambiguity or bug
+- do not broaden parser scope to hide the defect
+- do not add backend dependencies unless separately admitted
+- do not modify mimir-io, mimir-export, mimir-types, Cargo.toml, or Cargo.lock
+
+no broad parser expansion yet
+- no CRC enforcement yet
+- no body/footer parsing yet
+- no raw-state payload parsing yet
+- no replay frame extraction yet
+- no semantic event parsing yet
+- no nested array semantic parsing yet
+- no UTF-16 support yet
+- no ReplayInput::File support yet
+- no additional property-kind support yet
+- no corpus-wide ingestion yet
+- no export widening yet

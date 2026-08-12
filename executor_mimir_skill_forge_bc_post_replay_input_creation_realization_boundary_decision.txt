@@ -1,0 +1,44 @@
+executor mimir skill forge bc post replay-input creation realization boundary decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+pass type
+- narrow post-realization boundary-decision pass above `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesRealizationResultV1`
+- selected family: low_boost_recovery
+
+decision
+- Outcome B: explicitly reopen exactly one downstream closed domain
+- selected domain: actual replay parsing
+
+why this is the selected domain
+- the realized bridge now carries a concrete parser-consumable input: `mimir_replay::ReplayInput::Memory`
+- the memory input bytes are exactly the preserved opaque caller-admitted replay bytes
+- `mimir_replay` already exposes the narrow parser-facing surface `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- this does not prove parser readiness or parser success
+- this does not reinterpret `source_replay`, `source_replay.provenance_label`, or `audited_family_root_directory` as replay paths or replay storage
+
+why competing domains remain closed
+- parser-success logic remains closed because no parser attempt result exists yet
+- replay-source actual-materialization implementation remains closed because the memory bridge does not define carrier or storage semantics
+- replay-source carrier discovery remains closed because caller-admitted memory bytes are already present and no discoverable carrier surface exists
+- replay-input locator logic remains closed because the realized boundary already created `ReplayInput::Memory` and no locator output is needed
+- raw-state payload parsing remains closed because no parsed replay frames or raw-state payload surface exists
+- export widening remains closed because no parsed payload, tensor, control, export item, or widened consumer surface exists
+
+explicit non-claims
+- no replay parsing was implemented
+- no parser-success logic was implemented or defined
+- no replay-source actual-materialization implementation was reopened
+- no replay-source carrier discovery was reopened
+- no replay-input locator logic was reopened
+- no raw-state payload parsing was reopened
+- no export semantics were widened
+
+Rust/code changes
+- no Rust added
+- no crate dependency changes
+- docs-only is more honest because this pass reopens the domain but does not yet define the parser contract boundary
+
+forbidden boundary preserved
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- `mimir-replay`, `mimir-io`, `mimir-export`, and `mimir-types` remain untouched

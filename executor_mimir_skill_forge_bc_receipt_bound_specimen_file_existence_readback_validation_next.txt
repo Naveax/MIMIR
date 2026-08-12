@@ -1,0 +1,54 @@
+executor mimir skill forge bc receipt-bound specimen-file existence/readback validation next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a raw-state materialization reopen decision above
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+why this is the immediate next pass
+- The reopened locator contract is already explicit.
+- The anchored path-only locator is already explicit.
+- This pass now proves the anchored specimen-file paths exist and read back cleanly at the
+  identity tuple this boundary is allowed to audit.
+- The next unresolved problem is no longer locator shape or filesystem truth.
+- The next unresolved problem is whether the project should explicitly reopen the next boundary
+  needed to turn the still-opaque `source_raw_state_window_ref` into actual raw-state access.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+- the preserved audited family root directory already carried by that validation result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- decide explicitly whether raw-state materialization must now be reopened
+- keep the audited family root interpreted only as a BC specimen-tree anchor
+- use the newly validated readback result as the last trusted pre-materialization boundary
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family locator/index/export framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout/physics work
+
+classification of the next pass
+- a raw-state materialization reopen decision
+
+why the next pass is not another narrow refinement pass
+- This pass already resolved the smallest honest uncertainty above the realized locator.
+- Another refinement pass would only restate the same existence/readback guarantees.
+- The next missing step is no longer more readback detail; it is an explicit decision about
+  whether to cross the current no-materialization boundary.
+
+why the next pass is not a more specific observation-access realization pass still without raw-state materialization
+- Observation-access realization still depends on something stronger than a path and identity-only
+  specimen-file readback.
+- The current validated specimen file still carries `source_raw_state_window_ref` as an opaque
+  reference, not materialized raw-state payload.
+- Skipping the reopen decision would hide the real remaining boundary instead of naming it.

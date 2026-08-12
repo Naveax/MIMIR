@@ -1,0 +1,34 @@
+executor mimir skill forge bc replay header parser fixture_003 report generation next
+
+selected outcome driving next step
+- Outcome A
+
+next pass must
+- perform fixture_003 report admission
+- review artifacts/replay_header_reports/rl_replay_header_fixture_003_report.txt
+- review artifacts/replay_header_reports/rl_replay_header_fixture_003_structural_report.txt
+- decide what fixture_003 report evidence, if any, is admitted for a later implementation pass
+
+next pass must not
+- claim parser success for fixture_003 before admission
+- add a third supported tuple during report admission unless a separate implementation pass is explicitly authorized
+- broaden parser expansion
+- add export/runtime/CLI integration
+- add ReplayInput::File support
+- add wildcard BuildVersion support
+- add all-ReplayVersion = 8 support
+- add future unknown build support
+- add CRC validation
+- read or validate content_crc
+- parse body/raw-state/frame/event data
+- add backend replay parser dependencies to MIMIR
+
+current admitted boundary carried forward
+- parser-success is admitted only for exact allowlisted tuples through ReplayInput::Memory
+- fixture_001 regression is admitted
+- fixture_002 exact happy path is admitted
+- fixture_002 header-only stop-boundary is admitted
+- unknown BuildVersion rejection is admitted
+- fixture_003 report artifacts are evidence-only
+- fixture_003 parser-success is not admitted
+- broad parser-success is not admitted

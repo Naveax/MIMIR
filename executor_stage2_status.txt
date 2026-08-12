@@ -1,0 +1,10 @@
+concrete stub executor added: yes
+executor type name: StubExecutionResultJobExecutor
+convenience execute pipeline helper added: no
+mimir_export test count (cargo test -p mimir-export -- --list): 26
+validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

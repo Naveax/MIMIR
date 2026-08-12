@@ -1,0 +1,50 @@
+executor mimir skill forge bc actual replay parsing implementation readiness next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+next pass type
+- unsupported parser-attempt realization
+
+immediate next pass only
+- realize `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1` as an unsupported parser-attempt result
+- keep the pass low-boost-recovery-specific
+- consume only the current actual replay parsing contract result
+- preserve the exact receipt-bound tuple
+- preserve the exact `ReplayInput::Memory` label and bytes
+- invoke the configured `ReplayReader::read_header(&ReplayInput)` only as an attempted configured-reader call
+- because the only available reader is `UnsupportedReplayReader`, record unsupported/error behavior truthfully
+- produce no `ReplayHeader`
+- make no parser-success claim
+
+closed in the next pass
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- replay-source actual-materialization remains closed
+- carrier discovery remains closed
+- replay-input locator logic remains closed
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+still forbidden unless explicitly reopened
+- real parser implementation
+- actual parser invocation with a real parser
+- replay frame extraction
+- semantic event extraction
+- replay-source carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization implementation
+- replay-source materialization from `source_replay`, `source_replay.provenance_label`, or `audited_family_root_directory`
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- modifications to `mimir-replay`
+- modifications to `mimir-io`
+- modifications to `mimir-export`
+- modifications to `mimir-types`
+
+external requirement status
+- a real parser implementation is not required before unsupported-attempt realization
+- a real parser implementation is required before Outcome C, parser success, `ReplayHeader` production, raw-state parsing, frame extraction, semantic event extraction, or export widening

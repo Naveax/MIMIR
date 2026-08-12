@@ -1,0 +1,62 @@
+executor mimir skill forge bc actual replay parsing contract status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+pass type
+- low-boost-recovery-specific actual replay parsing contract-definition pass
+- selected boundary: header-level parser attempt contract above `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesRealizationResultV1`
+- contract name: `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1`
+
+runtime behavior changed
+- no
+
+public APIs added
+- yes
+- added low-boost-recovery-specific actual replay parsing contract shape enum, parser attempt kind enum, future parser surface enum, parser attempt boundary input/output structs, parser attempt object struct, per-specimen/lane/top-level contract result structs, contract-definition function, and contract-definition error surface in `mimir-skill`
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- modified `crates/mimir-skill/src/lib.rs`
+- added `docs/MIMIR_SKILL_FORGE_BC_ACTUAL_REPLAY_PARSING_CONTRACT_V1.md`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_contract_decision.txt`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_contract_next.txt`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_contract_status.txt`
+
+forbidden crate boundary check
+- `mimir-replay` source modified by this pass: no
+- `mimir-io` modified by this pass: no
+- `mimir-export` modified by this pass: no
+- `mimir-types` modified by this pass: no
+- `mimir_export` widening: no
+- no `apply_patch` edits were issued to `crates/mimir-replay`, `crates/mimir-io`, `crates/mimir-export`, or `crates/mimir-types`
+- `git status --short` is not a reliable tracked-file delta in this workspace because the Git root is `D:/` and `D:/RocketLeague bot/MIMIR` appears as untracked from that root; the forbidden-boundary conclusion above is based on the exact files edited in this pass and the successful validation run
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+explicit non-claims
+- no parser execution implemented
+- no parser-success logic implemented
+- no raw-state payload parsing implemented
+- no replay-frame extraction implemented
+- no semantic replay-event extraction implemented
+- no replay-source actual-materialization implementation added
+- no replay-source carrier discovery implemented
+- no replay-input locator logic implemented
+- no corpus ingestion implemented
+- no runtime CLI command added
+- no export widening implemented

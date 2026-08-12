@@ -1,0 +1,204 @@
+executor deterministic-family historical map
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: classify older deterministic-family artifacts so stale gap lists are not mistaken for current truth
+date: 2026-04-12
+
+classification legend
+- still canonical
+- historical but still useful
+- superseded by later closure evidence
+- planning-only / no longer current truth
+
+1. artifact
+- `executor_deterministic_family_closure_summary.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes
+why
+- it is the current compact closure-state summary for the family.
+
+2. artifact
+- `executor_deterministic_family_contract_index.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes
+why
+- it is the current per-surface status index.
+
+3. artifact
+- `executor_deterministic_family_matrix_freeze.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes
+why
+- it is the current post-closure matrix freeze and reopening-risk reference.
+
+4. artifact
+- `executor_deterministic_family_no_change_locks.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes
+why
+- it is the current no-change boundary list.
+
+5. artifact
+- `executor_stage77_closure_batch_audit.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes, when Stage77 closure-batch boundaries are relevant
+why
+- it is the authoritative audit for what the Stage77 closure batch actually closed and what it explicitly deferred.
+
+6. artifact
+- `executor_stage77_closure_batch_effects.txt`
+current role
+- historical but still useful
+what superseded it, if anything
+- partially subsumed by `executor_stage77_closure_batch_audit.txt` for closure classification
+should it still influence new planning directly
+- only secondarily
+why
+- it is useful as a concise effects summary, but the audit artifact is the stronger closure/boundary reference.
+
+7. artifact
+- `executor_stage77_export_name_teacher_id_decision.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes, when evaluating whether the remaining partial `export_name -> teacher label id` surface should be reopened
+why
+- it records the current repo-local decision that the remaining Stage77 asymmetry is mostly documentary naming, not a materially missing safety guarantee.
+
+8. artifact
+- `executor_scoreboard_component_ordering_boundary.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes, when scoreboard ordering is discussed
+why
+- it is the current no-change boundary for deterministic-but-not-independently-versioned ordering semantics.
+
+9. artifact
+- `executor_optional_defaulted_proposal_fields_boundary.txt`
+current role
+- still canonical
+what superseded it, if anything
+- not superseded
+should it still influence new planning directly
+- yes, when loader semantics for optional/defaulted proposal fields are discussed
+why
+- it is the current no-change boundary for that loader behavior.
+
+10. artifact
+- `executor_stage91_remaining_gaps.txt`
+current role
+- historical but still useful
+what superseded it, if anything
+- narrowed by `executor_stage95_remaining_gaps_after_stage94.txt`, then materially overtaken by `executor_deterministic_family_closure_summary.txt`, `executor_deterministic_family_contract_index.txt`, and `executor_deterministic_family_matrix_freeze.txt`
+should it still influence new planning directly
+- no
+why
+- it remains useful as a record of the post-Stage90 state, but its listed next gaps were later closed or reclassified by Stage92, Stage94, Stages96-101, and the closure-batch evidence.
+
+11. artifact
+- `executor_stage95_remaining_gaps_after_stage94.txt`
+current role
+- historical but still useful
+what superseded it, if anything
+- materially superseded by `executor_deterministic_family_closure_summary.txt`, `executor_deterministic_family_contract_index.txt`, and `executor_deterministic_family_matrix_freeze.txt`
+should it still influence new planning directly
+- no
+why
+- it was accurate after Stage94, but later Stage77 direct-effect passes and the closure batch changed the live truth.
+
+12. artifact
+- `executor_master_forward_roadmap.txt`
+current role
+- planning-only / no longer current truth
+what superseded it, if anything
+- its proposed Stage97-106 work was overtaken by actual later artifacts and by the post-closure set:
+  - `executor_stage96_stage77_teacher_namespace_effect.txt`
+  - `executor_stage97_stage77_anchor_metadata_effect.txt`
+  - `executor_stage98_stage77_score_signals_effect.txt`
+  - `executor_stage99_stage77_scorer_weights_effect.txt`
+  - `executor_stage100_stage77_simulation_seed_effect.txt`
+  - `executor_stage101_stage77_proposal_surface_effect.txt`
+  - `executor_stage77_closure_batch_audit.txt`
+  - `executor_deterministic_family_closure_summary.txt`
+should it still influence new planning directly
+- no
+why
+- it is a forward plan from an earlier evidence horizon, not the current source of truth.
+
+13. artifact
+- `executor_stage98_next_10_layer.txt`
+current role
+- planning-only / no longer current truth
+what superseded it, if anything
+- overtaken by later actual Stage99-101 work, the Stage77 closure batch, and the post-closure canonical set
+should it still influence new planning directly
+- no
+why
+- it assumes Stage98 had just landed and proposes future work that is now largely completed or reclassified.
+
+14. artifact
+- `executor_stage99_next_10_layer.txt`
+current role
+- planning-only / no longer current truth
+what superseded it, if anything
+- overtaken by later actual Stage100-101 work, the Stage77 closure batch, and the post-closure canonical set
+should it still influence new planning directly
+- no
+why
+- it is a snapshot of planned follow-ups before the later closure evidence existed.
+
+15. artifact
+- `executor_stage100_next_10_layer.txt`
+current role
+- planning-only / no longer current truth
+what superseded it, if anything
+- overtaken by actual Stage101 work, the Stage77 closure batch, and the post-closure canonical set
+should it still influence new planning directly
+- no
+why
+- its listed next steps were partly completed and partly reclassified by later evidence.
+
+16. artifact
+- `executor_stage101_next_10_layer.txt`
+current role
+- superseded by later closure evidence
+what superseded it, if anything
+- `executor_stage77_closure_batch_audit.txt`
+- `executor_stage77_closure_batch_effects.txt`
+- `executor_deterministic_family_closure_summary.txt`
+- `executor_deterministic_family_contract_index.txt`
+- `executor_deterministic_family_matrix_freeze.txt`
+should it still influence new planning directly
+- no
+why
+- it identifies Stage102-111 follow-up candidates immediately after Stage101, but several of those were then closed by the Stage77 closure batch and the remaining ones were reclassified as deferred or redundant by the later closure artifacts.
+
+strict usage guidance
+
+- For current deterministic-family truth, start from the still-canonical artifacts only.
+- Use the historical-but-useful artifacts to understand how the repo reached the current boundary, not to repopulate live gap lists.
+- Treat the planning-only artifacts as historical planning snapshots. They should not drive new work directly unless a future pass first proves that later closure evidence is no longer sufficient.

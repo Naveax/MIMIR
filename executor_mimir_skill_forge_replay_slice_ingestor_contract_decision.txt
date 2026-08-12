@@ -1,0 +1,50 @@
+executor mimir skill forge replay slice ingestor contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+why low boost recovery is the only target family here
+- It is the explicitly chosen first Skill Forge v1 prototype family.
+- The staged-delivery rules require one family-specific replay-slice-to-export seed path first.
+- A universal replay-slice contract now would force speculative fields for families with no first consumer.
+- Low boost recovery keeps the seed boundary tied to one subject and one bounded recovery occurrence without reopening wider replay semantics.
+
+exact required fields
+- `slice_id`
+- `source_replay_ref`
+- `provenance_label`
+- `frame_window.start`
+- `frame_window.end_exclusive`
+- `subject`
+- `family_hint = low_boost_recovery`
+- `raw_state_window_ref`
+
+exact optional fields
+- `audit_note`
+
+exact rejected scope expansions
+- real replay parsing
+- replay corpus mining or search
+- universal multi-family replay-slice semantics
+- rollout or physics proof
+- runtime bridge behavior
+- export-bundle widening
+- persistence/writer flow for replay slices
+- broad metadata bags with no immediate consumer
+- tactic-wide or outcome-wide inferred semantics
+
+whether narrow Rust type shaping was added, and why
+- Yes.
+- Added minimal shared DTOs in `crates/mimir-types/src/lib.rs`:
+  - `ReplaySliceId`
+  - `ReplaySubjectRef`
+  - `RawStateWindowRef`
+  - `ReplaySliceFamilyHint`
+  - `ReplaySourceRef`
+  - `ReplaySliceRef`
+- Reused existing `TimeWindow` and `FrameIndex` instead of creating parallel window/index types.
+- This was justified because the repo had no existing code-local seed type for `ReplaySlice`, and the next canonicalizer/event-phase pass needs one auditable shared boundary without adding parser or persistence behavior.
+
+why this is enough for the next canonicalizer/event-phase pass
+- The next pass now has one explicit input boundary with identity, provenance, bounded frame scope, subject scope, family scope, and bounded raw-state linkage.
+- That is sufficient to design family-specific canonicalization and extraction ownership without guessing hidden ingestion semantics.
+- It intentionally does not prove low-boost semantics, contacts, or phases; those remain owned by the next pass.

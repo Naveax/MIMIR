@@ -1,0 +1,41 @@
+executor mimir skill forge eval harness next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+next pass
+- low-boost-recovery consumer / BC-planning boundary
+
+milestone note
+- This is where the project is approaching the BC milestone.
+- The BC milestone should be flagged explicitly before any consumer contract starts shaping dataset
+  or export semantics.
+
+exact problem
+- The project now has accepted low-boost-recovery shells plus a bounded eval result that says
+  whether those shells are merely present, auditable, or ready for future bounded consumer work.
+- The next pass must define the first low-boost-recovery-only consumer / BC-planning boundary
+  without silently turning eval into BC export or widening `mimir_export` semantics.
+
+what the new eval harness now makes possible
+- Consume accepted shell outputs through one bounded eval result surface.
+- Separate unusable shell input from auditable shell input before any BC-planning logic touches the
+  shell.
+- Preserve exact slice / phase / accepted-reference lineage, carried confidence, and carried
+  unresolved assumptions for later consumer planning.
+
+what is still intentionally unresolved
+- true low-boost confirmation
+- contact truth
+- recovery success proof
+- physics reachability
+- downstream training usefulness
+- any real BC dataset/export contract
+- any runtime bridge semantics
+
+scope risk
+- medium to high
+- The main risk is letting consumer / BC planning read like implicit BC integration.
+- A second risk is widening export or `mimir_export` semantics before the BC milestone is formally
+  flagged and bounded.
+- A third risk is treating `shell_ready_for_future_consumer` as proof of training value instead of
+  what it is: a bounded shell-readiness signal only.

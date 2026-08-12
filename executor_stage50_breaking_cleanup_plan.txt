@@ -1,0 +1,147 @@
+historical note
+- this cleanup plan was written before stage52 executed Batch A removal.
+- Batch A is no longer hypothetical; see executor_stage52_removed_batch_a.txt for the removal record.
+- current remaining wrapper readiness and reclassification status are tracked in executor_stage53_post_removal_reclassification.txt.
+
+CURRENT CANONICAL LANES
+
+- Canonical report publication lane:
+  persist_execution_result_job_report + register_execution_result_job_report_in_index + load_indexed_execution_result_job_report
+- Canonical report retrieval lane:
+  load_and_query_execution_result_job_reports
+- Canonical summary publication lane:
+  persist_execution_result_job_report_collection_summary + register_execution_result_job_report_collection_summary_in_index + load_indexed_execution_result_job_report_collection_summary
+- Canonical summary retrieval/aggregation lane:
+  load_and_query_execution_result_job_report_collection_summaries
+  load_query_and_aggregate_execution_result_job_report_collection_summaries
+- Canonical stub-execution bridge lane:
+  query_stub_execute_persist_load_and_register_execution_result_job_report
+  query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports
+  query_stub_execute_register_report_and_index_load_summary
+
+LIKELY LEGACY / OVERLAP WRAPPERS
+
+- query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+  canonical replacement: query_stub_execute_persist_load_and_register_execution_result_job_report + load_indexed_execution_result_job_report
+  reference footprint summary: source=1, tests=11, docs=1
+  where references appear: compatibility wrapper definition in crates/mimir-export/src/lib.rs; parity/contract tests in crates/mimir-export/src/lib.rs; README migration map mention
+  usage character: live README guidance plus test coverage; not docs-only history
+  proposed batch: B
+  removal risk level: medium
+  rationale: shallow overlap wrapper and already mapped to the canonical lane, but it is still named in current README guidance and still has direct compatibility tests
+
+- query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  canonical replacement: query_stub_execute_register_report_and_index_load_summary + load_query_and_aggregate_execution_result_job_report_collection_summaries
+  reference footprint summary: source=3, tests=14, docs=2
+  where references appear: compatibility wrapper definition and one downstream wrapper/doc link in crates/mimir-export/src/lib.rs; parity/contract tests in crates/mimir-export/src/lib.rs; README migration map mention
+  usage character: live README guidance plus test coverage; also acts as an intermediate replacement target for another wrapper
+  proposed batch: B
+  removal risk level: high
+  rationale: overlap is clear, but this wrapper is still explicitly documented and still serves as the current documented stepping stone for an aggregate-persist compatibility path
+
+- query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+  canonical replacement: query_stub_execute_register_report_and_index_load_summary + load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary
+  reference footprint summary: source=2, tests=12, docs=0
+  where references appear: compatibility wrapper definition and one downstream wrapper call in crates/mimir-export/src/lib.rs; parity/contract tests in crates/mimir-export/src/lib.rs
+  usage character: repo-local references are source/test only; no canonical docs usage found
+  proposed batch: C
+  removal risk level: medium
+  rationale: likely removable, but it is the shallowest aggregate-persist convenience root for one remaining overlap family, so external compatibility pressure is not provable from repo-local evidence alone
+
+- query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  canonical replacement: query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries + persist_register_and_index_load_execution_result_job_report_collection_summary
+  reference footprint summary: source=2, tests=24, docs=1
+  where references appear: compatibility wrapper definition and one downstream wrapper call in crates/mimir-export/src/lib.rs; heavy parity/contract test coverage in crates/mimir-export/src/lib.rs; README migration map mention
+  usage character: live README guidance plus extensive test coverage; also serves as the base for deeper wrappers
+  proposed batch: B
+  removal risk level: high
+  rationale: still part of the current migration map and still anchors two deeper overlap wrappers, so removal should wait until the documented replacement lane is the only supported guidance
+
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+  canonical replacement: query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary + load_and_query_execution_result_job_report_collection_summaries
+  reference footprint summary: source=2, tests=16, docs=0
+  where references appear: compatibility wrapper definition and one downstream wrapper call in crates/mimir-export/src/lib.rs; parity/contract tests in crates/mimir-export/src/lib.rs
+  usage character: repo-local references are source/test only; no canonical docs usage found
+  proposed batch: A
+  removal risk level: low
+  rationale: undocumented post-aggregate query/load overlap wrapper with no unique semantics and no repo-local documentation pressure
+
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+  canonical replacement: query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries + summarize_execution_result_job_report_collection_summaries
+  reference footprint summary: source=2, tests=14, docs=0
+  where references appear: compatibility wrapper definition and one downstream wrapper call in crates/mimir-export/src/lib.rs; parity/contract tests in crates/mimir-export/src/lib.rs
+  usage character: repo-local references are source/test only; no canonical docs usage found
+  proposed batch: A
+  removal risk level: low
+  rationale: undocumented cartesian-product alias that only re-aggregates queried loaded summaries and adds no unique contract surface
+
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  canonical replacement: query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries + persist_register_and_index_load_execution_result_job_report_collection_summary
+  reference footprint summary: source=1, tests=13, docs=0
+  where references appear: compatibility wrapper definition in crates/mimir-export/src/lib.rs; parity/contract tests in crates/mimir-export/src/lib.rs
+  usage character: repo-local references are source/test only; no canonical docs usage found
+  proposed batch: A
+  removal risk level: low
+  rationale: deepest cartesian-product wrapper in the family, undocumented, and purely composition over already non-canonical compatibility steps
+
+- query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+  canonical replacement: query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries + load_and_query_execution_result_job_report_collection_summaries
+  reference footprint summary: source=1, tests=10, docs=0
+  where references appear: compatibility wrapper definition in crates/mimir-export/src/lib.rs; parity/contract tests in crates/mimir-export/src/lib.rs
+  usage character: repo-local references are source/test only; no canonical docs usage found
+  proposed batch: A
+  removal risk level: low
+  rationale: undocumented order-variant overlap wrapper with no unique semantics and no current migration-map role
+
+REPO-LOCAL REFERENCE FOOTPRINT
+
+- Search scope used for removal-impact audit:
+  crates/mimir-export/src/lib.rs
+  README.md
+  docs/
+- No repo-local references were found for the likely legacy wrapper set under docs/; current docs pressure is only in README.md
+- Current README migration-map mentions are limited to:
+  query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+  query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+- For the remaining five wrappers, repo-local references are limited to:
+  production definitions or intra-wrapper calls inside crates/mimir-export/src/lib.rs
+  parity/contract tests inside crates/mimir-export/src/lib.rs
+- Resulting footprint interpretation:
+  README-mentioned wrappers have active compatibility guidance pressure
+  non-README wrappers currently look test-retained rather than canonically documented
+
+PROPOSED BREAKING CLEANUP BATCHES
+
+- Batch A: strongest removal candidates
+  query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+  query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+  query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+  why: undocumented, composition-only, repo-local pressure is production definition plus tests only
+
+- Batch B: keep longer for compatibility
+  query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+  query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  why: still present in current README migration guidance and currently act as user-visible compatibility waypoints
+
+- Batch C: unclear / re-audit later
+  query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+  why: not documented, but it is the shortest aggregate-persist overlap root for one wrapper family and may still carry external caller value not visible from repo-local evidence
+
+BLOCKERS / RISKS
+
+- Repo-local searches cannot prove absence of downstream external consumers; the public API removal decision still needs consumer-impact review beyond this repository
+- Stage47 parity and later contract coverage intentionally keep these wrappers exercised; test volume is retention signal for compatibility verification, not proof of active preferred use
+- Three wrappers are still named in README migration guidance; removing them before updating docs and the published migration story would create avoidable compatibility churn
+- Several deep wrappers depend on shallower compatibility wrappers. Removal sequencing should avoid leaving migration guidance pointing at a wrapper that was already deleted
+- This pass did not add deprecation attributes or remove APIs, so no compiler-level consumer signal exists yet
+
+RECOMMENDED ORDER OF FUTURE CLEANUP
+
+1. Keep current runtime behavior and canonical lanes unchanged; treat cleanup as API-surface reduction only
+2. In the dedicated compatibility-breaking pass, remove Batch A first and update parity tests to validate only canonical lanes plus any intentionally retained wrappers
+3. Re-audit external consumers for query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries before deciding whether Batch C can move into Batch A or Batch B
+4. Once README migration guidance is rewritten to point only at canonical lanes, remove Batch B in the same breaking pass or the immediately following one
+5. After each removal step, preserve contract coverage around the canonical lanes so compatibility-wrapper deletion cannot silently change report or summary semantics

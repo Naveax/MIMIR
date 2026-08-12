@@ -1,0 +1,11 @@
+top-level execute->report-index->summary-index wrapper added: yes
+helper name: query_stub_execute_register_report_and_index_load_summary
+delegates only to existing execute/report-index/query-load/summary-index helpers: yes
+avoids directory scanning: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 133
+exact validation commands run:
+cargo fmt --all
+cargo check --workspace --all-targets --all-features
+cargo test --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p mimir-export -- --list

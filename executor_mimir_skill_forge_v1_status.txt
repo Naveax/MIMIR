@@ -1,0 +1,16 @@
+pass type: MIMIR Skill Forge v1 architecture / spec pass
+runtime behavior changed: no
+public APIs added: no
+public APIs removed: no
+skill-forge-spec artifact added: yes
+staged-delivery artifact added: yes
+first-prototype artifact added: yes
+next-steps artifact added: yes
+source/docs changed: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 173
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

@@ -1,0 +1,92 @@
+executor optional/defaulted proposal fields boundary
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: optional/defaulted proposal-field loader semantics no-change lock
+
+A. CURRENT TRUTH
+
+required on persisted-input load
+- Proposal `label` is currently required.
+  Evidence:
+  - `crates/mimir-types/src/lib.rs`: `PersistedVerticalSliceProposal.label` has no `#[serde(default)]`.
+  - `crates/mimir-cli/src/vertical_slice.rs`: `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+  - `executor_stage77_closure_batch_audit.txt`: explicitly records required-field rejection for missing proposal `label` as closed.
+
+optional/defaulted on persisted-input load
+- Proposal `actions` currently defaults on deserialize.
+- Proposal `legal_hint` currently defaults on deserialize.
+- Proposal `metadata` currently defaults on deserialize.
+- Proposal `score_signals` currently defaults on deserialize.
+  Evidence:
+  - `crates/mimir-types/src/lib.rs`: `PersistedVerticalSliceProposal.actions`, `legal_hint`, `metadata`, and `score_signals` each carry `#[serde(default, ...)]`.
+  - `crates/mimir-io/src/lib.rs`: `read_vertical_slice_input_artifact(...)` uses `read_artifact_auto(...)`, which deserializes the persisted payload rather than applying extra required-field tightening.
+  - `crates/mimir-cli/src/vertical_slice.rs`: `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface` removes `label`, `actions`, `legality_hint`, and `metadata`, then explicitly proves the branch artifact still reloads through the defaulted schema before the downstream drift guard fails.
+  - `executor_stage77_closure_batch_audit.txt`: states optional/defaulted proposal fields `actions`, `legal_hint`, and `metadata` were deferred because current persisted contracts intentionally default them on deserialization.
+  - `executor_deterministic_family_closure_summary.txt`, `executor_deterministic_family_contract_index.txt`, and `executor_deterministic_family_matrix_freeze.txt`: all classify optional/defaulted proposal-field loader semantics as partial/deferred rather than a closed missing-field rejection surface.
+
+scope note
+- The deterministic-family closure artifacts explicitly name the proposal-surface trio `actions`, `legal_hint`, and `metadata` as the deferred no-change surface.
+- The underlying loader struct also defaults `score_signals`, but this pass does not widen the deterministic-family deferred surface beyond what the existing artifacts already name.
+
+B. WHAT IS ALREADY GUARDED
+
+required-field rejection already proven
+- Missing proposal `label` already has an explicit failure-path proof.
+  Evidence:
+  - `crates/mimir-cli/src/vertical_slice.rs`: `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+  - `executor_stage77_closure_batch_audit.txt`
+
+downstream exported-payload propagation already proven
+- Proposal label/actions/legal_hint/metadata propagation into exported branch payloads is already proven on both deterministic lanes.
+  Evidence:
+  - Stage69: `deterministic_vertical_slice_explicitly_propagates_proposal_actions_legal_hint_and_metadata_without_perturbing_other_contract_edges`
+  - Stage77: `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+  - `executor_deterministic_family_closure_summary.txt`
+  - `executor_deterministic_family_contract_index.txt`
+
+downstream negative-drift coverage already proven
+- Exported Stage77 branch payload negative drift for the proposal surface is already guarded downstream.
+  Evidence:
+  - `crates/mimir-cli/src/vertical_slice.rs`: `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface`
+  - `executor_stage77_closure_batch_audit.txt`
+- That guard proves the repo already detects downstream branch-payload drift without converting the persisted-input loader into a stricter required-field contract.
+
+C. WHAT REMAINS INTENTIONALLY DEFAULTING
+
+current loader behavior
+- Missing optional/defaulted proposal fields currently deserialize as defaults instead of failing load.
+- For the deferred proposal-surface trio, that means:
+  - missing `actions` -> empty action list
+  - missing `legal_hint` -> `None`
+  - missing `metadata` -> empty metadata map
+- The current type definition also means:
+  - missing `score_signals` -> empty score-signal map
+
+current deterministic-family meaning
+- The closure family intentionally keeps that defaulting behavior.
+- The current contract is:
+  - reject missing required `label`
+  - keep defaulting optional/defaulted proposal fields on load
+  - rely on downstream proposal-surface propagation and negative-drift guards for the already-closed exported-payload boundary
+
+D. WHY THIS IS NOT AN OPEN BUG
+
+- Repo-local closure artifacts already distinguish this surface from true open defects.
+- `executor_stage77_closure_batch_audit.txt` says broader persisted-input negative drift for optional/defaulted proposal fields was deferred because tightening that into loader failures would widen semantics beyond a bounded closure batch.
+- `executor_deterministic_family_closure_summary.txt` says optional/defaulted persisted-input proposal fields are only partially closed because downstream coverage exists while missing-field rejection is not part of the current contract.
+- `executor_deterministic_family_contract_index.txt` marks persisted-input rejection for missing optional proposal fields as `deferred`, with intentional absence as the proof type.
+- `executor_deterministic_family_matrix_freeze.txt` marks optional/defaulted proposal-field loader semantics as `deferred` and warns that silently turning them into failures would be a semantics change.
+- That means the missing-field rejection gap here is not "unfinished closure"; it is an intentional contract boundary.
+
+E. NO-CHANGE DECISION
+
+- Keep optional/defaulted proposal fields defaulting on load.
+- Do not convert missing optional/defaulted proposal fields into loader failures without an explicit semantics-change decision.
+- Do not relabel this deferred surface as a missing runtime proof.
+- Do not treat the existing required-field proof for `label` as permission to tighten `actions`, `legal_hint`, `metadata`, or other defaulted proposal fields by implication.
+
+F. WHAT WOULD JUSTIFY FUTURE CHANGE
+
+- An explicit contract decision that persisted-input proposal fields should stop defaulting and become required.
+- A schema-version bump or equivalent contract-promotion event that makes the tighter loader contract explicit and auditable.
+- Real repo-local evidence that current defaulting behavior is causing confusion, silent breakage, or downstream ambiguity that the existing exported-payload guards do not already catch.
+- A deliberately scoped semantics-change pass that updates loader behavior, artifacts, tests, and closure docs together instead of presenting the change as mere documentary closure.

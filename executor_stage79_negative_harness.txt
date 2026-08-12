@@ -1,0 +1,36 @@
+helper names added or updated
+- `assert_fixture_lane_scoreboard_row_count_drift_fails_explicitly`
+- `assert_fixture_lane_extra_teacher_artifact_count_drift_fails_explicitly`
+- `assert_fixture_lane_non_branch_teacher_target_drift_fails_explicitly`
+- `assert_fixture_lane_teacher_artifact_ordinal_file_drift_changes_snapshot`
+- `assert_fixture_lane_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+- `assert_fixture_lane_missing_teacher_artifact_fails_explicitly`
+
+crate(s) touched
+- `mimir-cli`
+
+which negative cases were extracted
+- scoreboard row count drift vs export bundle branch count
+- extra teacher artifact count drift vs scoreboard-derived expected count
+- non-branch teacher target drift
+- teacher artifact ordinal/file drift that still parses
+- anchor-count drift for golden snapshot helper
+- missing teacher artifact count drift vs scoreboard-derived expected count
+
+which negative tests remain explicit
+- `canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+  - kept explicit because the frozen scoreboard row order and exact Stage 69 snapshot delta are still fixture-specific and should stay readable at the call site
+- `deterministic_vertical_slice_fails_explicitly_without_fake_backend`
+  - kept explicit because it is runtime precondition validation, not a lane-agnostic negative matrix case
+
+whether any extracted helper was exercised on the second fixture lane
+- yes
+- `assert_fixture_lane_scoreboard_row_count_drift_fails_explicitly` is exercised by `second_deterministic_vertical_slice_loader_fails_explicitly_on_scoreboard_row_count_drift`
+- `assert_fixture_lane_teacher_artifact_ordinal_file_drift_changes_snapshot` is exercised by `second_deterministic_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this pass improves maintainability without weakening the negative contract
+- The extracted helpers centralize only the repeated tamper/reload/assert mechanics and compute expectations from each lane's own canonical output.
+- Stage 75 contract language stays explicit in the test names and exact error strings, while fixture-specific ordering assertions remain visible instead of being hidden behind a generic abstraction.

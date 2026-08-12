@@ -1,0 +1,48 @@
+executor mimir skill forge bc opaque caller-admitted replay-byte handoff realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+exact realization role chosen
+- consume only `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationOpaqueCallerAdmittedReplayByteHandoffContractV1`
+- realize only the already-frozen opaque caller-admitted replay-byte handoff objects per specimen
+- preserve bytes as opaque caller-admitted payload only
+- revalidate exact receipt-bound tuple agreement before producing a result
+
+exact Rust surface chosen
+- added one realization disposition enum
+- added one realization note enum
+- added one per-specimen realization result struct
+- added one lane result struct
+- added one top-level realization result struct
+- added one narrow realization function
+- added one narrow realization error enum
+
+truth boundaries preserved
+- the bytes remain opaque
+- this is not replay parsing
+- this is not replay-source actual-materialization success beyond opaque handoff realization
+- this is not replay-source carrier discovery
+- this is not replay-input locator success
+- this is not `mimir_replay::ReplayInput`
+- `source_replay`, `source_replay.provenance_label`, and `audited_family_root_directory` were not reinterpreted as replay paths or replay storage
+
+crate boundary decision
+- implementation stays in `mimir-skill`
+- `mimir-replay` was not modified
+- `mimir-io` was not modified
+- `mimir-export` was not modified
+- `mimir-types` was not modified
+
+failure decision
+- hard-fail on degraded immediate opaque handoff contract notes
+- hard-fail on lower byte-backed realization drift by revalidating a byte-backed realization view through the strict existing contract validator
+- hard-fail on lane/specimen order drift
+- hard-fail on duplicate artifact ids
+- hard-fail on receipt-bound path drift
+- hard-fail on empty opaque bytes
+- hard-fail on mismatch between handoff input, handoff output, and handoff object
+
+why this is narrow enough
+- no new carrier, locator, replay-input, parsing, tensor, export, or sidecar semantics were introduced
+- no existing export bundle semantics were widened
+- the realization result carries only the immediate opaque handoff contract disposition/notes, audited root, ordered realization lanes, realization disposition/notes, and chosen opaque handoff shape

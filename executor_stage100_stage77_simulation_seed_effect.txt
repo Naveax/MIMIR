@@ -1,0 +1,58 @@
+helper names added or updated
+- none added
+- none updated
+- reused existing `persisted_input_artifact_for_lane_with_simulation_seed`
+- reused existing `run_persisted_input_artifact_and_capture_simulation_requests`
+
+crate(s) touched
+- `crates/mimir-cli`
+
+exact `simulation_seed` mutation applied
+- baseline `simulation_seed = 77`
+- mutated `simulation_seed = 7701`
+
+exact captured seed values before/after
+- baseline captured `SimulationRequest.seed` values: `[77, 77]`
+- mutated captured `SimulationRequest.seed` values: `[7701, 7701]`
+- captured `SimulationRequest.simulation_id` order remained:
+  - `anchor-stage77-second:branch:0:deterministic-vertical-slice`
+  - `anchor-stage77-second:branch:1:deterministic-vertical-slice`
+
+whether canonical reload also ran and what stayed stable if so
+- yes
+- both runs used `run_persisted_input_artifact_and_capture_simulation_requests`, which completed the deterministic run and loaded the canonical result successfully
+- stable across baseline and mutated runs:
+  - `consumer_export.anchors`
+  - `consumer_export.branches`
+  - teacher artifacts
+  - scoreboard row branch ids
+  - scoreboard score vectors
+  - manifest export name
+- seed-derived `scoreboard.rows[*].step_hashes` changed, which is expected because the deterministic fake backend hashes `request.seed`
+
+what unrelated surfaces remained stable
+- persisted input header
+- `replay_id`
+- `export_name`
+- `teacher_namespace`
+- `anchor_hint`
+- `proposals`
+- proposal `score_signals`
+- proposal `labels`
+- proposal `actions`
+- proposal `legal_hint`
+- proposal `metadata`
+- `scorer_weights`
+- exported branch ids
+- exported anchor payload
+- teacher metadata surfaces unrelated to seed
+
+tests added or updated
+- added `second_deterministic_vertical_slice_directly_consumes_simulation_seed_without_perturbing_other_contract_edges`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this closes the next remaining hidden Stage77 deterministic-input edge without widening runtime semantics
+- this pass proves the exact hidden boundary directly: mutating only persisted `simulation_seed` changes only the captured `SimulationRequest.seed` values consumed by the deterministic Stage77 runtime path
+- the proof uses the existing test-local capture backend and existing canonical reload path; it does not widen runtime semantics, export semantics, CLI surface, or fixture machinery

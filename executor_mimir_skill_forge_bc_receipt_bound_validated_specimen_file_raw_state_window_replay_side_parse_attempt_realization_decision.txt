@@ -1,0 +1,150 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-side parse-attempt realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact realization role chosen
+- one low-boost-recovery-specific realization boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptContractV1`
+- exact job:
+  - admit only the existing replay-side parse-attempt contract result
+  - revalidate that the admitted contract still preserves the exact receipt-bound root/order/path
+    and per-specimen identity tuple
+  - emit the first truthful replay-side parse-attempt result surface above that contract
+  - stay strictly below replay parsing success and below raw-state/tensor/control materialization
+
+exact attempt-result shape defined
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationDispositionV1`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationNoteV1`
+- exact per-specimen result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationLaneResultV1`
+- exact top-level result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- exact error type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationError`
+- exact entry function:
+  - `realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_side_parse_attempt_v1(...)`
+- exact truthful result semantics chosen:
+  - the current implementation can only emit a truthful blocked / unavailable replay-side
+    parse-attempt result
+- exact disposition:
+  - `RealizedForTruthfulBlockedReplaySideParseAttemptOnly`
+
+exact output / disposition chosen
+- exact top-level output fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_contract_disposition`
+  - ordered `source_contract_notes`
+  - `source_chosen_locator_contract_shape`
+  - `source_chosen_materialization_contract_shape`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `realization_disposition`
+  - ordered `realization_notes`
+  - `chosen_replay_parsing_contract_shape`
+- exact per-specimen output fields:
+  - `specimen_ordinal`
+  - `consumed_replay_side_parse_attempt_input`
+  - `preserved_replay_side_parse_attempt_output_boundary`
+  - `replay_side_parse_attempt_disposition`
+- exact note set:
+  - `ReplaySideParseAttemptContractBoundaryPreserved`
+  - `ContractInputsRevalidated`
+  - `AuditedFamilyRootReferencePreservedAsBcSpecimenTreeAnchor`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ArtifactIdsPreserved`
+  - `AnchoredBcSpecimenFilePathsPreserved`
+  - `SourceRawStateWindowRefsPreserved`
+  - `ReceiptBoundSourceLineagePreservedForBlockedReplaySideParseAttemptOnly`
+  - `ObservationBindingKindAndAcceptedReferenceWindowPreservedForDeferredObservationAccess`
+  - `SourceReplayReferenceRemainsOpaqueLineageOnly`
+  - `ReplaySideAccessStillUnavailableForTruthfulAttemptOnly`
+  - `TruthfulBlockedReplaySideParseAttemptResultOnly`
+  - `ReplayParsingStillDeferred`
+  - `ActualRawStatePayloadMaterializationDeferred`
+  - `TensorAndControlMaterializationStillDeferred`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationStillForbidden`
+
+why this exact truthful shape was chosen
+- The admitted contract preserves only lineage fields:
+  - `source_replay`
+  - `source_raw_state_window_ref`
+  - deferred observation lineage
+- It does not preserve a replay file path, replay bytes, or another replay storage handle.
+- The audited family root remains only the BC specimen-tree anchor and may not be reinterpreted as
+  replay storage.
+- `mimir-replay` still exposes no real parser success surface beyond `UnsupportedReplayReader`.
+- Therefore anything stronger than a blocked/unavailable result would be a fake access claim.
+
+exact admission / failure decisions chosen
+- Admit only the exact replay-side parse-attempt contract result.
+- Require the exact source realization disposition/note set, the exact replay-parsing reopen
+  decision disposition/note set already embedded in the contract, the exact locator/materialization
+  shapes, the exact contract disposition/note set, the exact replay-side parse-attempt shape, the
+  exact audited family root basename/existence/directory-ness, and exact lane/specimen order.
+- Require every replay-side parse-attempt input to still match the admitted materialization-attempt
+  input on:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+- Require every replay-side parse-attempt output boundary to still match that replay-side
+  parse-attempt input on the same identity tuple and to still match the admitted output boundary on:
+  - `preserved_observation_binding_kind`
+  - `preserved_accepted_reference_window`
+- Hard fail on degraded contract input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on artifact-id drift or duplicate artifact ids.
+- Hard fail on any attempt to reinterpret the audited family root as replay storage.
+- Hard fail on any attempt to widen this pass into actual replay parsing success, raw-state payload
+  materialization, tensor/control materialization, sidecars, manifests, generic indexing, or
+  `mimir_export`.
+
+what was intentionally excluded
+- any actual replay parsing success
+- any replay file or replay byte resolution
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - the new replay-side parse-attempt realization DTOs
+  - the realization error surface
+  - the strict contract validator for this realization boundary
+  - `realize_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_side_parse_attempt_v1(...)`
+  - narrow tests covering valid semantics, degraded contract rejection, identity-drift rejection,
+    and determinism
+- Added because the repo already treats realization boundaries as machine-verifiable admitted
+  layers. Leaving this pass as prose only would force the next pass to infer the result semantics
+  from documentation instead of consuming an explicit family-specific realization result.
+- No `mimir-types`, `mimir-io`, `mimir-replay`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The repo now has one explicit machine-verifiable replay-side parse-attempt realization result.
+- That result is truthful about the current limit:
+  - replay-side access is still unavailable
+  - replay parsing success is still deferred
+- The next pass no longer needs to guess whether the correct honest output is a blocked result or
+  whether any replay-side access semantics already exist.
+- The next immediate task is now obvious and narrow:
+  - decide whether actual replay parsing success / parser implementation should be deliberately
+    reopened above this blocked realization boundary
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

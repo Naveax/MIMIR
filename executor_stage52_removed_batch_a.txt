@@ -1,0 +1,28 @@
+removed wrappers list
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+- query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+
+retained wrapper groups untouched in this pass
+- canonical execution-result builders, loaders, validators, persistence helpers, and aggregation helpers
+- retained compatibility wrappers outside Batch A, including report persistence/index wrappers, report query/load wrappers, summary registration/index-load wrappers, summary query/load wrappers, summary query/aggregate wrappers, and the stage31/stage32 publication bridge wrapper
+- Batch B wrappers untouched
+- Batch C wrappers untouched
+
+parity coverage updates performed
+- removed the Batch A tail from the stage47 compatibility wrapper parity cluster
+- retained stage47 parity coverage for non-Batch-A wrappers
+- deleted Batch A wrapper-specific stage28, stage34, stage35, and stage36 test blocks
+- preserved canonical helper, canonical end-to-end, canonical failure-path, mutation/schema, and repeatability coverage
+
+confirmation that no Batch A symbol names remain repo-locally
+- confirmed clean in active source/docs/test surfaces targeted by this pass:
+  - crates/mimir-export/src/lib.rs
+  - README.md
+  - docs/
+  - repo-local tests
+- note: older executor/audit text artifacts from prior stages still contain historical mentions of the removed names
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- 198 tests

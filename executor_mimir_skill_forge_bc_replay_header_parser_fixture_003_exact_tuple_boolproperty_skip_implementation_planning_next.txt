@@ -1,0 +1,83 @@
+executor mimir skill forge bc replay header parser fixture 003 exact tuple boolproperty skip implementation planning next
+
+selected outcome
+- Outcome A
+
+direct implementation safe next
+- yes
+
+next pass
+- may implement only exact Fixture003Exact plus exact non-selected BoolProperty skip-only handling
+  in crates/mimir-replay/src/lib.rs
+
+allowed next-pass parser code scope
+- add SUPPORTED_BUILD_VERSION_FIXTURE_003 = "251020.62592.500294"
+- add private SupportedReplayHeaderTupleV1::Fixture003Exact
+- extend supported_replay_header_tuple_v1(...) with exactly one new BuildVersion allowlist arm
+- keep major/minor/net/game_type/ReplayVersion exact
+- keep unknown BuildVersion rejected
+- add non-selected BoolProperty skip-only handling:
+  - declared property_size must be 0
+  - ignored field remains read by the existing parser flow
+  - consume exactly one value byte
+  - accept only value byte 0 or 1
+  - invalid value byte fails malformed or equivalent existing error
+  - missing value byte fails insufficient or equivalent existing error
+- keep selected BoolProperty unsupported
+- keep bForfeit absent from metadata
+- keep BoolProperty -> FieldValue::Boolean closed
+
+required next-pass tests
+- fixture_001 regression
+- fixture_001 header-only stop-boundary
+- fixture_002 regression
+- fixture_002 header-only stop-boundary
+- fixture_003 exact happy path
+- fixture_003 header-only stop-boundary at 11198 bytes
+- non-selected BoolProperty skip-only regression
+- selected BoolProperty unsupported regression
+- malformed BoolProperty tests for nonzero declared size, missing value byte, and invalid value byte
+- unknown BuildVersion rejection
+- ReplayInput::File remains unsupported
+- CRC non-validation remains unchanged
+
+required next-pass artifacts
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_003_EXACT_TUPLE_BOOLPROPERTY_SKIP_IMPLEMENTATION_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_003_exact_tuple_boolproperty_skip_implementation_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_003_exact_tuple_boolproperty_skip_implementation_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_003_exact_tuple_boolproperty_skip_implementation_status.txt
+
+required next-pass validation
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test -p mimir-replay -- --nocapture
+- cargo test -p mimir-skill -- --nocapture
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+fixture missing rule
+- if sample_003.replay is missing, fixture-specific fixture_003 tests may skip with an explicit
+  fixture-missing message
+- do not claim fixture_003 parser success if fixture_003 tests skip
+- synthetic tuple and BoolProperty tests must still run
+
+must not happen next
+- no broad parser expansion
+- no broad version-family support
+- no ReplayVersion = 8 family support
+- no wildcard BuildVersion support
+- no future unknown build support
+- no ReplayInput::File support
+- no replay-source materialization
+- no path/hash/filename/provenance/artifact-id parser facts
+- no CRC validation
+- no content_crc read or validation in MIMIR parser code
+- no body/raw-state/frame/event parsing
+- no bForfeit metadata mapping
+- no BoolProperty -> FieldValue::Boolean metadata mapping
+- no backend replay parser dependencies
+- no CLI/runtime/export behavior
+
+no broad parser expansion yet
+- yes

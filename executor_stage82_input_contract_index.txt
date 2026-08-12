@@ -1,0 +1,325 @@
+executor stage 82 vertical-slice input contract index / lane manifest
+
+scope
+- repo root: `D:\RocketLeague bot\MIMIR`
+- contract family: persisted vertical-slice input artifact -> lane materialization -> deterministic runtime fixture execution
+- authoritative code locations:
+  - `crates/mimir-types/src/lib.rs`
+  - `crates/mimir-io/src/lib.rs`
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs`
+  - `crates/mimir-cli/src/vertical_slice.rs`
+
+A. INPUT ARTIFACT ENTRYPOINTS
+
+type names
+- `mimir_types::PersistedVerticalSliceAnchorHint`
+- `mimir_types::PersistedVerticalSliceProposal`
+- `mimir_types::PersistedVerticalSliceInput`
+- `mimir_types::VerticalSliceInputArtifactPayload`
+- `mimir_types::PersistedVerticalSliceInputArtifact`
+
+schema names / constants
+- `mimir_types::ArtifactKind::VerticalSliceInput`
+- `mimir_types::VERTICAL_SLICE_INPUT_ARTIFACT_SCHEMA`
+- `mimir_types::VERTICAL_SLICE_INPUT_ARTIFACT_SCHEMA_NAME`
+- `mimir_types::VERTICAL_SLICE_INPUT_ARTIFACT_SCHEMA_VERSION`
+- current schema identity:
+  - schema name: `mimir.vertical_slice_input_artifact`
+  - schema version: `1`
+
+IO helper names
+- `mimir_io::write_vertical_slice_input_artifact(...)`
+- `mimir_io::read_vertical_slice_input_artifact(...)`
+- `mimir_io::vertical_slice_input_artifact_path(...)`
+- lower-level schema guard used by some tests:
+  - `mimir_io::read_artifact_auto::<PersistedVerticalSliceInput>(..., ArtifactKind::VerticalSliceInput.schema())`
+
+persisted file path
+- canonical path helper returns:
+  - `output_dir/vertical-slice-input.json`
+- the current lane path is written and then reloaded by:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::load_persisted_fixture_for_lane(...)`
+
+B. INPUT FIELD SURFACE
+
+top-level payload: `mimir_types::PersistedVerticalSliceInput`
+- `replay_id: ReplayId`
+  - persisted replay identity for the lane
+- `export_name: String`
+  - persisted export bundle name
+- `teacher_namespace: String`
+  - persisted teacher-label namespace seed
+- `simulation_seed: u64`
+  - persisted deterministic simulation seed
+- `anchor_hint: PersistedVerticalSliceAnchorHint`
+  - nested persisted anchor description
+- `proposals: Vec<PersistedVerticalSliceProposal>`
+  - persisted proposal list in explicit lane order
+- `scorer_weights: BTreeMap<String, f64>`
+  - persisted weighted-sum scorer coefficients
+
+anchor_hint field surface: `mimir_types::PersistedVerticalSliceAnchorHint`
+- `anchor_id: Option<AnchorId>`
+- `frame_index: FrameIndex`
+- `kind: AnchorKind`
+- `metadata: Metadata`
+
+proposals field surface: `mimir_types::PersistedVerticalSliceProposal`
+- `label: String`
+- `actions: Vec<ActionRecord>`
+- `legal_hint: Option<bool>`
+- `metadata: Metadata`
+- `score_signals: BTreeMap<String, f64>`
+
+score-related persisted groups
+- per-proposal `score_signals`
+  - current lanes use `coverage` and `stability`
+- top-level `scorer_weights`
+  - current lanes use `coverage -> 1.0`, `stability -> 0.5`
+
+header metadata visible on current persisted lane artifacts
+- header kind/schema comes from `ArtifactKind::VerticalSliceInput`
+- header producer: `mimir-cli-tests`
+- header `created_by_component`: `vertical-slice-test-support`
+- header metadata:
+  - `fixture_lane -> Stage69Sample` or `fixture_lane -> Stage77Second`
+
+C. RUNTIME MATERIALIZATION MAP
+
+materialization entrypoint
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::fixture_from_persisted_input(...)`
+
+persisted anchor hint -> runtime anchor hint
+- source:
+  - `artifact.payload.anchor_hint`
+- destination:
+  - `mimir_anchor::AnchorHint`
+- exact field mapping:
+  - `anchor_id -> anchor_id`
+  - `frame_index -> frame_index`
+  - `kind -> kind`
+  - `metadata -> metadata`
+- runtime use:
+  - passed into `HintAnchorDetector.detect_persisted(...)` through `run_deterministic_vertical_slice(...)`
+
+persisted proposals -> runtime proposal fixture / branch proposal
+- source:
+  - `artifact.payload.proposals`
+- destination outer wrapper:
+  - `Vec<VerticalSliceProposalFixture>`
+- destination inner proposal:
+  - `mimir_branch::BranchProposal`
+- exact mapping per proposal:
+  - `label -> branch_proposal.label`
+  - `actions -> branch_proposal.actions`
+  - `legal_hint -> branch_proposal.legal_hint`
+  - `metadata -> branch_proposal.metadata`
+  - `score_signals -> VerticalSliceProposalFixture.score_signals`
+- runtime use:
+  - `branch_proposal` values feed `BoundedManualBranchGenerator`
+  - `score_signals` feed `score_branch(...)`
+
+persisted score_signals -> scorer input
+- source:
+  - `VerticalSliceProposalFixture.score_signals`
+- runtime consumer:
+  - `crates/mimir-cli/src/vertical_slice.rs::score_branch(...)`
+- exact call:
+  - `WeightedSumScorer::score(Some(branch_id.clone()), score_signals)`
+- implication:
+  - proposal-local score component values remain lane-defined and are not inferred anywhere else
+
+persisted scorer_weights -> runtime scorer_weights
+- source:
+  - `artifact.payload.scorer_weights`
+- destination:
+  - `VerticalSliceFixture.scorer_weights`
+- runtime consumer:
+  - `WeightedSumScorer::new(fixture.scorer_weights.clone())`
+
+header metadata / fixture lane identity handling
+- persisted header metadata does not alter runtime scoring, anchor generation, or branch generation
+- current lane identity is carried by:
+  - header metadata key `fixture_lane`
+  - the explicit constructor match arm in `persisted_input_artifact_for_lane(...)`
+- fixture identity is therefore still explicit in test-support code, not discovered via a registry
+
+other top-level field mappings
+- `replay_id -> VerticalSliceFixture.replay_id`
+  - then into `HintAnchorDetector.detect_persisted(...)`
+- `export_name -> VerticalSliceFixture.export_name`
+  - then into export manifest identity and teacher-label ids
+- `teacher_namespace -> VerticalSliceFixture.teacher_namespace`
+  - then into teacher synthesis request namespace and teacher artifact metadata
+- `simulation_seed -> VerticalSliceFixture.simulation_seed`
+  - then into `SimulationRequest.seed` for every generated branch simulation request
+
+D. LANE MANIFEST
+
+Stage69Sample
+- input artifact constructor source:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane(...)`
+  - match arm: `VerticalSliceFixtureLane::Stage69Sample`
+- lane identity metadata:
+  - header metadata `fixture_lane = Stage69Sample`
+  - header producer `mimir-cli-tests`
+  - header `created_by_component = vertical-slice-test-support`
+- replay / export / anchor identity:
+  - `replay_id = replay-stage69`
+  - `export_name = stage69-vertical-slice`
+  - `teacher_namespace = stage69.teacher`
+  - `simulation_seed = 69`
+  - `anchor_hint.anchor_id = anchor-stage69`
+  - `anchor_hint.frame_index = 128`
+  - `anchor_hint.kind = manual`
+  - `anchor_hint.metadata.source = stage69-fixture`
+- proposal labels:
+  - proposal 0: `candidate-alpha`
+  - proposal 1: `candidate-beta`
+- proposal-local score signals:
+  - `candidate-alpha`: `coverage = 2.0`, `stability = 3.0`
+  - `candidate-beta`: `coverage = 4.0`, `stability = 2.0`
+- score ordering implications under current scorer weights:
+  - weights: `coverage = 1.0`, `stability = 0.5`
+  - totals:
+    - `candidate-alpha` -> `3.5`
+    - `candidate-beta` -> `5.0`
+  - scoreboard row order remains branch generation order:
+    - branch 0 then branch 1
+  - teacher ranking order sorts by total score descending:
+    - branch 1 then branch 0
+- frozen snapshot linkage:
+  - expected snapshot source:
+    - `crates/mimir-cli/src/vertical_slice_test_support.rs::expected_golden_snapshot_for_lane(...)`
+    - `crates/mimir-cli/src/vertical_slice_test_support.rs::expected_stage73_golden_snapshot()`
+  - current frozen branch ids:
+    - `anchor-stage69:branch:0`
+    - `anchor-stage69:branch:1`
+
+Stage77Second
+- input artifact constructor source:
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_input_artifact_for_lane(...)`
+  - match arm: `VerticalSliceFixtureLane::Stage77Second`
+- lane identity metadata:
+  - header metadata `fixture_lane = Stage77Second`
+  - header producer `mimir-cli-tests`
+  - header `created_by_component = vertical-slice-test-support`
+- replay / export / anchor identity:
+  - `replay_id = replay-stage77-second`
+  - `export_name = stage77-second-vertical-slice`
+  - `teacher_namespace = stage77.second.teacher`
+  - `simulation_seed = 77`
+  - `anchor_hint.anchor_id = anchor-stage77-second`
+  - `anchor_hint.frame_index = 256`
+  - `anchor_hint.kind = manual`
+  - `anchor_hint.metadata.source = stage77-second-fixture`
+- proposal labels:
+  - proposal 0: `candidate-gamma`
+  - proposal 1: `candidate-delta`
+- proposal-local score signals:
+  - `candidate-gamma`: `coverage = 5.0`, `stability = 2.0`
+  - `candidate-delta`: `coverage = 2.0`, `stability = 1.0`
+- score ordering implications under current scorer weights:
+  - weights: `coverage = 1.0`, `stability = 0.5`
+  - totals:
+    - `candidate-gamma` -> `6.0`
+    - `candidate-delta` -> `2.5`
+  - scoreboard row order remains branch generation order:
+    - branch 0 then branch 1
+  - teacher ranking order remains:
+    - branch 0 then branch 1
+- frozen snapshot linkage:
+  - expected snapshot source:
+    - `crates/mimir-cli/src/vertical_slice_test_support.rs::expected_golden_snapshot_for_lane(...)`
+  - current frozen branch ids:
+    - `anchor-stage77-second:branch:0`
+    - `anchor-stage77-second:branch:1`
+
+E. TEST COVERAGE MAP
+
+types round-trip
+- `crates/mimir-types/src/lib.rs::persisted_vertical_slice_input_artifact_round_trips_through_json`
+- protects:
+  - envelope/header + payload JSON round-trip for the vertical-slice input artifact type surface
+
+io wrapper round-trip
+- `crates/mimir-io/src/lib.rs::writes_and_reads_vertical_slice_input_artifact_with_wrapper`
+- protects:
+  - wrapper write/read helpers and canonical file-path readback behavior
+
+schema mismatch rejection
+- `crates/mimir-io/src/lib.rs::vertical_slice_input_wrapper_rejects_schema_mismatch_explicitly`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_schema_mismatch_fails_explicitly`
+- protects:
+  - explicit unsupported-schema failure path for persisted input artifacts
+
+wrong-kind rejection
+- `crates/mimir-io/src/lib.rs::vertical_slice_input_wrapper_rejects_wrong_artifact_kind_explicitly`
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_wrong_kind_fails_explicitly`
+- protects:
+  - wrong-kind artifacts failing at the canonical schema boundary rather than materializing silently
+
+persisted Stage69 materialization -> same frozen snapshot
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_stage69_vertical_slice_input_materializes_same_frozen_snapshot`
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_persists_reloadable_outputs`
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`
+
+persisted Stage77 materialization -> same frozen snapshot
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_stage77_vertical_slice_input_materializes_same_frozen_snapshot`
+- `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_persists_reloadable_outputs`
+- `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`
+
+repeated-run determinism through persisted input path
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::persisted_vertical_slice_input_repeated_runs_stay_identical`
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_is_identical_across_repeated_runs`
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+- `crates/mimir-cli/src/vertical_slice.rs::second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+
+inherited parity / negative harness coverage via rewired `run_fixture_lane(...)`
+- because `run_fixture_lane(...)` now calls `load_persisted_fixture_for_lane(...)`, the existing helpers execute through persisted input materialization before runtime execution
+- shared parity helpers reached through that path:
+  - `assert_fixture_lane_matches_expected_contract(...)`
+  - `assert_fixture_lane_repeated_runs_are_identical(...)`
+  - `assert_fixture_lanes_have_distinct_golden_snapshots(...)`
+- shared negative helpers reached through that path:
+  - `assert_fixture_lane_scoreboard_row_count_drift_fails_explicitly(...)`
+  - `assert_fixture_lane_extra_teacher_artifact_count_drift_fails_explicitly(...)`
+  - `assert_fixture_lane_missing_teacher_artifact_fails_explicitly(...)`
+  - `assert_fixture_lane_non_branch_teacher_target_drift_fails_explicitly(...)`
+  - `assert_fixture_lane_teacher_artifact_ordinal_file_drift_changes_snapshot(...)`
+  - `assert_fixture_lane_snapshot_fails_explicitly_when_anchor_count_is_not_one(...)`
+- representative tests exercising inherited coverage:
+  - `canonical_vertical_slice_result_loader_fails_explicitly_on_scoreboard_row_count_drift`
+  - `canonical_vertical_slice_result_loader_fails_explicitly_on_extra_teacher_artifact_drift`
+  - `canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing`
+  - `canonical_vertical_slice_teacher_targets_fail_explicitly_on_non_branch_target_drift`
+  - `canonical_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+  - `canonical_vertical_slice_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+  - `second_deterministic_vertical_slice_loader_fails_explicitly_on_scoreboard_row_count_drift`
+  - `second_deterministic_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+  - `deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+
+F. EXPLICIT NON-GOALS / NON-GENERALIZED AREAS
+
+still intentionally narrow
+- no real replay ingestion
+- no adapter registry
+- no generalized fixture catalog loader
+- lane identities remain explicit in test-support code
+- runtime still consumes `VerticalSliceFixture` after input artifact materialization
+
+not changed in this pass
+- no new feature logic
+- no real rollout logic
+- no policy training or live orchestration
+- no schedulers, retries, queues, or network dependency
+- no widened export bundle semantics
+- no new runtime CLI commands
+- no execution-result cleanup boundary changes
+
+current trusted reading order for future work
+1. `crates/mimir-types/src/lib.rs`
+2. `crates/mimir-io/src/lib.rs`
+3. `crates/mimir-cli/src/vertical_slice_test_support.rs`
+4. `crates/mimir-cli/src/vertical_slice.rs`
+5. this file

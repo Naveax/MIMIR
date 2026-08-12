@@ -1,0 +1,63 @@
+executor mimir skill forge bc real replay parser backend integration contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+immediate next pass type
+- backend selection decision pass
+
+immediate next pass only
+- decide whether the future minimal real header parser should use an existing dependency or a narrow in-crate implementation
+- keep the parser target limited to `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- keep the first admitted input limited to `ReplayInput::Memory`
+- do not implement the parser
+- do not add dependencies unless the next pass explicitly authorizes dependency selection and remains decision-only or is explicitly reopened for code
+
+why this is the narrower next pass
+- this pass selected Outcome A and did not choose a concrete backend
+- implementation planning would be broader because it would assume a backend direction before that decision is made
+- backend selection can be decided without claiming parser readiness or parser success
+
+parser implementation status
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic status
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing status
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction status
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator status
+- replay-source materialization remains closed unless explicitly reopened
+- carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+still forbidden unless explicitly reopened
+- parser implementation
+- backend dependency addition
+- parser-success policy
+- `ReplayHeader` production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- interpreting `source_replay` as a replay path
+- interpreting `source_replay.provenance_label` as a replay path
+- interpreting `audited_family_root_directory` as replay storage
+- `mimir_export` widening
+

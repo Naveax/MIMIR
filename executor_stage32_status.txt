@@ -1,0 +1,11 @@
+summary persist/register/index-load helper added: yes
+helper name: persist_register_and_index_load_execution_result_job_report_collection_summary
+delegates only to existing summary persist + register + indexed-load helpers: yes
+avoids directory scanning: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 164
+exact validation commands run:
+cargo fmt --all
+cargo check --workspace --all-targets --all-features
+cargo test --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p mimir-export -- --list

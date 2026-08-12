@@ -1,0 +1,204 @@
+CURRENT CANONICAL BASELINES
+
+Historical note:
+- Stage 65 completed the recommended non-breaking internal rewiring of `query_stub_execute_persist_load_and_register_execution_result_job_report` to the canonical lower-level lane while preserving its public API and intended runtime behavior.
+- This file remains a Stage 64 readiness snapshot and should not be read as the current live implementation state.
+
+- Current surviving public execution-result wrapper count in `crates/mimir-export/src/lib.rs`: 6
+- Current surviving compatibility-wrapper count in `crates/mimir-export/src/lib.rs`: 3
+- Current canonical baseline set:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_index_load_summary`
+- Current surviving compatibility helpers in scope for this audit:
+  - `query_stub_execute_and_persist_execution_result_job_report`
+  - `query_stub_execute_persist_and_load_execution_result_job_report`
+  - `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+- README migration guidance status:
+  - canonical-only
+  - no README-documented compatibility aggregate waypoint remains
+  - the persist/register baseline is still the documented stub bridge
+
+CURRENT PERSIST-LANE BASELINE COMPOSITION
+
+- Baseline under review: `query_stub_execute_persist_load_and_register_execution_result_job_report`
+- Exact live call chain today:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_and_load_execution_result_job_report`
+  - `query_stub_execute_and_persist_execution_result_job_report`
+  - `query_and_stub_execute_execution_result_job_spec`
+  - `persist_execution_result_job_report`
+  - `load_execution_result_job_report`
+  - `register_execution_result_job_report_in_index`
+- Exact dependency edges:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report` depends directly on `query_stub_execute_persist_and_load_execution_result_job_report`
+  - `query_stub_execute_persist_and_load_execution_result_job_report` depends directly on `query_stub_execute_and_persist_execution_result_job_report`
+  - `query_stub_execute_and_persist_execution_result_job_report` depends directly on `query_and_stub_execute_execution_result_job_spec` and `persist_execution_result_job_report`
+- Exact proposed lower-level canonical replacement chain for a later internal-only rewiring pass:
+  - `query_and_stub_execute_execution_result_job_spec`
+  - `persist_execution_result_job_report`
+  - `load_execution_result_job_report`
+  - `register_execution_result_job_report_in_index`
+- Why that lower-level chain is exact:
+  - the Stage 47 explicit helper `stage47_explicit_query_stub_execute_persist_load_and_register_execution_result_job_report` already encodes the same canonical lane in repo-local test code
+  - the live wrapper body is only staircase composition; it does not add extra branching, fallback behavior, alternate persistence semantics, or alternate index semantics
+- Persisted artifact boundaries that must remain unchanged in any later rewiring pass:
+  - one report JSON write at `persist_execution_result_job_report`
+  - one report JSON reload at `load_execution_result_job_report`
+  - one report-index append/write at `register_execution_result_job_report_in_index`
+  - no added summary write, no alternate index file, no alternate path derivation, no hidden fan-out
+- Output ordering / value boundaries that must remain unchanged:
+  - returned value remains the loaded report, not the pre-persist in-memory report
+  - registration still occurs after reload and still uses the reloaded report value
+  - report index entry ordering remains whatever `register_execution_result_job_report_in_index` already produces today
+
+REWIRING FEASIBILITY ASSESSMENT
+
+- Future dedicated pass scope that appears feasible:
+  - rewrite only the internals of `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - preserve the public signature unchanged
+  - preserve wrapper name and public export
+  - preserve runtime semantics by keeping the same lower-level step order
+- Semantic drift risk: low
+- Rationale for low semantic drift risk:
+  - the baseline body is a pure staircase wrapper with no additional mutation beyond passing through the report path and index path
+  - the exact canonical lane already exists as Stage 47 explicit parity code in the same file
+  - current tests assert report equality, persisted reload equality, and index-entry field equality across the baseline
+- Validation coverage strength around the baseline: high
+- Coverage evidence:
+  - four dedicated baseline tests cover explicit-pipeline parity, latest-only selection, full-history selection, and field preservation
+  - one live Stage 47 parity assertion compares the wrapper to an explicit canonical replacement lane
+  - the baseline is also exercised transitively by downstream canonical and summary flows that call it
+  - the current `mimir_export` test surface remains large and contract-focused
+- Whether Stage 47 parity matters here: yes
+- Why Stage 47 parity matters here:
+  - it is the strongest repo-local proof that the proposed lower-level canonical expansion is not hypothetical
+  - it compares the live wrapper against the exact explicit step sequence that a rewiring pass would inline
+  - it lowers the risk that a later internal-only rewrite would accidentally return the pre-persist report or alter registration ordering
+- Whether canonical contract / end-to-end tests already give enough protection: mostly yes
+- Why protection is mostly yes rather than absolute:
+  - canonical contract and end-to-end tests already cover report persistence, report reload, report index registration, and downstream consumption
+  - baseline-specific tests already guard the wrapper surface directly
+  - the remaining unproven area is not semantics design; it is implementation discipline in the future rewiring pass
+- Additional audit evidence still needed before rewiring: minimal
+- Recommended pre-rewire evidence to gather in the dedicated rewiring pass:
+  - confirm the baseline still has no non-test callers outside `crates/mimir-export/src/lib.rs`
+  - keep the Stage 47 explicit parity helper or an equivalent direct explicit-pipeline assertion in place until after grouped removal is complete
+  - verify that no dedicated tests assert helper layering rather than observable behavior
+
+GROUPED-REMOVAL UNLOCK ANALYSIS
+
+- Rewiring target effect:
+  - if `query_stub_execute_persist_load_and_register_execution_result_job_report` is internally expanded to the canonical lower-level lane, the persist-lane compatibility stack underneath it stops being required by any canonical baseline
+
+- Helper: `query_stub_execute_persist_and_load_execution_result_job_report`
+  - current dependency edge:
+    - direct dependency from `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - dependency edge that would disappear after baseline rewiring:
+    - the only live canonical-baseline dependency on this helper
+  - cleanup still needed after rewiring:
+    - remove four dedicated wrapper tests tied only to this helper
+    - remove the live Stage 47 parity assertion and explicit replacement helper for this wrapper name if no other live surface needs them
+    - clean historical references only where they are meant to describe the live surface
+  - whether removal would then become cleanly compatibility-only: yes
+  - post-rewire removal readiness: strongly improved
+  - cleanup scope expectation: moderate but clean
+  - rationale:
+    - after the canonical-baseline dependency is gone, this helper becomes a compatibility-only staircase over canonical lower-level report execution/persist/load
+    - its remaining repo-local semantics are already exact and parity-backed
+
+- Helper: `query_stub_execute_and_persist_execution_result_job_report`
+  - current dependency edge:
+    - direct dependency from `query_stub_execute_persist_and_load_execution_result_job_report`
+  - dependency edge that would disappear after grouped cleanup:
+    - once `query_stub_execute_persist_and_load_execution_result_job_report` is removed, the last live source dependency on this helper disappears
+  - cleanup still needed after rewiring:
+    - either remove it in the same grouped pass as the persist/load helper or first prove there are no other repo-local callers
+    - clean any residual doc or historical references that present it as live guidance
+    - no dedicated wrapper-named tests appear to exist today, so cleanup is lighter than for the persist/load helper
+  - whether removal would then become cleanly compatibility-only: yes
+  - post-rewire removal readiness: strongly improved
+  - cleanup scope expectation: small to moderate
+  - rationale:
+    - its only current value is as a convenience step under another surviving compatibility helper
+    - once the baseline no longer routes through that chain, it becomes a pure compatibility wrapper over canonical execute/persist steps
+
+- Grouped-removal conclusion after baseline rewiring:
+  - grouped removal of `query_stub_execute_persist_and_load_execution_result_job_report` and `query_stub_execute_and_persist_execution_result_job_report` would become the cleanest repo-local next breaking move on the persist lane
+  - the grouped shape matters because removing only the lower helper first remains awkward until the upper helper is removed too
+
+COMPARE: REWIRE FIRST VS DEFER VS JUMP TO BATCH C
+
+- Option A: keep the baseline as-is and defer removal
+  - advantages:
+    - zero implementation risk now
+    - no need to touch canonical baseline internals
+  - disadvantages:
+    - canonical baseline continues to hide a two-helper compatibility stack
+    - both persist-lane compatibility helpers remain blocked from clean removal
+    - the repo keeps carrying avoidable wrapper layering inside a canonical baseline
+  - repo-local assessment:
+    - safe, but it preserves the main known blocker without reducing future cleanup scope
+
+- Option B: do a future internal rewiring pass first, then grouped-removal pass
+  - advantages:
+    - turns the baseline into an explicit canonical staircase without changing the public API
+    - removes the canonical-baseline blocker on the persist lane
+    - cleanly unlocks grouped removal of the two persist-lane compatibility helpers
+    - relies on existing parity and contract evidence rather than inventing new semantics
+  - disadvantages:
+    - requires one non-breaking implementation pass before the breaking cleanup pass
+    - future pass discipline still matters because the baseline is part of the supported surface
+  - repo-local assessment:
+    - best next path
+    - highest cleanup leverage for the lowest semantic risk
+
+- Option C: ignore persist-lane cleanup and jump to Batch C later
+  - advantages:
+    - avoids touching a supported canonical baseline
+    - keeps focus on isolated aggregate compatibility review
+  - disadvantages:
+    - does not reduce the persist-lane dependency stack at all
+    - Batch C still carries weaker parity evidence and higher external-consumer uncertainty than the persist-lane rewiring path
+    - skips the clearest repo-local cleanup lever currently available
+  - repo-local assessment:
+    - weaker than Option B
+    - only preferable if external compatibility risk dominates and the repo intentionally avoids any canonical-baseline internal cleanup
+
+- Best next path from repo-local evidence:
+  - B) do a future internal rewiring pass first, then grouped-removal pass
+
+POST-STAGE-63 DOC / ARTIFACT STATUS
+
+- `README.md`
+  - re-checked during Stage 64
+  - remains accurate
+  - migration guidance already points to canonical report and summary lanes
+  - no README edit required in this pass
+- `executor_stage63_remaining_helper_reclassification.txt`
+  - re-checked during Stage 64
+  - now carries a short historical note so it is not mistaken for the live post-Stage-64 assessment
+  - retained otherwise as a Stage 63 snapshot
+- Older stage artifacts
+  - remain historical
+  - no attempt was made to rewrite them as live state
+
+RECOMMENDED NEXT BREAKING STEP
+
+- Immediate conclusion for this audit pass:
+  - do not remove any wrapper in Stage 64
+  - do not rewire source in Stage 64
+- Recommended next breaking-step sequence:
+  - first run a dedicated non-breaking internal rewiring pass for `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - rewire that baseline internally to the exact canonical lower-level lane:
+    - `query_and_stub_execute_execution_result_job_spec`
+    - `persist_execution_result_job_report`
+    - `load_execution_result_job_report`
+    - `register_execution_result_job_report_in_index`
+  - then run a grouped breaking-removal pass for:
+    - `query_stub_execute_persist_and_load_execution_result_job_report`
+    - `query_stub_execute_and_persist_execution_result_job_report`
+- Why this is the recommended next breaking step:
+  - it removes the main repo-local blocker first
+  - it keeps the change narrow and auditable
+  - it uses exact existing contract/parity evidence instead of relying on guessed semantics

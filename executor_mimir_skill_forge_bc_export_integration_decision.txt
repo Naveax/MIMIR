@@ -1,0 +1,89 @@
+executor mimir skill forge bc export integration decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact integration point chosen
+- one narrow repo-local BC specimen consumer handoff surface in `mimir-skill`
+- exact function:
+  - `handoff_persisted_low_boost_recovery_bc_artifact_v1(...)`
+- exact result type:
+  - `LowBoostRecoveryBcArtifactConsumerHandoffV1`
+
+why this integration point was chosen
+- `mimir-io` already owns the correct narrow persisted-artifact boundary:
+  - raw read/write
+  - schema/version validation
+- Adding consumer semantics to `mimir-io` would widen IO ownership instead of proving one
+  family-specific consumer path.
+- `mimir-skill` already owns all low-boost-recovery family boundaries leading up to the persisted
+  BC artifact, so it is the narrowest honest owner for the first repo-local consumer handoff.
+- `mimir_export` remains explicitly out of scope.
+
+exact integration output / handoff chosen
+- `LowBoostRecoveryBcArtifactConsumerHandoffV1` preserves:
+  - `artifact_id`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_raw_state_window_ref`
+  - `source_phase_id`
+  - `accepted_reference_variant_id`
+  - `observation_binding_kind`
+  - `supervision_window_role`
+  - `accepted_reference_window`
+  - `target_binding_kind`
+  - `carried_confidence_band`
+  - `carried_unresolved_assumptions`
+- The handoff intentionally does not preserve:
+  - artifact header metadata
+  - artifact note bag
+  - duplicate target window field after equality has been enforced
+  - any replay state payload
+  - any tensor or control payload
+
+exact admission decisions chosen
+- Accept only `PersistedLowBoostRecoveryBcArtifact`.
+- Require the persisted header to remain:
+  - schema name `mimir.low_boost_recovery_bc_artifact`
+  - schema version `1`
+- Require payload family, artifact id, lineage fields, observation binding, target binding,
+  confidence band, unresolved assumptions, and artifact notes to remain on the exact low-boost-
+  recovery persisted-artifact boundary.
+- Require target window equality with the observation window.
+
+exact failure decisions chosen
+- Wrong schema name/version fails as artifact-envelope drift.
+- Blank lineage, family drift, artifact-id drift, observation-binding drift, target-lineage drift,
+  target-window drift, confidence drift, unresolved-assumption drift, or artifact-note drift fail
+  as payload-malformed.
+- No fallback repair is allowed.
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any batch export manifest/index work for BC artifacts
+- any generic multi-family integration framework
+- any tensor materialization
+- any action/control extraction
+- any replay parsing/mining/ingestion
+- any rollout/physics work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust type shaping / narrow implementation were added, and why
+- Yes.
+- Added one tiny family-specific integration result surface in `crates/mimir-skill/src/lib.rs`:
+  - `LowBoostRecoveryBcArtifactConsumerHandoffV1`
+- Added one narrow error surface in `crates/mimir-skill/src/lib.rs`:
+  - `LowBoostRecoveryBcArtifactIntegrationError`
+- Added one narrow constructor boundary in `crates/mimir-skill/src/lib.rs`:
+  - `handoff_persisted_low_boost_recovery_bc_artifact_v1(...)`
+- No `mimir-types` additions were needed because this handoff is repo-local and not yet a shared
+  persisted contract.
+- No `mimir_export` changes were made.
+
+why this is enough for the next pass
+- The repo now has one real persisted-artifact consumer path instead of only raw IO wrappers.
+- The next pass can build on an already-validated family-specific handoff without reaching back
+  into BC rows or accepted shells.
+- The next pass does not need to guess which persisted fields matter before consumer work begins.
+- `mimir_export` widening remains forbidden unless explicitly reopened.
+

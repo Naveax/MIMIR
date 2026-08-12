@@ -1,0 +1,55 @@
+executor mimir skill forge bc replay-input creation from opaque caller-admitted replay bytes realization status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+pass type
+- first realization pass for `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesContractV1`
+- selected family: low_boost_recovery
+- selected boundary: receipt-bound `ReplayInput::Memory` creation from opaque caller-admitted replay bytes
+
+runtime behavior changed
+- no
+
+public APIs added
+- yes
+- added low-boost-recovery-specific ReplayInput-creation realization disposition, notes, per-specimen result, lane result, top-level result, realization function, and realization error surface in `mimir-skill`
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- modified `crates/mimir-skill/src/lib.rs`
+- added `docs/MIMIR_SKILL_FORGE_BC_REPLAY_INPUT_CREATION_FROM_OPAQUE_CALLER_ADMITTED_REPLAY_BYTES_REALIZATION_V1.md`
+- added decision, next-step, and status artifacts
+
+forbidden crate boundary check
+- `mimir-replay` source modified: no
+- `mimir-io` modified: no
+- `mimir-export` modified: no
+- `mimir-types` modified: no
+- `mimir_export` widening: no
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+explicit non-claims
+- no replay parsing implemented
+- no parser-success logic implemented
+- no replay-source actual-materialization implementation added
+- no replay-source carrier discovery implemented
+- no replay-input locator logic implemented
+- no raw-state payload parsing implemented
+- no corpus ingestion implemented
+- no export widening implemented

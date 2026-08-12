@@ -1,0 +1,16 @@
+executor deterministic-family no-change locks
+repo root: D:\RocketLeague bot\MIMIR
+
+- fake-backend-only scope remains locked for this deterministic-family slice
+- no real replay parsing is added inside this deterministic-family slice
+- no real rollout, real physics, or live-backend widening is added inside this deterministic-family slice
+- no async/background systems are added inside this deterministic-family slice
+- no database code is added inside this deterministic-family slice
+- no runtime CLI commands are added inside this deterministic-family slice
+- no export-bundle semantic widening is allowed in this pass
+- no snapshot widening is allowed in this pass
+- no execution-result cleanup boundary changes are allowed in this pass
+- optional/defaulted proposal fields remain defaulting on load
+- missing required proposal `label` remains the targeted loader rejection already proven here
+- no independent branch-payload parity proof is pursued unless a genuinely distinct consumer path exists
+- already-closed Stage77 proof items remain closed unless new contrary evidence appears

@@ -1,0 +1,129 @@
+executor mimir skill forge bc receipt-bound raw-state-window locator reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact reopen role chosen
+- one low-boost-recovery-specific reopen-decision boundary above
+  `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1` and informed by
+  `LowBoostRecoveryBcRawStateWindowLookupRealizationProofResultV1`
+- exact job:
+  - admit only already-validated planning and proof inputs
+  - cross-validate that both inputs still describe the same preserved lane/specimen/artifact
+    population
+  - decide whether exactly one narrow receipt-bound locator contract may now be reopened
+  - if justified, freeze only the minimum contract shape and keep realization deferred
+
+exact reopen / no-reopen decision chosen
+- chosen decision:
+  - reopen justified for one narrow receipt-bound raw-state-window locator contract
+- exact reopened contract name:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractV1`
+- exact reason:
+  - the proof result already isolated one missing piece:
+    `MissingReceiptBoundRawStateWindowLocatorContract`
+  - the repo already preserves enough deterministic receipt-bound truth to define a contract
+    without widening architecture:
+    - `audited_family_root_directory`
+    - lane/specimen ordinals
+    - artifact ids
+    - planning-owned `source_raw_state_window_ref`
+    - deterministic low-boost-recovery lane/specimen naming rules
+- why this is still narrow:
+  - it binds one planning-owned specimen view to one deterministic BC specimen file only
+  - it does not interpret the family root as raw-state storage
+  - it does not materialize raw state
+
+exact criteria used
+- Require the missing piece to remain one contract-level problem rather than a storage redesign.
+- Require the reopened contract to stay low-boost-recovery-specific.
+- Require the reopened contract to stay strictly receipt-bound.
+- Require deterministic specimen-file path derivation from the audited family root to remain
+  available from already-fixed low-boost-recovery naming rules.
+- Require the contract to avoid sidecars, manifests, and generic indexing.
+- Require the contract to avoid `mimir_export`.
+- Require the contract to remain contract-only and not become actual lookup realization in this
+  pass.
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenDispositionV1`
+- exact disposition:
+  - `ReopenJustifiedForReceiptBoundSpecimenFileAnchoredLocatorContract`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenNoteV1`
+- exact chosen-shape type:
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorContractShapeV1`
+- exact chosen shape:
+  - `ReceiptBoundSpecimenFileAnchored`
+- exact success result type:
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenDecisionResultV1`
+- exact entry function:
+  - `decide_low_boost_recovery_bc_receipt_bound_raw_state_window_locator_reopen_from_planning_and_realization_proof_v1(...)`
+- exact success result fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_planning_disposition`
+  - ordered `source_planning_notes`
+  - `source_proof_disposition`
+  - ordered `source_proof_notes`
+  - `source_exact_insufficiency_marker`
+  - `audited_family_root_directory`
+  - `decision_disposition`
+  - ordered `decision_notes`
+  - `chosen_locator_contract_shape`
+
+exact admission / failure decisions chosen
+- Admit only
+  `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1` plus
+  `LowBoostRecoveryBcRawStateWindowLookupRealizationProofResultV1`.
+- Revalidate the planning input through the existing planning-boundary validator.
+- Revalidate the proof input through a new proof-result validator at this reopen boundary.
+- Require proof disposition to remain
+  `InsufficientForActualReceiptBoundRawStateWindowLookupRealization`.
+- Require proof marker to remain `MissingReceiptBoundRawStateWindowLocatorContract`.
+- Require planning/proof counts, audited family root, lane/specimen order, and artifact ids to
+  match exactly.
+- Hard fail on any degraded planning input.
+- Hard fail on any degraded proof input.
+- Hard fail on any planning/proof mismatch.
+- No soft no-reopen path was added for admitted valid input.
+- Reason no no-reopen path exists:
+  - the existing proof already narrowed the defect to one missing locator contract
+  - deterministic specimen-file path derivation already exists below this boundary
+  - valid admitted input already satisfies the reopen criteria
+
+what was intentionally excluded
+- any actual raw-state lookup realization
+- any raw-state locator/index implementation
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family downstream/export framework
+- any generic manifest/index framework
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenDispositionV1`
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenNoteV1`
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorContractShapeV1`
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenDecisionResultV1`
+  - `LowBoostRecoveryBcReceiptBoundRawStateWindowLocatorReopenDecisionError`
+  - `decide_low_boost_recovery_bc_receipt_bound_raw_state_window_locator_reopen_from_planning_and_realization_proof_v1(...)`
+- Added only because this pass bridges two already-code-backed boundaries in `mimir-skill`, so a
+  tiny machine-verifiable decision surface prevents the next pass from depending on prose alone.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The next pass no longer has to re-decide whether reopening is legal.
+- The next pass no longer has to guess the narrowest honest contract shape.
+- The next pass can stay narrow:
+  - define the specimen-file-anchored locator contract itself
+  - keep actual raw-state lookup realization deferred
+  - keep `mimir_export` closed unless separately reopened

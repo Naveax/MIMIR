@@ -1,0 +1,27 @@
+executor mimir skill forge bc byte-backed caller-admitted source-form contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+next pass
+- the first realization pass for
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormContractV1`
+
+scope of that next pass only
+- admit concrete caller-provided instances of
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormV1`
+- validate exact receipt-bound tuple agreement against the frozen contract
+- produce the first truthful realization result above this exact byte-backed caller-admitted contract
+
+what must remain forbidden in that next pass unless explicitly reopened
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- replay-source carrier discovery remains out of scope
+- replay-input locator logic remains out of scope
+- replay parsing remains out of scope
+- raw-state payload parsing remains out of scope
+- tensor/control materialization remains out of scope
+
+why this is the immediate next pass
+- the exact caller form is no longer open
+- the exact object shape is no longer open
+- the exact receipt-bound binding target is no longer open
+- the next missing truth is realization of this exact byte-backed caller-admitted contract

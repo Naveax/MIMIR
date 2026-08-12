@@ -1,0 +1,10 @@
+executor contract types added: yes
+added contract surface: ExecutionResultJobExecutor, ExecutionResultJobReport, ExecutionResultJobReportEntry, ExecutionResultJobReportStatus, validate_execution_result_job_report, validate_execution_result_job_report_entry
+concrete executor implementation added: no
+mimir_export test count (cargo test -p mimir-export -- --list): 21
+validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

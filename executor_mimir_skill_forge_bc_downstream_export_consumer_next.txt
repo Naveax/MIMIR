@@ -1,0 +1,48 @@
+executor mimir skill forge bc downstream export consumer next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- low-boost-recovery-specific filesystem/export-emission refinement above
+  `LowBoostRecoveryBcDownstreamExportConsumerResultV1`
+- still without `mimir_export`
+
+why this is the immediate next pass
+- The repo now has:
+  - persisted low-boost-recovery BC artifact IO wrappers
+  - one validated persisted-artifact handoff
+  - one refined downstream consumer result
+  - one deterministic low-boost-recovery specimen batching/orchestration result
+  - one logical low-boost-recovery export-layout/refinement result
+  - one bounded low-boost-recovery downstream export-consumer result above that layout
+- The next unresolved problem is no longer specimen admission, batching, ordering, layout shaping,
+  or what the first downstream consumer may inspect.
+- The next unresolved problem is how that downstream consumer result should be refined into one
+  deterministic family-specific filesystem/export-emission plan without widening into
+  `mimir_export`.
+
+what the next pass should consume
+- `LowBoostRecoveryBcDownstreamExportConsumerResultV1`
+
+what the next pass should do
+- define one bounded low-boost-recovery-specific filesystem/export-emission refinement contract
+- keep the work family-specific
+- preserve the downstream consumer-owned lane order and specimen order
+- make explicit the first deterministic path/manifest planning shape, if any, while still staying
+  outside `mimir_export`
+- stop short of generic export-bundle integration or generic multi-family abstractions
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family downstream export-consumer or export-emission framework
+- no actual filesystem bundle emission in `mimir_export`
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+
+why a deliberate reopen decision is not the next pass
+- There is no current defect that forces `mimir_export` to reopen.
+- The new downstream consumer result now gives the next pass a narrow family-specific surface
+  above the export-layout boundary.
+- Reopening export semantics now would widen the system before the first family-specific
+  filesystem/export-emission refinement above that consumer result exists.

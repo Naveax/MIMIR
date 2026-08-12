@@ -1,0 +1,12 @@
+report index query model added: yes
+query model names: ExecutionResultJobReportIndexQuery, ExecutionResultJobReportIndexSelectionSummary
+helper names: validate_execution_result_job_report_index_query, select_execution_result_job_report_index_entries, latest_execution_result_job_report_index_entry, query_execution_result_job_report_index, load_and_query_execution_result_job_report_index
+avoid directory scanning: yes
+convenience helper loads only index and not reports: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 67
+exact validation commands run:
+cargo fmt --all
+cargo check --workspace --all-targets --all-features
+cargo test --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p mimir-export -- --list

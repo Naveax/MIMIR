@@ -1,0 +1,125 @@
+executor stage 73 vertical-slice contract freeze
+
+scope
+- this artifact freezes the repo-local deterministic vertical-slice boundary established across Stage 69, Stage 70, Stage 71, and Stage 72
+- this is a contract/documentation freeze only
+- runtime behavior, export bundle semantics, and public CLI surface are intentionally unchanged by this pass
+
+fixed entrypoints
+- test-only deterministic slice entrypoint:
+  - `crates/mimir-cli/src/vertical_slice.rs::run_deterministic_vertical_slice`
+- canonical result loader / inspection entrypoint:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::load_canonical_vertical_slice_result`
+- canonical teacher-target inspection helper on the loaded result:
+  - `crates/mimir-cli/src/vertical_slice_result.rs::CanonicalVerticalSliceResult::teacher_branch_targets_in_order`
+
+fixed output surface
+- export bundle directory:
+  - `<vertical-slice-root>/export_bundle`
+  - constant source: `VERTICAL_SLICE_EXPORT_DIR_NAME`
+- scoreboard artifact path:
+  - `<vertical-slice-root>/scoreboard.json`
+  - canonical path helper: `mimir_io::scoreboard_artifact_path`
+- teacher label directory / file pattern:
+  - `<vertical-slice-root>/teacher_labels/teacher-label-{index}.json`
+  - constant source: `VERTICAL_SLICE_TEACHER_DIR_NAME`
+- export bundle inclusion boundary remains fixed:
+  - `export_bundle/` contains only the existing persisted anchor and branch artifacts
+  - `scoreboard.json` and `teacher_labels/teacher-label-{index}.json` remain outside the export bundle manifest/index on purpose
+
+fixed ordering guarantees
+- branch order:
+  - generated branch order is fixture/generator order
+  - frozen Stage 69 order is:
+    - `anchor-stage69:branch:0`
+    - `anchor-stage69:branch:1`
+- scoreboard row order:
+  - `PersistedScoreboard.rows` preserves branch order
+  - frozen Stage 69 scoreboard row order is:
+    - row 0 -> `anchor-stage69:branch:0`, total score `3.5`
+    - row 1 -> `anchor-stage69:branch:1`, total score `5.0`
+- teacher label order:
+  - teacher labels are synthesized from branch-seeded labels, then sorted by score descending
+  - tie-break is `TeacherLabelRecord.id` ascending if scores match
+  - persisted teacher artifact ordinal order is therefore rank order, not branch/generator order
+  - frozen Stage 69 teacher artifact order is:
+    - `teacher-label-0.json` -> target `anchor-stage69:branch:1`
+    - `teacher-label-1.json` -> target `anchor-stage69:branch:0`
+- relationship between scoreboard rows and teacher label ordinal loading:
+  - the canonical loader first loads the export bundle
+  - it then loads `scoreboard.json`
+  - it requires `scoreboard_artifact.payload.rows.len() == consumer_export.branches.len()`
+  - it then loads teacher artifacts strictly by ordinal file name for `index in 0..scoreboard_row_count`
+  - teacher artifact count is therefore derived from scoreboard row count
+  - teacher artifact ordinal positions do not imply row-aligned branch identity; the current contract is ordinal load by scoreboard-derived count, with teacher payload target identity remaining score-ranked
+
+fixed deterministic fixture
+- replay id:
+  - `replay-stage69`
+- export name:
+  - `stage69-vertical-slice`
+- anchor hint:
+  - anchor id `anchor-stage69`
+  - frame `128`
+  - kind `Manual`
+  - metadata `source=stage69-fixture`
+- fake backend seed:
+  - `69`
+- branch candidate labels:
+  - proposal 0: `candidate-alpha`
+  - proposal 1: `candidate-beta`
+- proposal action payloads:
+  - `candidate-alpha` -> `jump`, `pressed=true`
+  - `candidate-beta` -> `boost`, `pressed=true`; `steer`, `direction=0.5`
+- score signals:
+  - `candidate-alpha` -> `coverage=2.0`, `stability=3.0`
+  - `candidate-beta` -> `coverage=4.0`, `stability=2.0`
+- scoring weights:
+  - `coverage=1.0`
+  - `stability=0.5`
+- resulting frozen totals:
+  - `candidate-alpha` / `anchor-stage69:branch:0` -> `3.5`
+  - `candidate-beta` / `anchor-stage69:branch:1` -> `5.0`
+- teacher namespace:
+  - `stage69.teacher`
+
+fixed failure expectations
+- explicit failure without fake backend:
+  - `run_deterministic_vertical_slice(..., None)` fails with:
+    - `deterministic vertical slice requires deterministic fake backend`
+- explicit failure when required persisted artifacts are missing:
+  - the canonical loader fails if required persisted artifacts are absent
+  - current covered example:
+    - missing `teacher_labels/teacher-label-1.json` fails explicitly through `load_canonical_vertical_slice_result`
+- explicit wrong-kind/schema failure boundaries already covered by canonical IO helpers:
+  - scoreboard artifact reads go through `mimir_io::read_scoreboard_artifact`
+  - teacher label reads go through `mimir_io::read_teacher_label_artifact`
+  - wrong artifact kind and schema mismatch remain canonical helper failures, not ad hoc vertical-slice parsing behavior
+- explicit drift failures already enforced by the canonical loader:
+  - scoreboard row count drift against export bundle branch count fails explicitly
+  - non-branch teacher targets fail explicitly through `teacher_branch_targets_in_order`
+
+explicit non-goals
+- real replay parsing semantics
+- real rollout engine semantics
+- export bundle inclusion of scoreboard artifacts
+- export bundle inclusion of teacher-label artifacts
+- generalized orchestration, scheduling, retries, queues, or networked execution
+- public runtime CLI expansion
+- broad API widening beyond the existing test-only helper and loader surfaces
+
+current proving tests for this frozen boundary
+- `deterministic_vertical_slice_persists_reloadable_outputs`
+- `deterministic_vertical_slice_is_identical_across_repeated_runs`
+- `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+- `canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing`
+- `deterministic_vertical_slice_fails_explicitly_without_fake_backend`
+
+freeze intent
+- future extensions may add new behavior only by deliberately changing this contract and its proving tests
+- future work must not silently reinterpret:
+  - entrypoints
+  - artifact locations
+  - branch/scoreboard/teacher ordering
+  - fixture identity
+  - failure boundaries

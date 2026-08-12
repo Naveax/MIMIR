@@ -1,0 +1,77 @@
+executor mimir skill forge bc actual replay parsing contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+exact contract-definition role chosen
+- define one low-boost-recovery-specific actual replay parsing contract boundary above `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesRealizationResultV1`
+- consume only the realized receipt-bound ReplayInput-creation result
+- preserve the exact receipt-bound tuple and the exact memory-backed `ReplayInput` bridge
+- define a future header-level parser attempt boundary
+- remain below parser execution, parser-success policy, raw-state payload parsing, replay-source carrier discovery, replay-input locator logic, replay-source actual-materialization implementation, and `mimir_export`
+
+exact parser boundary shape chosen
+- contract name: `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1`
+- parser contract shape enum: `LowBoostRecoveryBcActualReplayParsingContractShapeV1`
+- selected shape: `ReceiptBoundReplayHeaderParseAttemptFromMimirReplayMemoryInputOnly`
+- parser attempt kind enum: `LowBoostRecoveryBcActualReplayParsingAttemptKindV1`
+- selected attempt kind: `MimirReplayReaderReadHeaderFromReplayInputOnly`
+- future parser surface enum: `LowBoostRecoveryBcActualReplayParsingFutureParserSurfaceV1`
+- selected future parser surface: `MimirReplayReplayReaderReadHeaderOfReplayInput`
+- exact future parser-facing surface named: `mimir_replay::ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- no `ReplayHeader` value is produced in this pass
+- no parser result or parser-success classification is produced in this pass
+
+exact admission/failure decisions chosen
+- admit only exact ReplayInput-creation realization disposition, notes, chosen shape, non-empty lanes, ordered lane/specimen ordinals, unique artifact ids, existing `low_boost_recovery_bc_v1` audited root, paths below that root, valid accepted windows, non-empty opaque bytes, exact preserved deferred handle kinds, and exact memory-backed ReplayInput bridge preservation
+- hard-fail on degraded notes, disposition drift, shape drift, count drift, order drift, duplicate artifact ids, root/path drift, invalid windows, empty bytes, handle-kind drift, ReplayInput-creation input/output drift, ReplayInput-creation bridge drift, file-backed `ReplayInput`, replay-input label drift, replay-input byte drift, path reinterpretation, parser execution, locator behavior, carrier discovery, actual-materialization implementation, raw-state parsing, or export widening
+
+why parser-success logic remains closed
+- this pass defines only the planned parser attempt boundary and attempt object
+- there is no attempted `read_header` result
+- there is no success/failure policy input to classify
+- the current `UnsupportedReplayReader` still does not prove parser readiness
+
+why raw-state payload parsing remains closed
+- no parsed replay frames exist at this boundary
+- no `ReplayHeader` exists at this boundary
+- no raw-state payload schema is admitted here
+- raw-state parsing would silently depend on parser execution and parser-success evidence that this pass does not produce
+
+why locator, carrier, materialization, and export remain closed
+- the admitted input is already `ReplayInput::Memory`; no locator output is needed or justified
+- no replay-source storage carrier or carrier provenance source is admitted
+- `source_replay`, `source_replay.provenance_label`, and `audited_family_root_directory` remain lineage/receipt anchors only
+- no parsed payload, tensor, control, export item, manifest, index, or consumer-ready widened export surface exists
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+what was intentionally excluded
+- parser execution
+- parser-success logic
+- raw-state payload parsing
+- replay frame extraction
+- semantic event extraction
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- tensor/control materialization
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization framework creation
+- `mimir_export` integration or widening
+
+Rust/code changes
+- yes, narrow Rust contract-definition surface was added in `mimir-skill`
+- added actual replay parsing contract shape enum, parser attempt kind enum, future parser surface enum, parser attempt boundary input tuple, parser attempt boundary output tuple, parser attempt object, per-specimen contract result, lane result, top-level contract result, contract-definition function, and contract-definition error surface
+- `mimir-replay` source was not modified
+- `mimir-io` was not modified
+- `mimir-export` was not modified
+- `mimir-types` was not modified
+
+why this is enough for the next pass
+- the exact first actual replay parsing contract boundary is now defined
+- the next pass can either realize this contract by attempting or preparing the exact header parse boundary, or stop for a narrow implementation-readiness decision if parser execution is not yet justified
+- no downstream parser-success, raw-state, locator, carrier, materialization, or export semantics were silently opened

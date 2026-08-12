@@ -1,0 +1,88 @@
+executor mimir skill forge bc byte-backed caller-admitted source-form contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact external requirement being imposed
+- one exact caller-admitted source form must now be supported above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionRealizationResultV1`
+- the exact chosen form is byte-backed caller admission
+- the ownership seam is `mimir-skill`
+- this choice is imposed externally, not inferred from repo-only evidence
+
+exact contract-definition role chosen
+- define one exact low-boost-recovery receipt-bound byte-backed caller-admitted source-form contract above the truthful blocked explicit-admission realization
+- preserve the lower explicit-admission realization exactly as input
+- freeze the exact tuple that future caller-admitted replay bytes must bind to
+
+exact object shape chosen
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormV1`
+- fields carried:
+  - lane/specimen ordinals
+  - artifact id
+  - anchored specimen-file path
+  - source raw-state-window ref
+  - source slice id
+  - source replay
+  - source subject
+  - source phase id
+  - preserved observation binding
+  - preserved accepted reference window
+  - preserved replay-input-locator handle kind
+  - preserved replay-source-materialization requirement kind
+  - preserved replay-source-actual-materialization handle kind
+  - preserved carrier-provenance/source-binding handle kind
+  - preserved explicit-admission kind
+  - `caller_admitted_replay_bytes: Vec<u8>`
+
+exact output/disposition chosen
+- top-level contract result:
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormContractV1`
+- top-level disposition:
+  `ContractDefinedForReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormOnly`
+- exact chosen shape:
+  `ReceiptBoundReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormOnly`
+- per-specimen output adds only:
+  `bound_byte_backed_caller_admitted_source_form_kind = CallerAdmittedReplayBytesOnly`
+
+exact admission decisions chosen
+- only the truthful blocked explicit-admission realization result may enter this boundary
+- exact lower note sets and chosen shapes must remain frozen
+- exact receipt-bound tuple preservation is mandatory
+- explicit-admission kind preservation is mandatory
+- audited family root remains only a BC specimen-tree anchor
+- the contract remains below `mimir_replay::ReplayInput`
+
+exact failure decisions chosen
+- hard-fail on degraded lower notes
+- hard-fail on chosen-shape drift
+- hard-fail on lane/specimen order drift
+- hard-fail on duplicate artifact ids
+- hard-fail on receipt-bound path drift
+- hard-fail on any tuple drift
+- hard-fail on explicit-admission kind drift
+- hard-fail on any attempt to reinterpret `source_replay`, `source_replay.provenance_label`, or `audited_family_root_directory`
+
+what was intentionally excluded
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- replay parsing
+- raw-state payload parsing
+- tensor/control materialization
+- `mimir_export` integration
+- `mimir-replay` changes
+- `mimir-io` changes
+- `mimir-types` changes
+- actual caller-byte realization
+
+whether Rust/code changes were added, and why
+- Yes.
+- A narrow public Rust surface was added in `mimir-skill` because the external requirement now fixes one exact source-form class and one exact caller object shape.
+- No `mimir-replay` dependency was added because this contract must remain below `ReplayInput`.
+
+why this is enough for the next pass
+- the exact lower input is now frozen
+- the exact future caller object shape is now frozen
+- the exact per-specimen byte-backed source-form boundary is now frozen
+- the next pass no longer needs to choose a caller form
+- the next pass can focus only on first realization of this exact byte-backed caller-admitted contract

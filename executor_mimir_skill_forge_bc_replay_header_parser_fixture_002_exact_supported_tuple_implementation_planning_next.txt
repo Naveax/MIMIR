@@ -1,0 +1,78 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation planning next
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-05
+
+selected outcome driving next step
+- Outcome A
+
+recommended next pass
+- fixture_002 exact supported tuple implementation
+
+allowed implementation target
+- crates/mimir-replay/src/lib.rs only
+- exact two-tuple allowlist only:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+
+required implementation shape
+- keep shared tuple constants exact:
+  - major_version=868
+  - minor_version=32
+  - net_version=10 / Some(10) at evidence level
+  - game_type=TAGame.Replay_Soccar_TA
+  - ReplayVersion=8
+- allow only these BuildVersion strings:
+  - 241206.55345.468477
+  - 250811.43331.492665
+- implement the allowlist as a private exact predicate or equivalent exact match
+- do not pass fixture path/hash/filename/provenance/artifact id into the predicate
+- keep ReplayInput::Memory only
+- keep ReplayInput::File unsupported
+- keep parser stop boundary at 8 + header_size
+- keep header_crc non-validating
+- do not read or validate content_crc
+- do not parse body/raw-state/frame/event data
+
+required tests in next implementation pass
+- preserve fixture_001 regression
+- add fixture_002 exact happy path:
+  - replay_id: D9DA34DA11F0811EAC139A94CBF30AF2
+  - source_label: rl_replay_header_fixture_002
+  - total_frames: Some(10351)
+  - ReplayName: asdasd
+  - Date: 2025-08-24 19-16-35
+  - MapName: NeoTokyo_Standard_P
+  - ReplayVersion: 8
+  - BuildVersion: 250811.43331.492665
+  - MaxChannels: 2047
+  - MatchType: Online
+  - TeamSize: 3
+  - RecordFPS: 30.0
+- add unknown BuildVersion rejection for an otherwise-supported synthetic tuple
+- preserve ReplayInput::File unsupported-input test
+- preserve header-only stop-boundary test
+- preserve CRC non-validation test
+
+validation commands for next implementation pass
+- cargo check --workspace --all-targets --all-features
+- cargo test -p mimir-replay -- --nocapture
+- cargo test -p mimir-skill -- --nocapture
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+still closed unless separately reopened
+- parser-success claim before implementation and validation
+- broad parser expansion
+- broad version-family support
+- wildcard BuildVersion support
+- all ReplayVersion=8 support
+- future unknown build support
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- export/runtime/CLI integration
+- dependency expansion

@@ -1,0 +1,15 @@
+report collection summary model added: yes
+summary helper added: yes
+convenience summarize helper added: yes
+helper names:
+- ExecutionResultJobReportCollectionSummary
+- summarize_execution_result_job_reports
+- query_load_and_summarize_execution_result_job_reports
+avoid directory scanning: yes
+mimir_export test count from `cargo test -p mimir-export -- --list`: 81
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

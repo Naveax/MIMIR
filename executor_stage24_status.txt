@@ -1,0 +1,11 @@
+report-query to summary-index-load bridge wrapper added: yes
+helper name: load_query_reports_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary
+delegates only to existing report-query/load + summarize + summary-persist/register/index-load helpers: yes
+avoids directory scanning: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 128
+exact validation commands run:
+cargo fmt --all
+cargo check --workspace --all-targets --all-features
+cargo test --workspace --all-targets --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p mimir-export -- --list

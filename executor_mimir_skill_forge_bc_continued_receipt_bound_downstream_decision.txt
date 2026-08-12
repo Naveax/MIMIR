@@ -1,0 +1,143 @@
+executor mimir skill forge bc continued receipt-bound downstream decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact continued downstream role chosen
+- one low-boost-recovery-specific continued receipt-bound downstream boundary above
+  `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`
+- exact job:
+  - admit only already-audited low-boost-recovery emitted-output results
+  - revalidate the audited result boundary without reopening filesystem reads or lower planning
+    layers
+  - preserve only the exact receipt-bound references and audited specimen payloads the first
+    downstream consumer is allowed to inspect
+  - strip audit-only success flags from the downstream-owned surface
+  - return one inspection-only continued downstream result when all admission invariants hold
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamDispositionV1`
+- exact disposition:
+  - `ReadyForLowBoostRecoveryAuditedSpecimenInspectionOnly`
+- exact note type:
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamNoteV1`
+- exact specimen result type:
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamLaneResultV1`
+- exact success result type:
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamResultV1`
+- exact success result fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_audit_disposition`
+  - `source_audit_notes`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `downstream_disposition`
+  - ordered `downstream_notes`
+- exact lane result fields:
+  - `lane_ordinal`
+  - `emitted_lane_directory`
+  - ordered `ordered_specimen_results`
+- exact specimen result fields:
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `emitted_specimen_file_path`
+  - `readback_specimen`
+- exact downstream notes:
+  - `EmittedOutputAuditBoundaryPreserved`
+  - `ReceiptBoundLaneAndSpecimenReferencesPreserved`
+  - `AuditedSpecimenPayloadInspectionOnly`
+  - `TensorAndControlMaterializationDeferred`
+  - `MimirExportIntegrationDeferred`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1`.
+- Require `audit_disposition` to remain
+  `ReadyForLowBoostRecoveryEmittedOutputRefinementOnly`.
+- Require `audit_notes` to remain the exact emitted-output audit/readback note set.
+- Require `family_root_directory_exists` to remain `true`.
+- Require the audited family root basename to remain `low_boost_recovery_bc_v1`.
+- Require `group_count > 0` and `specimen_count > 0`.
+- Require `ordered_lane_results` to be non-empty and `group_count` to equal their count.
+- Require every `lane_ordinal` to match the concrete lane position.
+- Require every `emitted_lane_directory` to remain the deterministic lane path under the audited
+  family root.
+- Require every `lane_directory_exists` flag to remain `true`.
+- Require every lane to contain at least one ordered specimen result.
+- Require every `specimen_ordinal` to match the concrete specimen position.
+- Require every `emitted_specimen_file_path` to remain the deterministic specimen path under the
+  enclosing lane directory.
+- Require every `specimen_file_exists` and `readback_matches_receipt_contract` flag to remain
+  `true`.
+- Revalidate every `readback_specimen` against the emitted specimen contract instead of trusting
+  construction history alone.
+- Require every `readback_specimen` ordinal and `artifact_id` to remain aligned with the enclosing
+  audited result.
+- Require every `artifact_id` to remain present and unique across the full audited result.
+- Forbid reopening actual emission receipts, plans, layout results, specimen batches, refined
+  specimens, persisted artifacts, BC rows, shells, or any lower planning boundary.
+
+exact failure / defer decisions chosen
+- Any degraded audit/readback invariant fails explicitly as malformed continued-downstream input.
+- No repair, no receipt regeneration, no filesystem re-audit, no skipping, and no resorting were
+  added.
+- No soft defer path was added.
+- Reason no defer path exists:
+  - this boundary adds no new evidence gate beyond the already-frozen audited result
+  - remaining uncertainty is already carried explicitly inside the audited specimen payload's
+    unresolved-assumption fields
+  - inventing a defer state here would widen semantics instead of narrowing them
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family continued downstream/export framework
+- any generic manifest/index framework
+- any new shared DTO in `mimir-types`
+- any `mimir-io` widening
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamDispositionV1`
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamNoteV1`
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamSpecimenResultV1`
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamLaneResultV1`
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamResultV1`
+  - `LowBoostRecoveryBcContinuedReceiptBoundDownstreamError`
+  - `consume_low_boost_recovery_bc_emitted_output_audit_readback_v1(...)`
+- Added one local audit-result validator because
+  `LowBoostRecoveryBcEmittedOutputAuditReadbackResultV1` is public and can be manually
+  constructed, so this boundary cannot trust construction history alone.
+- The new result surface is justified because it closes one real ambiguity:
+  later downstream passes no longer need to guess which parts of the audit result are inspectable
+  downstream state versus audit-only success flags.
+- The new result deliberately preserves only counts, audited references, artifact ids, and
+  `readback_specimen` payload access. It does not duplicate filesystem-existence flags, add a
+  manifest, or widen into tensor/control semantics.
+- No `mimir-types` additions were needed because this result is a repo-local family-specific
+  boundary, not a persisted or shared cross-crate DTO.
+- No `mimir-io` changes were needed because raw filesystem read ownership was already correct.
+- No `mimir-export` changes were made.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess what the first downstream consumer is allowed to inspect
+  from the audited emitted-output result.
+- The next pass no longer needs to carry audit-only existence flags as if they were downstream
+  semantics.
+- The next pass now has one explicit family-specific inspection-only result that preserves ordered
+  lane/specimen references, artifact ids, and audited specimen payloads without widening the
+  contract.
+- That makes the immediate next step obvious:
+  one more continued receipt-bound low-boost-recovery downstream refinement above
+  `LowBoostRecoveryBcContinuedReceiptBoundDownstreamResultV1`, with `mimir_export` widening still
+  forbidden unless explicitly reopened.

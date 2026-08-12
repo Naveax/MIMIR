@@ -1,0 +1,104 @@
+executor mimir skill forge bc replay-parsing success reopen decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact reopen role chosen
+- one low-boost-recovery-specific reopen-decision boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- exact job:
+  - admit only the existing blocked replay-side parse-attempt realization result
+  - revalidate that the admitted result still preserves the exact receipt-bound root/order/path and
+    per-specimen identity tuple
+  - decide whether parser-success / parser-implementation work is now the minimum honest reopen
+  - refuse to invent replay-input semantics or widen into parser implementation
+
+exact reopen / no-reopen decision chosen
+- exact disposition:
+  - `ParserImplementationRemainsClosedPendingReceiptBoundReplayInputAccessBoundary`
+- exact decision:
+  - reopen not justified yet
+
+exact criteria used
+- Require the exact blocked replay-side parse-attempt realization result with the exact source
+  contract disposition/note set, locator/materialization shapes, replay-parsing contract shape,
+  counts, audited family root, lane/specimen order, and per-specimen blocked dispositions already
+  frozen below this boundary.
+- Require every consumed replay-side parse-attempt input and preserved output boundary to remain
+  aligned on:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+- Require the next boundary to consume only the blocked realization result plus the already
+  preserved audited family root reference.
+- Require the next boundary to remain low-boost-recovery-specific, receipt-bound, below raw-state
+  payload/tensor/control materialization, and outside `mimir_export`.
+- Require the next boundary to avoid sidecars/manifests/generic indexing unless a separate reopen
+  proves them necessary.
+- Require the current repo surface to already provide or prove one parser-consumable replay input
+  handle above the admitted blocked result.
+- The current repo fails that last requirement.
+
+exact output / disposition chosen
+- no parser-success / parser-implementation contract shape was defined in this pass
+- exact output is the explicit no-reopen decision:
+  - `ParserImplementationRemainsClosedPendingReceiptBoundReplayInputAccessBoundary`
+- exact reason:
+  - `source_replay` remains opaque lineage only
+  - `audited_family_root_directory` remains only the BC specimen-tree anchor
+  - the admitted blocked result carries no replay file path, replay bytes, or other admitted
+    `ReplayInput` handle
+  - `mimir-replay` still exposes only `ReplayInput` abstractions plus `UnsupportedReplayReader`
+    with no admitted bridge from the blocked result to a parser-consumable replay input
+
+exact admission / failure decisions chosen
+- Admit only the exact blocked replay-side parse-attempt realization result.
+- Hard fail on degraded realization input.
+- Hard fail on count/order/root/path drift.
+- Hard fail on artifact-id drift or duplicate artifact ids.
+- Hard fail on any input/output-boundary identity drift.
+- Hard fail on any attempt to reinterpret the audited family root as replay storage.
+- Hard fail on any attempt to derive replay-input semantics from the admitted input without an
+  explicit new boundary.
+- Hard fail on any attempt to widen this pass into actual replay parsing, raw-state payload
+  materialization, tensor/control materialization, sidecars, manifests, generic indexing, or
+  `mimir_export`.
+- Produce the explicit no-reopen decision when the admitted blocked result is valid but the
+  parser-success criteria still fail because no receipt-bound replay input handle exists above it.
+- Do not emit a reopen-justified decision in the current repo state.
+
+what was intentionally excluded
+- any actual replay parsing implementation
+- any actual replay file or replay byte resolution
+- any replay-input locator implementation
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- No.
+- No Rust/code changes were added because the current repo has no code consumer for a new
+  parser-success reopen DTO or function.
+- Adding one now would either:
+  - duplicate the already explicit blocked replay-side parse-attempt realization result
+  - or smuggle speculative replay-input-access semantics into `mimir-skill`
+- Docs plus explicit executor artifacts are the narrowest honest surface for this pass.
+
+why this is enough for the next pass
+- The repo now has an explicit recorded answer that parser-success / parser-implementation work is
+  still closed above the blocked replay-side parse-attempt realization result.
+- The remaining unresolved question is now obvious and narrower:
+  - whether a broader receipt-bound replay-input-access / replay-source-binding boundary must be
+    reopened before parser work can be honest
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

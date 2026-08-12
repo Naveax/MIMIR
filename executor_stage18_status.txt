@@ -1,0 +1,14 @@
+summary index lookup helpers added: yes
+indexed summary load helper added: yes
+helper names:
+- find_execution_result_job_report_collection_summary_index_entry_by_summary_file_path
+- find_execution_result_job_report_collection_summary_index_entry_by_report_count
+- load_indexed_execution_result_job_report_collection_summary
+avoid directory scanning: yes
+mimir_export test count from `cargo test -p mimir-export -- --list`: 98
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

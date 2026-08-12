@@ -1,0 +1,61 @@
+executor mimir skill forge bc post replay-input creation realization boundary status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+pass type
+- narrow post-realization boundary-decision pass
+- selected family: low_boost_recovery
+- admitted boundary: `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplayInputCreationFromOpaqueCallerAdmittedReplayBytesRealizationResultV1`
+- decision outcome: Outcome B, reopen exactly one downstream domain
+- selected domain: actual replay parsing
+
+runtime behavior changed
+- no
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added `docs/MIMIR_SKILL_FORGE_BC_POST_REPLAY_INPUT_CREATION_REALIZATION_BOUNDARY_DECISION_V1.md`
+- added `executor_mimir_skill_forge_bc_post_replay_input_creation_realization_boundary_decision.txt`
+- added `executor_mimir_skill_forge_bc_post_replay_input_creation_realization_boundary_next.txt`
+- added `executor_mimir_skill_forge_bc_post_replay_input_creation_realization_boundary_status.txt`
+
+Rust changes
+- no Rust added
+- no crate dependency changes
+- docs-only is more honest because the selected outcome reopens one domain but does not define or implement the parser contract
+
+forbidden crate boundary check
+- `mimir-replay` source modified: no
+- `mimir-io` modified: no
+- `mimir-export` modified: no
+- `mimir-types` modified: no
+- `mimir_export` widening: no
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+explicit non-claims
+- no replay parsing implemented
+- no parser-success logic implemented or defined
+- no replay-source actual-materialization implementation reopened
+- no replay-source carrier discovery reopened
+- no replay-input locator logic reopened
+- no raw-state payload parsing reopened
+- no export widening implemented or reopened

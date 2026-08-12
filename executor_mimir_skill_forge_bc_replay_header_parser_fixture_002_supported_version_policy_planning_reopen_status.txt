@@ -1,0 +1,142 @@
+executor mimir skill forge bc replay header parser fixture_002 supported-version policy planning reopen status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-05
+
+pass type
+- docs/artifacts-only supported-version policy planning reopen
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+source/docs changed
+- yes, docs/artifacts only
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+
+fixture_002 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- extension: .replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- byte length greater than 8: yes
+- differs from fixture_001 by SHA-256: yes
+
+mapping/error-boundary input verified
+- yes
+- prior selected outcome: Outcome A
+- selected field mapping candidates remain candidate expected-output evidence only
+- structural evidence remains external/report evidence only
+- no parser-success carried in from the prior pass
+
+current supported-version implementation inspected
+- yes
+- current exact tuple:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- BuildVersion is currently a single exact value
+- unsupported-version is produced after selected property parsing obtains ReplayVersion and BuildVersion
+- current policy does not depend on path/hash/filename/provenance/artifact id
+
+selected future policy
+- exact two-tuple allowlist
+- SupportedReplayHeaderTupleV1::Fixture001Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- SupportedReplayHeaderTupleV1::Fixture002Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=250811.43331.492665
+
+future implementation boundary admitted
+- yes
+- later implementation must be exact allowlist only and separately scoped
+- preferred next pass remains exact supported tuple implementation planning
+
+parser behavior changed now
+- no
+
+parser-success claimed for fixture_002 now
+- no
+
+fixture_002 supported-version policy implemented now
+- no
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+exact validation commands run
+- PASS: cargo check --workspace --all-targets --all-features
+- PASS: cargo test -p mimir-replay -- --nocapture
+  - 17 mimir-replay tests passed; 0 failed
+- PASS: cargo test -p mimir-skill -- --nocapture
+  - 273 mimir-skill tests passed; 0 failed
+- PASS: cargo test --workspace --all-targets --all-features
+- PASS: cargo clippy --workspace --all-targets --all-features -- -D warnings
+- PASS: cargo test -p mimir-export -- --list
+  - 173 mimir-export tests listed; 0 benchmarks
+
+forbidden crate boundary check
+- crates/mimir-replay/src/lib.rs changed: no
+  SHA-256: 346AAC530897841779613898CB37EB2C5172E7E44DBB224FDC39B9E94D15771B
+- crates/mimir-skill/src/lib.rs changed: no
+  SHA-256: C851DDC128F72189DAC4A6A1E3E7D151A181C1F5B75830378C0E6BAC6CCCE9EB
+- crates/mimir-types/src/lib.rs changed: no
+  SHA-256: 7E97135EBA28E40215E24F3602A8F537E5EFF7472A86351D853A8BFF10AFF29F
+- Cargo.toml changed: no
+  SHA-256: B815700C45FD84FF860FDFF4526EAA46B5A76F8B213F570C4FA9788CCF689121
+- Cargo.lock changed: no
+  SHA-256: 06D21529D8A307494ECAE8F064DFF019743B3D2C2615C7A8AFF6CC0FD8A2FB57
+- backend replay parser dependency search found no matches for:
+  boxcars, rattletrap, rrrocket, rocket_replay, replay_parser, octane
+- forbidden implementation crates modified by this pass: no
+- dependency/manifests modified by this pass: no
+
+created/updated artifacts
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_SUPPORTED_VERSION_POLICY_PLANNING_REOPEN_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_supported_version_policy_planning_reopen_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_supported_version_policy_planning_reopen_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_supported_version_policy_planning_reopen_status.txt
+
+recommended next pass
+- fixture_002 exact supported tuple implementation planning
+- direct implementation is acceptable only if separately scoped to the exact two-tuple allowlist and the crate boundary above
+- no broad parser expansion yet

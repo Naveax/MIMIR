@@ -1,0 +1,64 @@
+executor mimir skill forge eval harness decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+exact eval result fields chosen
+- `source_slice_id`
+- `source_phase_id`
+- `accepted_reference_variant_id`
+- `eval_status`
+- `eval_notes`
+- `metric_summary`
+- `carried_confidence_band`
+- `carried_unresolved_assumptions`
+
+exact eval status classes chosen
+- `unusable_input`
+- `shell_present`
+- `shell_auditable`
+- `shell_ready_for_future_consumer`
+
+exact metric representation chosen
+- `LowBoostRecoveryEvalMetricSummaryV1`
+- boolean fields only:
+  - `lineage_completeness`
+  - `accepted_shell_completeness`
+  - `bounded_evidence_consistency`
+  - `unresolved_burden_visibility`
+  - `reference_window_availability`
+
+what was intentionally excluded
+- any physics, rollout, or reachability proof
+- any true low-boost confirmation
+- any contact or recovery-success proof
+- any policy-improvement or downstream training-worth proof
+- any generic benchmark or multi-family eval framework
+- any export payload growth or BC generation surface
+- any metadata bag or open-ended metrics map
+
+whether Rust type shaping and narrow implementation were added, and why
+- Yes.
+- Added family-specific DTOs in `crates/mimir-types/src/lib.rs`:
+  - `LowBoostRecoveryEvalStatusV1`
+  - `LowBoostRecoveryEvalNoteV1`
+  - `LowBoostRecoveryEvalMetricSummaryV1`
+  - `LowBoostRecoveryEvalResultV1`
+- These belong in `mimir-types` because they are plain data and the eval result may need to cross
+  crate boundaries later without re-running shell inspection logic.
+- Added one narrow family-specific constructor in `crates/mimir-skill/src/lib.rs`:
+  - `evaluate_low_boost_recovery_curriculum_export_shell_v1`
+- The function consumes only `LowBoostRecoveryCurriculumExportShellV1`, validates the bounded
+  accepted-shell surface, and returns a status-bearing eval result instead of widening the pipeline.
+
+why this is enough for the next consumer/BC-planning pass
+- The next pass can now inspect accepted low-boost-recovery shells through one bounded eval result
+  surface instead of touching solver or validator internals.
+- The result preserves slice / phase / reference-variant lineage, the carried confidence band, and
+  the carried unresolved assumptions.
+- The result also distinguishes:
+  - structurally unusable shell input
+  - shell merely present
+  - shell auditable
+  - shell ready for future bounded consumer planning
+- That is enough to start the low-boost-recovery consumer / BC-planning boundary without silently
+  widening export semantics or pretending BC usefulness is already proven.

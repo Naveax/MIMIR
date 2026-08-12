@@ -1,0 +1,51 @@
+executor mimir skill forge bc replay header parser fixture 003 boolproperty non-selected error-boundary closure next
+
+selected outcome
+- Outcome A
+
+recommended next pass
+- fixture_003 supported-version policy planning reopen
+
+why this is safer than implementation planning now
+- this pass closes the future direction for bForfeit as non-selected BoolProperty skip-only, not
+  metadata mapping
+- supported-version policy remains explicitly closed and must be planned before any honest
+  fixture_003 parser-support implementation claim
+- implementation still needs a later explicit skip-only BoolProperty parser boundary
+- no parser expansion is authorized by this next planning pass
+
+required caveat for next pass
+- fixture_003 supported-version policy planning may proceed only as docs-only planning
+- implementation later must include exact non-selected BoolProperty skip-only parser boundary
+- bForfeit must remain excluded from metadata
+- BoolProperty -> FieldValue::Boolean must remain closed unless separately reopened
+- selected BoolProperty must remain unsupported unless separately reopened
+- no parser-success may be claimed for fixture_003
+- no parser code may be changed in the supported-version policy planning pass unless a later prompt
+  explicitly opens implementation
+
+next pass must not
+- add fixture_003 as a third supported tuple
+- claim fixture_003 parser success
+- claim fixture_003 is supported by MinimalReplayHeaderReader
+- broaden ReplayVersion = 8 support
+- add wildcard BuildVersion support
+- map bForfeit to metadata
+- admit BoolProperty -> FieldValue::Boolean
+- add ReplayInput::File support
+- add CRC validation
+- read or validate content_crc in MIMIR parser code
+- parse body/raw-state/frame/event data
+- add backend replay parser dependencies
+- add CLI/runtime/export behavior
+
+future implementation prerequisites after planning
+- exact fixture_003 supported tuple policy admission
+- exact non-selected BoolProperty skip-only byte-layout implementation plan
+- tests proving bForfeit is skipped but not mapped
+- tests proving selected BoolProperty remains unsupported
+- tests proving malformed BoolProperty fails cleanly
+- fixture_001 and fixture_002 regressions preserved
+
+no parser expansion yet
+- yes

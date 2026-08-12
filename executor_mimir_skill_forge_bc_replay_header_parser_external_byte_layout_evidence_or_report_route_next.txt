@@ -1,0 +1,62 @@
+executor mimir skill forge bc replay header parser external byte-layout evidence or report route next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+immediate next pass type
+- approved parser-report admission pass
+
+immediate next pass input
+- artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+
+immediate next pass only
+- admit, partially admit, or reject the generated external parser/tool report as byte-layout and
+  expected-output evidence for fixture id rl_replay_header_fixture_001
+- decide whether the report's external boxcars header observations are sufficient to ground:
+  - supported Rocket League replay header admission rule
+  - supported version or version family
+  - header boundary or header termination
+  - field encodings, numeric endianness, and string/property encoding rules
+  - body/raw-state boundary for the future minimal parser
+  - replay id derivation or explicit blocked policy
+  - total_frames derivation or explicit None policy
+  - metadata key map or explicit empty metadata policy
+  - insufficient, malformed, and unsupported-if-distinguishable error boundaries
+- keep report evidence distinct from MIMIR parser output
+- do not implement parser code in the admission pass
+- do not implement parser-success logic in the admission pass
+- do not produce ReplayHeader in the admission pass
+
+if report admission succeeds
+- a later planning/implementation gate may consider the admitted byte-accounting map and expected
+  ReplayHeader evidence
+- parser implementation still requires explicit reopening
+
+if report admission fails or remains partial
+- parser implementation remains blocked
+- next pass must request user-supplied byte-layout docs/tool output or a narrower external report
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only after fixture evidence, byte-layout evidence, and expected
+  output evidence are admitted
+
+parser implementation closure
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic closure
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing closure
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction closure
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator closure
+- replay-source materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- mimir_export widening remains forbidden unless explicitly reopened

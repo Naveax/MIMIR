@@ -1,0 +1,171 @@
+executor mimir skill forge bc replay header parser fixture 003 exact tuple boolproperty skip implementation planning decision
+
+exact outcome chosen
+- Outcome A
+
+fixture identities verified
+- yes
+- fixture_001:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+  - byte length: 3001021
+  - SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+  - first four bytes little-endian i32: 13200
+  - extension: .replay
+  - byte length > 8: yes
+- fixture_002:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+  - byte length: 2632903
+  - SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+  - first four bytes little-endian i32: 11273
+  - extension: .replay
+  - byte length > 8: yes
+- fixture_003:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+  - byte length: 1638538
+  - SHA-256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+  - first four bytes little-endian i32: 11190
+  - extension: .replay
+  - byte length > 8: yes
+  - differs from fixture_001 by SHA-256: yes
+  - differs from fixture_002 by SHA-256: yes
+
+supported-version policy planning input verified
+- yes
+- prior supported-version policy planning reopen selected Outcome A
+- selected future policy is exact three-tuple allowlist only
+- no parser code changed in the prior pass
+- no parser-success was claimed for fixture_003 in the prior pass
+
+current implementation inspected
+- yes
+- current parser file: crates/mimir-replay/src/lib.rs
+- current private enum variants:
+  - SupportedReplayHeaderTupleV1::Fixture001Exact
+  - SupportedReplayHeaderTupleV1::Fixture002Exact
+- current exact shared constants:
+  - major_version = 868
+  - minor_version = 32
+  - net_version = 10
+  - game_type = TAGame.Replay_Soccar_TA
+  - ReplayVersion = 8
+- current exact BuildVersion constants:
+  - fixture_001 = 241206.55345.468477
+  - fixture_002 = 250811.43331.492665
+- current unsupported-version check occurs after top-level selected properties are parsed and
+  before ReplayHeader construction
+- current selected property set excludes bForfeit
+- current non-selected property skip uses declared size for Array/Float/Int/Name/QWord/Str only
+- current BoolProperty behavior is unsupported-property
+- no fixture_003 tuple or BuildVersion constant exists in source
+
+exact future tuple code plan
+- future parser code file: crates/mimir-replay/src/lib.rs only
+- add SUPPORTED_BUILD_VERSION_FIXTURE_003 = "251020.62592.500294"
+- add private enum variant SupportedReplayHeaderTupleV1::Fixture003Exact
+- extend supported_replay_header_tuple_v1(...) with exactly one new BuildVersion match arm
+- accept only:
+  - Fixture001Exact: 868/32/net10/TAGame.Replay_Soccar_TA/ReplayVersion 8/BuildVersion 241206.55345.468477
+  - Fixture002Exact: 868/32/net10/TAGame.Replay_Soccar_TA/ReplayVersion 8/BuildVersion 250811.43331.492665
+  - Fixture003Exact: 868/32/net10/TAGame.Replay_Soccar_TA/ReplayVersion 8/BuildVersion 251020.62592.500294
+- reject any other major/minor/net/game_type/ReplayVersion/BuildVersion through unsupported-version
+- do not inspect path/hash/filename/provenance/artifact id/fixture id/label/body bytes
+
+exact future BoolProperty skip-only code plan
+- future parser code file: crates/mimir-replay/src/lib.rs only
+- add a dedicated non-selected BoolProperty skip path
+- do not add bForfeit to selected property set
+- do not map BoolProperty to metadata
+- do not map BoolProperty -> FieldValue::Boolean
+- selected BoolProperty remains unsupported unless separately reopened
+- required layout:
+  - key already read
+  - kind is BoolProperty
+  - declared property_size must be 0
+  - existing ignored field is already read by parse_top_level_properties
+  - consume exactly one value byte after ignored field
+  - accept only value byte 0 or 1
+  - invalid byte fails malformed or equivalent existing error
+  - missing value byte fails insufficient or equivalent existing error
+- recommended helper:
+  - skip_non_selected_bool_property(key, cursor, value_len)
+- helper must not produce FieldValue
+- helper must not write metadata
+- helper must not depend on fixture path/hash/label
+
+exact future test plan
+- preserve fixture_001 happy path and header-only stop-boundary
+- preserve fixture_002 happy path and header-only stop-boundary
+- add fixture_003 exact happy path from ReplayInput::Memory with label rl_replay_header_fixture_003
+- fixture_003 expected header:
+  - replay_id = DF72482811F0B757082C458D84251EFF
+  - source_label = rl_replay_header_fixture_003
+  - total_frames = Some(8288)
+  - ReplayName = Text("asdasd")
+  - Date = Text("2025-11-01 19-20-48")
+  - MapName = Text("cs_day_p")
+  - ReplayVersion = Integer(8)
+  - BuildVersion = Text("251020.62592.500294")
+  - MaxChannels = Integer(2047)
+  - MatchType = Text("Online")
+  - TeamSize = Integer(2)
+  - RecordFPS = Float(30.0)
+  - bForfeit absent from metadata
+- add fixture_003 header-only stop-boundary at 8 + 11190 = 11198
+- add synthetic non-selected BoolProperty skip-only regression with declared size 0 and value byte
+  0 or 1
+- add selected BoolProperty remains unsupported regression
+- add malformed BoolProperty regressions:
+  - declared size not 0 fails
+  - missing value byte fails cleanly
+  - invalid value byte not 0 or 1 fails
+- preserve unknown BuildVersion rejection to prove no wildcard BuildVersion support
+- preserve ReplayInput::File unsupported and CRC non-validation tests
+- do not add content_crc/body/raw-state/frame/event parsing tests or claims
+
+direct implementation safe next
+- yes
+- direct implementation is safe only for the exact scoped changes in crates/mimir-replay/src/lib.rs
+  and the required implementation artifacts
+- one more planning pass is not required unless a future pass wants to broaden the tuple,
+  BoolProperty, input, CRC, body, runtime, CLI, export, or dependency boundary
+
+parser code changed now
+- no
+
+parser-success claimed for fixture_003 now
+- no
+
+bForfeit metadata mapping admitted
+- no
+
+what was intentionally not broadened
+- parser-success
+- parser scope
+- version-family support
+- ReplayVersion = 8 support
+- BuildVersion support
+- future unknown build support
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- BoolProperty metadata mapping
+- bForfeit metadata mapping
+- CLI/runtime/export behavior
+- backend replay parser dependencies
+
+forbidden files/dependencies changed
+- no intended changes
+- no Rust source changes
+- no manifests changed
+- no lockfile changed
+- no dependencies added
+- no backend replay parser dependency added
+- no CLI/runtime/export/IO/type behavior changed
+
+decision summary
+- Outcome A is selected because the future implementation can be scoped exactly to a third
+  BuildVersion allowlist arm plus a non-selected BoolProperty one-byte skip boundary.
+- No parser-success is claimed until the future implementation and tests actually pass.

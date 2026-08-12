@@ -1,0 +1,84 @@
+EXECUTOR STAGE 100 NEXT 10 LAYER
+Repository root: `D:\RocketLeague bot\MIMIR`
+Assumption boundary:
+- Stage100 is treated as succeeded because the Stage77 `simulation_seed -> SimulationRequest.seed` direct-consumption proof landed and the required validation sequence is green.
+
+Only 6 future stages are justified by current repo-local evidence. Adding more would be guesswork.
+
+1. Proposed stage title
+- Stage 101: Stage77 proposal surface propagation pass
+exact edge/problem
+- `PersistedVerticalSliceProposal.label`, `actions`, `legal_hint`, and `metadata` on `VerticalSliceFixtureLane::Stage77Second` surviving into the exported branch payloads exactly where intended.
+why it matters
+- These are live branch semantics. Score and teacher-order proofs do not guarantee proposal payload propagation is still correct.
+why it should come in that order after Stage100
+- Stage100 closes the last hidden deterministic input edge. The next highest-risk unproven Stage77 boundary is the branch proposal payload surface itself.
+pass type
+- direct propagation proof
+scope risk
+- medium
+
+2. Proposed stage title
+- Stage 102: Stage77 export_name to teacher-id identity pass
+exact edge/problem
+- `PersistedVerticalSliceInput.export_name -> TeacherLabelId` derivation on `VerticalSliceFixtureLane::Stage77Second`.
+why it matters
+- Teacher label ids are persisted identity, not presentation text. A Stage69 proof already exists; Stage77 should not rely on cross-lane inference.
+why it should come in that order after Stage100
+- It is narrower and lower-risk than proposal propagation, but still closes a real Stage77 contract edge.
+pass type
+- direct-effect proof
+scope risk
+- low
+
+3. Proposed stage title
+- Stage 103: Stage77 teacher artifact ordering closure pass
+exact edge/problem
+- Teacher artifact ordinal files, canonical load order, and teacher target ordering for `Stage77Second` lack a single direct-effect closure proof beyond the current mixed snapshot and score-order tests.
+why it matters
+- Ordering regressions can remain semantically wrong while file presence and row counts still look healthy.
+why it should come in that order after Stage100
+- It builds on the identity guarantees from Stage102 and closes a nearby persisted-output surface without widening semantics.
+pass type
+- closure proof
+scope risk
+- low
+
+4. Proposed stage title
+- Stage 104: Stage77 branch payload contract index pass
+exact edge/problem
+- The Stage77 proof set is now spread across snapshot tests, negative harness checks, and multiple direct-effect tests.
+why it matters
+- A contract index is the cleanest way to prevent duplicate follow-up work and fake completeness claims.
+why it should come in that order after Stage100
+- It is only worth freezing after the remaining narrow Stage77 direct-effect edges above are closed.
+pass type
+- indexing/doc pass
+scope risk
+- low
+
+5. Proposed stage title
+- Stage 105: Teacher-surface cross-lane parity audit
+exact edge/problem
+- Compare which teacher identity and ordering edges are proven on `Stage69Sample` versus `Stage77Second`, and mark any asymmetry that still lacks same-lane proof.
+why it matters
+- Cross-lane reuse is useful, but unmarked asymmetry is how hidden gaps survive.
+why it should come in that order after Stage100
+- It should follow the remaining Stage77 teacher-edge closures so the audit reflects the real post-catch-up state.
+pass type
+- audit/index pass
+scope risk
+- low
+
+6. Proposed stage title
+- Stage 106: Post-Stage100 deterministic-family gap reindex
+exact edge/problem
+- Recompute the remaining deterministic-family vertical-slice gaps after the Stage100-105 cluster instead of assuming the old list is still valid.
+why it matters
+- This repo has enough staged history that stale roadmap carry-forward is a real failure mode.
+why it should come in that order after Stage100
+- It depends on the evidence from the narrower follow-up proofs and should be the checkpoint before proposing anything wider.
+pass type
+- audit/index pass
+scope risk
+- low

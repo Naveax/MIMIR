@@ -1,0 +1,95 @@
+executor mimir skill forge bc replay header parser first minimal implementation decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+exact outcome chosen
+- Outcome A
+- first minimal parser implementation succeeded
+- parser-success is admitted only for the first minimal ReplayInput::Memory header boundary
+- parser-success is not admitted broadly
+
+whether parser implementation succeeded
+- yes
+- added MinimalReplayHeaderReader
+- implemented ReplayReader for MinimalReplayHeaderReader
+- implementation is limited to crates/mimir-replay/src/lib.rs
+- UnsupportedReplayReader remains unchanged
+
+whether fixture happy path passed
+- yes
+- command: cargo test -p mimir-replay -- --nocapture
+- fixture test parsed rl_replay_header_fixture_001
+- exact replay_id, source_label, total_frames, and selected metadata assertions passed
+
+whether complete-header-only test passed
+- yes
+- the fixture bytes were sliced exactly to 8 + header_size
+- MinimalReplayHeaderReader parsed the same ReplayHeader from the header-only slice
+- this admits no body parse requirement for the first minimal boundary
+
+whether synthetic error tests passed
+- yes
+- unsupported input
+- empty label
+- short prefix variants
+- negative header_size
+- oversized header_size
+- unsupported version tuple
+- missing terminator
+- duplicate selected property
+- duplicate top-level non-selected property
+- unknown property kind
+- negative-length/UTF-16 text
+- selected ArrayProperty
+- selected non-finite float
+- CRC non-validation boundary
+
+whether parser-success is now admitted only for this first minimal boundary
+- yes
+- admitted only for ReplayInput::Memory
+- admitted only for header parsing through 8 + header_size
+- admitted only for the exact supported version tuple:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+
+what was intentionally excluded
+- CRC validation
+- content_crc read or validation
+- body parsing
+- raw-state payload parsing
+- replay frame extraction
+- footer parsing
+- semantic event parsing
+- nested array semantics
+- UTF-16 text support
+- unencountered property-kind support
+- ReplayInput::File support
+- backend parser dependency
+- manifest or lockfile change
+- mimir-io changes
+- mimir-export changes
+- mimir-types changes
+- mimir_export widening
+- CLI/runtime code
+- broad replay version-family support
+
+whether forbidden files changed
+- no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- mimir-io changed: no
+- mimir-export changed: no
+- mimir-types changed: no
+- backend dependency added: no
+
+validation result
+- cargo fmt --all: success
+- cargo check --workspace --all-targets --all-features: success
+- cargo test -p mimir-replay -- --nocapture: success
+- cargo test --workspace --all-targets --all-features: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings: success
+- cargo test -p mimir-export -- --list: success, 173 tests listed

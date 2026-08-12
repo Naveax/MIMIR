@@ -1,0 +1,51 @@
+executor mimir skill forge bc replay header parser external fixture supply admission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+immediate next pass type
+- fixture supply retry pass
+
+immediate next pass only
+- supply or place one real Rocket League `.replay` or equivalent real replay byte payload under an
+  explicitly allowed fixture location
+- preferred default candidate path:
+  `D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay`
+- alternatively set `MIMIR_REPLAY_FIXTURE_PATH` to a real supplied fixture path
+- record fixture id, byte length, SHA-256 hash, source/provenance, permission status, license
+  status, privacy status, and storage/admission form
+- admit the fixture only as future `ReplayInput::Memory` fixture evidence
+- do not parse the fixture
+- do not produce `ReplayHeader`
+- do not derive replay id
+- do not derive total frames
+- do not derive metadata
+- do not copy fixture bytes into the repository unless permission and privacy status explicitly
+  allow committed fixture bytes
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only after both fixture evidence and byte-layout evidence are
+  admitted
+
+byte-layout evidence admission pass status
+- not yet the immediate next pass because fixture bytes are still missing
+- if a future retry pass admits real fixture bytes while byte-layout evidence remains missing, the
+  next pass after that must be byte-layout evidence admission
+
+parser-success logic status
+- remains closed unless explicitly reopened after required evidence is admitted
+
+raw-state payload parsing status
+- remains closed unless explicitly reopened
+
+frame/event extraction status
+- frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator status
+- replay-source materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- `mimir_export` widening remains forbidden unless explicitly reopened

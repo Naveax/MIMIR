@@ -1,0 +1,30 @@
+helper/module names added or updated
+- updated `crates/mimir-cli/src/vertical_slice_test_support.rs`
+- added `expected_golden_snapshot_for_lane(...)` as the shared lane -> frozen snapshot mapper
+- added `assert_fixture_lane_matches_expected_contract(...)`
+- added `assert_fixture_lane_repeated_runs_are_identical(...)`
+- added `assert_fixture_lanes_have_distinct_golden_snapshots(...)`
+
+crate(s) touched
+- `mimir-cli`
+
+which duplicated positive checks were consolidated
+- `deterministic_vertical_slice_persists_reloadable_outputs`
+- `deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`
+- `deterministic_vertical_slice_is_identical_across_repeated_runs`
+- `deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+- `second_deterministic_vertical_slice_persists_reloadable_outputs`
+- `second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`
+- `second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+- `deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+
+which explicit lane-specific tests remain
+- `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering` remains explicit for the Stage 69 lane’s branch-score and teacher-target ordering contract
+- the Stage 75 negative contract tests remain explicit and unchanged in `crates/mimir-cli/src/vertical_slice.rs`
+- the second fixture identity and second frozen snapshot remain explicit in `fixture_for_lane(...)` and `expected_golden_snapshot_for_lane(...)`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+
+short note on why this pass improves cross-lane contract confidence without widening runtime semantics
+- The new parity helpers enforce the same narrow success/reload/golden/repeatability/non-collapse contract across both deterministic lanes through one test-only path, reducing assertion drift between lanes while leaving production logic, export bundle semantics, runtime behavior, CLI surface, and cleanup boundaries unchanged.

@@ -1,0 +1,52 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-side parse-attempt realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a replay-parsing success / parser-implementation reopen decision above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- a replay-parsing success / parser-implementation reopen decision
+
+why this is the immediate next pass
+- The replay-side parse-attempt contract is already explicit.
+- This pass now makes the first realized result above that contract explicit.
+- That realized result is truthful and bounded:
+  - `RealizedForTruthfulBlockedReplaySideParseAttemptOnly`
+- The remaining unresolved problem is no longer contract shape or first result semantics.
+- The remaining unresolved problem is whether actual replay-side access and parser work should now
+  be deliberately reopened above that blocked boundary.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySideParseAttemptRealizationResultV1`
+- the preserved audited family root directory already carried by that result
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- decide whether the repo should reopen actual replay-side access / parser-success work
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- preserve the invariant that raw-state payload, tensor, and control materialization remain closed
+  unless separately reopened
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no silent parser implementation
+- no actual raw-state payload materialization
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family replay/raw-state/index/export/materialization framework
+- no generic manifest/index framework
+- no tensor materialization
+- no control/action extraction
+- no rollout/physics/runtime work
+
+why the next pass is not another narrow refinement pass
+- This pass already fixes the first honest realization shape explicitly.
+- Another realization-refinement pass would only restate the same blocked/unavailable semantics.
+
+why the next pass is not a more specific observation-access realization pass
+- The current admitted result still lacks any honest replay-side access surface to refine.
+- Observation lineage remains deferred only because replay-side access and parsing remain unopened.

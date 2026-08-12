@@ -1,0 +1,67 @@
+executor mimir skill forge bc broader replay-source actual-materialization reopen above explicit carrier provenance/source-binding admission realization minimum caller-supplied mimir-skill source form next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+next pass
+- another reopen-decision pass above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionRealizationResultV1`
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+classification of the next pass
+- another reopen decision
+
+why this is the immediate next pass
+- This pass now fixes the minimum honest remaining source-form class:
+  - a brand-new caller-supplied surface in `mimir-skill`
+- The repo still does not justify one exact caller-admitted source form or one exact next
+  contract-definition boundary.
+- The next unresolved problem is therefore still narrower than a contract-definition pass:
+  - determine whether one exact caller-admitted source form can be proven inside that new
+    `mimir-skill` seam without inventing carrier/path/bytes/frame semantics
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionRealizationResultV1`
+- the preserved audited family root directory reference already carried by that realization result
+- this pass's reopen-decision docs/artifacts as audit guidance only
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- decide only whether one exact caller-admitted source form now exists inside a brand-new
+  `mimir-skill` caller seam
+- preserve the closure of artifact, sibling-sidecar, and manifest/index classes unless new audited
+  evidence appears
+- preserve the invariant that `source_replay` remains opaque lineage unless a later explicit
+  boundary proves more
+- preserve the invariant that `source_replay.provenance_label` is not an implicit replay path
+- preserve the invariant that the audited family root remains only a BC specimen-tree anchor
+- stay below replay-source actual-materialization implementation
+- stay below replay-source carrier discovery
+- stay below replay-input locator logic
+- stay below replay parsing
+- stay below raw-state payload materialization
+- stay below tensor/control materialization
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no contract-definition boundary unless one exact caller-admitted source form is proven inside
+  that pass
+- no replay-source actual-materialization implementation
+- no replay-source carrier discovery
+- no replay-input locator logic
+- no replay parsing implementation
+- no actual raw-state payload materialization
+- no tensor materialization
+- no control/action extraction
+- no sidecar/manifest realization
+- no new artifact family
+- no generic multi-family replay/raw-state/index/export/materialization framework
+- no rollout/physics/runtime work
+
+why the next pass is not a contract-definition pass
+- The audited repo still does not prove one exact caller-admitted object shape.
+- Freezing a contract now would still invent payload/provenance semantics.
+
+why the next pass is not a realization pass
+- There is still no admitted exact caller source form to realize.

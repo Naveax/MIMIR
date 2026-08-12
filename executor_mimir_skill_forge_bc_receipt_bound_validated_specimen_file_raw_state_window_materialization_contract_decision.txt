@@ -1,0 +1,102 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window materialization contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact contract-definition role chosen
+- one low-boost-recovery-specific contract-definition boundary above:
+  - `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+  - `LowBoostRecoveryBcRawStateMaterializationReopenDecisionResultV1`
+- exact job:
+  - admit only the validated specimen-file boundary plus the explicit raw-state-materialization reopen decision
+  - cross-validate that the reopen decision still refers to the same validated input counts, root, and locator shape
+  - define exactly what one admitted validated specimen contributes to the raw-state materialization contract
+  - define exactly what one honest materialization-attempt boundary would consume and expose
+  - remain contract-only
+
+exact contract shape defined
+- exact top-level contract type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractV1`
+- exact disposition type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractDispositionV1`
+- exact note type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractNoteV1`
+- exact per-specimen admitted view:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractAdmittedSpecimenV1`
+- exact attempt input boundary shape:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptInputV1`
+- exact attempt output-boundary shape:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptOutputBoundaryV1`
+- exact lane/specimen contract result types:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractLaneResultV1`
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractSpecimenResultV1`
+- exact entry function:
+  - `define_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_materialization_contract_v1(...)`
+- exact error type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationContractDefinitionError`
+
+exact output / disposition chosen
+- exact contract disposition:
+  - `ContractDefinedForReceiptBoundValidatedSpecimenFileRawStateWindowMaterializationAttemptOnly`
+- exact chosen materialization contract shape preserved on output:
+  - `ReceiptBoundValidatedSpecimenFileSourceRawStateWindowRefMaterializationAttemptOnly`
+- exact contract notes:
+  - `SpecimenFileExistenceReadbackValidationBoundaryPreserved`
+  - `RawStateMaterializationReopenDecisionBoundaryPreserved`
+  - `ValidationAndReopenInputsCrossValidated`
+  - `AuditedFamilyRootReferencePreservedAsBcSpecimenTreeAnchor`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ArtifactIdsPreserved`
+  - `AnchoredBcSpecimenFilePathsPreserved`
+  - `SourceRawStateWindowRefsPreserved`
+  - `ReceiptBoundSourceLineagePreservedForMaterializationAttemptOnly`
+  - `ObservationBindingKindAndAcceptedReferenceWindowPreservedForDeferredObservationAccess`
+  - `ActualRawStateMaterializationDeferred`
+  - `ReplayParsingStillDeferred`
+  - `TensorAndControlMaterializationStillDeferred`
+  - `SidecarManifestAndGenericIndexStillUnjustified`
+  - `MimirExportIntegrationStillForbidden`
+
+exact admission / failure decisions chosen
+- Admit only
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileExistenceReadbackValidationResultV1`
+  plus
+  `LowBoostRecoveryBcRawStateMaterializationReopenDecisionResultV1`.
+- Require the exact validation disposition/note set and the exact reopen disposition/note set already frozen below this boundary.
+- Require the exact locator contract shape and exact materialization contract shape already frozen below this boundary.
+- Require counts to stay positive and aligned.
+- Require the audited family root basename, existence, and directory-ness to remain exact.
+- Require lane/specimen order and artifact identity to remain exact inside the validation input.
+- Hard fail on degraded validation input.
+- Hard fail on degraded reopen input.
+- Hard fail on count/root mismatch between validation and reopen inputs.
+- Hard fail on any attempt to reinterpret the audited family root as raw-state storage.
+- Hard fail on any attempt to widen this pass into actual raw-state materialization, replay parsing, tensors, controls, sidecars, manifests, generic indexing, or `mimir_export`.
+
+what was intentionally excluded
+- any actual raw-state materialization
+- any replay parsing
+- any raw-state payload exposure
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family raw-state/index/export framework
+- any generic manifest/index framework
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - the new contract-definition DTOs
+  - the contract-definition error surface
+  - the strict validation/reopen cross-validation helpers
+  - `define_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_materialization_contract_v1(...)`
+  - narrow tests covering valid semantics, degraded inputs, mismatch rejection, and determinism
+- Added only because the repo already uses explicit machine-verifiable family-specific boundaries for prior passes, and leaving this pass as prose only would force the next pass to guess the exact admitted per-specimen materialization-attempt boundary.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were added.
+
+why this is enough for the next pass
+- The repo now has one explicit contract surface that binds validated specimen identity, anchored specimen-file path, opaque `source_raw_state_window_ref`, and preserved receipt-bound lineage to one honest materialization-attempt boundary.
+- The next pass no longer needs to guess what an admitted specimen is or what fields a first raw-state materialization-attempt pass is allowed to consume or expose.
+- `mimir_export` widening remains unnecessary and still forbidden unless explicitly reopened.

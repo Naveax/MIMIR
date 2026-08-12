@@ -1,0 +1,41 @@
+FINAL LIVE EXECUTION-RESULT SURFACE
+
+- Final live public wrapper count in `crates/mimir-export/src/lib.rs`: 4
+- Final live compatibility-wrapper count in `crates/mimir-export/src/lib.rs`: 1
+- Final live wrappers:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_index_load_summary`
+  - `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+
+CANONICAL BASELINES RETAINED
+
+- Retained canonical baselines:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_index_load_summary`
+
+REMAINING COMPATIBILITY EDGE LEFT IN PLACE
+
+- Single remaining compatibility wrapper left in place:
+  - `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+- README guidance is already canonical-only and does not depend on this compatibility edge.
+
+WHY CLEANUP STOPS HERE
+
+- Stage 67 already established that repo-local evidence favored stopping over another breaking removal.
+- The remaining compatibility wrapper is isolated, behavior-tested, and not part of README migration guidance.
+- The supported baseline set is already narrow, and another removal would mainly reduce one public name without improving the canonical migration story.
+- Repo-local evidence in this repository therefore favors freeze/closeout over another compatibility-breaking deletion.
+
+WHAT NEW EVIDENCE WOULD BE REQUIRED TO REOPEN CLEANUP
+
+- Cleanup should only be reopened if new external-consumer evidence appears showing that the remaining compatibility wrapper is unused or can be deprecated safely.
+- Cleanup should also only be reopened if new deprecation evidence or explicit API retirement requirements appear.
+- Absent new external-consumer or deprecation evidence, this cleanup boundary stays frozen.
+
+SAFE FUTURE DIRECTION
+
+- Keep README guidance and new composition work on the canonical lower-level report and summary lanes only.
+- Treat the remaining compatibility wrapper as frozen, non-canonical surface unless new evidence justifies a breaking removal pass.
+- Do not continue removing execution-result APIs from this boundary without new external-consumer or deprecation evidence.

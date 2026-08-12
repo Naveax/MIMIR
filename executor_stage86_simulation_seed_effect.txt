@@ -1,0 +1,36 @@
+helper names added or updated
+- `persisted_input_artifact_for_lane_with_simulation_seed`
+- `CapturedSimulationRequest`
+- `run_persisted_input_artifact_and_capture_simulation_requests`
+- `run_deterministic_vertical_slice` updated to accept `Option<&dyn SimBackend>` within the test-only vertical-slice module
+
+crate(s) touched
+- `crates/mimir-cli`
+
+which base lane was used
+- `Stage69Sample`
+
+exact simulation_seed mutation applied
+- baseline `simulation_seed = 69`
+- mutated `simulation_seed = 6901`
+
+what direct evidence proved seed consumption
+- the new direct-consumption test records the `SimulationRequest` values seen by the vertical-slice runtime path
+- baseline captured requests kept stable branch identities and observed seeds `[69, 69]`
+- mutated captured requests kept the same branch identities and observed seeds `[6901, 6901]`
+- the mutated persisted input artifact is asserted equal to a clone of the baseline artifact with only `payload.simulation_seed` changed
+
+whether final output changed or remained stable
+- final output changed in seed-derived simulation details (`step_hashes` from the deterministic fake backend)
+- branch identities and scoreboard totals remained stable
+
+tests added or updated
+- added `deterministic_vertical_slice_directly_consumes_simulation_seed_from_persisted_input`
+- updated test-only runner plumbing in `vertical_slice.rs` / `vertical_slice_test_support.rs`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this closes a Stage 84 gap without widening runtime semantics
+- this pass proves `simulation_seed` is consumed at the runtime simulation-request boundary for the deterministic persisted-input vertical slice
+- the observability hook is test-only support local to `mimir-cli`; it does not add CLI surface, runtime commands, or a generic telemetry framework

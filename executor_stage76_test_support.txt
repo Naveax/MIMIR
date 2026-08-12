@@ -1,0 +1,35 @@
+test-support helper/module names added or updated
+- added `crates/mimir-cli/src/vertical_slice_test_support.rs`
+- updated `crates/mimir-cli/src/vertical_slice.rs`
+- updated `crates/mimir-cli/src/lib.rs` to register the test-only helper module
+
+crate(s) touched
+- `mimir-cli`
+
+what duplication was removed or reduced
+- centralized deterministic Stage 69 fixture construction in `sample_fixture()`
+- centralized frozen Stage 73 golden snapshot construction in `expected_stage73_golden_snapshot()`
+- centralized canonical run + reload lane in `run_sample_fixture()`, `run_sample_fixture_and_load()`, `load_result()`, and `load_snapshot()`
+- centralized repeated scoreboard and teacher-label path construction in `scoreboard_path()` and `teacher_artifact_path()`
+- centralized repeated artifact rewrite scaffolding in `rewrite_scoreboard_artifact()`, `rewrite_teacher_artifact()`, and `rewrite_teacher_target_as_replay()`
+
+tests rewired
+- `deterministic_vertical_slice_persists_reloadable_outputs`
+- `deterministic_vertical_slice_is_identical_across_repeated_runs`
+- `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering`
+- `deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`
+- `deterministic_vertical_slice_repeated_runs_match_frozen_stage73_golden_snapshot`
+- `canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+- `canonical_vertical_slice_result_loader_fails_explicitly_on_scoreboard_row_count_drift`
+- `canonical_vertical_slice_result_loader_fails_explicitly_on_extra_teacher_artifact_drift`
+- `canonical_vertical_slice_teacher_targets_fail_explicitly_on_non_branch_target_drift`
+- `canonical_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+- `canonical_vertical_slice_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+- `canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing`
+- `deterministic_vertical_slice_fails_explicitly_without_fake_backend` still uses the shared fixture
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this pass improves maintainability without changing the frozen contract
+- The Stage 69-75 vertical-slice tests now depend on one test-only source of truth for the deterministic fixture, frozen golden snapshot, canonical reload lane, and artifact tamper paths. This reduces silent drift risk in future stages while preserving the same assertions, ordering, failure messages, and frozen contract semantics.

@@ -1,0 +1,63 @@
+executor mimir skill forge validator + confidence / abstain decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-12
+
+exact decision classes chosen
+- `malformed`
+- `reject`
+- `abstain`
+- `accept_candidate`
+
+exact confidence representation chosen
+- `LowBoostRecoveryConfidenceBandV1`
+- bands:
+  - `insufficient_evidence`
+  - `boundary_sensitive`
+  - `boundary_stable`
+- the confidence band is intentionally validator-bounded only
+- it represents structural consistency plus boundary stability only
+- it does not represent physics truth, replay truth, contact truth, low-boost truth, or recovery
+  success truth
+
+exact abstain triggers chosen
+- abstain occurs only after the parameter bundle and variant set both survive malformed checks
+- abstain occurs when the exact observed-window variant clears the reject floor but the required
+  one-frame trim probes are too boundary-sensitive to support provisional acceptance
+- concrete v1 trigger:
+  - exact window duration is 2 frames
+  - both trim probes remain structurally valid
+  - at least one required trimmed window duration is below the validator stability floor of 2
+    frames
+
+what was intentionally excluded
+- any rollout-backed or RocketSim-backed feasibility proof
+- any claim of true low-boost confirmation
+- any claim of contact truth or recovery success truth
+- any generic validator or generic confidence framework
+- any new replay parsing, replay mining, export, curriculum, runtime, or CLI work
+- any speculative metadata bags or opaque score payloads
+
+whether Rust type shaping and narrow implementation were added, and why
+- Yes.
+- Added `LowBoostRecoveryValidationDecisionV1`,
+  `LowBoostRecoveryConfidenceBandV1`,
+  `LowBoostRecoveryValidationReasonV1`,
+  `LowBoostRecoveryValidationNoteV1`, and
+  `LowBoostRecoveryValidationResultV1` in `crates/mimir-types/src/lib.rs`.
+- Those were added because the validation result is a plain data boundary that later curriculum,
+  export, or eval work may need to read without re-running validator logic.
+- Added one narrow family-specific validator function in `crates/mimir-skill/src/lib.rs`:
+  `validate_low_boost_recovery_candidate_v1`.
+- The implementation stays family-specific so this pass does not quietly create fake all-family
+  infrastructure.
+
+why this is enough for the next curriculum/export shell pass
+- The next pass can now consume a bounded, explicit decision artifact instead of inferring
+  candidate quality from parameter bundles indirectly.
+- Curriculum/export shell work can gate on:
+  - `accept_candidate`
+  - explicit variant lineage
+  - explicit unresolved assumptions
+  - explicit bounded confidence band
+- Abstain remains real, so the next pass does not need to pretend every structurally valid candidate
+  is exportable.

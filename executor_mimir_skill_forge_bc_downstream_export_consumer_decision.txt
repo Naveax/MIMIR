@@ -1,0 +1,106 @@
+executor mimir skill forge bc downstream export consumer decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+exact downstream export-consumer role chosen
+- one low-boost-recovery-specific downstream export-consumer boundary above
+  `LowBoostRecoveryBcExportLayoutResultV1`
+- exact job:
+  - admit only already-laid-out low-boost-recovery recovery-context lanes
+  - revalidate the export-layout boundary without reshaping it
+  - preserve the ordered lanes unchanged as the downstream consumer-owned result
+  - mark the result ready only for a later low-boost-recovery filesystem/export-emission
+    refinement pass
+
+exact output / disposition chosen
+- exact result type:
+  - `LowBoostRecoveryBcDownstreamExportConsumerResultV1`
+- exact disposition:
+  - `ReadyForLowBoostRecoveryFilesystemExportEmissionRefinementOnly`
+- exact preserved layout context:
+  - `specimen_count`
+  - `group_count`
+  - `source_layout_disposition`
+  - `source_layout_notes`
+- exact preserved lane surface:
+  - `preserved_recovery_context_lanes: Vec<LowBoostRecoveryBcExportLayoutLaneV1>`
+  - no second lane DTO was introduced
+- exact bounded notes:
+  - `ExportLayoutBoundaryPreserved`
+  - `RecoveryContextLaneInspectionOnly`
+  - `FilesystemEmissionDeferred`
+  - `TensorAndControlMaterializationDeferred`
+  - `MimirExportIntegrationDeferred`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcExportLayoutResultV1`.
+- Require `source_batching_disposition` to remain
+  `ReadyForLowBoostRecoveryLayoutRefinementOnly`.
+- Require `layout_disposition` to remain
+  `ReadyForLowBoostRecoveryDownstreamExportConsumerOnly`.
+- Require `specimen_count > 0`.
+- Require `group_count > 0`.
+- Require `ordered_recovery_context_lanes` to be non-empty.
+- Require `group_count` to equal the number of preserved lanes.
+- Require `layout_notes` to remain the exact low-boost-recovery export-layout note set.
+- Require each `source_group_ordinal` to match the concrete lane position.
+- Require lanes to remain in the exact export-layout order.
+- Require each lane to contain at least one preserved refined specimen.
+- Revalidate every preserved specimen instead of trusting construction history.
+- Require every specimen to remain aligned with its enclosing lane lineage.
+- Require specimen order within each lane to remain the exact export-layout order.
+- Require every `artifact_id` to remain unique across the full layout result.
+- Require `specimen_count` to equal the number of preserved specimens across all lanes.
+
+exact failure / defer decisions chosen
+- Any export-layout drift fails explicitly as malformed downstream-consumer input.
+- No repair, fallback, regrouping, resorting, or silent skip was added.
+- No soft defer path was added.
+- Reason no defer path exists:
+  - this boundary adds no new evidence gate beyond the already-frozen export-layout contract
+  - remaining uncertainty is already carried explicitly in preserved unresolved assumptions
+  - introducing a defer state here would invent semantics instead of narrowing them
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any generic multi-family downstream export-consumer framework
+- any filesystem bundle or manifest emission
+- any new shared DTO in `mimir-types`
+- any `mimir-io` widening
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust type shaping / narrow implementation were added, and why
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcDownstreamExportConsumerDispositionV1`
+  - `LowBoostRecoveryBcDownstreamExportConsumerNoteV1`
+  - `LowBoostRecoveryBcDownstreamExportConsumerResultV1`
+  - `LowBoostRecoveryBcDownstreamExportConsumerError`
+  - `consume_low_boost_recovery_bc_export_layout_v1(...)`
+- Added one local export-layout revalidation helper because
+  `LowBoostRecoveryBcExportLayoutResultV1` is public and can be manually constructed, so the
+  downstream consumer boundary cannot trust construction history alone.
+- Reused `LowBoostRecoveryBcExportLayoutLaneV1` directly instead of inventing a second lane DTO
+  because the first consumer only needs to preserve the existing lane shape, not widen it.
+- No `mimir-types` additions were needed because the downstream consumer result remains repo-local
+  and is not a persisted or cross-crate DTO.
+- No `mimir-io` changes were needed because raw artifact IO ownership was already correct.
+- No `mimir-export` changes were made.
+
+why this is enough for the next pass
+- The next pass no longer needs to guess what the first downstream export consumer is allowed to
+  inspect from recovery-context lanes.
+- The next pass no longer needs to guess what layout state must be preserved above
+  `LowBoostRecoveryBcExportLayoutResultV1`.
+- The next pass now has one explicit family-specific consumer result that is ready only for
+  low-boost-recovery filesystem/export-emission refinement, not for `mimir_export`,
+  tensors, or controls.
+- That makes the immediate next step obvious:
+  one family-specific filesystem/export-emission refinement pass, still without reopening
+  `mimir_export`.

@@ -1,0 +1,69 @@
+executor mimir skill forge bc replay header parser replayheader mapping policy admission next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+selected outcome driving next step
+- Outcome B
+- ReplayHeader mapping policy is partially admitted only
+- expected ReplayHeader evidence remains partial
+- byte-layout evidence remains partial
+- parser implementation remains blocked
+
+immediate next pass type
+- remaining ReplayHeader mapping gap and error-boundary derivation/admission pass
+
+immediate next pass input
+- fixture id: rl_replay_header_fixture_001
+- fixture path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- prior report path: artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report path:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+- ReplayHeader mapping policy admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REPLAYHEADER_MAPPING_POLICY_ADMISSION_V1.md
+
+immediate next pass must target
+- exact missing Id behavior
+- exact duplicate Id behavior
+- exact malformed Id shape policy
+- exact missing NumFrames None-versus-error behavior
+- exact wrong-kind NumFrames None-versus-error behavior
+- exact negative NumFrames None-versus-error behavior
+- exact malformed NumFrames behavior
+- exact selected metadata missing/omission/default/empty behavior
+- exact selected metadata duplicate behavior
+- exact selected metadata wrong-kind/malformed behavior
+- exact MIMIR error boundaries for mapping failures
+
+if expected ReplayHeader evidence becomes complete in the next pass
+- the following pass must target remaining error-boundary derivation/admission if any MIMIR
+  insufficient-byte, malformed-byte, invalid-property, unsupported-version, parser-stop, or CRC
+  boundaries remain incomplete
+
+parser implementation pass status
+- not allowed as the immediate next pass
+- parser implementation is allowed only after fixture evidence, complete byte-layout evidence,
+  complete expected output evidence, and required error boundaries are admitted and a later pass
+  explicitly reopens implementation
+
+parser implementation closure
+- parser implementation remains closed unless explicitly reopened
+
+parser-success logic closure
+- parser-success logic remains closed unless explicitly reopened
+
+raw-state payload parsing closure
+- raw-state payload parsing remains closed unless explicitly reopened
+
+frame/event extraction closure
+- replay frame extraction remains closed unless explicitly reopened
+- semantic event extraction remains closed unless explicitly reopened
+
+replay-source materialization/carrier/locator closure
+- replay-source actual materialization remains closed unless explicitly reopened
+- replay-source carrier discovery remains closed unless explicitly reopened
+- replay-input locator logic remains closed unless explicitly reopened
+
+mimir_export status
+- mimir_export widening remains forbidden unless explicitly reopened

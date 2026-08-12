@@ -1,0 +1,170 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation planning status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-05
+
+pass type
+- docs/artifacts-only exact supported tuple implementation planning
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+parser code changed
+- no
+
+Rust source changed
+- no
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- extension: .replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+- byte length greater than 8: yes
+
+fixture_002 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- extension: .replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+- byte length greater than 8: yes
+- differs from fixture_001 by SHA-256: yes
+
+required input artifacts re-audited
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_SUPPORTED_VERSION_POLICY_PLANNING_REOPEN_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_supported_version_policy_planning_reopen_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_supported_version_policy_planning_reopen_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_supported_version_policy_planning_reopen_status.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_MAPPING_ERROR_BOUNDARY_ADMISSION_V1.md
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIRST_MINIMAL_IMPLEMENTATION_AUDIT_V1.md
+- crates/mimir-replay/README.md
+- crates/mimir-replay/src/lib.rs
+- crates/mimir-skill/src/lib.rs
+- crates/mimir-types/src/lib.rs
+- Cargo.toml
+- Cargo.lock
+
+current reader implementation inspected
+- yes
+- MinimalReplayHeaderReader is in crates/mimir-replay/src/lib.rs
+- current accepted input remains ReplayInput::Memory only
+- current ReplayInput::File behavior remains unsupported-input
+- current parser boundary remains header-only through 8 + header_size
+- current header_crc behavior remains layout read only, no validation
+- current content_crc behavior remains unread and unvalidated
+- current body/raw-state/frame/event parsing remains absent
+- current backend replay parser dependency remains absent
+- current exact supported tuple remains fixture_001 only
+- current BuildVersion support remains exactly 241206.55345.468477
+
+fixture_002 expected-output evidence status
+- admitted as candidate expected-output evidence only
+- not MIMIR parser output in this pass
+- not parser-success evidence in this pass
+
+planned exact two-tuple allowlist
+- SupportedReplayHeaderTupleV1::Fixture001Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- SupportedReplayHeaderTupleV1::Fixture002Exact:
+  major_version=868
+  minor_version=32
+  net_version=Some(10)
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=250811.43331.492665
+
+planned implementation boundary for next pass
+- crates/mimir-replay/src/lib.rs only
+- exact two-tuple allowlist only
+- private exact tuple marker or equivalent exact predicate only
+- no path/hash/filename/provenance/artifact-id predicate input
+- no ReplayInput::File support
+- no replay-source materialization
+- no CRC validation
+- no content_crc read or validation
+- no body/raw-state/frame/event parsing
+- no export/runtime/CLI integration
+- no dependency expansion
+
+planned tests for next pass
+- fixture_001 regression
+- fixture_002 exact happy path using candidate expected-output evidence
+- unknown BuildVersion rejection for otherwise-supported synthetic tuple
+- existing ReplayInput::File unsupported-input boundary preserved
+- existing header-only stop-boundary preserved
+- existing CRC non-validation boundary preserved
+
+exact validation commands run
+- PASS: cargo check --workspace --all-targets --all-features
+- PASS: cargo test -p mimir-replay -- --nocapture
+  - 17 mimir-replay tests passed; 0 failed
+- PASS: cargo test -p mimir-skill -- --nocapture
+  - 273 mimir-skill tests passed; 0 failed
+- PASS: cargo test --workspace --all-targets --all-features
+- PASS: cargo clippy --workspace --all-targets --all-features -- -D warnings
+- PASS: cargo test -p mimir-export -- --list
+  - 173 mimir-export tests listed; 0 benchmarks
+
+forbidden boundary check
+- crates/mimir-replay/src/lib.rs changed by this pass: no
+- crates/mimir-skill/src/lib.rs changed by this pass: no
+- crates/mimir-types/src/lib.rs changed by this pass: no
+- Cargo.toml changed by this pass: no
+- Cargo.lock changed by this pass: no
+- crates/mimir-cli changed by this pass: no
+- crates/mimir-io changed by this pass: no
+- crates/mimir-export changed by this pass: no
+- backend replay parser dependency added by this pass: no
+- MIMIR dependency added by this pass: no
+
+forbidden file hashes observed after validation
+- crates/mimir-replay/src/lib.rs SHA-256: 346AAC530897841779613898CB37EB2C5172E7E44DBB224FDC39B9E94D15771B
+- crates/mimir-skill/src/lib.rs SHA-256: C851DDC128F72189DAC4A6A1E3E7D151A181C1F5B75830378C0E6BAC6CCCE9EB
+- crates/mimir-types/src/lib.rs SHA-256: 7E97135EBA28E40215E24F3602A8F537E5EFF7472A86351D853A8BFF10AFF29F
+- Cargo.toml SHA-256: B815700C45FD84FF860FDFF4526EAA46B5A76F8B213F570C4FA9788CCF689121
+- Cargo.lock SHA-256: 06D21529D8A307494ECAE8F064DFF019743B3D2C2615C7A8AFF6CC0FD8A2FB57
+
+created artifacts
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_EXACT_SUPPORTED_TUPLE_IMPLEMENTATION_PLANNING_V1.md
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_planning_decision.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_planning_next.txt
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_planning_status.txt
+
+explicit non-claims
+- parser-success for fixture_002: no
+- fixture_002 supported by MinimalReplayHeaderReader now: no
+- broad parser-success: no
+- broad version-family support: no
+- wildcard BuildVersion support: no
+- all ReplayVersion=8 support: no
+- future unknown build support: no
+- ReplayInput::File support: no
+- replay-source materialization: no
+- path/hash/filename/provenance/artifact-id parser facts: no
+- CRC validation: no
+- content_crc read or validation: no
+- body/raw-state/frame/event parsing: no
+- export/runtime/CLI integration: no
+- backend replay parser dependency in MIMIR: no
+
+recommended next pass
+- implement only the exact two-tuple allowlist in crates/mimir-replay/src/lib.rs
+- include fixture_001 regression, fixture_002 exact happy path, and unknown BuildVersion rejection
+- do not broaden parser scope

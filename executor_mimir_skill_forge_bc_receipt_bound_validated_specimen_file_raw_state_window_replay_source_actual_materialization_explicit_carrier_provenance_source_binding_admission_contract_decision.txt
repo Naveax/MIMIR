@@ -1,0 +1,147 @@
+executor mimir skill forge bc receipt-bound validated specimen-file raw-state-window replay-source actual-materialization explicit carrier provenance/source-binding admission contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact contract-definition role chosen
+- one low-boost-recovery-specific contract-definition boundary above:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationCarrierProvenanceBindingRealizationResultV1`
+- exact job:
+  - admit only the existing truthful blocked carrier-provenance/source-binding realization result
+  - revalidate the exact receipt-bound root/order/path, per-specimen identity tuple, deferred
+    observation lineage, preserved replay-input-locator handle kind, preserved replay-source-
+    materialization requirement kind, preserved replay-source-actual-materialization handle kind,
+    and preserved carrier-provenance/source-binding handle kind already frozen by that result
+  - define one broader replay-source-actual-materialization-facing explicit carrier
+    provenance/source-binding admission contract surface
+  - keep replay-source actual-materialization implementation, replay-source carrier discovery,
+    replay-input locator logic, replay parsing, raw-state payload materialization,
+    tensor/control materialization, and `mimir_export` closed in this pass
+
+exact contract shape defined
+- exact contract name:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractV1`
+- exact chosen contract shape:
+  - `LowBoostRecoveryBcReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractShapeV1::ReceiptBoundReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionOnly`
+- exact new admission kind:
+  - `LowBoostRecoveryBcReceiptBoundReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionKindV1::FutureAdmittedExplicitReplaySourceCarrierProvenanceSourceBindingOnly`
+- exact broader replay-source-actual-materialization-facing boundary input:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionBoundaryInputV1`
+- exact broader replay-source-actual-materialization-facing boundary output:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionOutputBoundaryV1`
+- exact per-specimen result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractLaneResultV1`
+- exact top-level contract result type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractV1`
+- exact error type:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractDefinitionError`
+- exact entry function:
+  - `define_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_source_actual_materialization_explicit_carrier_provenance_source_binding_admission_contract_v1(...)`
+
+exact output / disposition chosen
+- exact top-level disposition:
+  - `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionContractDispositionV1::ContractDefinedForReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationExplicitCarrierProvenanceSourceBindingAdmissionOnly`
+- exact per-specimen contract contents:
+  - `specimen_ordinal`
+  - `admitted_replay_source_actual_materialization_carrier_provenance_binding_boundary_input`
+  - `admitted_replay_source_actual_materialization_carrier_provenance_binding_output_boundary`
+  - `admitted_replay_source_actual_materialization_carrier_provenance_binding_disposition`
+  - `replay_source_actual_materialization_explicit_carrier_provenance_source_binding_admission_boundary_input`
+  - `replay_source_actual_materialization_explicit_carrier_provenance_source_binding_admission_output_boundary`
+- exact meaning:
+  - one truthful blocked replay-source actual-materialization carrier-provenance/source-binding
+    realization specimen may contribute only a contract-only future admission boundary above the
+    blocked realization
+  - the preserved lineage/root fields still do not admit a real explicit carrier provenance/source
+    binding
+  - `FutureAdmittedExplicitReplaySourceCarrierProvenanceSourceBindingOnly` means only that a later
+    realization boundary may externally admit one explicit carrier provenance/source binding for
+    that exact preserved tuple
+  - this contract does not say what the later carrier class is
+  - this contract does not say where a later carrier lives
+
+exact admission / failure decisions chosen
+- Admit only the exact truthful blocked carrier-provenance/source-binding realization result
+  already inside the low-boost-recovery receipt-bound chain.
+- Require the exact carrier-provenance/source-binding contract note set, carrier-provenance/
+  source-binding realization note set, chosen shapes, root basename/existence/directory-ness, and
+  exact lane/specimen order.
+- Require every admitted specimen to remain identical on:
+  - `lane_ordinal`
+  - `specimen_ordinal`
+  - `artifact_id`
+  - `anchored_bc_specimen_file_path`
+  - `source_raw_state_window_ref`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+  - `preserved_observation_binding_kind`
+  - `preserved_accepted_reference_window`
+  - `preserved_replay_input_locator_handle_kind`
+  - `preserved_replay_source_materialization_requirement_kind`
+  - `preserved_replay_source_actual_materialization_handle_kind`
+  - `preserved_replay_source_actual_materialization_carrier_provenance_binding_handle_kind`
+- Require the preserved replay-input-locator handle kind to remain
+  `FutureParserConsumableReplayHandleOnly`.
+- Require the preserved replay-source-materialization requirement kind to remain
+  `ExplicitReplaySourceMaterializationRequiredBeforeReplayInputOrParsing`.
+- Require the preserved replay-source-actual-materialization handle kind to remain
+  `FutureExplicitReplaySourceCarrierOnly`.
+- Require the preserved carrier-provenance/source-binding handle kind to remain
+  `FutureExplicitReplaySourceCarrierProvenanceBindingOnly`.
+- Hard fail on degraded realization input.
+- Hard fail on count/order/root/path/artifact drift.
+- Hard fail on duplicate artifact ids.
+- Hard fail on any attempt to reinterpret `source_replay` or `source_replay.provenance_label` as
+  an implicit replay path or replay source.
+- Hard fail on any attempt to reinterpret the audited family root as replay storage.
+- Hard fail on any attempt to widen this pass into replay-source actual-materialization
+  implementation, replay-source carrier discovery, replay-input locator logic, replay parsing,
+  actual raw-state payload materialization, or tensor/control materialization.
+
+what was intentionally excluded
+- any replay-source actual-materialization implementation
+- any replay-source carrier discovery
+- any replay-input locator logic
+- any replay file path derivation from `source_replay` or `source_replay.provenance_label`
+- any replay bytes or replay frames materialization
+- any actual `mimir_replay::ReplayInput` materialization
+- any replay parsing implementation
+- any actual raw-state payload materialization
+- any tensor materialization
+- any control/action extraction
+- any `mimir_export` integration or surface edits
+- any sidecar/manifest realization
+- any generic multi-family replay/raw-state/index/export/materialization framework
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - the explicit carrier provenance/source-binding admission contract shape enum
+  - the explicit carrier provenance/source-binding admission kind enum
+  - the admission contract disposition and note enums
+  - the admission boundary input/output DTOs
+  - the admission contract per-specimen and lane DTOs
+  - the top-level admission contract DTO
+  - the admission contract-definition error surface
+  - strict validation for truthful blocked carrier-provenance/source-binding realizations entering
+    this contract-definition boundary
+  - `define_low_boost_recovery_bc_receipt_bound_validated_specimen_file_raw_state_window_replay_source_actual_materialization_explicit_carrier_provenance_source_binding_admission_contract_v1(...)`
+  - narrow tests covering valid contract definition, degraded-realization rejection,
+    identity-drift rejection, and determinism
+- No `mimir-replay`, `mimir-io`, `mimir-types`, or `mimir-export` changes were added.
+- Reason code changes were justified:
+  - the repo already freezes family-specific contract/realization boundaries as machine-verifiable
+    `mimir-skill` surfaces
+  - this pass is the first narrow contract-definition pass for the reopened broader admission
+    boundary, so leaving it docs-only would keep the chosen boundary unbound in code
+
+why this is enough for the next pass
+- The repo now has one explicit machine-verifiable broader replay-source-actual-materialization
+  admission contract above the truthful blocked carrier-provenance/source-binding realization.
+- The exact next missing problem is no longer whether the broader admission boundary should exist.
+- The exact next missing problem is no longer what that broader admission contract surface is.
+- The next immediate gap is the first truthful realization result above that contract.
+- `mimir_export` widening remains forbidden unless explicitly reopened.

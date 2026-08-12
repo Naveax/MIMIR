@@ -1,0 +1,141 @@
+executor deterministic-family handoff pack
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: final deterministic-family handoff / closure-pack entry point
+date: 2026-04-12
+
+A. WHAT THIS PACK IS
+
+- This is the post-closure entry point for the deterministic fake-backend vertical-slice family.
+- It is not a new roadmap and it does not widen semantics.
+- Its job is to tell a future reader, from one file, what is now closed, what remains partial, what is intentionally deferred, what is explicitly no-change, and which older artifacts are now only historical context.
+
+B. CURRENT SOURCE OF TRUTH
+
+Treat these as the current canonical references for deterministic-family status:
+
+- `executor_deterministic_family_closure_summary.txt`
+  Role: compact statement of overall closure state, closed surfaces, partial surfaces, deferred boundaries, and redundant older roadmap items.
+
+- `executor_deterministic_family_contract_index.txt`
+  Role: per-surface status index with `closed / partial / deferred` classification and current evidence.
+
+- `executor_deterministic_family_matrix_freeze.txt`
+  Role: post-closure matrix freeze for the main deterministic-family surfaces, reopening risk, and explicit no-reopen guidance.
+
+- `executor_deterministic_family_no_change_locks.txt`
+  Role: no-change boundary list for fake-backend-only scope, loader semantics, export-bundle semantics, snapshot scope, CLI/runtime boundaries, and already-closed Stage77 proof items.
+
+- `executor_stage77_closure_batch_audit.txt`
+  Role: authoritative record of what the Stage77 closure batch newly closed, what was already closed before that batch, and what remained intentionally deferred.
+
+- `executor_stage77_closure_batch_effects.txt`
+  Role: concise summary of the Stage77 closure batch test/helper additions and the exact Stage77 edges it closed.
+
+- `executor_stage77_export_name_teacher_id_decision.txt`
+  Role: current decision record for why `export_name -> teacher label id` remains family-level closed but still only partial as a separately named Stage77 same-lane proof.
+
+- `executor_scoreboard_component_ordering_boundary.txt`
+  Role: current boundary record for why scoreboard component ordering is deterministic today but still only partial as a first-class versioned contract.
+
+- `executor_optional_defaulted_proposal_fields_boundary.txt`
+  Role: current no-change boundary for optional/defaulted proposal-field loader semantics.
+
+C. CURRENT STATE IN ONE PAGE
+
+closed
+- The deterministic fake-backend vertical-slice family is strongly closed at its intended narrow scope.
+- Core closure includes:
+  - base deterministic execution
+  - canonical reload boundary
+  - frozen lane-distinct snapshots
+  - repeated-run determinism
+  - Stage69 and Stage77 direct-effect coverage for `teacher_namespace`, `anchor_hint.metadata`, `score_signals`, `scorer_weights`, and `simulation_seed`
+  - Stage69 and Stage77 proposal-surface propagation into exported branch payloads
+  - Stage77 direct proposal `actions -> SimulationRequest.commands` consumption
+  - Stage77 exported-branch negative drift guard
+  - Stage77 targeted branch-artifact corruption rejection
+  - Stage77 manifest/index stability under proposal-surface-only mutation
+  - Stage77 metadata heterogeneous value-shape preservation
+  - required persisted-input rejection for missing proposal `label`
+
+partial
+- `export_name -> teacher label id`
+  Current truth: family-level closure is strong enough, but there is still no separately named Stage77 export-name-only direct mutation proof.
+- scoreboard component ordering
+  Current truth: ordering is deterministic today, but the determinism is implementation-backed through `BTreeMap` plus existing tests rather than a separately versioned contract surface.
+
+deferred
+- optional/defaulted proposal-field loader rejection beyond required `label`
+- branch-payload parity via an independent implementation
+- real replay parsing
+- real rollout / real physics / live backend behavior
+- async/background systems
+- database work
+- runtime CLI expansion
+- snapshot widening
+- export-bundle semantic widening
+
+no-change locks
+- fake-backend-only scope stays locked
+- loader defaults for optional proposal fields stay unchanged
+- export-bundle boundary stays unchanged
+- execution-result cleanup boundaries stay unchanged
+- already-closed Stage77 closure-batch items stay closed unless new contrary evidence appears
+
+D. WHAT SHOULD NOT BE REOPENED CASUALLY
+
+Do not casually reopen these already-closed or intentionally deferred families without new repo-local evidence:
+
+- Stage77 closure-batch proof items already closed in `executor_stage77_closure_batch_audit.txt`
+  This includes proposal-actions direct consumption, exported branch-payload negative drift, targeted corruption rejection, manifest/index stability, metadata value-shape preservation, and missing required proposal-label rejection.
+
+- Stage77 proposal-surface sub-items already covered by Stage101-era evidence
+  Do not restate action ordering, teacher-label text derivation from branch label, or sibling-branch isolation as new open work unless a new distinct failure path appears.
+
+- branch-payload parity via the current shared consumer path
+  Do not present shared-path parity as a missing proof. `executor_stage77_closure_batch_audit.txt` already records why it is intentionally deferred as tautological under the current `load_export_bundle -> adapt_loaded_export_for_consumer` path.
+
+- optional/defaulted proposal-field loader tightening
+  Do not convert missing optional/defaulted proposal fields into loader failures by implication. That is a semantics change, not documentary closure.
+
+- scoreboard component ordering promotion
+  Do not relabel ordering as a fully versioned contract unless there is an explicit contract-promotion decision. Current truth is deterministic-but-implementation-backed, not separately versioned.
+
+- fake-backend-only deterministic-family scope
+  Real replay parsing, real rollout or physics, live backend behavior, async/background systems, database work, runtime CLI expansion, snapshot widening, and export-bundle widening are separate families or explicit no-change boundaries here.
+
+E. WHAT IS STILL LEGITIMATELY PARTIAL
+
+- `export_name -> teacher label id` remains partial only as a separately named Stage77 same-lane proof question. Family-level closure is already strong.
+- scoreboard component ordering remains partial only as a first-class contract-status question. Deterministic behavior exists today, but the contract is not independently versioned.
+- optional/defaulted proposal-field loader semantics remain intentionally deferred rather than partially broken. Missing-field rejection there is not current truth.
+
+F. WHERE TO START IN A FUTURE CHAT
+
+Minimal reading order for someone resuming deterministic-family work later:
+
+1. `executor_deterministic_family_handoff_pack.txt`
+   Why first: this file is the current entry point.
+
+2. `executor_deterministic_family_closure_summary.txt`
+   Why second: it gives the fastest truthful summary of closed, partial, deferred, and redundant older work.
+
+3. `executor_deterministic_family_contract_index.txt`
+   Why third: it maps each main surface to current evidence and status.
+
+4. `executor_deterministic_family_matrix_freeze.txt`
+   Why fourth: it freezes the post-closure classification and reopening-risk interpretation.
+
+5. `executor_deterministic_family_no_change_locks.txt`
+   Why fifth: it tells you which boundaries are intentionally no-change and should not drift accidentally.
+
+6. Read one of these only if your future task touches that boundary:
+   - `executor_stage77_closure_batch_audit.txt`
+   - `executor_stage77_export_name_teacher_id_decision.txt`
+   - `executor_scoreboard_component_ordering_boundary.txt`
+   - `executor_optional_defaulted_proposal_fields_boundary.txt`
+
+bottom line
+
+- Current truth is no longer in the old remaining-gap lists.
+- Current truth is the closure summary + contract index + matrix freeze + no-change locks, with the boundary/decision artifacts above for the remaining narrow partial or deferred areas.

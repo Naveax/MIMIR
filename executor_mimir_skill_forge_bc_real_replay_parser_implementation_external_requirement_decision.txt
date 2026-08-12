@@ -1,0 +1,73 @@
+executor mimir skill forge bc real replay parser implementation external requirement decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- parser requirement scope Outcome A
+- require only a minimal real header parser backend
+
+relation to previous boundary decision
+- this pass follows Outcome B from the post-unsupported parser-attempt boundary decision
+- that earlier Outcome B selected an explicit external requirement pass for real parser implementation
+- this pass selects the narrower parser requirement scope inside that authorized requirement pass
+
+exact requirement scope chosen
+- future implementation must make `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>` capable of returning a real `ReplayHeader` for valid supported `ReplayInput::Memory` replay bytes
+- first parser target is header-level parsing only
+- parser may read only the bytes and label carried by `ReplayInput::Memory`
+- parser may output only `Ok(ReplayHeader)` for valid supported bytes or structured errors for invalid, malformed, or unsupported bytes
+
+why minimal header parser is preferred
+- the current trusted result proves only unsupported behavior from `UnsupportedReplayReader`
+- the existing actual replay parsing contract already names the header-attempt surface
+- header parsing is the smallest real parser step that can prove backend capability without raw-state, frame, event, locator, carrier, materialization, or export claims
+- broader replay parsing would reopen unproven domains and increase the chance of fake completeness
+
+why broader parser requirement is rejected
+- raw replay structure parsing is not needed to satisfy the first real parser capability requirement
+- no trusted `ReplayHeader` output exists yet
+- no raw-state payload schema, replay frame source, or semantic event source exists
+- requiring header plus raw replay structure now would over-authorize the next implementation pass
+
+why stop/no-op is rejected
+- the unsupported-attempt realization already proves that scaffold-only parser behavior is the blocker
+- a no-op would fail to define the external condition needed before real parser work can proceed
+- a narrow requirement artifact can be created without claiming parser readiness
+
+what was intentionally excluded
+- real parser implementation
+- parser backend integration contract implementation
+- parser-success policy
+- `ReplayHeader` production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual-materialization
+- carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- `mimir_export` widening
+- modifications to `mimir-replay`
+- modifications to `mimir-io`
+- modifications to `mimir-export`
+- modifications to `mimir-types`
+
+whether Rust/code changes were added, and why or why not
+- no Rust or code changes were added
+- this pass is requirement-definition only
+- adding Rust would either implement part of the parser, encode a premature backend contract, or imply parser readiness that the audit does not support
+
+why this is enough for the next pass
+- the first parser implementation target is now explicit and bounded to header-level parsing
+- allowed parser input and output are defined
+- default future ownership is assigned to `mimir-replay`
+- crate boundaries that may be reopened later are named
+- forbidden downstream domains remain closed
+- the next pass can define the parser backend integration contract without implementing parser logic
+

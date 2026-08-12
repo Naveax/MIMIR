@@ -1,0 +1,41 @@
+executor deterministic-family future chat startup checklist
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: concise startup checklist for future deterministic-family chats
+date: 2026-04-12
+
+recommended reading order
+
+1. `executor_deterministic_family_handoff_pack.txt`
+2. `executor_deterministic_family_closure_summary.txt`
+3. `executor_deterministic_family_contract_index.txt`
+4. `executor_deterministic_family_matrix_freeze.txt`
+5. `executor_deterministic_family_no_change_locks.txt`
+6. Read `executor_deterministic_family_archive_guide.txt` if you need help classifying older artifacts before planning
+7. Read a boundary artifact only if the task touches that exact surface
+
+questions to ask before reopening any deterministic-family surface
+
+- What exact file/function/path is allegedly still unproven?
+- Is there new repo-local evidence, or only older roadmap wording?
+- Is the claimed gap already classified as `closed`, `partial`, or `deferred` in the current canonical set?
+- Is the request about a real failure path, or only same-lane symmetry aesthetics?
+- Would the proposed work change loader semantics, export-bundle semantics, snapshot scope, runtime behavior, CLI surface, or cleanup boundaries?
+- Does the task require a distinct implementation boundary, or would it only restate the same shared path?
+
+classify the proposed task before accepting it
+
+truly new evidence
+- Accept only if there is a new failing test, new contradictory code path, new artifact drift, or a concrete mismatch against the current canonical set.
+
+just symmetry or aesthetics
+- Reject as closure work if it only duplicates an already proven family edge on another lane without adding a distinct guarantee.
+
+semantics change disguised as closure
+- Reject as hygiene/closure if it tightens defaulted loader behavior, widens bundle semantics, widens snapshots, or promotes implementation-backed behavior into a stronger contract without an explicit decision.
+
+outside deterministic-family scope
+- Reject or re-scope if it requires real replay parsing, real rollout/physics, live backend behavior, async/background systems, database work, runtime CLI expansion, or export-bundle widening.
+
+last pre-work check
+
+- If the task still looks valid after the questions above, name the exact invariant it would prove and the exact current artifact that says the surface is not already closed.

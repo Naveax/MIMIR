@@ -1,0 +1,34 @@
+executor mimir skill forge bc replay header parser fixture 002 report generation next
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+selected outcome driving next step
+- Outcome A
+
+next pass
+- fixture_002 report admission
+
+generated evidence requiring admission
+- artifacts/replay_header_reports/rl_replay_header_fixture_002_report.txt
+- artifacts/replay_header_reports/rl_replay_header_fixture_002_structural_report.txt
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_REPORT_GENERATION_V1.md
+
+required framing for next pass
+- generated reports are external evidence only
+- generated reports are not MIMIR parser output
+- generated reports are not parser-success evidence for fixture_002
+- generated reports are not broad parser-support evidence
+- fixture_002 remains admitted only as PRIVATE_LOCAL_PATH_WITH_HASH
+- no parser expansion yet
+
+still closed
+- parser success for fixture_002
+- broad parser success
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body/raw-state/frame/event parsing
+- export/runtime/CLI integration
+- backend replay parser dependencies

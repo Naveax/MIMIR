@@ -1,0 +1,49 @@
+executor mimir skill forge bc replay header parser readiness handoff next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+selected outcome driving next step
+- Outcome A
+- readiness/integration planning is complete
+- no parser expansion is admitted
+
+selected next implementation candidate
+- Option B only
+- add a narrow README/example test in mimir-replay only
+- the example/test may demonstrate explicit opt-in use of MinimalReplayHeaderReader with
+  caller-supplied ReplayInput::Memory bytes and an admitted non-empty label
+- the example/test must repeat that parser-success is limited to ReplayInput::Memory, the exact
+  fixture-supported tuple, and header-only parsing ending at 8 + header_size
+
+next pass may implement only this exact candidate if explicitly reopened
+- mimir-replay README/example test only
+- no mimir-skill consumer seam
+- no mimir-cli command
+- no mimir-io integration
+- no mimir-export integration
+- no mimir-types schema change
+- no Cargo.toml or Cargo.lock change
+- no dependency addition
+- no backend replay parser dependency
+
+future mimir-skill seam status
+- plausible later, but not the selected next candidate
+- would require a separate explicit reopen
+- must consume only already admitted ReplayInput::Memory or admitted bytes/label
+- must preserve header-only semantics and must not replace the current unsupported-attempt result
+  silently
+
+no broad parser expansion yet
+- no CRC validation
+- no content_crc read or validation
+- no body/footer parsing
+- no raw-state payload parsing
+- no replay frame extraction
+- no semantic event parsing
+- no nested array semantic parsing
+- no UTF-16 support
+- no ReplayInput::File support
+- no additional property-kind support
+- no corpus-wide ingestion
+- no export widening
+- no runtime/CLI behavior

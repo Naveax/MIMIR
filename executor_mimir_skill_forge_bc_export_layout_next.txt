@@ -1,0 +1,47 @@
+executor mimir skill forge bc export layout next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-14
+
+next pass
+- low-boost-recovery-specific downstream export-consumer boundary above
+  `LowBoostRecoveryBcExportLayoutResultV1`
+- still without `mimir_export`
+
+why this is the immediate next pass
+- The repo now has:
+  - persisted low-boost-recovery BC artifact IO wrappers
+  - one validated persisted-artifact handoff
+  - one refined downstream consumer result
+  - one deterministic low-boost-recovery specimen batching/orchestration result
+  - one logical low-boost-recovery export-layout/refinement result above the ordered groups
+- The next unresolved problem is no longer specimen admission, batching, grouping, ordering, or
+  the first logical layout shape.
+- The next unresolved problem is what the first family-specific downstream consumer boundary should
+  accept from those recovery-context lanes before any deliberate `mimir_export` reopen.
+
+what the next pass should consume
+- `LowBoostRecoveryBcExportLayoutResultV1`
+
+what the next pass should do
+- define one bounded low-boost-recovery downstream export-consumer surface above the logical
+  recovery-context lane layout
+- keep the work family-specific
+- keep the work downstream of the layout result instead of reopening batching or lower artifact
+  boundaries
+- preserve the layout-only disposition instead of silently materializing tensors, controls, or
+  filesystem bundle semantics
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no generic multi-family downstream export-consumer framework
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout work
+- no filesystem bundle emission
+
+why a deliberate reopen decision is not the next pass
+- There is no current defect that forces `mimir_export` to reopen.
+- The new layout result now gives the next pass a narrow family-specific input surface above the
+  ordered groups.
+- Reopening export semantics now would widen the system before the first downstream consumer on
+  that layout exists.

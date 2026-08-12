@@ -1,0 +1,161 @@
+executor mimir skill forge bc replay header parser first minimal implementation status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+pass type
+- first minimal parser implementation pass
+- Rust source plus required docs/artifacts
+- parser implementation added
+- parser-success admitted only for the first minimal boundary
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- yes
+- opt-in mimir-replay behavior changed through the new MinimalReplayHeaderReader
+- existing UnsupportedReplayReader behavior changed: no
+- CLI/runtime caller behavior changed: no
+
+public APIs added
+- yes
+- MinimalReplayHeaderReader added
+- ReplayReader implementation for MinimalReplayHeaderReader added
+
+source/docs changed
+- yes
+- changed crates/mimir-replay/src/lib.rs
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIRST_MINIMAL_IMPLEMENTATION_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_first_minimal_implementation_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_first_minimal_implementation_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_first_minimal_implementation_status.txt
+
+Rust source changed
+- yes
+- only crates/mimir-replay/src/lib.rs
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture identity verified
+- yes
+
+parser implementation added
+- yes
+
+MinimalReplayHeaderReader added
+- yes
+
+fixture happy path passed
+- yes
+- command: cargo test -p mimir-replay -- --nocapture
+
+complete-header-only test passed
+- yes
+- fixture slice ending exactly at 8 + header_size parsed to the same ReplayHeader
+
+synthetic error tests passed
+- yes
+
+parser-success admitted for first minimal boundary
+- yes
+- ReplayInput::Memory only
+- exact supported version tuple only
+- header-only parsing ending at 8 + header_size only
+
+parser-success admitted broadly
+- no
+
+CRC validation added
+- no
+
+backend dependency added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+  - result: success
+- cargo check --workspace --all-targets --all-features
+  - result: success
+- cargo test -p mimir-replay -- --nocapture
+  - result: success
+  - mimir-replay unit tests: 17 passed, 0 failed
+  - doc-tests: 0 passed, 0 failed
+- cargo test --workspace --all-targets --all-features
+  - result: success
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+  - result: success
+- cargo test -p mimir-export -- --list
+  - result: success
+  - listed count: 173 tests, 0 benchmarks
+  - doc-tests listed count: 0 tests, 0 benchmarks
+
+forbidden crate boundary check
+- mimir-replay source modified by this pass: yes, crates/mimir-replay/src/lib.rs only
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- Cargo.toml modified by this pass: no
+- Cargo.lock modified by this pass: no
+- mimir_export widening: no
+- backend dependency added: no
+- parser backend dependency scan command:
+  rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml Cargo.lock crates -g "Cargo.toml"
+- parser backend dependency scan result: no matches
+- git diff tracked-file check command:
+  git diff --name-only -- crates/mimir-replay/src/lib.rs crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock
+- git diff tracked-file check result: no tracked file diffs reported
+- git status caveat: this MIMIR workspace is inside broader git root D:/, so MIMIR paths appear
+  as untracked from that broader repository
+- timestamp boundary check showed recent source edit only on crates/mimir-replay/src/lib.rs; listed
+  forbidden crate files retained older timestamps
+
+implemented parser boundaries
+- ReplayInput::Memory accepted
+- ReplayInput::File rejected as unsupported-input
+- empty memory label rejected as mapping error
+- header_size/header_crc prefix read
+- header_crc read as layout only
+- content_crc not read
+- header_end computed as 8 + header_size
+- header region only parsed
+- exact version tuple enforced
+- top-level properties scanned until None
+- duplicate top-level names rejected
+- selected scalar properties parsed
+- non-selected admitted properties skipped by bounded property_size
+- non-selected top-level ArrayProperty skipped by bounded property_size only
+- selected ArrayProperty rejected
+- unknown property kinds rejected
+- negative-length/UTF-16 text rejected
+- terminator end required to equal header_end
+- trailing bytes after header_end allowed
+
+explicit non-claims
+- no CRC validation was implemented
+- no broad replay parser was implemented
+- no body parser was implemented
+- no raw-state payload parser was implemented
+- no replay frame parser was implemented
+- no semantic event parser was implemented
+- no nested array semantics were implemented
+- no UTF-16 support was implemented
+- no ReplayInput::File support was implemented
+- no export integration was implemented
+- no runtime/CLI behavior was added

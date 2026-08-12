@@ -1,0 +1,60 @@
+helper names added or updated
+- `persisted_input_artifact_for_lane_with_export_name`
+
+crate(s) touched
+- `crates/mimir-cli`
+
+which base lane was used
+- `VerticalSliceFixtureLane::Stage69Sample`
+
+exact export_name mutation applied
+- baseline: `stage69-vertical-slice`
+- mutated: `stage69-vertical-slice-export-name-drift`
+
+what direct evidence proved teacher-label id derivation changed as expected
+- The new test `deterministic_vertical_slice_export_name_changes_only_export_name_derived_teacher_ids` runs the persisted-input lane twice with identical inputs except `export_name`.
+- Baseline persisted teacher payload ids were asserted as:
+  - `stage69-vertical-slice:teacher:1`
+  - `stage69-vertical-slice:teacher:0`
+- Mutated persisted teacher payload ids were asserted as:
+  - `stage69-vertical-slice-export-name-drift:teacher:1`
+  - `stage69-vertical-slice-export-name-drift:teacher:0`
+- The test also asserts `baseline_teacher_ids != mutated_teacher_ids`.
+- The ordinal suffix remained stable (`1`, `0`) while only the export-name-derived prefix changed.
+- The export bundle manifest and canonical consumer manifest were both asserted to expose the corresponding baseline vs mutated `export_name`.
+- Canonical reload succeeded for both runs through `run_persisted_input_artifact_and_load`.
+
+what unrelated surfaces remained stable
+- `replay_id` remained identical between baseline and mutated persisted inputs.
+- `teacher_namespace` remained identical.
+- `simulation_seed` remained identical.
+- `anchor_hint` remained identical.
+- `proposals` remained identical.
+- `scorer_weights` remained identical.
+- Anchor records remained identical after canonical reload.
+- Branch records and branch ids remained identical after canonical reload.
+- Scoreboard payload remained identical after canonical reload.
+- Teacher ordering stayed stable: `teacher_branch_targets_in_order()` matched exactly across runs.
+- Teacher payload `target`, `label`, `score`, and `metadata` remained identical artifact-by-artifact.
+- Snapshot fields other than `export_name` remained stable:
+  - `replay_id`
+  - `anchor_id`
+  - `anchor_frame_index`
+  - `anchor_kind`
+  - `export_directory_name`
+  - `scoreboard_artifact_relative_path`
+  - `teacher_artifact_relative_paths`
+  - `branch_ids_in_order`
+  - `scoreboard_rows_in_order`
+  - `teacher_targets_in_order`
+
+tests added or updated
+- Added `deterministic_vertical_slice_export_name_changes_only_export_name_derived_teacher_ids`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why this closes the top remaining Stage 91 edge without widening runtime semantics
+- Stage 91 identified the missing first-class edge as `VerticalSliceFixture.export_name -> TeacherLabelId::new(format!("{}:teacher:{ordinal}", ...)) -> persisted teacher artifact payload ids`.
+- This pass isolates that edge directly on the existing deterministic persisted-input lane, proves the exact id derivation effect, proves a narrow negative (`!=`) against baseline ids, and proves that unrelated vertical-slice contract surfaces stay stable.
+- No runtime feature logic, export bundle inclusion semantics, CLI surface, loader semantics, or execution-result boundaries were widened.

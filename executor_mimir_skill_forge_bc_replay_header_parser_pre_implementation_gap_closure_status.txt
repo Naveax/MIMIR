@@ -1,0 +1,255 @@
+executor mimir skill forge bc replay header parser pre implementation gap closure status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+pass type
+- remaining precise pre-implementation gap closure pass
+- policy/evidence admission only
+- docs/artifacts only
+- no parser implementation
+- no parser-success logic
+- no ReplayHeader production
+- no backend dependency addition
+
+selected outcome
+- Outcome A
+- remaining precise gaps are closed or explicitly accepted for the first minimal parser
+  implementation boundary
+- byte-layout/error-boundary readiness is sufficient for a later explicit parser implementation
+  planning reopen pass
+- parser implementation remains closed now
+- parser-success logic remains closed now
+
+runtime behavior changed
+- no
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_PRE_IMPLEMENTATION_GAP_CLOSURE_V1.md
+- added executor_mimir_skill_forge_bc_replay_header_parser_pre_implementation_gap_closure_decision.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_pre_implementation_gap_closure_next.txt
+- added executor_mimir_skill_forge_bc_replay_header_parser_pre_implementation_gap_closure_status.txt
+- Rust source changed: no
+- manifests changed: no
+- lockfile changed: no
+- fixture files added: no
+
+fixture identity verified
+- yes
+- path exists: yes
+- byte length matched expected 3001021: yes
+- SHA-256 matched expected F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB: yes
+- fixture identity treated as parser fact: no
+
+report identities verified
+- yes
+- prior external parser report exists: yes
+- structural report exists: yes
+
+non-mapping admission input verified
+- yes
+- inspected:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_NON_MAPPING_BYTE_LAYOUT_ERROR_BOUNDARY_ADMISSION_V1.md
+- previous selected outcome: Outcome B
+- exact fixture tuple, top-level byte layout, minimal stop policy, and many hard boundaries were
+  admitted before this pass
+
+current error surface inspected
+- yes
+- mimir_core::Result<T> is std::result::Result<T, MimirError>
+- current MimirError variants inspected: Io, Json, TomlSerialize, TomlDeserialize, Message
+- current mimir-replay implementation inspected: UnsupportedReplayReader returns MimirError::message
+- current ReplayReader surface inspected: read_header(&ReplayInput) -> Result<ReplayHeader>
+- current mimir-types FieldValue finite-float behavior inspected
+- current mimir-skill unsupported replay parsing attempt boundary inspected; it records
+  UnsupportedReplayReader errors truthfully and records no ReplayHeader produced
+
+CRC gap closed for first implementation
+- yes
+- closure type: explicit validation deferral
+- first minimal reader may read header_crc as layout evidence only
+- first minimal reader must not validate header CRC
+- first minimal reader must not expose CRC in ReplayHeader
+- first minimal reader must not read or validate content/body CRC
+- CRC mismatch is not observable in the first minimal parser
+- enforced CRC validation remains deferred and must be reopened separately
+
+ArrayProperty gap closed for first implementation
+- yes
+- closure type: bounded top-level skip policy
+- top-level non-selected ArrayProperty may be skipped using bounded property_size
+- nested array dictionary semantics are not parsed
+- selected ArrayProperty is unsupported
+- array declared ranges beyond header bounds are hard malformed-property errors
+- future required/selected fields inside arrays must reject or defer rather than parse by guess
+
+UTF-16 gap closed for first implementation
+- yes
+- closure type: hard unsupported-text boundary
+- first minimal parser supports only admitted non-negative Windows-1252 parse_text strings used by
+  this fixture
+- UTF-16 or negative-length parse_text is unsupported
+- no silent fallback, lossy decode, replacement-character decode, or guessed conversion is
+  admitted
+
+unencountered property kind gap closed for first implementation
+- yes
+- closure type: hard unsupported-property boundary
+- supported encountered top-level kinds are StrProperty, NameProperty, IntProperty, FloatProperty,
+  QWordProperty, and ArrayProperty as non-selected bounded skip only
+- BoolProperty, ByteProperty, StructProperty, and unknown kind text are hard unsupported-property
+  errors
+- no silent skipping of unknown kinds is admitted
+
+error surface gap closed for first implementation
+- yes
+- closure type: stable MimirError::Message(String) category policy
+- first parser tests must assert stable message category substrings:
+  - replay header parse error: insufficient
+  - replay header parse error: malformed
+  - replay header parse error: unsupported-version
+  - replay header parse error: unsupported-property
+  - replay header parse error: unsupported-text
+  - replay header parse error: unsupported-input
+  - replay header mapping error
+- typed replay-specific error taxonomy remains deferred
+
+expected ReplayHeader evidence status
+- complete
+- replay_id: ReplayId::new("7F59297811EFD8B19C444A81FB07660C")
+- source_label: "rl_replay_header_fixture_001"
+- total_frames: Some(13555)
+- metadata:
+  - ReplayName = FieldValue::Text("Frestyle double touch but not ball")
+  - Date = FieldValue::Text("2025-01-22 11-10-32")
+  - MapName = FieldValue::Text("Stadium_Winter_P")
+  - ReplayVersion = FieldValue::Integer(8)
+  - BuildVersion = FieldValue::Text("241206.55345.468477")
+  - MaxChannels = FieldValue::Integer(2047)
+  - MatchType = FieldValue::Text("Online")
+  - TeamSize = FieldValue::Integer(3)
+  - RecordFPS = FieldValue::Float(30.0)
+- expected-output evidence only: yes
+- MIMIR parser output admitted: no
+- parser-success evidence admitted: no
+
+byte-layout/error readiness status
+- complete for the first minimal parser implementation planning reopen boundary
+- partial for broad replay parsing, broad version-family support, enforced CRC validation, nested
+  arrays, UTF-16 support, additional property kinds, file input, body parsing, raw-state parsing,
+  frame extraction, and event extraction
+
+next pass may be parser implementation planning reopen
+- yes
+- next pass may be an explicit parser implementation planning reopen pass
+- parser code is allowed only after that later pass explicitly reopens implementation
+
+parser implementation may proceed now
+- no
+- parser implementation remains closed by this pass
+- parser-success logic remains closed by this pass
+
+selected fixture id/path/byte length/SHA-256
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+report paths
+- prior external parser report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+- mapping/error-boundary admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_MAPPING_GAP_ERROR_BOUNDARY_ADMISSION_V1.md
+- non-mapping admission artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REMAINING_NON_MAPPING_BYTE_LAYOUT_ERROR_BOUNDARY_ADMISSION_V1.md
+- new pre-implementation gap closure artifact:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_PRE_IMPLEMENTATION_GAP_CLOSURE_V1.md
+
+mimir_export test count from cargo test -p mimir-export -- --list
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list
+
+required validation result
+- all listed required validation commands completed successfully
+
+forbidden crate boundary check
+- mimir-replay source modified by this pass: no
+- mimir-io modified by this pass: no
+- mimir-export modified by this pass: no
+- mimir-types modified by this pass: no
+- mimir_export widening: no
+- Cargo.toml modified by this pass: no
+- Cargo.lock modified by this pass: no
+- MIMIR backend dependency added: no
+- parser implementation added: no
+- parser-success logic added: no
+- ReplayHeader production added: no
+- raw-state payload parsing added: no
+- replay frame extraction added: no
+- semantic replay event extraction added: no
+- runtime CLI command added: no
+- dependency scan result for boxcars/rattletrap/rrrocket/carball/rlreplay/subtr-actor in MIMIR
+  manifests and lockfile: no matches
+- command run: git rev-parse --show-toplevel
+- command result: D:/
+- command run: git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export
+  crates/mimir-types Cargo.toml Cargo.lock
+- command result: no tracked file diffs reported
+- command run: rg -n "boxcars|rattletrap|rrrocket|carball|rlreplay|subtr-actor" Cargo.toml
+  Cargo.lock crates -g "Cargo.toml"
+- command result: no matches
+- command run: Get-ChildItem -Recurse -File -LiteralPath 'crates' | Where-Object {
+  $_.LastWriteTime -gt (Get-Date).AddMinutes(-15) } | Select-Object FullName,LastWriteTime
+- command result: no recently modified files under crates
+- workspace caveat: git rev-parse --show-toplevel reports D:/, so this MIMIR workspace is inside a
+  broader Git tree. The forbidden-boundary conclusion is based on exact applied patch paths, no
+  tracked diffs under forbidden crate paths or manifests, no recent source-file modification under
+  crates, no dependency matches in MIMIR manifests or lockfile, and no intentional edits outside
+  the new docs/artifact files.
+
+explicit non-claims
+- no real MIMIR replay parser was implemented
+- no MIMIR parser success was claimed or encoded
+- no backend dependency was added to MIMIR
+- no ReplayHeader was produced or synthesized
+- no raw-state payload was parsed
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented
+- no CRC validation result was admitted
+- no broad version-family support was admitted
+- no nested array semantics were admitted
+- no UTF-16 text support was admitted
+- no unencountered property-kind support was admitted
+
+next pass
+- explicit parser implementation planning reopen pass may proceed next
+- that later pass must restate all first-implementation restrictions before parser code is allowed
+- parser implementation remains closed until that later explicit reopen pass
+- parser-success logic remains closed until that later explicit reopen pass
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- mimir_export widening remains forbidden

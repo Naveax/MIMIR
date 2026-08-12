@@ -1,0 +1,40 @@
+historical note:
+- this artifact records the Stage 65 rewiring snapshot before Stage 66 removed the persist-lane compatibility pair.
+- read the `177 tests` count and surviving-surface implications here as historical only; the live post-Stage-66 surface is narrower.
+
+rewired baseline name:
+- `query_stub_execute_persist_load_and_register_execution_result_job_report`
+
+old internal call chain:
+- `query_stub_execute_persist_load_and_register_execution_result_job_report`
+- `query_stub_execute_persist_and_load_execution_result_job_report`
+- `query_stub_execute_and_persist_execution_result_job_report`
+- `query_and_stub_execute_execution_result_job_spec`
+- `persist_execution_result_job_report`
+- `load_execution_result_job_report`
+- `register_execution_result_job_report_in_index`
+
+new internal call chain:
+- `query_stub_execute_persist_load_and_register_execution_result_job_report`
+- `query_and_stub_execute_execution_result_job_spec`
+- `persist_execution_result_job_report`
+- `load_execution_result_job_report`
+- `register_execution_result_job_report_in_index`
+
+public API signature unchanged:
+- yes
+
+runtime behavior intended unchanged:
+- yes
+- returned value remains the reloaded report from `load_execution_result_job_report`
+- index registration still occurs after reload and still uses the loaded report
+- no new file writes, no alternate path derivation, no hidden fan-out
+
+baseline-specific test/parity updates performed:
+- no baseline behavior test was removed
+- no Stage 47 parity helper was removed
+- no baseline-specific assertions required semantic changes because the observable behavior stayed identical
+- added only a short historical note to `executor_stage64_rewiring_readiness.txt` so the Stage 64 readiness artifact is not mistaken for future unfinished work after Stage 65 completion
+
+resulting `mimir-export` test count from `cargo test -p mimir-export -- --list`:
+- 177 tests, 0 benchmarks

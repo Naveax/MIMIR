@@ -1,0 +1,55 @@
+executor mimir skill forge bc receipt-bound specimen-file-anchored raw-state-window locator contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+next pass
+- a first actual locator-realization pass above
+  `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractV1`,
+  still without raw-state materialization
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+why this is the immediate next pass
+- The reopen decision is already explicit.
+- The specimen-file-anchored contract is now explicitly defined in prose and code.
+- The remaining unresolved problem is no longer contract shape.
+- The remaining unresolved problem is whether the deterministic BC specimen-file lookup source can
+  now be realized as a concrete receipt-bound locator without crossing into raw-state
+  materialization.
+
+what the next pass should consume
+- `LowBoostRecoveryBcReceiptBoundSpecimenFileAnchoredRawStateWindowLocatorContractV1`
+- the preserved audited family root directory reference already carried by that contract
+- nothing from `mimir_export` unless a separate explicit reopen says otherwise
+
+what the next pass should do
+- remain strictly low-boost-recovery-specific
+- remain strictly receipt-bound
+- realize the deterministic BC specimen-file locator path from the contract without widening the
+  contract inputs
+- verify the realized locator remains aligned with:
+  - `artifact_id`
+  - `source_raw_state_window_ref`
+  - `lane_ordinal`
+  - `specimen_ordinal`
+- keep raw-state materialization deferred
+- keep tensor/control materialization deferred
+
+what the next pass must still not do
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no sidecar/manifest realization unless a separate defect-driven reopen proves one is required
+- no generic multi-family locator/index/export framework
+- no generic manifest/index framework
+- no raw-state payload materialization
+- no tensor materialization
+- no control/action extraction
+- no replay parsing/mining/rollout/physics work
+
+classification of the next pass
+- a first actual locator-realization pass still without raw-state materialization
+
+why the next pass is not another contract refinement pass
+- This pass already froze the narrowest honest contract surface.
+- Another refinement pass would only restate the same contract instead of resolving the next real
+  missing step.
+- The remaining honest work is realization of the BC specimen-file locator itself, not more
+  contract rewording.

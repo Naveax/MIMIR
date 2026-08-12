@@ -1,0 +1,68 @@
+executor mimir skill forge bc broader replay-source actual-materialization reopen above explicit carrier provenance/source-binding admission realization minimum caller-supplied mimir-skill source form decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact choice among outcome a/b/c
+- Outcome A
+- another reopen-decision is still required because the caller-supplied class is still not
+  justified as one exact next source form
+
+exact reasoning
+- The audited repo now supports one narrower answer than the prior minimum-source-form pass:
+  - artifact, sibling-sidecar, and manifest/index classes remain closed
+  - the only remaining honest source-form class is a brand-new caller-supplied surface in
+    `mimir-skill`
+- That class-level narrowing is justified by the current repo surfaces:
+  - `mimir-skill` owns the family-specific receipt-bound chain on this defect path and already
+    hosts family-specific caller inputs such as the existing output parent directory parameter on
+    `emit_low_boost_recovery_bc_actual_filesystem_emission_v1(...)`
+  - `mimir-replay` exposes only generic `ReplayInput` carriers and no tuple-binding admission
+    surface
+  - `mimir-io` exposes only raw artifact/specimen read/write helpers
+  - `mimir-export` remains unrelated and explicitly frozen
+  - `mimir-types::ReplaySourceRef`, `LowBoostRecoveryBcSerializedArtifactV1`, and
+    `LowBoostRecoveryBcActualFilesystemEmissionSpecimenFileV1` still carry only opaque lineage,
+    not an admitted source
+- Outcome B is still not honest because the repo does not justify one exact caller-admitted source
+  form or one exact next contract-definition boundary:
+  - no public DTO above the blocked realization defines the caller payload
+  - no audited consumer proves whether the minimum caller admission should be provenance-only,
+    file-backed, byte-backed, replay-frame-backed, or `mimir_replay::ReplayInput`-backed
+  - freezing Rust types now would invent payload semantics
+- Outcome C is too weak because this pass does produce a narrower audited decision than before:
+  - the minimum honest remaining source-form class is now fixed to a new caller-supplied
+    `mimir-skill` seam
+  - only the exact caller-admitted form remains unresolved
+
+what was intentionally excluded
+- any new contract-definition boundary name above the blocked explicit-admission realization
+- any Rust API or DTO in `mimir-skill`
+- any replay-source actual-materialization implementation
+- any replay-source carrier discovery
+- any replay-input locator logic
+- any replay parsing implementation
+- any replay file path derivation from `source_replay` or `source_replay.provenance_label`
+- any replay bytes or replay frames materialization
+- any actual `mimir_replay::ReplayInput` admission or materialization
+- any raw-state payload materialization
+- any tensor/control materialization
+- any sidecar/manifest realization
+- any new artifact family
+- any generic multi-family replay/raw-state/index/export/materialization framework
+- any `mimir_export` integration or surface edit
+
+whether Rust/code changes were added, and why or why not
+- No.
+- Docs-only is more honest here.
+- The audit narrows the remaining source-form class to a caller-supplied `mimir-skill` seam, but
+  it still does not justify one exact caller-admitted object or one exact next contract boundary.
+- Adding Rust now would force the repo to choose payload/provenance semantics that are not proven
+  by the audited surfaces.
+
+why this is enough for the next pass
+- The next missing problem is now narrower than before:
+  - prove or reject one exact caller-admitted source form inside a brand-new `mimir-skill` caller
+    seam
+- The next pass no longer needs to revisit artifact, sibling-sidecar, or manifest/index classes
+  unless genuinely new audited evidence appears.
+- `mimir_export` widening remains forbidden unless explicitly reopened.

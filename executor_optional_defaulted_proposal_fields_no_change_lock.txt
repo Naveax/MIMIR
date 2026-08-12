@@ -1,0 +1,20 @@
+executor optional/defaulted proposal fields no-change lock
+repo root: D:\RocketLeague bot\MIMIR
+
+current classification
+- deferred by design
+
+why it is not open
+- Current deterministic-family artifacts already record missing optional/defaulted proposal-field rejection as intentionally deferred.
+- Required-field rejection for proposal `label` is already proven separately.
+- Downstream proposal-surface propagation and exported branch negative-drift coverage are already proven separately.
+
+why changing it would be a semantics change
+- The persisted-input loader currently defaults missing optional/defaulted proposal fields on deserialize.
+- Converting those fields into load failures would tighten the persisted-input contract rather than close an unproven runtime edge.
+
+recommended handling
+- do not reopen casually
+- do not silently tighten loader semantics
+- do not relabel this deferred surface as missing closure
+- only revisit if an explicit contract change is desired

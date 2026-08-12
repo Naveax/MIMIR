@@ -1,0 +1,49 @@
+executor mimir skill forge bc replay header parser first minimal implementation audit next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+selected outcome driving next step
+- Outcome A
+- implementation is admitted as matching the first minimal ReplayInput::Memory header boundary
+- parser-success remains limited to the exact first minimal boundary
+
+next pass may be
+- narrow parser-readiness handoff
+- narrow integration-planning pass
+- audit-focused consumer planning for how callers could opt in to MinimalReplayHeaderReader later
+
+next pass must preserve
+- ReplayInput::Memory-only parser-success boundary unless separately reopened
+- exact fixture-supported tuple only:
+  major_version=868
+  minor_version=32
+  net_version=10
+  game_type=TAGame.Replay_Soccar_TA
+  ReplayVersion=8
+  BuildVersion=241206.55345.468477
+- header-only stop boundary at 8 + header_size
+- content_crc unread and unvalidated
+- header_crc unvalidated
+- UnsupportedReplayReader truthful unsupported behavior
+- no mimir_export widening
+
+no broad parser expansion yet
+- no CRC enforcement
+- no body/footer parsing
+- no raw-state payload parsing
+- no replay frame extraction
+- no semantic event parsing
+- no nested array semantic parsing
+- no UTF-16 support
+- no ReplayInput::File support
+- no additional property-kind support
+- no corpus-wide ingestion
+- no export integration
+- no runtime/CLI behavior
+- no backend replay parser dependency
+
+if a later issue is found
+- target the exact implementation bug or ambiguity
+- do not broaden parser scope to hide the defect
+- do not add backend dependencies unless separately admitted
+- do not modify mimir-io, mimir-export, mimir-types, Cargo.toml, or Cargo.lock

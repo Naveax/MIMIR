@@ -1,0 +1,8 @@
+executor mimir skill forge bc milestone flag
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+- BC milestone is now approaching.
+- Do not silently widen this into BC export.
+- The next pass must be the first real low-boost-recovery BC contract-definition pass.
+- The user should be explicitly alerted at this boundary.

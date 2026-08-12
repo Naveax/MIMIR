@@ -1,0 +1,167 @@
+executor mimir skill forge bc replay header parser fixture 002 mapping error boundary admission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+exact outcome chosen
+- Outcome A
+- fixture_002 mapping/error-boundary admission is complete enough for the currently admitted
+  external/report evidence
+- selected field mapping candidates are admitted only as candidate expected-output evidence
+- no parser-success is claimed for fixture_002
+- no supported-version policy is admitted for fixture_002
+
+whether fixture identities were verified
+- yes
+- fixture_001 verified:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+  - byte length: 3001021
+  - SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+  - first four bytes little-endian i32: 13200
+  - extension .replay: yes
+  - byte length greater than 8: yes
+- fixture_002 verified:
+  - path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+  - byte length: 2632903
+  - SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+  - first four bytes little-endian i32: 11273
+  - differs from fixture_001 by SHA-256: yes
+  - extension .replay: yes
+  - byte length greater than 8: yes
+
+whether evidence inputs were verified
+- yes
+- fixture_002 parser/header report verified as admitted external evidence-only
+- fixture_002 structural report verified as admitted external structural/report evidence-only
+- fixture_002 report admission doc, decision, next, and status inspected
+- fixture_002 generation and intake readiness docs inspected
+- current mimir-replay, mimir-skill, mimir-types, Cargo.toml, Cargo.lock, and repository policy docs
+  inspected
+- fixture_001 mapping/error-boundary followup artifacts inspected
+
+whether mapping policy carryover was accepted/partial/rejected
+- accepted as candidate mapping policy only
+- accepted carryover:
+  - Id -> ReplayHeader.replay_id candidate policy
+  - ReplayInput::Memory.label -> ReplayHeader.source_label candidate policy
+  - NumFrames -> ReplayHeader.total_frames candidate policy
+  - selected same-name metadata key policy
+  - Str and Name -> FieldValue::Text
+  - Int -> FieldValue::Integer
+  - finite Float -> FieldValue::Float
+- rejected carryover:
+  - fixture_001 exact supported-version tuple
+  - fixture_001 BuildVersion support
+  - parser-success behavior
+  - broad parser behavior
+  - CRC validation
+  - body/raw-state/frame/event parsing
+
+whether ReplayHeader candidate expected-output evidence was admitted
+- yes
+- admitted only as candidate expected-output evidence, not MIMIR parser output
+- replay_id candidate: ReplayId::new("D9DA34DA11F0811EAC139A94CBF30AF2")
+- source_label candidate: "rl_replay_header_fixture_002"
+- total_frames candidate: Some(10351)
+- metadata candidates:
+  - ReplayName = FieldValue::Text("asdasd")
+  - Date = FieldValue::Text("2025-08-24 19-16-35")
+  - MapName = FieldValue::Text("NeoTokyo_Standard_P")
+  - ReplayVersion = FieldValue::Integer(8)
+  - BuildVersion = FieldValue::Text("250811.43331.492665")
+  - MaxChannels = FieldValue::Integer(2047)
+  - MatchType = FieldValue::Text("Online")
+  - TeamSize = FieldValue::Integer(3)
+  - RecordFPS = FieldValue::Float(30.0)
+
+whether replay_id policy was admitted/partial/deferred
+- admitted as candidate mapping/error-boundary policy only
+- fixture_002 Id is uppercase 32-character ASCII hex and is a valid ReplayId candidate
+- missing, duplicate, wrong-kind, empty, malformed, non-ASCII, non-hex, overlength, and underlength
+  Id are hard mapping-error policies under the admitted carryover
+- lowercase ASCII hex remains valid under the admitted ASCII-hex policy; no uppercase-only policy
+  is invented
+- no fallback to MatchGUID, path, filename, fixture id, hash, or provenance is admitted
+
+whether total_frames policy was admitted/partial/deferred
+- admitted as candidate mapping/error-boundary policy only
+- fixture_002 NumFrames is present Int(10351) and maps to Some(10351) as candidate evidence
+- missing NumFrames maps to None under the admitted carryover
+- duplicate, wrong-kind, negative, or malformed NumFrames is a hard mapping or malformed-property
+  error policy
+- no silent negative-to-large conversion is admitted
+
+whether metadata policy was admitted/partial/deferred
+- admitted as candidate mapping/error-boundary policy only
+- selected same-name metadata keys admitted for fixture_002 candidate values
+- selected Str and Name map to FieldValue::Text
+- selected Int maps to FieldValue::Integer
+- selected finite Float maps to FieldValue::Float
+- selected missing key omits that metadata entry; all selected missing yields Metadata::new()
+- duplicate selected key, wrong-kind selected key, malformed selected value, and non-finite selected
+  float are hard error policies
+- empty selected string/name is preserved as empty FieldValue::Text
+- arrays, body/footer data, frames, events, raw-state data, and non-selected properties are excluded
+
+whether structural/error-boundary policy was admitted/partial/deferred
+- partial
+- admitted only as external/report structural candidate evidence:
+  - header_size offset/value: 0 / 11273
+  - header_crc offset/value: 4 / 3202895499
+  - header data range candidate: [8, 11281)
+  - major/minor/net/game_type candidates: 868 / 32 / Some(10) / TAGame.Replay_Soccar_TA
+  - property table start: 48
+  - top-level property count: 27
+  - terminator offset/end/matches-header-end: 11272 / 11281 / true
+  - first body boundary candidates: content_size 11281 / content_crc 11285 / content data start 11289
+- first body boundary candidates are not parser evidence
+- CRC validation remains closed
+- content_crc read/validation remains closed
+- fixture_002 supported-version policy remains closed
+
+whether parser code changed
+- no
+
+whether parser-success was claimed for fixture_002
+- no
+
+whether fixture_002 supported-version policy was admitted
+- no
+
+what was intentionally not broadened
+- parser success for fixture_002
+- broad parser success
+- fixture_002 support by MinimalReplayHeaderReader
+- supported replay version policy
+- broad version-family support
+- ReplayHeader mapping as MIMIR parser output for fixture_002
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation
+- body parsing
+- raw-state parsing
+- frame parsing
+- event parsing
+- export behavior
+- runtime behavior
+- CLI behavior
+- backend replay parser dependency
+
+whether forbidden files/dependencies changed
+- crates/mimir-replay/src/lib.rs changed: no
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- crates/mimir-types changed: no
+- root Cargo.toml changed: no
+- root Cargo.lock changed: no
+- MIMIR dependencies changed: no
+- backend replay parser dependency added to MIMIR: no
+
+decision
+- Outcome A admitted for fixture_002 mapping/error-boundary admission
+- no selected-field mapping-specific blockers remain for this evidence-only pass
+- next pass may be fixture_002 supported-version policy planning reopen
+- no parser expansion yet

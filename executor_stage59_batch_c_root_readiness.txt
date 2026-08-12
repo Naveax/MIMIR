@@ -1,0 +1,115 @@
+historical note
+- this artifact records the pre-Stage-60 Batch C root comparison snapshot.
+- Stage 60 removed `query_load_and_summarize_execution_result_job_reports`, so the live surviving helper set and wrapper counts changed after this file was written.
+- read this file as historical rationale only; current post-Stage-60 reclassification lives in `executor_stage61_remaining_helper_reclassification.txt`.
+
+CURRENT CANONICAL BASELINES
+
+- Current surviving public execution-result wrapper count in `crates/mimir-export/src/lib.rs`: 8
+- Current surviving compatibility-wrapper count in `crates/mimir-export/src/lib.rs`: 5
+- Current canonical baseline set:
+  - `query_stub_execute_persist_load_and_register_execution_result_job_report`
+  - `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+  - `query_stub_execute_register_report_and_index_load_summary`
+- Canonical lower-level execution-result lanes remain:
+  - report publication: `persist_execution_result_job_report` + `register_execution_result_job_report_in_index` + `load_indexed_execution_result_job_report`
+  - report retrieval: `load_and_query_execution_result_job_reports`
+  - summary publication: `persist_execution_result_job_report_collection_summary` + `register_execution_result_job_report_collection_summary_in_index` + `load_indexed_execution_result_job_report_collection_summary`
+  - summary retrieval: `load_and_query_execution_result_job_report_collection_summaries`
+  - summary retrieval plus aggregate: `load_query_and_aggregate_execution_result_job_report_collection_summaries`
+- Current remaining README-documented compatibility wrapper count: 0
+- Older stage classifications now stale after Stage 58:
+  - `executor_stage57_final_waypoint_readiness.txt` still reports the pre-Stage-58 `9 / 6` wrapper counts and a pre-removal next-step recommendation, so it now needs to be read as history only.
+  - Stage 53 and Stage 55 readiness classifications remain useful as historical rationale, but their live counts and "next removal" ordering are no longer current.
+
+CURRENT SURVIVING COMPATIBILITY WRAPPERS
+
+- `query_stub_execute_and_persist_execution_result_job_report`
+- `query_stub_execute_persist_and_load_execution_result_job_report`
+- `query_load_and_summarize_execution_result_job_reports`
+- `query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries`
+- `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+
+BATCH C ROOT AUDIT
+
+- Wrapper: `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries`
+- Canonical replacement if expanded:
+  - `query_stub_execute_register_report_and_index_load_summary`
+  - `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+- Live composition path:
+  - call `query_stub_execute_register_report_and_index_load_summary`
+  - then call `load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary`
+- Current reference footprint:
+  - one live public definition in `crates/mimir-export/src/lib.rs`
+  - five dedicated wrapper tests in `crates/mimir-export/src/lib.rs`
+  - historical mentions in `executor_stage47_wrapper_parity_audit.txt`, `executor_stage53_post_removal_reclassification.txt`, `executor_stage55_second_removal_readiness.txt`, `executor_stage57_final_waypoint_readiness.txt`, and `executor_stage58_removed_final_documented_waypoint.txt`
+- Stage47 parity status:
+  - not covered by the live Stage 47 parity cluster in source
+  - `executor_stage47_wrapper_parity_audit.txt` classifies it as "not yet directly tested" at Stage 47
+- README role or no README role:
+  - no README migration role remains after Stage 58
+  - README migration guidance is canonical-only for aggregate lanes
+- Dependency notes:
+  - no surviving public wrapper in `crates/mimir-export/src/lib.rs` calls this wrapper
+  - no README migration bullet, status artifact, or source helper now depends on it as an intermediate lane
+- Updated removal readiness: higher
+- Removal difficulty: medium
+- Recommended classification: separate later candidate
+- Rationale:
+  - Stage 58 removed the last README-documented aggregate compatibility waypoint, so this wrapper is now more isolated than it was in Stage 57.
+  - The wrapper is still a distinct queried-summary aggregate-and-persist root with five dedicated tests and no Stage 47 parity scaffold to remove alongside it.
+  - Repo-local evidence now shows isolation, but not that it is the lowest-risk next removal among the remaining wrappers.
+
+COMPARISON AGAINST OTHER SURVIVING COMPATIBILITY HELPERS
+
+- Compared with `query_stub_execute_and_persist_execution_result_job_report`:
+  - Batch C root is more removable as a single-wrapper pass.
+  - Evidence: `query_stub_execute_persist_and_load_execution_result_job_report` still calls `query_stub_execute_and_persist_execution_result_job_report`, so removing the persist helper alone would force a same-pass rewrite of another surviving wrapper.
+  - Public-surface simplification from removing Batch C would therefore be cleaner than removing `query_stub_execute_and_persist_execution_result_job_report` first.
+
+- Compared with `query_stub_execute_persist_and_load_execution_result_job_report`:
+  - Batch C root is more isolated, but not clearly better as the next removal.
+  - Evidence: the canonical baseline `query_stub_execute_persist_load_and_register_execution_result_job_report` currently calls `query_stub_execute_persist_and_load_execution_result_job_report`, so removing the persist/load helper would require touching canonical implementation internals in the same pass.
+  - Batch C avoids that dependency edge, but the persist/load helper has stronger explicit parity scaffolding and a smaller semantic lane.
+
+- Compared with `query_load_and_summarize_execution_result_job_reports`:
+  - Batch C root is less removable.
+  - Evidence: `query_load_and_summarize_execution_result_job_reports` has no surviving wrapper dependents, no README migration role, no Stage 47 parity scaffolding, and only three dedicated wrapper tests in `crates/mimir-export/src/lib.rs`.
+  - Removing `query_load_and_summarize_execution_result_job_reports` would simplify the public surface with less repo-local cleanup than removing Batch C.
+
+- Compared with `query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries`:
+  - Batch C root is not more removable.
+  - Evidence: both wrappers are isolated from other surviving wrappers and both have five dedicated wrapper tests, but `query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries` already has an exact Stage 47 explicit replacement lane in source and its replacement ends at query/load rather than query/aggregate/persist/register/index-load.
+  - Batch C does not simplify the public surface more than removing the query/load helper first.
+
+- One-wrapper removal isolation conclusion:
+  - yes, Batch C is isolated enough to be removed in its own future breaking pass
+  - no, it is not the most attractive one-wrapper removal candidate based on current repo-local footprint
+
+POST-STAGE-58 DOC / ARTIFACT STATUS
+
+- `README.md`
+  - re-checked
+  - already accurate for post-Stage-58 state
+  - no edit required
+- `executor_stage57_final_waypoint_readiness.txt`
+  - now explicitly marked as historical
+  - added a short note pointing readers to Stage 58 and Stage 59 artifacts for the live state
+- `executor_stage58_removed_final_documented_waypoint.txt`
+  - re-checked
+  - remains an accurate historical removal record
+  - no edit required
+
+RECOMMENDED NEXT BREAKING STEP
+
+- Keep the Batch C root for now and remove a different compatibility helper first.
+- Recommended next single-wrapper breaking pass:
+  - remove `query_load_and_summarize_execution_result_job_reports`
+- Why this is the better next cleanup:
+  - it is already isolated from other surviving wrappers
+  - it has no README migration role
+  - it has the smallest direct repo-local test footprint among the isolated remaining compatibility wrappers
+  - removing it would shrink the public compatibility surface without touching canonical baselines or reopening the separate queried-summary aggregate root question
+- Batch C root recommendation:
+  - keep `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries` as a separate later candidate
+  - re-audit external-consumer uncertainty before actually removing it

@@ -1,0 +1,12 @@
+pass type: canonical contract tests
+runtime behavior changed: no
+new wrappers added: no
+canonical contract tests added: yes
+README changed: yes
+mimir_export test count from cargo test -p mimir-export -- --list: 187
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

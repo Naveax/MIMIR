@@ -1,0 +1,230 @@
+MIMIR external structural byte/layout report for rl_replay_header_fixture_003
+
+REPORT STATUS
+- generated_by: temporary external Rust structural scanner outside MIMIR source/dependency graph
+- scanner_scope: reads fixture bytes for header-only structural offsets plus first body size/CRC boundary fields
+- external_tool: mimir_fixture_003_header_report_v1
+- external_tool_version: 0.1.0
+- parser_tool_source_inspected: local Cargo registry cache for boxcars 0.11.1
+- source_inspection_root: C:\Users\navea\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\boxcars-0.11.1\src
+- report_is_mimir_parser_output: no
+- report_is_parser_success: no
+- report_is_fixture_003_parser_success: no
+- report_is_parser_implementation: no
+- report_is_full_byte_layout_admission: no
+- report_requires_later_structural_admission_pass: yes
+- raw_state_payloads_parsed: no
+- replay_frames_extracted: no
+- semantic_events_extracted: no
+- replay_header_synthesized: no
+- export_runtime_cli_integration_claimed: no
+
+FIXTURE IDENTITY CHECK
+- fixture_id: rl_replay_header_fixture_003
+- input_path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_003.replay
+- observed_byte_length: 1638538
+- observed_sha256: 20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC
+- admission_form: PRIVATE_LOCAL_PATH_WITH_HASH
+- fixture_identity_is_parser_fact: no
+
+SOURCE EVIDENCE INPUTS
+- boxcars 0.11.1 Cargo.toml: package name/version/repository at Cargo.toml
+- parser entry/read order: src/parser.rs lines 319-325 and 361-390
+- header parser: src/header.rs lines 45-64 and 81-153
+- header property array parser: src/header.rs lines 160-163
+- primitive/string reads: src/core_parser.rs lines 21-27, 42-52, 69-79, 97-133
+- string decode helpers: src/parsing_utils.rs lines 9-23
+- public replay/header property model: src/models.rs lines 15-31 and 80-96
+- parse error categories: src/errors.rs lines 11-21 and 24-56
+- CRC algorithm source: src/crc.rs lines 39-80
+
+SOURCE-DERIVED STRUCTURAL PATH SUMMARY
+- top_level[0..4): header_size, i32 little-endian, source parser.rs 361-365/core_parser.rs 69-79
+- top_level[4..8): header_crc, u32 little-endian, source parser.rs 362-369/core_parser.rs 75-79
+- header_data region candidate: [8, 8 + header_size), source parser.rs 365-369; parser views this region for CRC but parse_header consumes from the same stream
+- header fields inside header_data: major_version i32 LE, minor_version i32 LE, optional net_version i32 LE when major_version > 865 and minor_version > 17, source header.rs 45-52
+- game_type: parse_text, source header.rs 59-61/core_parser.rs 116-133/parsing_utils.rs 14-23
+- properties: recursive dictionary; key parse_str; key None terminates; kind parse_str; property_size u32 LE then four ignored bytes; value decoded by kind; source header.rs 81-153
+- first body boundary fields after header terminator: content_size i32 LE then content_crc u32 LE, source parser.rs 371-378
+- network_parse Never in the parser/tool report prevents network frame decode, but boxcars parse() still parses body/footer structures before returning Replay; source parser.rs 371-390 and 461-517
+
+FIXTURE STRUCTURAL OFFSETS GENERATED FOR LATER ADMISSION
+- header_size_offset: 0
+- header_size_byte_length: 4
+- header_size_encoding: i32_little_endian
+- header_size_value: 11190
+- header_size_raw_hex: B6 2B 00 00
+- header_crc_offset: 4
+- header_crc_byte_length: 4
+- header_crc_encoding: u32_little_endian
+- header_crc_value: 3547804793
+- header_crc_raw_hex: 79 34 77 D3
+- header_data_start_offset: 8
+- header_data_end_exclusive_candidate: 11198
+- major_version_offset: 8
+- major_version_value: 868
+- major_version_raw_hex: 64 03 00 00
+- minor_version_offset: 12
+- minor_version_value: 32
+- minor_version_raw_hex: 20 00 00 00
+- net_version_offset: 16
+- net_version_value: Some(10)
+- net_version_raw_hex: 0A 00 00 00
+- game_type_offset: 20
+- game_type_encoding: windows1252_parse_text_null_terminated
+- game_type_prefix_value: 24
+- game_type_raw_byte_length_excluding_prefix: 24
+- game_type_value: TAGame.Replay_Soccar_TA
+- header_properties_start_offset: 48
+- header_property_count_top_level_generated: 27
+- header_property_kind_counts_generated: Array=3; Bool=1; Float=3; Int=12; Name=2; QWord=1; Str=5
+- header_terminator_key_offset: 11189
+- header_terminator_key_encoding: utf8_parse_str_null_terminated
+- header_terminator_key_prefix_value: 5
+- header_terminator_key_total_byte_length: 9
+- header_terminator_end_offset: 11198
+- header_terminator_matches_header_end: true
+- content_size_offset_candidate: 11198
+- content_size_encoding: i32_little_endian
+- content_size_value: 1627332
+- content_crc_offset_candidate: 11202
+- content_crc_encoding: u32_little_endian
+- content_crc_value: 3991282011
+- content_data_start_candidate: 11206
+- body_boundary_is_parser_implementation_policy: no, report-only candidate pending admission
+
+TOP-LEVEL HEADER PROPERTY STRUCTURAL TABLE
+| ordinal | byte_range | key | kind | key_prefix_offset:value | kind_prefix_offset:value | property_size_offset:value | ignored4_offset:hex | value_range | value_encoding | generated_value_summary | value_hex_if_small |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | [48,89) len=41 | TeamSize | IntProperty | 48:9 | 61:12 | 77:4 | 81:00 00 00 00 | [85,89) len=4 | i32_little_endian_4_bytes | 2 | 02 00 00 00 |
+| 1 | [89,128) len=39 | bForfeit | BoolProperty | 89:9 | 102:13 | 119:0 | 123:00 00 00 00 | [127,128) len=1 | bool_property_standard_1_byte | true | 01 |
+| 2 | [128,171) len=43 | Team0Score | IntProperty | 128:11 | 143:12 | 159:4 | 163:00 00 00 00 | [167,171) len=4 | i32_little_endian_4_bytes | 6 | 06 00 00 00 |
+| 3 | [171,214) len=43 | Team1Score | IntProperty | 171:11 | 186:12 | 202:4 | 206:00 00 00 00 | [210,214) len=4 | i32_little_endian_4_bytes | 4 | 04 00 00 00 |
+| 4 | [214,267) len=53 | TotalSecondsPlayed | FloatProperty | 214:19 | 237:14 | 255:4 | 259:00 00 00 00 | [263,267) len=4 | f32_little_endian_4_bytes | 284.332 | 7F 2A 8E 43 |
+| 5 | [267,321) len=54 | MatchStartEpoch | QWordProperty | 267:16 | 287:14 | 305:8 | 309:00 00 00 00 | [313,321) len=8 | u64_little_endian_8_bytes | 1762024423 | E7 5B 06 69 00 00 00 00 |
+| 6 | [321,1771) len=1450 | Goals | ArrayProperty | 321:6 | 331:14 | 349:1414 | 353:00 00 00 00 | [357,1771) len=1414 | i32_count_then_repeated_nested_rdict_boundary_scan | array_count=10 | <omitted_over_32_bytes> |
+| 7 | [1771,5288) len=3517 | HighLights | ArrayProperty | 1771:11 | 1786:14 | 1804:3476 | 1808:00 00 00 00 | [1812,5288) len=3476 | i32_count_then_repeated_nested_rdict_boundary_scan | array_count=16 | <omitted_over_32_bytes> |
+| 8 | [5288,10272) len=4984 | PlayerStats | ArrayProperty | 5288:12 | 5304:14 | 5322:4942 | 5326:00 00 00 00 | [5330,10272) len=4942 | i32_count_then_repeated_nested_rdict_boundary_scan | array_count=4 | <omitted_over_32_bytes> |
+| 9 | [10272,10322) len=50 | ReplayName | StrProperty | 10272:11 | 10287:12 | 10303:11 | 10307:00 00 00 00 | [10311,10322) len=11 | windows1252_or_utf16_parse_text_null_terminated | asdasd | 07 00 00 00 61 73 64 61 73 64 00 |
+| 10 | [10322,10368) len=46 | ReplayVersion | IntProperty | 10322:14 | 10340:12 | 10356:4 | 10360:00 00 00 00 | [10364,10368) len=4 | i32_little_endian_4_bytes | 8 | 08 00 00 00 |
+| 11 | [10368,10422) len=54 | ReplayLastSaveVersion | IntProperty | 10368:22 | 10394:12 | 10410:4 | 10414:00 00 00 00 | [10418,10422) len=4 | i32_little_endian_4_bytes | 8 | 08 00 00 00 |
+| 12 | [10422,10466) len=44 | GameVersion | IntProperty | 10422:12 | 10438:12 | 10454:4 | 10458:00 00 00 00 | [10462,10466) len=4 | i32_little_endian_4_bytes | 30 | 1E 00 00 00 |
+| 13 | [10466,10506) len=40 | BuildID | IntProperty | 10466:8 | 10478:12 | 10494:4 | 10498:00 00 00 00 | [10502,10506) len=4 | i32_little_endian_4_bytes | 717252342 | F6 66 C0 2A |
+| 14 | [10506,10549) len=43 | Changelist | IntProperty | 10506:11 | 10521:12 | 10537:4 | 10541:00 00 00 00 | [10545,10549) len=4 | i32_little_endian_4_bytes | 500294 | 46 A2 07 00 |
+| 15 | [10549,10614) len=65 | BuildVersion | StrProperty | 10549:13 | 10566:12 | 10582:24 | 10586:00 00 00 00 | [10590,10614) len=24 | windows1252_or_utf16_parse_text_null_terminated | 251020.62592.500294 | 14 00 00 00 32 35 31 30 32 30 2E 36 32 35 39 32 2E 35 30 30 32 39 34 00 |
+| 16 | [10614,10663) len=49 | ReserveMegabytes | IntProperty | 10614:17 | 10635:12 | 10651:4 | 10655:00 00 00 00 | [10659,10663) len=4 | i32_little_endian_4_bytes | 4 | 04 00 00 00 |
+| 17 | [10663,10707) len=44 | RecordFPS | FloatProperty | 10663:10 | 10677:14 | 10695:4 | 10699:00 00 00 00 | [10703,10707) len=4 | f32_little_endian_4_bytes | 30 | 00 00 F0 41 |
+| 18 | [10707,10755) len=48 | KeyframeDelay | FloatProperty | 10707:14 | 10725:14 | 10743:4 | 10747:00 00 00 00 | [10751,10755) len=4 | f32_little_endian_4_bytes | 10 | 00 00 20 41 |
+| 19 | [10755,10799) len=44 | MaxChannels | IntProperty | 10755:12 | 10771:12 | 10787:4 | 10791:00 00 00 00 | [10795,10799) len=4 | i32_little_endian_4_bytes | 2047 | FF 07 00 00 |
+| 20 | [10799,10847) len=48 | MaxReplaySizeMB | IntProperty | 10799:16 | 10819:12 | 10835:4 | 10839:00 00 00 00 | [10843,10847) len=4 | i32_little_endian_4_bytes | 10 | 0A 00 00 00 |
+| 21 | [10847,10915) len=68 | Id | StrProperty | 10847:3 | 10854:12 | 10870:37 | 10874:00 00 00 00 | [10878,10915) len=37 | windows1252_or_utf16_parse_text_null_terminated | DF72482811F0B757082C458D84251EFF | <omitted_over_32_bytes> |
+| 22 | [10915,10990) len=75 | MatchGUID | StrProperty | 10915:10 | 10929:12 | 10945:37 | 10949:00 00 00 00 | [10953,10990) len=37 | windows1252_or_utf16_parse_text_null_terminated | E234C8D411F0B756B03A458D8F6C9447 | <omitted_over_32_bytes> |
+| 23 | [10990,11040) len=50 | MapName | NameProperty | 10990:8 | 11002:13 | 11019:13 | 11023:00 00 00 00 | [11027,11040) len=13 | windows1252_or_utf16_parse_text_null_terminated | cs_day_p | 09 00 00 00 63 73 5F 64 61 79 5F 70 00 |
+| 24 | [11040,11097) len=57 | Date | StrProperty | 11040:5 | 11049:12 | 11065:24 | 11069:00 00 00 00 | [11073,11097) len=24 | windows1252_or_utf16_parse_text_null_terminated | 2025-11-01 19-20-48 | 14 00 00 00 32 30 32 35 2D 31 31 2D 30 31 20 31 39 2D 32 30 2D 34 38 00 |
+| 25 | [11097,11139) len=42 | NumFrames | IntProperty | 11097:10 | 11111:12 | 11127:4 | 11131:00 00 00 00 | [11135,11139) len=4 | i32_little_endian_4_bytes | 8288 | 60 20 00 00 |
+| 26 | [11139,11189) len=50 | MatchType | NameProperty | 11139:10 | 11153:13 | 11170:11 | 11174:00 00 00 00 | [11178,11189) len=11 | windows1252_or_utf16_parse_text_null_terminated | Online | 07 00 00 00 4F 6E 6C 69 6E 65 00 |
+
+SELECTED REPLAYHEADER-CANDIDATE PROPERTY ROUTES GENERATED FOR LATER ADMISSION
+- Id: structural_path=header.properties[21], key_offset=10847, kind=StrProperty, value_range=[10878,10915), value_encoding=windows1252_or_utf16_parse_text_null_terminated, generated_value=DF72482811F0B757082C458D84251EFF
+- ReplayName: structural_path=header.properties[9], key_offset=10272, kind=StrProperty, value_range=[10311,10322), value_encoding=windows1252_or_utf16_parse_text_null_terminated, generated_value=asdasd
+- Date: structural_path=header.properties[24], key_offset=11040, kind=StrProperty, value_range=[11073,11097), value_encoding=windows1252_or_utf16_parse_text_null_terminated, generated_value=2025-11-01 19-20-48
+- MapName: structural_path=header.properties[23], key_offset=10990, kind=NameProperty, value_range=[11027,11040), value_encoding=windows1252_or_utf16_parse_text_null_terminated, generated_value=cs_day_p
+- ReplayVersion: structural_path=header.properties[10], key_offset=10322, kind=IntProperty, value_range=[10364,10368), value_encoding=i32_little_endian_4_bytes, generated_value=8
+- BuildVersion: structural_path=header.properties[15], key_offset=10549, kind=StrProperty, value_range=[10590,10614), value_encoding=windows1252_or_utf16_parse_text_null_terminated, generated_value=251020.62592.500294
+- NumFrames: structural_path=header.properties[25], key_offset=11097, kind=IntProperty, value_range=[11135,11139), value_encoding=i32_little_endian_4_bytes, generated_value=8288
+- MaxChannels: structural_path=header.properties[19], key_offset=10755, kind=IntProperty, value_range=[10795,10799), value_encoding=i32_little_endian_4_bytes, generated_value=2047
+- MatchType: structural_path=header.properties[26], key_offset=11139, kind=NameProperty, value_range=[11178,11189), value_encoding=windows1252_or_utf16_parse_text_null_terminated, generated_value=Online
+- TeamSize: structural_path=header.properties[0], key_offset=48, kind=IntProperty, value_range=[85,89), value_encoding=i32_little_endian_4_bytes, generated_value=2
+- RecordFPS: structural_path=header.properties[17], key_offset=10663, kind=FloatProperty, value_range=[10703,10707), value_encoding=f32_little_endian_4_bytes, generated_value=30
+
+REMAINING UNKNOWNS
+- top-level property bForfeit kind BoolProperty declared_size=0 scanner_consumed=1
+- ArrayProperty element 0 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 1 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 2 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 3 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 4 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 5 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 6 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 7 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 8 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 9 nested_property_count=3; nested header properties scanned for boundary only
+- ArrayProperty element 0 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 1 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 2 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 3 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 4 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 5 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 6 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 7 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 8 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 9 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 10 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 11 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 12 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 13 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 14 nested_property_count=4; nested header properties scanned for boundary only
+- ArrayProperty element 15 nested_property_count=4; nested header properties scanned for boundary only
+- StructProperty SceNpOnlineId nested property Term kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpId nested property Handle kind StructProperty declared_size=274 scanner_consumed=292
+- StructProperty UniqueNetId nested property NpId kind StructProperty declared_size=428 scanner_consumed=440
+- StructProperty UniqueNetId nested property Platform kind ByteProperty declared_size=24 scanner_consumed=43
+- StructProperty UniqueNetId nested property SplitscreenID kind ByteProperty declared_size=1 scanner_consumed=10
+- ArrayProperty element 0 nested property PlayerID kind StructProperty declared_size=740 scanner_consumed=756
+- ArrayProperty element 0 nested property Platform kind ByteProperty declared_size=24 scanner_consumed=43
+- ArrayProperty element 0 nested property bBot kind BoolProperty declared_size=0 scanner_consumed=1
+- ArrayProperty element 0 nested_property_count=11; nested header properties scanned for boundary only
+- StructProperty SceNpOnlineId nested property Term kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpId nested property Handle kind StructProperty declared_size=274 scanner_consumed=292
+- StructProperty UniqueNetId nested property NpId kind StructProperty declared_size=428 scanner_consumed=440
+- StructProperty UniqueNetId nested property Platform kind ByteProperty declared_size=24 scanner_consumed=43
+- StructProperty UniqueNetId nested property SplitscreenID kind ByteProperty declared_size=1 scanner_consumed=10
+- ArrayProperty element 1 nested property PlayerID kind StructProperty declared_size=740 scanner_consumed=756
+- ArrayProperty element 1 nested property Platform kind ByteProperty declared_size=24 scanner_consumed=43
+- ArrayProperty element 1 nested property bBot kind BoolProperty declared_size=0 scanner_consumed=1
+- ArrayProperty element 1 nested_property_count=11; nested header properties scanned for boundary only
+- StructProperty SceNpOnlineId nested property Term kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpId nested property Handle kind StructProperty declared_size=274 scanner_consumed=292
+- StructProperty UniqueNetId nested property NpId kind StructProperty declared_size=428 scanner_consumed=440
+- StructProperty UniqueNetId nested property Platform kind ByteProperty declared_size=24 scanner_consumed=43
+- StructProperty UniqueNetId nested property SplitscreenID kind ByteProperty declared_size=1 scanner_consumed=10
+- ArrayProperty element 2 nested property PlayerID kind StructProperty declared_size=740 scanner_consumed=756
+- ArrayProperty element 2 nested property Platform kind ByteProperty declared_size=24 scanner_consumed=43
+- ArrayProperty element 2 nested property bBot kind BoolProperty declared_size=0 scanner_consumed=1
+- ArrayProperty element 2 nested_property_count=11; nested header properties scanned for boundary only
+- StructProperty SceNpOnlineId nested property Term kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpOnlineId nested property Dummy kind ByteProperty declared_size=1 scanner_consumed=10
+- StructProperty SceNpId nested property Handle kind StructProperty declared_size=274 scanner_consumed=292
+- StructProperty UniqueNetId nested property NpId kind StructProperty declared_size=428 scanner_consumed=440
+- StructProperty UniqueNetId nested property Platform kind ByteProperty declared_size=25 scanner_consumed=44
+- StructProperty UniqueNetId nested property SplitscreenID kind ByteProperty declared_size=1 scanner_consumed=10
+- ArrayProperty element 3 nested property PlayerID kind StructProperty declared_size=708 scanner_consumed=724
+- ArrayProperty element 3 nested property Platform kind ByteProperty declared_size=25 scanner_consumed=44
+- ArrayProperty element 3 nested property bBot kind BoolProperty declared_size=0 scanner_consumed=1
+- ArrayProperty element 3 nested_property_count=11; nested header properties scanned for boundary only
+- CRC validity is not checked by this scanner
+- body/raw-state/frame/event bytes are not parsed by this scanner
+- external boxcars report parses body/footer structures for diagnostics, but those remain non-header evidence
+- supported replay version policy for fixture_003 is not admitted by this report
+
+ADMISSION LIMITS
+- this report narrows structural evidence gaps but is not admitted byte-layout evidence by itself
+- generated offsets require a later fixture_003 report admission pass before parser support can reopen
+- Id remains a candidate replay_id source only; no MIMIR replay_id mapping is admitted here
+- NumFrames remains a candidate total_frames source only; no MIMIR total_frames mapping is admitted here
+- selected properties remain candidate metadata sources only; no metadata key map is admitted here
+- fixture path, filename, byte length, and SHA-256 remain fixture identity facts only, not parser facts
+- no MIMIR code, manifests, lockfile, mimir-io, mimir-export, or mimir-types files were modified by this report generator
+- parser_success_for_fixture_003_claimed: no
+- broad_parser_success_claimed: no

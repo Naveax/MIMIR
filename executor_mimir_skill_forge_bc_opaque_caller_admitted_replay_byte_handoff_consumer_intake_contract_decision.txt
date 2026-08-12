@@ -1,0 +1,75 @@
+executor mimir skill forge bc opaque caller-admitted replay-byte handoff consumer-intake contract decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+exact consumer role chosen
+- define one low-boost-recovery receipt-bound consumer-intake contract directly above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationOpaqueCallerAdmittedReplayByteHandoffRealizationResultV1`
+- consume realized opaque caller-admitted replay-byte handoff objects only as opaque payload
+- preserve the same receipt-bound tuple and opaque bytes
+- add only a bounded consumer-intake marker
+
+why this is the narrowest honest next seam
+- the prior pass already realized the opaque handoff object
+- no downstream consumer boundary can honestly consume that object until the intake contract is frozen
+- the minimum truthful consumer action is intake of realized opaque bytes, not parsing, locating, carrier discovery, replay-input creation, tensor/control materialization, or export emission
+
+exact Rust surface chosen
+- one consumer-intake kind enum
+- one consumer-intake contract-shape enum
+- one consumer-intake contract disposition enum
+- one consumer-intake contract note enum
+- one consumer-intake boundary input struct
+- one consumer-intake boundary output struct
+- one per-specimen consumer-intake contract result struct
+- one lane result struct
+- one top-level consumer-intake contract result struct
+- one consumer-intake contract-definition error enum
+- one contract-definition function in `mimir-skill`
+
+truth boundaries preserved
+- opaque bytes remain opaque payload only
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was added
+- no replay-input locator logic was added
+- no replay parsing was added
+- no `mimir_replay::ReplayInput` was created
+- `source_replay`, `source_replay.provenance_label`, and `audited_family_root_directory` were not reinterpreted as replay path or replay storage
+
+crate boundary decision
+- implementation stays in `mimir-skill`
+- `mimir-replay` was not modified
+- `mimir-io` was not modified
+- `mimir-export` was not modified
+- `mimir-types` was not modified
+
+failure decision
+- hard-fail on degraded opaque handoff source contract notes
+- hard-fail on degraded opaque handoff realization notes
+- hard-fail on disposition drift
+- hard-fail on chosen-shape drift
+- hard-fail on lane/specimen order drift
+- hard-fail on empty lane results
+- hard-fail on duplicate artifact ids
+- hard-fail on receipt-bound path drift
+- hard-fail on invalid accepted windows
+- hard-fail on empty opaque byte payloads
+- hard-fail on mismatch between handoff input, output, and realized handoff object
+
+what was intentionally excluded
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- replay parsing
+- parser-success logic
+- corpus-wide replay ingestion
+- real rollout physics
+- async/background systems
+- database code
+- runtime CLI commands
+- `mimir_export` widening
+- `mimir-replay` changes
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- generic all-family replay/raw-state/index/export/materialization infrastructure

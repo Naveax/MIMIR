@@ -1,0 +1,32 @@
+executor stage 75 negative matrix
+
+negative cases added
+- scoreboard row count drift versus export bundle branch count now fails explicitly through `load_canonical_vertical_slice_result`
+- extra teacher artifact count drift versus scoreboard-derived expected count now fails explicitly through `load_canonical_vertical_slice_result`
+- non-branch teacher target drift now fails explicitly through `CanonicalVerticalSliceResult::teacher_branch_targets_in_order`
+- teacher artifact ordinal/file drift that still parses now trips the frozen snapshot boundary through `CanonicalVerticalSliceResult::golden_snapshot`
+- multi-anchor drift now fails explicitly through `CanonicalVerticalSliceResult::golden_snapshot`
+
+crate(s) touched
+- `mimir-cli`
+
+tests added or updated
+- added `canonical_vertical_slice_result_loader_fails_explicitly_on_scoreboard_row_count_drift`
+- added `canonical_vertical_slice_result_loader_fails_explicitly_on_extra_teacher_artifact_drift`
+- added `canonical_vertical_slice_teacher_targets_fail_explicitly_on_non_branch_target_drift`
+- added `canonical_vertical_slice_snapshot_detects_teacher_artifact_ordinal_file_drift`
+- added `canonical_vertical_slice_snapshot_fails_explicitly_when_anchor_count_is_not_one`
+- updated `canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing` to assert the new count-drift contract message
+
+exact contract edges now explicitly enforced
+- `scoreboard.json` row count must equal export bundle branch count before canonical reload succeeds
+- `teacher_labels/teacher-label-*.json` file count must equal the scoreboard-derived expected branch count before canonical reload succeeds
+- canonical teacher target inspection accepts only `TeacherLabelTarget::Branch`
+- teacher artifact ordinal filenames remain part of the frozen ordering boundary even when swapped files still parse cleanly
+- golden snapshot helper requires exactly one anchor, not merely at least one
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on contract depth versus runtime widening
+- this pass deepens the Stage 73/74 contract by converting previously implicit or partially unenforced negative edges into explicit loader/snapshot failures and deterministic drift detections, without widening runtime semantics, export bundle semantics, CLI surface, or execution-result cleanup boundaries

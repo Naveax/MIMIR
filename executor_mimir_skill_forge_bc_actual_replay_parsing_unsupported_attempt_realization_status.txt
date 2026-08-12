@@ -1,0 +1,68 @@
+executor mimir skill forge bc actual replay parsing unsupported attempt realization status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-30
+
+pass type
+- low-boost-recovery-specific actual replay parsing unsupported parser-attempt realization pass
+- selected input: `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingContractV1`
+- selected result: `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowActualReplayParsingUnsupportedAttemptRealizationResultV1`
+- selected reader behavior: invoke `UnsupportedReplayReader` through `ReplayReader::read_header(&ReplayInput)` and record the returned error
+
+runtime behavior changed
+- no
+- no CLI, live runtime path, async/background system, database, rollout physics, export path, or parser backend was changed
+- a new library realization function exists in `mimir-skill` and runs only when called
+
+public APIs added
+- yes
+- added low-boost-recovery-specific unsupported parser-attempt realization enums, per-specimen/lane/top-level result structs, realization function, and error surface in `mimir-skill`
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- modified `crates/mimir-skill/src/lib.rs`
+- added `docs/MIMIR_SKILL_FORGE_BC_ACTUAL_REPLAY_PARSING_UNSUPPORTED_ATTEMPT_REALIZATION_V1.md`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_unsupported_attempt_realization_decision.txt`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_unsupported_attempt_realization_next.txt`
+- added `executor_mimir_skill_forge_bc_actual_replay_parsing_unsupported_attempt_realization_status.txt`
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact final validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all final validation commands completed successfully
+- repair note: an earlier clippy attempt before the final clean sequence rejected a private helper for too many arguments; the helper was narrowed and the final validation sequence above passed
+
+forbidden crate boundary check
+- `mimir-replay` source modified by this pass: no
+- `mimir-io` modified by this pass: no
+- `mimir-export` modified by this pass: no
+- `mimir-types` modified by this pass: no
+- `mimir_export` widening: no
+- command run: `git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types`
+- command result: no tracked file diffs reported
+- workspace caveat: `git rev-parse --show-toplevel` reports `D:/`, and `git status --short -- crates/mimir-skill/src/lib.rs ...` reports the MIMIR project paths as untracked from that Git view; forbidden-boundary conclusion is based on exact edited paths, no `apply_patch` edits to forbidden crates, and the no-diff check above
+
+explicit non-claims
+- no real replay parser was implemented
+- no parser success was claimed or encoded
+- no `ReplayHeader` was produced or stored
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual materialization was implemented
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented

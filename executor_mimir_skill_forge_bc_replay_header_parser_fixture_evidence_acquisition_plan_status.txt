@@ -1,0 +1,133 @@
+executor mimir skill forge bc replay header parser fixture evidence acquisition plan status
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+pass type
+- fixture/evidence acquisition planning pass
+- planning-only
+- no parser implementation
+- no parser-success policy
+- no backend dependency addition
+- no `ReplayHeader` production
+
+selected evidence-planning outcome
+- Outcome A
+- acquisition planning is bounded enough for a later fixture materialization/admission contract pass
+- actual fixture evidence and byte-layout evidence remain missing
+- implementation remains blocked until evidence is admitted and the parser implementation gate is explicitly reopened
+
+runtime behavior changed
+- no
+- no CLI, live runtime path, async/background system, database, rollout physics, export path, locator path, carrier path, materialization path, parser backend, or reader behavior was changed
+
+public APIs added
+- no
+
+public APIs removed
+- no
+
+source/docs changed
+- yes
+- added `docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_EVIDENCE_ACQUISITION_PLAN_V1.md`
+- added `executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_decision.txt`
+- added `executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_next.txt`
+- added `executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_status.txt`
+- Rust/code changes added: no
+- manifests changed: no
+- lockfile changed: no
+
+fixture files added
+- no
+- no real replay fixture bytes were present or supplied
+- no fake binary fixture files were created
+
+mimir_export test count from `cargo test -p mimir-export -- --list`
+- 173 tests, 0 benchmarks
+- doc-tests: 0 tests, 0 benchmarks
+
+exact validation commands run
+- `cargo fmt --all`
+- `cargo check --workspace --all-targets --all-features`
+- `cargo test --workspace --all-targets --all-features`
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`
+- `cargo test -p mimir-export -- --list`
+
+validation result
+- all listed validation commands completed successfully
+
+forbidden crate boundary check
+- `mimir-replay` source modified by this pass: no
+- `mimir-io` modified by this pass: no
+- `mimir-export` modified by this pass: no
+- `mimir-types` modified by this pass: no
+- `mimir_export` widening: no
+- `Cargo.toml` modified by this pass: no
+- `Cargo.lock` modified by this pass: no
+- backend dependency added: no
+- parser implementation added: no
+- parser-success logic added: no
+- command run: `git rev-parse --show-toplevel`
+- command result: `D:/`
+- command run: `git diff --name-only -- crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock`
+- command result: no tracked file diffs reported
+- command run: `git diff --name-only -- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_EVIDENCE_ACQUISITION_PLAN_V1.md executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_decision.txt executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_next.txt`
+- command result before this status file was created: no tracked file diffs reported
+- command run: `git status --short -- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_EVIDENCE_ACQUISITION_PLAN_V1.md executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_decision.txt executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_next.txt executor_mimir_skill_forge_bc_replay_header_parser_fixture_evidence_acquisition_plan_status.txt crates/mimir-replay crates/mimir-io crates/mimir-export crates/mimir-types Cargo.toml Cargo.lock`
+- command result before this status file was created: new planning docs/artifacts reported untracked; broader Git root also reports `Cargo.toml`, `Cargo.lock`, and the crate directories as untracked
+- workspace caveat: `git rev-parse --show-toplevel` reports `D:/`; this MIMIR workspace is inside a broader Git tree, so the forbidden-boundary conclusion is based on exact applied patch paths, no tracked diffs, no applied edits under forbidden crate paths, and unchanged manifests/lockfile intent from this pass
+
+evaluated existing fixture/evidence state
+- `.replay` fixtures present in the repo: no
+- replay-byte fixtures under tests/docs/corpus/examples/assets: no real replay-byte fixtures found
+- byte-layout documentation present locally: no exact Rocket League replay header byte layout found
+- expected `ReplayHeader` mapping documented: only planning rules, no fixture-backed mapping
+- replay id derivation documented: no byte-backed derivation found
+- total frame derivation documented: no byte-backed derivation found
+- metadata mapping documented: no byte-backed metadata map found
+- insufficient-byte fixtures present: no
+- malformed-byte fixtures present: no
+- unsupported-format/version fixtures present: no
+- parser-related fixtures from previous passes: only synthetic opaque-byte and unsupported-reader scaffolds
+- external dependency docs cached locally as evidence: no exact cached byte-layout docs found; prior external parser citations are backend-selection evidence only and are not sufficient parser byte-layout evidence
+
+fixture class plan summary
+- valid supported replay fixture: required, must be real Rocket League replay bytes admitted as `ReplayInput::Memory`, with provenance and expected `ReplayHeader` mapping
+- insufficient-byte fixture: required, may be derived only from valid fixture prefix after the valid fixture exists, expected `insufficient_bytes`, no header
+- malformed-byte fixture: required, may be synthetic only under documented mutation rule, expected `malformed_bytes`, no header
+- unsupported-format/version fixture: required only if distinguishable from malformed bytes, expected `unsupported_format_or_version`, no header
+
+expected ReplayHeader evidence rules
+- `replay_id`: must be byte-backed or later approved by explicit byte-backed identity policy; no label/path/provenance derivation
+- `source_label`: may be copied from `ReplayInput::Memory.label` as source context only
+- `total_frames`: may be `None` unless byte-backed header evidence exists
+- `metadata`: may be empty unless key-by-key byte evidence exists
+
+next pass
+- fixture materialization/admission contract pass
+- if no real fixture bytes or approved external byte-layout evidence are supplied, the next pass must remain an external fixture supply/admission contract
+- parser implementation remains closed unless explicitly reopened
+- parser-success logic remains closed unless explicitly reopened
+- raw-state payload parsing remains closed unless explicitly reopened
+- frame/event extraction remains closed unless explicitly reopened
+- replay-source materialization/carrier/locator remain closed unless explicitly reopened
+- `mimir_export` widening remains forbidden unless explicitly reopened
+
+explicit non-claims
+- no real replay parser was implemented
+- no backend dependency was selected or added
+- no parser success was claimed or encoded
+- no `ReplayHeader` was produced or synthesized
+- no Rocket League replay byte layout details were invented
+- no fixture expectations were fabricated
+- no replay id derivation was invented
+- no total frame derivation was invented
+- no metadata map was invented
+- no raw-state payload parsing was implemented
+- no replay frames were extracted
+- no semantic replay events were extracted
+- no replay-source actual-materialization implementation was added
+- no replay-source carrier discovery was implemented
+- no replay-input locator logic was implemented
+- no corpus ingestion was added
+- no runtime CLI command was added
+- no export widening was implemented

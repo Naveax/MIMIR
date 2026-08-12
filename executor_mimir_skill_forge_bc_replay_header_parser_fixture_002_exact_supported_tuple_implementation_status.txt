@@ -1,0 +1,129 @@
+executor mimir skill forge bc replay header parser fixture_002 exact supported tuple implementation status
+
+pass type
+- exact supported tuple implementation
+
+selected outcome
+- Outcome A
+
+runtime behavior changed
+- no
+
+parser code changed
+- yes
+- crates/mimir-replay/src/lib.rs
+
+Rust source changed
+- yes
+- only crates/mimir-replay/src/lib.rs
+
+manifests changed
+- no
+
+lockfile changed
+- no
+
+fixture_001 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- first four bytes little-endian i32: 13200
+
+fixture_002 identity verified
+- yes
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- first four bytes little-endian i32: 11273
+
+implementation planning input verified
+- yes
+- docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_FIXTURE_002_EXACT_SUPPORTED_TUPLE_IMPLEMENTATION_PLANNING_V1.md present
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_planning_decision.txt present
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_planning_next.txt present
+- executor_mimir_skill_forge_bc_replay_header_parser_fixture_002_exact_supported_tuple_implementation_planning_status.txt present
+- selected planning outcome: Outcome A
+
+exact two-tuple allowlist implemented
+- yes
+- private enum: SupportedReplayHeaderTupleV1
+- private predicate: supported_replay_header_tuple_v1
+
+fixture_001 regression passed
+- yes
+- test: minimal_reader_parses_rl_replay_header_fixture_001_and_header_only_slice
+
+fixture_002 exact happy path passed
+- yes
+- test: minimal_reader_parses_rl_replay_header_fixture_002_exact_happy_path
+
+fixture_002 header-only stop-boundary passed
+- yes
+- test: minimal_reader_parses_rl_replay_header_fixture_002_header_only_slice
+- slice length: 11281 bytes
+
+unknown BuildVersion rejection passed
+- yes
+- test: minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple
+- rejected BuildVersion: 250812.43331.492665
+- error category: replay header parse error: unsupported-version
+
+parser-success admitted for exact allowlisted tuples
+- yes
+
+parser-success admitted broadly
+- no
+
+wildcard BuildVersion support added
+- no
+
+ReplayInput::File support added
+- no
+
+CRC validation added
+- no
+
+content_crc read/validation added
+- no
+
+body/raw-state/frame/event parsing added
+- no
+
+backend dependency added
+- no
+
+exact validation commands run
+- PASS: cargo fmt --all
+- PASS: cargo check --workspace --all-targets --all-features
+- PASS: cargo test -p mimir-replay -- --nocapture
+- PASS: cargo test -p mimir-skill -- --nocapture
+- PASS: cargo test --workspace --all-targets --all-features
+- PASS: cargo clippy --workspace --all-targets --all-features -- -D warnings
+- PASS: cargo test -p mimir-export -- --list
+
+forbidden boundary check
+- crates/mimir-skill/src/lib.rs changed: no
+- crates/mimir-cli changed: no
+- crates/mimir-io changed: no
+- crates/mimir-export changed: no
+- crates/mimir-types changed: no
+- Cargo.toml changed: no
+- Cargo.lock changed: no
+- dependencies added: no
+- backend replay parser dependency added: no
+- ReplayInput::File support added: no
+- CRC validation added: no
+- content_crc read/validation added: no
+- body/raw-state/frame/event parsing added: no
+- export/runtime/CLI integration added: no
+
+workspace git caveat
+- the project directory is under a broader Git root at D:/
+- relevant project paths are reported as untracked by that Git root, so git diff/status cannot prove tracked-file deltas for this repository
+- boundary status above is based on explicit edited paths, file inspection, validation commands, and direct forbidden-target checks
+
+recommended next pass
+- exact supported tuple implementation audit/admission
+- no broad parser expansion yet
+- no export/runtime/CLI integration yet

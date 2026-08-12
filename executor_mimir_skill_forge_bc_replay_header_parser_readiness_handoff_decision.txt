@@ -1,0 +1,107 @@
+executor mimir skill forge bc replay header parser readiness handoff decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+exact outcome chosen
+- Outcome A
+- narrow readiness/integration planning is complete
+- no parser expansion is admitted
+
+whether fixture identity was verified
+- yes
+- fixture id: rl_replay_header_fixture_001
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- byte length: 3001021
+- SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+
+whether current implementation audit input was verified
+- yes
+- first minimal implementation artifacts were rechecked
+- first minimal implementation audit artifacts were rechecked
+- crates/mimir-replay/src/lib.rs was rechecked
+- crates/mimir-replay/Cargo.toml was rechecked
+- root Cargo.toml and Cargo.lock were rechecked
+- crates/mimir-core/src/lib.rs and crates/mimir-types/src/lib.rs were rechecked
+- docs/ARTIFACT_VERSIONING.md, docs/DATA_CONTRACTS.md, and staged-delivery rules were rechecked
+
+whether consumer boundaries were inspected
+- yes
+- mimir-replay inspected and classified as owning crate for explicit opt-in reader docs/examples/tests
+- mimir-skill inspected and classified as a plausible later consumer because it already depends on
+  mimir-replay and carries ReplayInput::Memory handoff contracts, while its current parser-attempt
+  realization remains UnsupportedReplayReader-only
+- mimir-cli inspected and classified as closed because direct parser use would add CLI/runtime
+  behavior and likely replay-source materialization
+- mimir-io inspected and classified as closed because parser use would widen raw I/O or persisted
+  contract semantics
+- mimir-export inspected and classified as closed because parser use would widen export semantics
+
+exact allowed future opt-in boundary
+- MinimalReplayHeaderReader remains explicit opt-in only
+- no global default reader replacement is admitted
+- UnsupportedReplayReader remains the truthful unsupported default
+- a future caller may call MinimalReplayHeaderReader.read_header(&ReplayInput::Memory { label, bytes })
+  only after it already has admitted bytes and a non-empty admitted label
+- caller must not derive parser facts from path, hash, filename, fixture identity, provenance label,
+  receipt lineage, or artifact id
+- caller must not construct or use ReplayInput::File
+- caller must not read replay bytes from disk as part of the parse attempt without a separate
+  replay-source materialization reopen
+- caller must not treat header parse success as replay-source actual-materialization
+- caller must not treat header parse success as raw-state, frame, footer, body, or event parsing
+- caller must not route this through mimir-export
+- parser-success remains admitted only for ReplayInput::Memory, the exact fixture-supported tuple,
+  and header-only parsing ending at 8 + header_size
+- parser-success admitted broadly: no
+
+exact rejected integration paths
+- mimir-skill opt-in consumer seam rejected for this pass
+- CLI command rejected
+- export integration rejected
+- mimir-io persistence or read/write integration rejected
+- mimir-types schema expansion rejected
+- global reader/default replacement rejected
+- ReplayInput::File support rejected
+- backend replay parser dependency rejected
+- path/hash/filename/provenance-derived parser admission rejected
+
+whether next pass may implement anything
+- yes, but only if separately reopened and only for selected candidate B
+- selected candidate B: add a narrow README/example test in mimir-replay only
+- no consumer integration may be implemented in the next pass under this handoff
+- no mimir-skill, mimir-cli, mimir-io, mimir-export, mimir-types, manifest, lockfile, dependency, or
+  parser-scope change is admitted by the selected next candidate
+
+what was intentionally not broadened
+- parser-success beyond the first minimal boundary
+- CRC validation
+- content_crc read or validation
+- body parsing
+- raw-state payload parsing
+- replay frame extraction
+- footer parsing
+- semantic event parsing
+- nested array semantics
+- UTF-16 support
+- ReplayInput::File support
+- backend parser dependency
+- runtime or CLI behavior
+- mimir-export integration or widening
+- mimir-io persistence semantics
+- mimir-types schema surface
+- broad replay version-family support
+- additional unencountered property-kind support
+
+whether forbidden files/dependencies changed
+- mimir-io changed by this pass: no
+- mimir-export changed by this pass: no
+- mimir-types changed by this pass: no
+- Cargo.toml changed by this pass: no
+- Cargo.lock changed by this pass: no
+- backend dependency added: no
+
+decision
+- Outcome A admitted
+- readiness handoff is complete
+- safe opt-in policy is admitted for future explicitly scoped work only
+- no parser expansion is admitted

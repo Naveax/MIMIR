@@ -1,0 +1,49 @@
+executor mimir skill forge bc replay header parser fixture 002 mapping error boundary admission next
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+selected outcome driving next step
+- Outcome A
+
+next pass
+- fixture_002 supported-version policy planning reopen may be the next pass
+- no parser implementation yet
+- no parser expansion yet
+
+why supported-version planning may be next
+- selected fixture_002 mapping candidates are admitted as candidate expected-output evidence only
+- replay_id mapping/error-boundary policy has no remaining selected-field blocker
+- total_frames mapping/error-boundary policy has no remaining selected-field blocker
+- metadata mapping/error-boundary policy has no remaining selected-field blocker
+- structural evidence is still external/report evidence only, but no additional mapping-specific
+  evidence gap is blocking this admission pass
+
+exact blocker for fixture_002 support
+- fixture_002 supported-version policy is not admitted
+- current MinimalReplayHeaderReader supported tuple remains fixture_001 exact:
+  - major_version = 868
+  - minor_version = 32
+  - net_version = Some(10)
+  - game_type = TAGame.Replay_Soccar_TA
+  - ReplayVersion = 8
+  - BuildVersion = 241206.55345.468477
+- fixture_002 report-level BuildVersion candidate is 250811.43331.492665
+- fixture_002 support requires a separate supported-version policy planning reopen before any
+  parser implementation discussion
+
+still closed
+- parser success for fixture_002
+- broad parser success
+- fixture_002 supported-version policy
+- broad version-family support
+- ReplayInput::File support
+- replay-source materialization
+- path/hash/filename/provenance/artifact-id parser facts
+- CRC validation
+- content_crc read or validation in MIMIR parser code
+- body/raw-state/frame/event parsing
+- export/runtime/CLI integration
+- backend replay parser dependencies
+
+parser expansion
+- no parser expansion yet

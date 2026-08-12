@@ -1,0 +1,34 @@
+executor mimir skill forge bc opaque caller-admitted replay-byte handoff realization next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-29
+
+mimir_export boundary
+- `mimir_export` widening remains forbidden unless explicitly reopened
+- no export bundle, sidecar, manifest, index, or runtime export semantics may be silently widened from this pass
+
+next pass type after this one
+- first narrow consumer contract-definition pass above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationOpaqueCallerAdmittedReplayByteHandoffRealizationResultV1`
+
+scope of that next pass only
+- consume the exact opaque caller-admitted replay-byte handoff realization result
+- choose one truthful next consumer boundary above realized opaque handoff objects
+- preserve the same receipt-bound tuple and opaque byte payload
+
+still forbidden in the next pass unless explicitly reopened
+- replay-source actual-materialization implementation
+- replay-source carrier discovery
+- replay-input locator logic
+- replay parsing
+- parser-success logic
+- raw-state payload parsing
+- tensor/control materialization
+- corpus-wide replay ingestion
+- `mimir_replay::ReplayInput` creation
+- `mimir_export` widening
+- generic all-family replay/raw-state/index/export/materialization framework creation
+
+reason this is the next step
+- the exact opaque handoff contract is now realized
+- the next missing truth is not parsing or carrier discovery
+- the next missing truth is deciding the first narrow consumer boundary above realized opaque handoff objects

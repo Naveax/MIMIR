@@ -1,0 +1,119 @@
+1. Stage102: Stage77 exported branch payload negative-drift guard
+Exact edge/problem:
+- Prove canonical/load-facing checks fail explicitly if a persisted/exported Stage77 branch payload drops one of the now-proven proposal surfaces (`label`, `actions`, `legality_hint`, or `metadata`) after export.
+Why it matters:
+- Stage101 proved positive propagation; the next risk is silent surface erosion after the branch artifact is written.
+Why this order:
+- It directly hardens the surface just proven, before moving to lower-value adjacent edges.
+Pass type:
+- Negative contract pass
+Scope risk:
+- Low
+
+2. Stage103: Stage77 branch artifact payload ordering proof
+Exact edge/problem:
+- Prove action ordering inside the exported branch payload remains stable and is not reordered by serialization/reload.
+Why it matters:
+- Action list order is a semantically meaningful deterministic surface even when gameplay semantics are out of scope.
+Why this order:
+- It is the narrowest remaining branch-payload integrity edge after Stage101.
+Pass type:
+- Direct propagation pass
+Scope risk:
+- Low
+
+3. Stage104: Stage77 branch payload canonical reload parity proof
+Exact edge/problem:
+- Prove exported branch payload fields observed pre-reload and post-reload match exactly at the canonical consumer boundary.
+Why it matters:
+- Prevents a serialize/load mismatch from hiding behind successful export generation.
+Why this order:
+- Stage101 already exercises canonical reload, so this is a small tightening step.
+Pass type:
+- Canonical parity pass
+Scope risk:
+- Low
+
+4. Stage105: Stage77 targeted branch artifact corruption failure path
+Exact edge/problem:
+- Corrupt one exported Stage77 branch artifact field and prove the consumer/load path fails explicitly rather than degrading silently.
+Why it matters:
+- Positive proofs are incomplete if malformed artifacts can still be accepted.
+Why this order:
+- It complements Stages 101-104 on the same surface before moving outward.
+Pass type:
+- Negative artifact-boundary pass
+Scope risk:
+- Low
+
+5. Stage106: Stage77 teacher-label branch-label derivation proof
+Exact edge/problem:
+- Isolate and prove that teacher label text is derived from exported branch label text while ids, targets, scores, and metadata remain stable.
+Why it matters:
+- Stage101 observed this as an expected consequence; a dedicated proof removes ambiguity.
+Why this order:
+- It is the next nearest dependent surface revealed by Stage101.
+Pass type:
+- Derived-surface propagation pass
+Scope risk:
+- Low
+
+6. Stage107: Stage77 branch artifact metadata key preservation proof
+Exact edge/problem:
+- Prove metadata key set and value types survive export/reload without loss, coercion, or reordering drift for a targeted proposal.
+Why it matters:
+- Metadata is easy to partially preserve while silently changing shape.
+Why this order:
+- It deepens the Stage101 metadata proof without widening beyond the same surface.
+Pass type:
+- Direct propagation pass
+Scope risk:
+- Medium
+
+7. Stage108: Stage77 branch artifact field isolation across proposals
+Exact edge/problem:
+- Prove mutating one proposal's exported-branch payload cannot bleed into sibling branch payloads under Stage77.
+Why it matters:
+- Cross-branch contamination is a realistic deterministic-family failure mode.
+Why this order:
+- Stage101 already checks one unaffected branch stays stable; this would harden that into a more explicit isolation pass.
+Pass type:
+- Isolation pass
+Scope risk:
+- Medium
+
+8. Stage109: Stage77 persisted-input artifact negative-drift guard for proposal surface
+Exact edge/problem:
+- Prove persisted Stage77 input loading rejects proposal-surface schema drift for the fields now relied on by Stage101.
+Why it matters:
+- The export proof is weaker if the input boundary can drift without an explicit failure.
+Why this order:
+- It hardens the upstream boundary once the downstream propagation surface is covered.
+Pass type:
+- Negative schema-boundary pass
+Scope risk:
+- Medium
+
+9. Stage110: Stage77 simulation-request action-surface consumption proof
+Exact edge/problem:
+- Record deterministic fake-backend requests and prove mutated proposal actions are consumed exactly into the targeted branch simulation request command payload.
+Why it matters:
+- Stage101 proves export-branch propagation; this would close the adjacent execution-side consumption edge for actions.
+Why this order:
+- It stays deterministic-family only, but comes after the exported branch payload edge is closed.
+Pass type:
+- Direct consumption pass
+Scope risk:
+- Medium
+
+10. Stage111: Stage77 manifest/index stability under proposal-surface-only mutation
+Exact edge/problem:
+- Prove export manifest/index structure stays stable when only a proposal surface changes.
+Why it matters:
+- Prevents accidental bundle-structure widening caused by local payload mutations.
+Why this order:
+- It is a lower-priority packaging check once payload and boundary proofs are in place.
+Pass type:
+- Packaging stability pass
+Scope risk:
+- Low

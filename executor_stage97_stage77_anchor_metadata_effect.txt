@@ -1,0 +1,46 @@
+Helper names added or updated:
+- None added.
+- Reused existing helper: `persisted_input_artifact_for_lane_with_anchor_metadata`
+- Reused existing snapshot expectation helper: `expected_golden_snapshot_for_lane`
+
+Crate(s) touched:
+- `crates/mimir-cli`
+
+Exact Stage77 anchor metadata mutation applied:
+- Baseline persisted `payload.anchor_hint.metadata`:
+  `{"source":"stage77-second-fixture"}`
+- Mutated persisted `payload.anchor_hint.metadata`:
+  `{"anchor_contract_tag":"stage97-stage77-explicit-propagation","anchor_origin":"stage77-second-fixture-mutated"}`
+
+Exact anchor metadata surface asserted after canonical reload:
+- `CanonicalVerticalSliceResult.consumer_export.anchors[0].metadata`
+- Loaded through `run_persisted_input_artifact_and_load(...)`
+
+What direct evidence proved anchor-metadata propagation:
+- The Stage77 baseline run canonically reloaded with anchor metadata equal to `{"source":"stage77-second-fixture"}`.
+- The Stage77 mutated run canonically reloaded with anchor metadata equal to `{"anchor_contract_tag":"stage97-stage77-explicit-propagation","anchor_origin":"stage77-second-fixture-mutated"}`.
+- The test asserts the mutated persisted artifact matches the baseline artifact with only `payload.anchor_hint.metadata` changed.
+- The test asserts the canonically reloaded anchor metadata differs between runs while anchor identity fields remain equal.
+
+What unrelated surfaces remained stable:
+- Branch ids in order:
+  `["anchor-stage77-second:branch:0","anchor-stage77-second:branch:1"]`
+- Scoreboard totals:
+  `[6.0, 2.5]`
+- Teacher targets in order:
+  `["anchor-stage77-second:branch:0","anchor-stage77-second:branch:1"]`
+- Teacher artifacts:
+  full equality between baseline and mutated canonical reloads
+- Anchor identity fields:
+  `anchor_id`, `anchor_frame_index`, `anchor_kind`, `replay_id`
+- Frozen snapshot surface:
+  baseline and mutated snapshots both equal the Stage77 expected golden snapshot, preserving export directory name, scoreboard artifact relative path, teacher artifact relative paths, branch ids in order, scoreboard rows in order, and teacher targets in order
+
+Tests added or updated:
+- Added `second_deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+
+Resulting mimir_export test count from `cargo test -p mimir-export -- --list`:
+- `173 tests, 0 benchmarks`
+
+Short note:
+- This closes the top remaining Stage77 metadata-propagation follow-up edge by proving that mutating only persisted `anchor_hint.metadata` changes only the exported anchor metadata after canonical reload, without widening runtime semantics, bundle semantics, loader semantics, or frozen snapshot scope.

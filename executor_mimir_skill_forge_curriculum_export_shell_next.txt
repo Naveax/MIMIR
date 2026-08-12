@@ -1,0 +1,39 @@
+executor mimir skill forge curriculum / export shell next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+next pass
+- eval harness for low boost recovery
+
+exact problem
+- Consume `LowBoostRecoveryCurriculumExportShellV1` and define the first bounded eval harness that
+  can measure whether provisionally accepted low-boost-recovery shells are usable as auditable eval
+  inputs.
+- The harness must distinguish accepted-shell existence from any stronger claim of recovery truth
+  or policy improvement.
+
+what the new shell boundary now makes possible
+- The eval harness can consume one bounded shell artifact instead of re-deriving acceptance from
+  parameter bundles and raw validator outputs.
+- The harness can anchor on:
+  - accepted reference variant lineage
+  - accepted reference window
+  - replay provenance and raw-state linkage
+  - preserved provisional confidence and unresolved assumptions
+- The harness can continue to exclude `malformed`, `reject`, and `abstain` outputs by construction.
+
+what is still intentionally unresolved
+- true low-boost confirmation
+- contact truth
+- recovery success proof
+- physics reachability
+- any BC export contract
+- any runtime consumer bridge
+- any multi-family eval design
+
+scope risk
+- medium
+- The main risk is letting the eval harness treat shell presence as proof rather than as bounded
+  accepted-candidate evidence.
+- A second risk is trying to turn the eval harness into a broader export or training pipeline
+  before the low-boost-recovery shell boundary is exercised on its own terms.

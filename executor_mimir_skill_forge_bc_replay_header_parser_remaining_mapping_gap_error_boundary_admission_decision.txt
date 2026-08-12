@@ -1,0 +1,188 @@
+executor mimir skill forge bc replay header parser remaining mapping gap error boundary admission decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-02
+
+exact outcome chosen
+- Outcome A
+- Remaining ReplayHeader mapping gaps and mapping-specific error boundaries are fully admitted for
+  rl_replay_header_fixture_001 and future minimal header-parser planning.
+- Expected ReplayHeader evidence is complete for this fixture as expected-output evidence only.
+- Parser implementation remains closed.
+- Parser-success logic remains closed.
+
+whether fixture identity was verified
+- yes
+- fixture path exists: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- observed byte length: 3001021
+- observed SHA-256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- fixture identity is not admitted as a parser fact
+
+whether report identities were verified
+- yes
+- prior external parser report exists:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_report.txt
+- structural report exists:
+  artifacts/replay_header_reports/rl_replay_header_fixture_001_structural_report.txt
+- structural admission artifact exists:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_STRUCTURAL_REPORT_ADMISSION_V1.md
+
+whether ReplayHeader mapping policy input was verified
+- yes
+- inspected:
+  docs/MIMIR_SKILL_FORGE_BC_REPLAY_HEADER_PARSER_REPLAYHEADER_MAPPING_POLICY_ADMISSION_V1.md
+- previous selected outcome was Outcome B
+- previous pass left mapping/error-boundary behavior partial
+
+whether current error surface was inspected
+- yes
+- inspected mimir_core::MimirError and Result alias in crates/mimir-core/src/lib.rs
+- inspected current mimir-replay use in crates/mimir-replay/src/lib.rs
+- current concrete parser result surface is Result<ReplayHeader>
+- current domain error carrier is MimirError::Message(String)
+- current error surface is specific enough to carry hard mapping failures as Err(MimirError::Message(_))
+- current error surface is not specific enough for typed replay error matching
+- typed replay-specific error taxonomy remains deferred
+
+exact admitted mapping/error policies
+- replay_id
+  - source: exactly one top-level Id property
+  - required kind: Str
+  - required encoding: windows1252_parse_text_null_terminated
+  - required shape: non-empty, exactly 32 ASCII hex digits, preserving source case
+  - fixture structural path: header.properties[20]
+  - fixture value: 7F59297811EFD8B19C444A81FB07660C
+  - destination: ReplayId::new("7F59297811EFD8B19C444A81FB07660C")
+  - missing Id: hard replay-header mapping error
+  - duplicate Id: hard replay-header mapping error
+  - non-Str Id: hard replay-header mapping error
+  - empty Id: hard replay-header mapping error
+  - malformed, non-ASCII, non-hex, or wrong-length Id: hard replay-header mapping error
+  - replay-id-like non-Id properties are ignored; no fallback is admitted
+- source_label
+  - source: ReplayInput::Memory.label
+  - non-empty memory label maps directly and is preserved exactly
+  - fixture expected source_label: rl_replay_header_fixture_001
+  - empty memory label: hard input/mapping error
+  - ReplayInput::File: hard unsupported-input boundary for the first minimal parser target
+  - no derivation from path, filename, hash, provenance, or Id is admitted
+- total_frames
+  - source: optional top-level NumFrames property
+  - required kind if present: Int
+  - source type: signed i32
+  - fixture structural path: header.properties[24]
+  - fixture value: 13555
+  - valid present non-negative Int maps to Some(value as u32)
+  - missing NumFrames maps to None
+  - duplicate NumFrames: hard replay-header mapping error
+  - wrong-kind NumFrames: hard replay-header mapping error
+  - negative NumFrames: hard replay-header mapping error
+  - malformed NumFrames bytes: hard malformed-property error
+  - greater than u32::MAX is impossible for admitted i32 source values; any different source shape
+    remains malformed/unadmitted
+- metadata
+  - selected same-name keys: ReplayName, Date, MapName, ReplayVersion, BuildVersion, MaxChannels,
+    MatchType, TeamSize, RecordFPS
+  - Str maps to FieldValue::Text
+  - Name maps to FieldValue::Text
+  - Int maps to FieldValue::Integer
+  - finite Float maps to FieldValue::Float
+  - future selected QWord may map to FieldValue::Integer only if non-overflowing into i64
+  - Array is not admitted for selected metadata
+  - selected key missing: omit that metadata entry
+  - all selected keys missing: Metadata::new() is admitted
+  - duplicate selected key: hard replay-header mapping error
+  - wrong-kind selected key: hard replay-header mapping error
+  - malformed selected value: hard malformed-property error
+  - empty selected string/name: preserve as empty FieldValue::Text
+  - non-finite selected float: hard replay-header mapping error
+  - unknown non-selected properties: ignored for ReplayHeader.metadata
+  - QWord overflow for any future selected QWord key: hard replay-header mapping error
+
+exact partial/deferred mapping/error policies
+- no ReplayHeader field mapping remains partial after this pass
+- no selected mapping-specific missing/duplicate/wrong-kind/malformed policy remains partial after
+  this pass
+- typed replay-specific MimirError variants remain deferred
+- exact non-mapping byte-level parser errors remain deferred
+- supported-version policy remains deferred
+- CRC policy remains deferred
+- full property validation policy remains deferred
+- parser stop/error behavior remains deferred
+
+expected fixture ReplayHeader evidence status
+- complete
+- replay_id: ReplayId::new("7F59297811EFD8B19C444A81FB07660C")
+- source_label: "rl_replay_header_fixture_001"
+- total_frames: Some(13555)
+- metadata:
+  - ReplayName = FieldValue::Text("Frestyle double touch but not ball")
+  - Date = FieldValue::Text("2025-01-22 11-10-32")
+  - MapName = FieldValue::Text("Stadium_Winter_P")
+  - ReplayVersion = FieldValue::Integer(8)
+  - BuildVersion = FieldValue::Text("241206.55345.468477")
+  - MaxChannels = FieldValue::Integer(2047)
+  - MatchType = FieldValue::Text("Online")
+  - TeamSize = FieldValue::Integer(3)
+  - RecordFPS = FieldValue::Float(30.0)
+- this is expected-output evidence only
+- no MIMIR parser output is admitted
+- no parser-success evidence is admitted
+
+remaining gaps
+- complete byte-layout evidence remains partial
+- supported-version policy remains missing
+- CRC policy remains missing
+- full property validation policy remains partial
+- parser stop/error behavior remains partial
+- non-mapping insufficient-byte boundaries remain partial
+- non-mapping malformed-byte boundaries remain partial
+- unsupported-version boundary remains missing, if distinguishable
+- typed replay-specific MIMIR error taxonomy remains missing
+- parser implementation remains unopened
+- parser-success logic remains unopened
+
+whether parser implementation may proceed or remains blocked
+- parser implementation remains blocked
+- parser-success logic remains blocked
+- implementation may proceed only after complete byte-layout evidence, remaining non-mapping error
+  boundaries, supported-version policy, CRC policy, and parser stop behavior are admitted and
+  implementation is explicitly reopened
+
+what was intentionally excluded
+- parser implementation
+- parser-success logic
+- ReplayHeader production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- mimir_export widening
+- modifying mimir-io
+- modifying mimir-export
+- modifying mimir-types
+- modifying Cargo.toml
+- modifying Cargo.lock
+- adding backend dependencies
+- adding fixture files
+- treating fixture path, filename, provenance, byte length, or SHA-256 as parser facts
+
+whether Rust/code/manifests/lockfile changes were added, and why or why not
+- Rust source changes added: no
+- Cargo.toml changes added: no
+- Cargo.lock changes added: no
+- backend dependencies added: no
+- reason: this is a policy/evidence admission pass only; parser implementation, dependency
+  integration, and forbidden crate boundaries remain closed
+
+why this is enough for the next pass
+- expected ReplayHeader fixture evidence is now complete without claiming parser success
+- mapping-specific failure behavior is now explicit for all ReplayHeader fields
+- the next pass can focus on non-mapping byte-layout, supported-version, CRC, parser-stop, and
+  byte-error boundaries instead of reopening mapping questions

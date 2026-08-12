@@ -1,0 +1,87 @@
+executor mimir skill forge bc replay header parser fixture evidence acquisition plan decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- Outcome A
+
+exact fixture/evidence planning result
+- evidence acquisition planning is bounded enough for a later fixture materialization/admission pass
+- no parser implementation was authorized
+- future reader owner remains `mimir-replay`
+- future reader type name remains `RocketLeagueReplayHeaderReader`
+- future reader remains distinct from `UnsupportedReplayReader`
+- parser target remains `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- first admitted parser input remains `ReplayInput::Memory`
+- `ReplayInput::File` remains rejected or deferred until file support is explicitly reopened
+- valid output remains real `ReplayHeader` for valid supported bytes only
+- invalid, malformed, insufficient, unsupported, non-memory, or deferred input remains structured error only
+
+whether actual valid fixture evidence is present or missing
+- missing
+- no real `.replay` fixture was found in the audited repo evidence
+- no replay-byte fixture under tests, docs, corpus, examples, or assets was found
+- existing opaque-byte test data is synthetic contract evidence only and is not valid parser fixture evidence
+
+whether byte-layout evidence is present or missing
+- missing
+- no exact local Rocket League replay header byte layout, magic/admission rule, version layout, header termination rule, field offsets, replay id derivation, total frame derivation, or metadata field map was found
+- prior external parser documentation citations are backend-selection evidence only; they are not fixture-backed byte-layout evidence for this in-crate parser
+
+whether implementation may proceed or remains blocked
+- implementation remains blocked
+- parser implementation may be reopened only after real valid fixture bytes, byte-layout evidence, expected output mapping, insufficient fixture, malformed fixture, and unsupported-if-distinguishable fixture evidence are admitted
+
+what was intentionally excluded
+- parser implementation
+- parser-success logic
+- backend dependency addition
+- `ReplayHeader` production or synthesis
+- real fixture file creation
+- fake binary fixture creation
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization implementation
+- replay-source carrier discovery implementation
+- replay-input locator implementation
+- `mimir_export` widening
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- interpreting `source_replay` as a replay path
+- interpreting `source_replay.provenance_label` as a replay path
+- interpreting `audited_family_root_directory` as replay storage
+
+whether Rust/code changes were added, and why or why not
+- no Rust/code changes were added
+- this was a planning-only evidence acquisition pass
+- adding Rust would imply parser implementation, parser-success behavior, fixture tests, or dependency selection before byte-layout evidence exists
+- no manifests or lockfile were modified
+- no fixture files were added because no real fixture bytes were present or supplied
+
+why this is enough for the next pass
+- fixture classes are explicitly defined: valid supported, insufficient-byte, malformed-byte, and unsupported-format/version if distinguishable
+- byte-accounting map format is explicit and forbids fake offsets or guessed values
+- expected `ReplayHeader` evidence rules are explicit for `replay_id`, `source_label`, `total_frames`, and `metadata`
+- fixture provenance and deterministic validation rules are explicit
+- no-fake-header rules are explicit
+- implementation reopen gate is explicit
+- the immediate next pass can focus only on materializing or admitting real fixture and byte-layout evidence
+
+next pass implication
+- next pass should be fixture materialization/admission contract pass
+- if no real fixture bytes or approved external evidence are supplied, the next pass must remain an external fixture supply/admission contract
+- parser implementation remains closed
+- parser-success logic remains closed
+- raw-state payload parsing remains closed
+- frame/event extraction remains closed
+- replay-source materialization/carrier/locator remain closed
+- `mimir_export` widening remains forbidden

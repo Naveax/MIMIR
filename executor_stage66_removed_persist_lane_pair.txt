@@ -1,0 +1,42 @@
+removed wrapper pair:
+- query_stub_execute_persist_and_load_execution_result_job_report
+- query_stub_execute_and_persist_execution_result_job_report
+
+exact canonical replacement lanes now recommended:
+- replacement for `query_stub_execute_and_persist_execution_result_job_report`:
+  `query_and_stub_execute_execution_result_job_spec` + `persist_execution_result_job_report`
+- replacement for `query_stub_execute_persist_and_load_execution_result_job_report`:
+  `query_and_stub_execute_execution_result_job_spec` + `persist_execution_result_job_report` + `load_execution_result_job_report`
+- surviving canonical register lane left unchanged:
+  `query_stub_execute_persist_load_and_register_execution_result_job_report`
+- surviving canonical query/load lane left unchanged:
+  `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports`
+
+wrapper-specific test cleanup performed:
+- removed the four dedicated wrapper tests owned by `query_stub_execute_persist_and_load_execution_result_job_report`
+- removed no dedicated wrapper-named tests for `query_stub_execute_and_persist_execution_result_job_report` because none existed
+- updated surviving canonical register-lane tests that previously used the removed persist/load helper as an explicit baseline so they now call the same lower-level canonical composition directly
+
+Stage 47 parity/helper cleanup performed:
+- removed the live Stage 47 parity assertion for `query_stub_execute_persist_and_load_execution_result_job_report`
+- removed the explicit Stage 47 replacement helper for `query_stub_execute_persist_and_load_execution_result_job_report`
+- rewired the surviving Stage 47 explicit register helper to the lower-level canonical composition directly
+- left Stage 47 parity for surviving wrappers intact
+
+active reference cleanup confirmation:
+- no active repo-local source, README, docs, or test references remain for:
+  - `query_stub_execute_persist_and_load_execution_result_job_report`
+  - `query_stub_execute_and_persist_execution_result_job_report`
+- historical stage artifacts were left untouched as history
+
+Batch C scope confirmation:
+- `query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries` was left untouched in this pass
+
+canonical baseline integrity confirmation:
+- `query_stub_execute_persist_load_and_register_execution_result_job_report` still works unchanged
+- `query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports` still works unchanged
+- report persist/load/register semantics remain unchanged
+- latest-only and full-history behavior remain unchanged
+
+resulting mimir_export test count from `cargo test -p mimir-export -- --list`:
+- 173 tests

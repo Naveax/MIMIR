@@ -1,0 +1,22 @@
+removed wrapper:
+- query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+
+canonical replacement lane now recommended:
+- query_stub_execute_register_report_and_index_load_summary
+- load_query_and_aggregate_execution_result_job_report_collection_summaries
+- persist_register_and_index_load_execution_result_job_report_collection_summary
+
+parity coverage updates performed:
+- removed the dedicated stage47 compatibility parity case for the removed wrapper
+- removed the stage47 explicit helper that existed only to mirror the removed wrapper
+- retained parity coverage for the remaining supported wrappers in the stage47 cluster
+
+migration/docs updates performed:
+- README.md no longer recommends or references the removed wrapper
+- README.md now points aggregate-then-publish callers directly to the canonical replacement lane
+
+active-reference confirmation:
+- no active repo-local source/docs/test references remain in crates/mimir-export/src/lib.rs, README.md, docs/, or repo-local tests
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list:
+- 189 tests

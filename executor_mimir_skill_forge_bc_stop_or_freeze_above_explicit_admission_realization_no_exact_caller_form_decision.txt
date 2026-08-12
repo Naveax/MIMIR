@@ -1,0 +1,74 @@
+executor mimir skill forge bc stop-or-freeze above explicit admission realization no exact caller form decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact choice among outcome a/b/c
+- Outcome B
+- no exact caller-admitted source form is justified, and the chain must explicitly remain blocked
+  pending new audited evidence or a new explicit external requirement
+
+exact reasoning
+- The current audited repo still proves seam ownership but not seam payload.
+- `mimir-skill` remains the only honest ownership location for any future caller seam on this
+  low-boost-recovery receipt-bound defect path:
+  - the blocked explicit-admission chain lives there
+  - the highest public surfaces on this path still stop at the explicit admission
+    contract/realization pair
+  - `mimir-skill` already accepts one family-specific caller-provided filesystem input through
+    `emit_low_boost_recovery_bc_actual_filesystem_emission_v1(..., output_parent_directory)`
+- The repo still does not justify one exact caller-admitted source form:
+  - `ReplaySourceRef` remains opaque lineage only
+  - low-boost-recovery serialized artifacts and emitted specimen files still carry only
+    `source_replay: ReplaySourceRef`, not path/bytes/frames/carrier semantics
+  - `mimir-io` still exposes no caller-binding loader or replay-source binding reader
+  - `mimir-replay::ReplayInput` exists, but only inside `mimir-replay`; workspace audit still
+    shows no use outside that crate
+  - `mimir-skill` does not currently depend on `mimir-replay`, so `ReplayInput` is not an
+    already-established seam type on this path
+  - current `mimir-skill` note surfaces still keep multiple future carrier classes open:
+    file-backed, byte-backed, replay-frame-backed, or `mimir_replay::ReplayInput`
+  - the explicit admission contract notes still refuse to promise carrier class, locator,
+    storage, bytes, frames, or `mimir_replay::ReplayInput`
+- The exact caller-admitted candidates remain unproven one by one:
+  - file-path-backed is unproven
+  - byte-backed is unproven
+  - replay-frame-backed is unproven
+  - `mimir_replay::ReplayInput`-backed is unproven
+  - pure provenance-only is unproven
+- Outcome A is therefore not honest:
+  - freezing one exact contract-definition boundary now would invent payload semantics
+- Outcome C is also not honest:
+  - the stop-or-freeze question can now be answered from audited surfaces
+  - the answer is an explicit stop pending new evidence, not another vague reopen loop
+
+what was intentionally excluded
+- any Rust API or DTO in `mimir-skill`
+- any new contract-definition boundary name
+- any replay-source actual-materialization implementation
+- any replay-source carrier discovery
+- any replay-input locator logic
+- any replay parsing implementation
+- any replay file path derivation from `source_replay` or `source_replay.provenance_label`
+- any replay bytes or replay frames materialization
+- any actual `mimir_replay::ReplayInput` admission or materialization
+- any raw-state payload materialization
+- any tensor/control materialization
+- any artifact, sibling-sidecar, or manifest/index reopening
+- any `mimir_export` integration or surface edit
+
+whether Rust/code changes were added, and why or why not
+- No.
+- Docs-only is more honest here.
+- The audit now answers the stop-or-freeze question by choosing explicit blocked status, but it
+  still does not justify one exact caller-admitted object shape.
+- Adding Rust now would force an unverified payload choice and would fake completeness.
+
+why this is enough for the next pass
+- This pass answers the actual stop-or-freeze question:
+  - the chain cannot honestly freeze one exact caller-admitted source form now
+  - the chain must remain blocked until new audited evidence or a new explicit external
+    requirement appears
+- No further pass is justified from current audited surfaces alone.
+- If new audited evidence later appears, the next justified pass is another reopen-decision pass
+  that audits that evidence before any contract-definition work.
+- `mimir_export` widening remains forbidden unless explicitly reopened.

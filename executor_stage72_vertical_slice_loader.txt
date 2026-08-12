@@ -1,0 +1,28 @@
+canonical loader / inspection helper names added
+- `CanonicalVerticalSliceResult`
+- `load_canonical_vertical_slice_result`
+- `CanonicalVerticalSliceResult::teacher_branch_targets_in_order`
+
+crate(s) touched
+- `mimir-cli`
+
+result struct names added, if any
+- `CanonicalVerticalSliceResult`
+
+Stage 69–71 rewiring summary
+- added a test-only canonical vertical-slice result loader in `crates/mimir-cli/src/vertical_slice_result.rs` beside the existing deterministic fake-backend slice support so the known Stage 69/70/71 boundary reloads through one explicit entrypoint without creating a `mimir-io -> mimir-export` dependency cycle
+- rewired the main reload-oriented assertions in `crates/mimir-cli/src/vertical_slice.rs` to use `load_canonical_vertical_slice_result` instead of separate local scoreboard and teacher-artifact reload helpers
+- kept the export bundle on the existing `export_bundle/` lane, the scoreboard on `scoreboard.json`, and teacher labels on `teacher_labels/teacher-label-{index}.json`
+- kept deterministic ordering explicit by loading teacher artifacts only by scoreboard-derived ordinal count and by asserting branch-target order through the canonical loaded surface
+
+tests added or updated
+- updated `deterministic_vertical_slice_persists_reloadable_outputs` to assert Stage 69–71 reload behavior through the canonical loader
+- updated `deterministic_vertical_slice_is_identical_across_repeated_runs` to compare full canonical loaded results across repeated runs
+- updated `deterministic_vertical_slice_preserves_branch_score_and_teacher_ordering` to inspect ordering through the canonical loaded result surface
+- added `canonical_vertical_slice_result_loader_fails_explicitly_when_required_artifact_is_missing`
+
+resulting mimir_export test count from cargo test -p mimir-export -- --list
+- `173 tests, 0 benchmarks`
+
+short note on why export bundle semantics were intentionally left unchanged
+- Stage 72 only adds one canonical read/inspection lane across the already-persisted Stage 69/70/71 outputs; it does not add scoreboard or teacher-label artifacts to the export manifest/index, so the trusted export bundle boundary and artifact-kind semantics remain unchanged by design.

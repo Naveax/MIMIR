@@ -1,0 +1,98 @@
+historical note
+- this artifact records the stage47 pre-removal parity snapshot.
+- four Batch A wrappers listed below were removed in stage52.
+- current post-removal state is tracked in executor_stage52_removed_batch_a.txt and executor_stage53_post_removal_reclassification.txt.
+
+audited compatibility-wrapper count: 12
+
+CANONICAL BASELINES
+- query_stub_execute_persist_load_and_register_execution_result_job_report
+  nearest canonical pipeline: query_and_stub_execute_execution_result_job_spec -> persist_execution_result_job_report -> load_execution_result_job_report -> register_execution_result_job_report_in_index
+  parity assessment: canonical baseline
+  unique behavior beyond composition: no; this is the documented canonical stub-execution report publication boundary
+  classification: canonical
+- query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports
+  nearest canonical pipeline: query_stub_execute_persist_load_and_register_execution_result_job_report -> load_and_query_execution_result_job_report_index -> load_selected_execution_result_job_reports
+  parity assessment: canonical baseline
+  unique behavior beyond composition: no; this is the documented canonical report retrieval boundary
+  classification: canonical
+- query_stub_execute_register_report_and_index_load_summary
+  nearest canonical pipeline: query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports -> summarize_execution_result_job_reports -> persist_execution_result_job_report_collection_summary -> register_execution_result_job_report_collection_summary_in_index -> load_indexed_execution_result_job_report_collection_summary
+  parity assessment: canonical baseline
+  unique behavior beyond composition: no; this is the documented canonical summary materialization boundary
+  classification: canonical
+
+COMPATIBILITY WRAPPERS WITH VERIFIED PARITY
+- query_stub_execute_persist_and_load_execution_result_job_report
+  nearest canonical pipeline: query_and_stub_execute_execution_result_job_spec -> persist_execution_result_job_report -> load_execution_result_job_report
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: compatibility convenience
+- query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+  nearest canonical pipeline: query_stub_execute_persist_load_and_register_execution_result_job_report -> load_indexed_execution_result_job_report
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: likely legacy / overlap
+- query_stub_execute_register_report_and_query_load_execution_result_job_report_collection_summaries
+  nearest canonical pipeline: query_stub_execute_register_report_and_index_load_summary -> load_and_query_execution_result_job_report_collection_summaries
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: compatibility convenience
+- query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+  nearest canonical pipeline: query_stub_execute_register_report_and_index_load_summary -> load_query_and_aggregate_execution_result_job_report_collection_summaries
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: likely legacy / overlap
+- query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  nearest canonical pipeline: query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries -> persist_register_and_index_load_execution_result_job_report_collection_summary
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: likely legacy / overlap
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+  nearest canonical pipeline: query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary -> load_and_query_execution_result_job_report_collection_summaries
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: likely legacy / overlap
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+  nearest canonical pipeline: query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries -> summarize_execution_result_job_report_collection_summaries
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: likely legacy / overlap
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+  nearest canonical pipeline: query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries -> persist_register_and_index_load_execution_result_job_report_collection_summary
+  appears semantically identical: yes
+  unique behavior beyond composition: none observed
+  classification: likely legacy / overlap
+
+COMPATIBILITY WRAPPERS NOT YET DIRECTLY TESTED
+- query_stub_execute_and_persist_execution_result_job_report
+  nearest canonical pipeline: query_and_stub_execute_execution_result_job_spec -> persist_execution_result_job_report
+  current assessment: composition-only wrapper; no unique semantics visible in source; not directly exercised by the Stage 47 parity cluster
+  classification: compatibility convenience
+- query_load_and_summarize_execution_result_job_reports
+  nearest canonical pipeline: query_stub_execute_persist_load_register_query_and_load_execution_result_job_reports -> summarize_execution_result_job_reports
+  current assessment: composition-only wrapper; no unique semantics visible in source; not directly exercised by the Stage 47 parity cluster
+  classification: compatibility convenience
+- query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+  nearest canonical pipeline: query_stub_execute_register_report_and_index_load_summary -> load_query_summarize_persist_register_and_index_load_execution_result_job_report_collection_summary
+  current assessment: composition-only wrapper; no unique semantics visible in source; not directly exercised by the Stage 47 parity cluster
+  classification: likely legacy / overlap
+- query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+  nearest canonical pipeline: query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries -> load_and_query_execution_result_job_report_collection_summaries
+  current assessment: composition-only wrapper; no unique semantics visible in source; not directly exercised by the Stage 47 parity cluster
+  classification: likely legacy / overlap
+
+LIKELY LEGACY / OVERLAP WRAPPERS
+- query_stub_execute_persist_load_register_and_index_load_execution_result_job_report
+- query_stub_execute_register_report_and_query_aggregate_execution_result_job_report_collection_summaries
+- query_stub_execute_register_report_and_aggregate_queried_execution_result_job_report_collection_summaries
+- query_stub_execute_register_report_query_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_and_query_load_execution_result_job_report_collection_summaries
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_and_aggregate_execution_result_job_report_collection_summaries
+- query_stub_execute_register_report_query_aggregate_persist_register_index_load_query_load_aggregate_persist_register_and_index_load_execution_result_job_report_collection_summary
+- query_stub_execute_register_report_aggregate_and_query_load_execution_result_job_report_collection_summaries
+
+recommendations for future work
+- prefer canonical lower-level helpers for new composition
+- avoid adding new cartesian-product wrappers unless they add unique semantics
+- future cleanup/removal should happen only in a dedicated compatibility-breaking pass

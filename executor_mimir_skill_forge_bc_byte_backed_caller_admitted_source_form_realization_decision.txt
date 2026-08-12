@@ -1,0 +1,64 @@
+executor mimir skill forge bc byte-backed caller-admitted source-form realization decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-20
+
+exact realization boundary chosen
+- realize concrete caller-provided instances of
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormV1`
+  directly above
+  `LowBoostRecoveryBcReceiptBoundValidatedSpecimenFileRawStateWindowReplaySourceActualMaterializationByteBackedCallerAdmittedSourceFormContractV1`
+- keep the realization strictly in `mimir-skill`
+- keep the realization strictly low-boost-recovery-specific
+- keep the realization strictly receipt-bound
+
+exact truth now claimed
+- non-empty caller-admitted replay bytes can be bound to the exact frozen receipt-bound tuple
+- the realized bytes remain opaque caller material only
+- this is a truthful realization of caller-byte admission only
+
+exact truth still not claimed
+- replay parsing success
+- replay-source actual-materialization success
+- replay-source carrier discovery
+- replay-input locator success
+- `mimir_replay::ReplayInput` creation
+- any replay path/storage semantics derived from lineage fields
+
+realization surface chosen
+- disposition enum with one truthful variant:
+  `RealizedForReceiptBoundByteBackedCallerAdmittedReplayBytesOnly`
+- note enum recording contract preservation, tuple preservation, byte admission, and all remaining deferrals
+- per-specimen result preserving:
+  - consumed contract boundary input
+  - preserved contract output boundary
+  - realized caller-admitted source-form object
+  - realization disposition
+- lane result and top-level result preserving counts, chosen shapes, audited root, lower realization lineage, and ordered structure
+- one narrow public realization function consuming:
+  - the byte-backed caller-admitted source-form contract
+  - a lane-ordered caller matrix of concrete source-form objects
+
+critical admission rule chosen
+- `caller_admitted_replay_bytes` must be non-empty for truthful realization
+- zero-length byte payloads are rejected because this pass is claiming admitted replay bytes, not merely a vacant wrapper object
+
+critical failure rule chosen
+- hard-fail on any tuple drift between caller object and frozen contract output boundary
+- hard-fail on any degraded contract notes or lower note-set drift
+- hard-fail on any attempt to reinterpret `source_replay`, `source_replay.provenance_label`, or `audited_family_root_directory`
+
+what remained intentionally excluded
+- `mimir-replay` changes
+- `mimir-io` changes
+- `mimir-export` changes
+- `mimir-types` changes
+- replay parsing logic
+- actual replay-source materialization logic
+- carrier discovery
+- locator logic
+
+why this realization boundary was chosen
+- it is the smallest truthful step above the frozen contract
+- it accepts the externally required caller-byte form without overstating success
+- it leaves the next pass narrow and obvious
+

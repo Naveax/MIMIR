@@ -1,0 +1,10 @@
+redundant helper surface removed: yes
+final surviving helper name: query_and_execute_execution_result_job_spec
+README duplication fixed: yes
+mimir_export test count from `cargo test -p mimir-export -- --list`: 29 tests, 0 benchmarks
+exact validation commands run:
+- cargo fmt --all
+- cargo check --workspace --all-targets --all-features
+- cargo test --workspace --all-targets --all-features
+- cargo clippy --workspace --all-targets --all-features -- -D warnings
+- cargo test -p mimir-export -- --list

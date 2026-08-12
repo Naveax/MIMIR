@@ -1,0 +1,190 @@
+executor deterministic-family matrix freeze
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: post-closure deterministic-family source-of-truth matrix freeze
+status legend: closed / partial / deferred
+
+matrix
+
+surface: base deterministic vertical-slice execution
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: positive runtime + canonical reload
+primary evidence: `executor_deterministic_family_contract_index.txt`; `executor_stage73_vertical_slice_contract_freeze.txt`; `deterministic_vertical_slice_persists_reloadable_outputs`; `second_deterministic_vertical_slice_persists_reloadable_outputs`
+reopening risk: high if stale roadmap language reclassifies the core family as still open
+notes: current trusted boundary is the deterministic fake-backend vertical-slice family only
+
+surface: canonical reload boundary
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: canonical export-bundle + scoreboard + teacher-artifact reload
+primary evidence: `executor_deterministic_family_closure_summary.txt`; `deterministic_vertical_slice_persists_reloadable_outputs`; `second_deterministic_vertical_slice_persists_reloadable_outputs`
+reopening risk: high because this is the main trusted consumer boundary
+notes: reload boundary is already closed at the current narrow contract and should not be widened casually
+
+surface: frozen snapshot identity
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: frozen golden snapshot checks
+primary evidence: `executor_stage73_vertical_slice_contract_freeze.txt`; `deterministic_vertical_slice_matches_frozen_stage73_golden_snapshot`; `second_deterministic_vertical_slice_matches_its_frozen_golden_snapshot`; `deterministic_fixture_lanes_do_not_collapse_to_the_same_golden_snapshot`
+reopening risk: medium because snapshot widening would silently change documentary scope
+notes: lane-distinct frozen snapshots are part of the current trusted boundary
+
+surface: repeated-run determinism
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: repeated-run exact identity
+primary evidence: `executor_deterministic_family_closure_summary.txt`; `deterministic_vertical_slice_is_identical_across_repeated_runs`; `second_deterministic_vertical_slice_is_identical_across_repeated_runs`
+reopening risk: medium if future work introduces hidden nondeterminism and treats current freeze as advisory
+notes: repeated-run identity is part of family closure, not a soft aspiration
+
+surface: teacher_namespace propagation
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: direct-effect mutation
+primary evidence: `executor_stage87_teacher_namespace_effect.txt`; `executor_stage96_stage77_teacher_namespace_effect.txt`; `deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`; `second_deterministic_vertical_slice_explicitly_propagates_teacher_namespace_without_perturbing_other_contract_edges`
+reopening risk: low
+notes: older gap language is superseded by current same-family direct proofs on both lanes
+
+surface: anchor_hint.metadata propagation
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: direct-effect mutation
+primary evidence: `executor_stage88_anchor_metadata_effect.txt`; `executor_stage97_stage77_anchor_metadata_effect.txt`; `deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`; `second_deterministic_vertical_slice_explicitly_propagates_anchor_metadata_without_perturbing_other_contract_edges`
+reopening risk: low
+notes: exported anchor payload propagation is closed at the current scope
+
+surface: proposal surface propagation
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: direct-effect mutation of label/actions/legal_hint/metadata into exported branch payload
+primary evidence: `executor_stage89_proposal_surface_effect.txt`; `executor_stage101_stage77_proposal_surface_effect.txt`; `deterministic_vertical_slice_explicitly_propagates_proposal_actions_legal_hint_and_metadata_without_perturbing_other_contract_edges`; `second_deterministic_vertical_slice_explicitly_propagates_proposal_label_actions_legal_hint_and_metadata_into_exported_branch_payload_without_perturbing_other_contract_edges`
+reopening risk: medium if later passes try to restate already-closed Stage77 proposal-field isolation work
+notes: sibling-branch isolation and label-text derivation are already covered inside the current proof set
+
+surface: proposal actions direct consumption
+lane coverage: Stage77Second
+current status: closed
+proof style: direct request-capture proof into `SimulationRequest.commands`
+primary evidence: `executor_stage77_closure_batch_audit.txt`; `second_deterministic_vertical_slice_directly_consumes_proposal_actions_into_simulation_requests_without_perturbing_other_contract_edges`
+reopening risk: medium if action-order proof is reintroduced as separate open work
+notes: this closes the targeted Stage77 request-consumption edge without widening runtime semantics
+
+surface: score_signals direct effect
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: direct component/total/teacher-order mutation proof
+primary evidence: `executor_stage90_score_signals_effect.txt`; `executor_stage98_stage77_score_signals_effect.txt`; `deterministic_vertical_slice_score_signals_directly_change_score_output_and_teacher_ordering_without_perturbing_other_contract_edges`; `second_deterministic_vertical_slice_score_signals_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+reopening risk: low
+notes: sanitizer-heavy or policy-quality concerns are outside this deterministic-family closure
+
+surface: scorer_weights direct effect
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: direct component/total/teacher-order mutation proof
+primary evidence: `executor_stage85_scorer_weights_effect.txt`; `executor_stage99_stage77_scorer_weights_effect.txt`; `deterministic_vertical_slice_scorer_weights_directly_change_totals_and_teacher_ordering`; `second_deterministic_vertical_slice_scorer_weights_directly_change_component_values_total_score_and_teacher_ordering_without_perturbing_other_contract_edges`
+reopening risk: low
+notes: both deterministic lanes now have direct-effect coverage
+
+surface: simulation_seed direct consumption
+lane coverage: Stage69Sample, Stage77Second
+current status: closed
+proof style: direct request-capture proof into `SimulationRequest.seed`
+primary evidence: `executor_stage86_simulation_seed_effect.txt`; `executor_stage100_stage77_simulation_seed_effect.txt`; `deterministic_vertical_slice_directly_consumes_simulation_seed_from_persisted_input`; `second_deterministic_vertical_slice_directly_consumes_simulation_seed_without_perturbing_other_contract_edges`
+reopening risk: low
+notes: seed propagation is closed on both lanes
+
+surface: export_name -> teacher label id
+lane coverage: Stage69Sample direct; Stage77Second broad same-family stability only
+current status: partial
+proof style: Stage69 direct-effect mutation + Stage77 stability coverage
+primary evidence: `executor_stage92_export_name_teacher_id_effect.txt`; `executor_deterministic_family_closure_summary.txt`; `deterministic_vertical_slice_export_name_changes_only_export_name_derived_teacher_ids`
+reopening risk: medium because symmetry pressure can mislabel this as fully open or fully closed for the wrong reason
+notes: deterministic-family closure is strong enough, but there is still no Stage77-only direct mutation proof for this identity edge
+
+surface: scoreboard component schema drift
+lane coverage: Stage77Second explicit; Stage69 broad value-level coverage
+current status: closed
+proof style: explicit negative drift guard
+primary evidence: `executor_stage94_stage77_scoreboard_component_drift.txt`; `executor_deterministic_family_contract_index.txt`; `second_deterministic_vertical_slice_detects_explicit_scoreboard_component_schema_drift`
+reopening risk: medium if later work confuses schema identity drift with ordering drift
+notes: this row covers component-key/schema identity, not independent ordering-version semantics
+
+surface: scoreboard component ordering
+lane coverage: Stage69Sample, Stage77Second
+current status: partial
+proof style: implementation-backed determinism plus existing ordering checks
+primary evidence: `executor_stage93_scoreboard_component_schema.txt`; `executor_deterministic_family_closure_summary.txt`; `executor_deterministic_family_contract_index.txt`
+reopening risk: medium because lexical `BTreeMap` behavior can be mistaken for accidental, unowned ordering
+notes: current ordering determinism exists, but not as a separately versioned first-class schema-order contract
+
+surface: exported branch payload negative drift
+lane coverage: Stage77Second
+current status: closed
+proof style: targeted negative drift guard after hash refresh
+primary evidence: `executor_stage77_closure_batch_audit.txt`; `second_deterministic_vertical_slice_detects_exported_branch_payload_negative_drift_for_proposal_surface`
+reopening risk: low
+notes: this is already a targeted closure item and should not be reframed as still missing
+
+surface: targeted branch artifact corruption rejection
+lane coverage: Stage77Second
+current status: closed
+proof style: explicit canonical-load failure on corrupted branch artifact
+primary evidence: `executor_stage77_closure_batch_audit.txt`; `second_deterministic_vertical_slice_rejects_targeted_branch_artifact_corruption_at_canonical_load_boundary`
+reopening risk: low
+notes: corruption rejection is closed at canonical load, not merely at later consumer use
+
+surface: missing required proposal label rejection
+lane coverage: Stage77Second
+current status: closed
+proof style: persisted-input loader negative for required field
+primary evidence: `executor_stage77_closure_batch_audit.txt`; `second_deterministic_vertical_slice_persisted_input_rejects_missing_proposal_label_before_runtime_materialization`
+reopening risk: low
+notes: this closes the required-field failure path only
+
+surface: manifest/index stability
+lane coverage: Stage77Second
+current status: closed
+proof style: packaging stability under proposal-surface-only mutation
+primary evidence: `executor_stage77_closure_batch_audit.txt`; `second_deterministic_vertical_slice_keeps_manifest_and_index_stable_except_for_the_mutated_branch_payload_hash`
+reopening risk: medium if later passes try to pull scoreboard/teacher artifacts into the export-bundle manifest/index
+notes: bundle semantics remain intentionally narrow; only the mutated branch payload hash moves
+
+surface: optional/defaulted proposal-field loader semantics
+lane coverage: Stage69Sample, Stage77Second
+current status: deferred
+proof style: intentional no-change boundary
+primary evidence: `executor_stage77_closure_batch_audit.txt`; `executor_deterministic_family_closure_summary.txt`; `executor_deterministic_family_contract_index.txt`
+reopening risk: high if a future "closure" pass silently converts defaulted fields into required failures
+notes: `actions`, `legal_hint`, and `metadata` remain defaulting on load; changing that would widen semantics
+
+surface: branch-payload parity via independent implementation
+lane coverage: Stage77Second
+current status: deferred
+proof style: intentionally withheld because shared-path parity would be tautological
+primary evidence: `executor_stage77_closure_batch_audit.txt`; `executor_deterministic_family_closure_summary.txt`
+reopening risk: medium if parity work is revived without a distinct consumer path
+notes: current runtime output and canonical reload share `load_export_bundle -> adapt_loaded_export_for_consumer`
+
+surface: real replay / real rollout / async-background out-of-scope boundaries
+lane coverage: n/a
+current status: deferred
+proof style: explicit scope boundary
+primary evidence: `executor_deterministic_family_closure_summary.txt`; `executor_deterministic_family_contract_index.txt`; pass constraints in this freeze
+reopening risk: high if future planning treats these as incomplete deterministic-family items instead of intentionally separate families
+notes: this includes real replay parsing, real rollout or physics or live backend behavior, async/background systems, database work, runtime CLI expansion, snapshot widening, and export-bundle semantic widening
+
+surfaces that should not be reopened casually without new evidence
+
+- Stage77 closure-batch proof items already closed in `executor_stage77_closure_batch_audit.txt`: proposal actions direct consumption, exported branch payload negative drift, targeted corruption rejection, manifest/index stability, metadata value-shape preservation, and missing required proposal label rejection.
+- Stage77 proposal action-order proof as a separate missing item should not be revived. Current Stage101-era proposal-surface assertions already covered exact loaded `actions` equality.
+- Stage77 teacher-label text derivation from exported branch label should not be revived as distinct open work. Current proposal-surface proof already isolates that edge.
+- Stage77 sibling proposal/branch field-isolation work should not be revived. Current proposal-surface proof already holds the unaffected sibling branch stable.
+- Branch-payload parity work should not be reopened unless there is a genuinely distinct consumer implementation or read path. Shared-path parity is tautological here.
+- Optional/defaulted proposal-field rejection should not be reopened unless a semantics change is explicitly desired. Current loader behavior intentionally defaults missing optional fields.
+- Snapshot widening should not be treated as closure work. It changes documentary scope and export expectations instead of proving a missing current defect.
+
+bottom line
+
+- The deterministic fake-backend vertical-slice family is closed at its intended narrow scope.
+- Real remaining partial surfaces are limited to Stage77-direct symmetry for `export_name -> teacher label id` and independent first-class scoreboard component-ordering contract status.
+- Deferred surfaces are scope boundaries or intentionally tautological areas, not active proof failures in the current deterministic family.

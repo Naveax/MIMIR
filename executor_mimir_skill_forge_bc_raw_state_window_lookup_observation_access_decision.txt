@@ -1,0 +1,157 @@
+executor mimir skill forge bc raw-state-window lookup / observation-access decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-15
+
+exact lookup / planning role chosen
+- one low-boost-recovery-specific raw-state-window lookup / observation-access planning boundary
+  above `LowBoostRecoveryBcFirstConcreteSpecimenConsumerResultV1`
+- exact job:
+  - admit only already-validated first concrete specimen consumer results
+  - revalidate the preserved first concrete consumer surface without reopening filesystem reads or
+    lower planning layers
+  - preserve only the exact planning-owned specimen view the next receipt-bound pass is allowed to
+    inspect
+  - make raw-state-window and observation-binding visibility explicit while keeping lookup and
+    materialization deferred
+
+exact consumed-view sufficiency decision chosen
+- keep `LowBoostRecoveryBcArtifactConsumerHandoffV1` intact as the lookup / planning consumed view
+- exact direct lookup / observation-access planning fields relied on:
+  - `source_raw_state_window_ref`
+  - `observation_binding_kind`
+  - `supervision_window_role`
+  - `accepted_reference_window`
+- exact provenance / identity fields preserved because `source_raw_state_window_ref` is still
+  opaque and no raw-state locator contract exists yet:
+  - `artifact_id`
+  - `source_slice_id`
+  - `source_replay`
+  - `source_subject`
+  - `source_phase_id`
+  - `accepted_reference_variant_id`
+- exact boundary-limit fields preserved so the planning pass does not silently widen into
+  control/action or false certainty:
+  - `target_binding_kind`
+  - `carried_confidence_band`
+  - `carried_unresolved_assumptions`
+- exact payload fields intentionally dropped in this pass:
+  - none
+- why that sufficiency decision was chosen:
+  - the first concrete specimen consumer boundary already removed transport placement from the
+    payload itself
+  - no repo-local raw-state lookup realization exists yet to prove a smaller planning subset is
+    sufficient
+  - dropping lineage or boundary-limit fields now would be speculative rather than defect-driven
+
+exact output / disposition chosen
+- exact disposition type:
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningDispositionV1`
+- exact disposition:
+  - `ReadyForLowBoostRecoveryRawStateWindowLookupObservationAccessPlanningOnly`
+- exact note type:
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningNoteV1`
+- exact specimen result type:
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningSpecimenResultV1`
+- exact lane result type:
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningLaneResultV1`
+- exact success result type:
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1`
+- exact entry function:
+  - `plan_low_boost_recovery_bc_raw_state_window_lookup_observation_access_from_first_concrete_specimen_consumer_v1(...)`
+- exact success result fields:
+  - `specimen_count`
+  - `group_count`
+  - `source_consumer_disposition`
+  - `source_consumer_notes`
+  - `audited_family_root_directory`
+  - ordered `preserved_ordered_lane_results`
+  - `planning_disposition`
+  - ordered `planning_notes`
+- exact lane result fields:
+  - `lane_ordinal`
+  - ordered `ordered_specimen_results`
+- exact specimen result fields:
+  - `specimen_ordinal`
+  - `lookup_planning_consumed_specimen_view`
+- exact note set:
+  - `FirstConcreteSpecimenConsumerBoundaryPreserved`
+  - `AuditedFamilyRootReferencePreserved`
+  - `LaneAndSpecimenOrderPreserved`
+  - `ArtifactConsumerHandoffViewRetainedForLookupPlanning`
+  - `SourceRawStateWindowRefVisibleAsOpaqueLookupReferenceOnly`
+  - `ObservationBindingVisibleForPlanningOnly`
+  - `TensorAndControlMaterializationDeferred`
+  - `MimirExportIntegrationDeferred`
+
+exact admission decisions chosen
+- Admit only `LowBoostRecoveryBcFirstConcreteSpecimenConsumerResultV1`.
+- Require `source_downstream_disposition` to remain
+  `ReadyForLowBoostRecoveryAuditedSpecimenInspectionOnly`.
+- Require `source_downstream_notes` to remain the exact continued receipt-bound downstream note
+  set.
+- Require `consumer_disposition` to remain
+  `ReadyForLowBoostRecoveryConsumedSpecimenViewOnly`.
+- Require `consumer_notes` to remain the exact first concrete specimen consumer note set.
+- Require the audited family root basename to remain `low_boost_recovery_bc_v1`.
+- Require `group_count > 0` and `specimen_count > 0`.
+- Require lane/specimen order to remain aligned with vector order.
+- Revalidate every `consumed_specimen_view` against the exact
+  `LowBoostRecoveryBcArtifactConsumerHandoffV1` invariants instead of trusting construction
+  history alone.
+- Require every `artifact_id` to remain present and unique across the full admitted input.
+- Forbid reopening continued receipt-bound downstream, emitted-output audit/readback, actual
+  emission receipts, plans, persisted artifacts, BC rows, shells, or any lower planning boundary.
+
+exact failure / defer decisions chosen
+- Hard fail on malformed or degraded first concrete specimen consumer input.
+- Hard fail on wrong continued-downstream or first concrete consumer disposition/note sets.
+- Hard fail on count drift, order drift, duplicate artifact ids, or drifted handoff content.
+- No repair, no receipt regeneration, no filesystem re-audit, no skipping, and no resorting were
+  added.
+- No soft defer path was added.
+- Reason no defer path exists:
+  - this boundary adds no new evidence gate beyond the already-preserved first concrete specimen
+    consumer result
+  - remaining uncertainty is already carried in preserved lineage plus
+    `carried_unresolved_assumptions`
+  - inventing a defer state here would widen semantics instead of narrowing them
+
+what was intentionally excluded
+- any `mimir_export` integration
+- any `mimir_export` surface edits
+- any sidecar/manifest realization
+- any generic multi-family downstream/export framework
+- any generic manifest/index framework
+- any raw-state locator/index realization
+- any raw-state materialization
+- any tensor materialization
+- any control/action extraction
+- any replay parsing/mining/rollout/physics work
+- any async/background systems
+- any database work
+- any usefulness-proof or policy-improvement claim
+
+whether Rust/code changes were added, and why or why not
+- Yes.
+- Added in `crates/mimir-skill/src/lib.rs` only:
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningDispositionV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningNoteV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningSpecimenResultV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningLaneResultV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningResultV1`
+  - `LowBoostRecoveryBcRawStateWindowLookupObservationAccessPlanningError`
+  - `plan_low_boost_recovery_bc_raw_state_window_lookup_observation_access_from_first_concrete_specimen_consumer_v1(...)`
+- Reused the already-established `LowBoostRecoveryBcArtifactConsumerHandoffV1` shape instead of
+  inventing a speculative smaller planning DTO.
+- Added minimal tests for admission, rejection, preserved order/artifact ids, visibility
+  semantics, and determinism.
+- No `mimir-types`, `mimir-io`, or `mimir-export` changes were needed.
+
+why this is enough for the next pass
+- The next pass no longer has to guess what the first lookup / observation-access planning
+  consumer is allowed to inspect.
+- `source_raw_state_window_ref` visibility is explicit and still opaque.
+- Observation-binding visibility is explicit and still planning-only.
+- The next unresolved problem is now narrower:
+  prove whether this planning-owned view is still insufficient for actual receipt-bound
+  raw-state-window lookup realization before any reopen decision is considered.

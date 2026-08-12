@@ -1,0 +1,117 @@
+executor stage 93 scoreboard component-schema contract index
+
+A. COMPONENT SOURCE PATH
+
+persisted input to scoreboard components:
+- `mimir_types::PersistedVerticalSliceProposal.score_signals` is the persisted per-proposal source map.
+- deterministic fixture materialization in `crates/mimir-cli/src/vertical_slice_test_support.rs::fixture_from_persisted_input(...)` copies `proposal.score_signals` into `VerticalSliceProposalFixture.score_signals` without adding inferred keys.
+- deterministic execution in `crates/mimir-cli/src/vertical_slice.rs::run_deterministic_vertical_slice(...)` builds a `WeightedSumScorer` from persisted `scorer_weights`, then calls `score_branch(...)` for each generated branch using that proposal-local `score_signals` map.
+- `crates/mimir-cli/src/vertical_slice.rs::score_branch(...)` delegates directly to `mimir_score::WeightedSumScorer::score(Some(branch_id.clone()), score_signals)`.
+- `crates/mimir-score/src/lib.rs::WeightedSumScorer::score(...)` iterates the incoming `signals` map, computes `weights.get(name).unwrap_or(0.0) * signal`, inserts each weighted value into `ScoreVector.components`, and accumulates `ScoreVector.total`.
+- `crates/mimir-cli/src/vertical_slice.rs::run_deterministic_vertical_slice(...)` converts the score with `PersistedScoreVector::from(score.clone())` and stores it in each `mimir_io::PersistedScoreRow`.
+- the persisted scoreboard artifact surface is `mimir_io::PersistedScoreboard { rows: Vec<PersistedScoreRow> }`, written through `persist_scoreboard(...)` to `scoreboard.json`.
+
+scoreboard reload / observability path:
+- `crates/mimir-cli/src/vertical_slice_result.rs::load_canonical_vertical_slice_result(...)` reloads `scoreboard.json` via `read_scoreboard_artifact(...)` and exposes the full `PersistedScoreboardArtifact` as `CanonicalVerticalSliceResult.scoreboard_artifact`.
+- `CanonicalVerticalSliceResult::golden_snapshot(...)` does not carry component maps forward; it narrows the scoreboard view to ordered pairs of `{ branch_id, total_score }`.
+- therefore component maps are first-class in the raw scoreboard artifact and canonical reload surface, but not first-class in the frozen snapshot struct.
+
+identity / ordering mechanics that exist today:
+- component keys live in `BTreeMap<String, f64>` at three points: persisted `score_signals`, scorer `weights`, and persisted `score.components`.
+- because `BTreeMap` is used, serialized key iteration is lexicographically ordered rather than insertion-ordered.
+- there is no separate explicit schema enum or ordered component lane list for scoreboard components in this pass.
+
+B. CURRENT EXPECTED COMPONENT SURFACE
+
+deterministic fixture family currently expected keys:
+- Stage69 sample lane proposals use `coverage` and `stability`.
+- Stage77 second lane proposals use `coverage` and `stability`.
+- deterministic fixture `scorer_weights` for both lanes also use `coverage` and `stability`.
+
+truthful current expectation:
+- the current deterministic family expects scoreboard component maps whose concrete keys are `coverage` and `stability`.
+- those keys are not inferred from gameplay logic in this pass; they come directly from persisted fixture `score_signals` and are weighted by persisted `scorer_weights`.
+- missing scorer weights do not reject keys; `WeightedSumScorer` would emit the key with weighted value `0.0`.
+- extra persisted `score_signals` keys are not rejected by runtime code; they would also flow into `score.components` and contribute according to any matching weight or `0.0`.
+- as a result, the currently expected surface is narrow by fixture convention and tests, not by a dedicated runtime schema gate.
+
+current deterministic examples:
+- Stage69 branch 0 baseline components: `coverage = 2.0`, `stability = 1.5`, total `3.5`.
+- Stage69 branch 1 baseline components: `coverage = 4.0`, `stability = 1.0`, total `5.0`.
+- Stage77 snapshot only freezes totals today; it does not enumerate component maps directly.
+
+C. DIRECT OBSERVABILITY TODAY
+
+tests / helpers that directly inspect component values:
+- `crates/mimir-cli/src/vertical_slice.rs::deterministic_vertical_slice_score_signals_directly_change_score_output_and_teacher_ordering_without_perturbing_other_contract_edges`
+  - directly materializes `baseline_rows` and `mutated_rows` as `(branch_id, row.score.components.clone(), row.score.total)`.
+  - directly asserts exact Stage69 component maps and totals before and after the targeted proposal-0 `score_signals` mutation.
+  - directly proves that `coverage` changed only on the mutated row while `stability` and the untouched row remained fixed.
+- `crates/mimir-score/src/lib.rs::tests::weighted_sum_is_deterministic`
+  - directly asserts `score.components["coverage"] == 3.0` and `score.components["stability"] == 2.0` for the scorer in isolation.
+  - this is scorer-local coverage, not vertical-slice scoreboard artifact coverage.
+
+tests / helpers that directly inspect raw scoreboard payloads without naming component keys separately:
+- `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_matches_expected_contract`
+  - directly asserts `canonical.scoreboard_artifact.payload == output.scoreboard`.
+  - this would fail on component-map drift, but only as whole-payload inequality rather than an edge-local component-schema assertion.
+
+tests / helpers that observe scoreboard data only through totals or broad equality:
+- `expected_golden_snapshot_for_lane(...)` and `VerticalSliceGoldenSnapshot.scoreboard_rows_in_order`
+  - directly freeze only `{ branch_id, total_score }`.
+- `canonical_vertical_slice_snapshot_detects_persisted_scoreboard_order_drift`
+  - directly asserts row order drift using snapshot totals, not component maps.
+- several Stage85-92 edge tests compare scoreboard payload equality or scoreboard totals while focusing on neighboring contract surfaces, but they do not independently assert the scoreboard component-key set/order as its own contract edge.
+
+D. INDIRECTLY GUARDED PARTS
+
+what is still broadly guarded rather than first-class:
+- component-key identity drift outside the specific Stage90 Stage69 mutation slice.
+  - broad scoreboard payload equality would catch many changes, but it would not isolate whether the defect was a key rename, a dropped key, an added zero-weight key, or a serialization-order/documentation issue.
+- Stage77 component-schema sharpness.
+  - Stage77 lane has strong snapshot/parity coverage, but its component maps are not enumerated in a dedicated assertion the way Stage69 is in the Stage90 test.
+- canonical snapshot schema sharpness.
+  - snapshots intentionally keep only `branch_id` and `total_score`, so component-schema drift can still exist beneath an unchanged total if multiple weighted contributions offset each other.
+- component-ordering as an explicit contract.
+  - `BTreeMap` currently gives stable lexical ordering, and broad equality on the full scoreboard payload would fail if order-sensitive serialization changed, but no dedicated artifact names this as an explicit scoreboard-component ordering contract.
+- negative schema drift diagnostics.
+  - current failures are mostly broad artifact drift or total/order mismatch failures; there is no dedicated narrow failure that says the scoreboard component-key set for a deterministic lane changed unexpectedly.
+
+important distinction:
+- a component mismatch would often still fail somewhere today.
+- the remaining gap is observability precision: many failures would surface as broad scoreboard drift instead of an explicit component-schema contract failure.
+
+E. BEST FUTURE NEGATIVE/SCHEMA TEST TARGET
+
+best next narrow target:
+- mutate a persisted scoreboard artifact after a valid deterministic run and change only one row's `score.components` schema while trying to keep neighboring surfaces as stable as possible.
+
+exact candidate edge:
+- Stage77 is the best follow-up target because Stage69 already has the Stage90 direct component-value mutation test.
+- after running the Stage77 lane, rewrite `scoreboard.json` so one row's `score.components` map drifts in one narrow way:
+  - rename `coverage` to `coverage_drifted`, or
+  - drop `stability`, or
+  - add an unexpected extra key such as `unexpected_component`.
+
+why it matters:
+- it would make scoreboard component-key identity a first-class contract surface rather than relying on broad equality or total-only snapshots.
+- it would reduce the current asymmetry where Stage69 has edge-local component assertions and Stage77 mostly relies on parity / broad artifact checks.
+- it would produce a sharper failure story for future schema drift than "scoreboard artifact changed".
+
+what a future narrow negative/schema-drift pass should assert:
+- baseline and mutated runs keep the same export bundle branch identities/order and the same teacher artifact file count.
+- the rewritten scoreboard artifact still reloads structurally so the negative assertion is about component schema, not file unreadability.
+- the dedicated check compares per-row component key sets exactly and fails with a message that names:
+  - lane
+  - row / branch id
+  - expected component keys
+  - observed component keys
+- if ordering is also considered part of the contract, the check should say explicitly that the current source of determinism is `BTreeMap` lexical order rather than an independently versioned schema list.
+
+F. NO-CHANGE DECISION
+
+- this Stage93 pass is documentation / indexing only.
+- no Rust runtime behavior is changed in this pass.
+- no test semantics are changed in this pass.
+- no export bundle semantics are widened in this pass.
+- unless a tiny documentary inconsistency is discovered later, the intended change set for Stage93 is limited to the new repo-local text artifacts.

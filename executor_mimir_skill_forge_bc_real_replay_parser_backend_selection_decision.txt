@@ -1,0 +1,70 @@
+executor mimir skill forge bc real replay parser backend selection decision
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-01
+
+exact outcome chosen
+- Outcome B
+
+exact backend direction selected
+- narrow in-crate `mimir-replay` header parser implementation direction
+- future parser target remains `ReplayReader::read_header(&ReplayInput) -> Result<ReplayHeader>`
+- first admitted input remains `ReplayInput::Memory`
+- future valid output remains a real `ReplayHeader` for valid supported bytes only
+- future invalid, malformed, insufficient, unsupported, or deferred output remains structured error only
+- `UnsupportedReplayReader` remains truthful scaffold behavior and must remain distinguishable from any future real reader
+
+whether a concrete dependency was selected
+- no concrete dependency was selected
+- no dependency was added
+
+why this is the narrowest honest choice
+- audit found no current workspace replay parser backend dependency
+- audit found no current real `ReplayReader` implementation
+- `mimir-replay` already owns the exact reader contract and can own a future minimal header reader
+- an in-crate implementation can be constrained to `ReplayInput::Memory` and byte-backed header fields only
+- the credible external Rust candidate, `boxcars`, is not already present or project-approved and its verified public parse path returns a broader `Replay` structure rather than a header-only result
+- selecting a broad external parser now would create dependency and semantic surface before MIMIR has a fixture-backed header-only mapping plan
+
+external candidate audit summary
+- `boxcars` was audited as the primary external Rust replay parser candidate
+- positive evidence: Rust library, MIT license, memory byte input, documented network-skip/header-oriented parsing mode, current crates.io version reported by cargo as 0.11.1
+- rejection reason for this pass: its verified public parse path is broader than MIMIR's minimal header-only contract and still constructs body-derived replay structures while skipping network frames
+- `subtr-actor` was rejected as a broader transformer built on `boxcars`, not a minimal header parser backend
+
+what was intentionally excluded
+- parser implementation
+- backend dependency addition
+- parser-success policy
+- `ReplayHeader` production or synthesis
+- raw-state payload parsing
+- replay frame extraction
+- semantic replay event extraction
+- replay-source actual materialization
+- replay-source carrier discovery
+- replay-input locator logic
+- replay-source actual-materialization implementation
+- replay-source carrier discovery implementation
+- replay-input locator implementation
+- `mimir_export` widening
+- corpus-wide replay ingestion
+- runtime CLI commands
+- async/background systems
+- database code
+- real rollout physics
+- execution-result cleanup boundary changes
+- generic all-family replay/raw-state/index/export/materialization frameworks
+- interpreting `source_replay` as a replay path
+- interpreting `source_replay.provenance_label` as a replay path
+- interpreting `audited_family_root_directory` as replay storage
+
+whether Rust/code changes were added, and why or why not
+- no Rust/code changes were added
+- this was a backend selection decision pass only
+- adding code would imply parser implementation, parser-success logic, a dependency marker, or parser readiness that this pass does not prove
+
+why this is enough for the next pass
+- backend direction is now selected without implementation
+- the next pass can plan a minimal in-crate `mimir-replay` header reader
+- the next pass can define exact byte-level header assumptions, fixture evidence, error taxonomy, and validation gates
+- parser implementation remains closed unless explicitly reopened
+- parser-success logic, raw-state parsing, frame/event extraction, materialization, carrier discovery, locator logic, and `mimir_export` widening remain closed

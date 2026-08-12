@@ -1,0 +1,80 @@
+MIMIR external parser/tool report for rl_replay_header_fixture_001
+
+REPORT STATUS
+- generated_by: temporary external Rust crate outside MIMIR workspace
+- parser_tool: boxcars crate
+- parser_tool_version: 0.11.1
+- parser_tool_source: crates.io local cargo registry cache
+- parser_tool_repository: https://github.com/nickbabcock/boxcars
+- parser_mode: ParserBuilder::new(bytes).never_parse_network_data().parse()
+- report_is_mimir_parser_output: no
+- report_is_parser_success: no
+- report_is_byte_layout_admission: no
+- report_requires_later_admission_pass: yes
+
+FIXTURE IDENTITY
+- fixture_id: rl_replay_header_fixture_001
+- input_path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay
+- expected_byte_length: 3001021
+- observed_byte_length: 3001021
+- expected_sha256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- observed_sha256: F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB
+- fixture_identity_is_parser_fact: no
+
+TOOL RECOGNITION
+- boxcars_parse_result: success
+- recognized_as_rocket_league_replay: yes, inferred only from successful boxcars parse
+- mimir_supported_replay_claim: no
+
+BYTE-BACKED EXTERNAL PARSE SUMMARY
+- header_size: 13200
+- header_crc: 2370383193
+- major_version: 868
+- minor_version: 32
+- net_version: Some(10)
+- game_type: "TAGame.Replay_Soccar_TA"
+- header_property_count: 26
+- property_kind_counts: {"Array": 3, "Float": 3, "Int": 12, "Name": 2, "QWord": 1, "Str": 5}
+- header_boundary_source: external_boxcars_parse; not admitted into MIMIR in this report
+- selected_properties_source: external_boxcars_header_properties; not admitted into MIMIR in this report
+- Id: kind=Str, value="7F59297811EFD8B19C444A81FB07660C", source=external_boxcars_header_property
+- ReplayName: kind=Str, value="Frestyle double touch but not ball", source=external_boxcars_header_property
+- Date: kind=Str, value="2025-01-22 11-10-32", source=external_boxcars_header_property
+- MapName: kind=Name, value="Stadium_Winter_P", source=external_boxcars_header_property
+- ReplayVersion: kind=Int, value=8, source=external_boxcars_header_property
+- BuildVersion: kind=Str, value="241206.55345.468477", source=external_boxcars_header_property
+- NumFrames: kind=Int, value=13555, source=external_boxcars_header_property
+- MaxChannels: kind=Int, value=2047, source=external_boxcars_header_property
+- MatchType: kind=Name, value="Online", source=external_boxcars_header_property
+- TeamSize: kind=Int, value=3, source=external_boxcars_header_property
+- RecordFPS: kind=Float, value=30.0, source=external_boxcars_header_property
+
+BODY/FOOTER DATA READ BY EXTERNAL TOOL
+- content_size: 2987805
+- content_crc: 2323044833
+- levels_count: 1
+- keyframes_count: 64
+- debug_info_count: 0
+- tick_marks_count: 16
+- packages_count: 3
+- objects_count: 398
+- names_count: 416
+- class_indices_count: 41
+- net_cache_count: 36
+- body_footer_values_are_mimir_header_evidence: no, require separate admission decision
+
+NETWORK / FRAME / EVENT LIMITS
+- network_parse_requested: Never
+- network_frames_present_in_report: false
+- replay_frames_extracted: no
+- raw_state_payload_decoded: no
+- semantic_replay_events_extracted: no
+
+SUFFICIENCY LIMITS
+- sufficient_for_mimir_byte_layout_admission_now: no, this report still requires a later admission pass
+- sufficient_to_implement_mimir_parser_now: no
+- replay_id_policy_admitted: no; Id is only an external parser-reported header property
+- total_frames_policy_admitted: no; NumFrames is only an external parser-reported header property
+- metadata_policy_admitted: no; selected properties are not yet a MIMIR metadata map
+- malformed_or_insufficient_boundaries_admitted: no
+- unsupported_format_or_version_boundary_admitted: no

@@ -1,0 +1,51 @@
+executor mimir skill forge bc replay header parser fixture_003 mapping error boundary admission next
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-06
+
+selected outcome driving next step
+- Outcome A
+
+next pass should
+- target fixture_003 BoolProperty/non-selected property structural error-boundary closure
+- decide whether top-level BoolProperty remains a hard unsupported-property boundary, can be
+  skipped as a non-selected property, or can be mapped only after a separate BoolProperty metadata
+  policy
+- keep bForfeit excluded from selected ReplayHeader metadata unless BoolProperty policy is
+  explicitly reopened and admitted
+- keep all fixture_003 selected scalar mapping evidence as candidate expected-output evidence only
+
+supported-version planning condition
+- fixture_003 supported-version policy planning may proceed only after the BoolProperty boundary
+  is closed, or as a docs-only planning pass that explicitly treats BoolProperty support as a
+  non-parser-support caveat and implementation blocker
+
+next pass must not
+- claim parser success for fixture_003
+- add fixture_003 as a third supported tuple
+- broaden parser expansion
+- add broad ReplayVersion = 8 support
+- add wildcard BuildVersion support
+- add future unknown build support
+- admit BoolProperty parser support without an explicit BoolProperty policy pass
+- add export/runtime/CLI integration
+- add ReplayInput::File support
+- add replay-source materialization
+- add CRC validation
+- read or validate content_crc
+- parse body/raw-state/frame/event data
+- add backend replay parser dependencies to MIMIR
+
+current admitted boundary carried forward
+- fixture_003 parser/header report is evidence-only
+- fixture_003 structural report is evidence-only
+- fixture_003 selected scalar values are candidate expected-output evidence only
+- bForfeit is report-only evidence
+- parser-success is admitted only for the existing exact fixture_001 and fixture_002 tuples through
+  ReplayInput::Memory
+- fixture_003 parser-success is not admitted
+- fixture_003 supported-version policy is not admitted
+- third supported tuple is not added
+- broad parser-success is not admitted
+
+no parser expansion yet
+- yes

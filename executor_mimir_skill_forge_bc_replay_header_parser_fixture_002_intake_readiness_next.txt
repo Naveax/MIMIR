@@ -1,0 +1,40 @@
+executor mimir skill forge bc replay header parser fixture 002 intake readiness next
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-05-04
+
+selected outcome driving next step
+- Outcome A
+
+next pass
+- may generate or admit a fixture_002 structural/header report
+
+fixture_002 admitted input identity
+- fixture id: rl_replay_header_fixture_002
+- path: D:\RocketLeague bot\MIMIR\external_fixtures\sample_002.replay
+- byte length: 2632903
+- SHA-256: 376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6
+- admission form: PRIVATE_LOCAL_PATH_WITH_HASH
+
+required framing for next pass
+- no parser expansion yet
+- no parser-success claim for fixture_002 yet
+- success through the admitted mimir-skill seam means only minimal header parse success only
+- failure through the admitted mimir-skill seam means only minimal header parse failure only
+- ReplayHeader remains header-only parser-attempt evidence
+- parser-success remains admitted only for ReplayInput::Memory, the exact fixture-supported tuple,
+  and header-only parsing ending at 8 + header_size
+- parser-success is not admitted broadly
+
+still closed
+- no export integration
+- no runtime integration
+- no CLI integration
+- no broad parser expansion
+- no ReplayInput::File support
+- no replay-source materialization
+- no path/hash/filename/provenance/artifact-id parser facts
+- no CRC validation
+- no content_crc read or validation
+- no body/raw-state/frame/event parsing
+- no broad version-family support
+- no backend replay parser dependency

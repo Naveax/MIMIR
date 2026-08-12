@@ -1,0 +1,87 @@
+executor scoreboard component ordering boundary
+repo root: D:\RocketLeague bot\MIMIR
+pass intent: scoreboard component ordering boundary clarification only
+
+A. CURRENT TRUTH
+
+- Current scoreboard component ordering is deterministic today.
+- The current source of that determinism is implementation-backed:
+  - persisted `score_signals` are carried in `BTreeMap<String, f64>`
+  - `WeightedSumScorer::score(...)` iterates those `BTreeMap` signals and writes `ScoreVector.components` into another `BTreeMap<String, f64>`
+  - persisted scoreboard component maps therefore serialize in lexical key order under the current implementation
+- Repo-local evidence supporting that statement:
+  - `executor_stage93_scoreboard_component_schema.txt` explicitly documents the three `BTreeMap<String, f64>` points and states that serialized key iteration is lexicographically ordered rather than insertion-ordered
+  - `crates/mimir-score/src/lib.rs::WeightedSumScorer::score(...)` builds `ScoreVector.components` with `BTreeMap`
+  - current Stage77 score tests in `crates/mimir-cli/src/vertical_slice.rs` assert component-key vectors as `["coverage", "stability"]` on both rows before and after targeted score mutations
+  - `executor_deterministic_family_closure_summary.txt`, `executor_deterministic_family_contract_index.txt`, and `executor_deterministic_family_matrix_freeze.txt` all classify scoreboard component ordering as deterministic but only partial as an explicit contract surface
+
+B. WHAT IS ACTUALLY GUARDED
+
+component-key/schema identity
+- Component-key/schema identity is explicitly guarded today.
+- Repo-local evidence:
+  - `executor_stage93_scoreboard_component_schema.txt` names component-key identity as a contract surface and distinguishes it from ordering
+  - `executor_stage94_stage77_scoreboard_component_drift.txt` documents the explicit Stage77 negative drift guard
+  - `crates/mimir-cli/src/vertical_slice_test_support.rs::assert_fixture_lane_scoreboard_component_schema_drift_fails_explicitly(...)` rewrites only a persisted component key (`coverage` -> `coverage_drifted`) and proves the resulting explicit schema-drift failure
+
+value-level score behavior
+- Value-level score-input effects are explicitly guarded today.
+- Repo-local evidence:
+  - Stage69 and Stage77 scorer-weight mutation tests assert exact component values, totals, and teacher ordering
+  - Stage69 and Stage77 score-signal mutation tests assert exact component values, totals, and teacher ordering
+  - `executor_deterministic_family_closure_summary.txt` and `executor_deterministic_family_contract_index.txt` classify those value-level score surfaces as closed
+
+existing ordering stability from current structures/tests
+- Existing component ordering stability is guarded only indirectly through current structures and tests.
+- Repo-local evidence:
+  - `executor_stage93_scoreboard_component_schema.txt` states that ordering currently follows `BTreeMap` lexical iteration and that there is no separate ordered component lane list or explicit schema enum
+  - current Stage77 score tests assert key vectors in lexical order, which would fail if current iteration order changed
+  - broad scoreboard payload equality checks would also fail on many ordering-sensitive changes
+- That is real evidence of stable behavior, but it is still implementation-backed rather than separately versioned
+
+C. WHAT IS NOT CURRENTLY A FIRST-CLASS CONTRACT
+
+- Scoreboard component ordering is not currently promoted to a separately versioned first-class schema-order contract.
+- What is missing today:
+  - no separate schema-order artifact
+  - no distinct versioned ordered component list
+  - no explicit statement that component order itself carries an independently owned schema version
+  - no contract boundary that says ordering is versioned independently from component-key identity
+- Current ordering should therefore be described as implementation-backed determinism, not as a separately versioned contract surface.
+
+D. WHY THE MATRIX LEFT THIS AS PARTIAL
+
+- The matrix left this surface as `partial` for one exact reason:
+  - ordering determinism is real and observable today, but it still comes mainly from `BTreeMap` behavior plus existing tests rather than a separately versioned first-class contract decision
+- It is not `open` because:
+  - current behavior is deterministic
+  - current tests and artifact equality checks already rely on that determinism
+- It is not `closed` as a first-class versioned contract because:
+  - schema identity drift and value-level effects have explicit named guards
+  - ordering does not yet have its own independently versioned contract artifact
+
+E. NO-CHANGE DECISION
+
+- Recommended no-change interpretation:
+  - keep current scoreboard component ordering behavior as implementation-backed determinism
+  - keep distinguishing component-key/schema identity from ordering semantics
+  - do not promote ordering to a stronger contract by implication
+  - do not reopen this surface as if it were fully open
+  - do not relabel this surface as fully versioned without an explicit contract-promotion decision
+- This clarification pass does not change runtime semantics, tests, snapshots, schema behavior, or export-bundle semantics.
+
+F. WHAT WOULD JUSTIFY FUTURE PROMOTION
+
+- Minimal conditions that would justify later promotion to a separately versioned first-class ordering contract:
+  - a deliberate schema/contract decision that component order itself is part of the owned public deterministic-family boundary
+  - a dedicated schema-order artifact or equivalent ordered component-contract definition
+  - explicit wording that ordering semantics are versioned independently from component-key identity
+  - corresponding tests or checks that validate the declared ordering contract rather than merely inheriting `BTreeMap` behavior
+  - repo-local evidence that ordering ambiguity is causing real confusion, review churn, or breakage
+
+bottom line
+
+- Current truth: deterministic, yes.
+- Current cause: `BTreeMap` plus current tests.
+- Current first-class versioned contract status: not yet.
+- Current recommended interpretation: partial, implementation-backed determinism, no semantic change.

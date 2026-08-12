@@ -1,0 +1,40 @@
+executor mimir skill forge bc contract next step
+repo root: D:\RocketLeague bot\MIMIR
+date: 2026-04-13
+
+next pass
+- first low-boost-recovery BC serialization/export boundary pass
+
+milestone note
+- The BC milestone has now been crossed.
+- Export and persistence semantics are the next thing to define.
+- `mimir_export` widening is still forbidden unless explicitly reopened.
+
+exact problem
+- The repo now has a real low-boost-recovery BC contract row and a strict admission rule, but it
+  still does not define how that row becomes a serialized or persisted BC artifact.
+- The next pass must define the first BC serialization/export boundary without silently widening
+  the contract into generic dataset machinery or direct `mimir_export` integration.
+
+what the new BC contract now makes possible
+- Consume one explicit `LowBoostRecoveryBcRowV1` instead of inferring BC row semantics from shell
+  and planning artifacts.
+- Keep low-boost-recovery lineage, supervision-window role, observation binding, target binding,
+  carried confidence, and carried unresolved assumptions fixed while defining serialization.
+- Separate contract definition from export implementation cleanly.
+
+what is still intentionally unresolved
+- concrete observation serialization
+- concrete target serialization
+- persistence format and artifact identity
+- whether any later pass should touch `mimir_export`
+- any proof of low-boost truth, contact truth, recovery success, physics reachability, or BC
+  usefulness
+
+scope risk
+- high
+- The main risk is letting the first BC serialization/export boundary pass smuggle observation or
+  target semantics into a generic framework.
+- The second risk is letting serialization choices read like usefulness proof when the BC contract
+  still only preserves lineage plus deferred bindings.
+- The third risk is widening `mimir_export` by implication instead of explicit reopening.
