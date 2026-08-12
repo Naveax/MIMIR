@@ -82,6 +82,7 @@ const SUPPORTED_BUILD_VERSION_CORPUS_RANK_003: &str = "230823.66121.430366";
 const SUPPORTED_BUILD_VERSION_CORPUS_RANK_004: &str = "231010.63095.433650";
 const SUPPORTED_BUILD_VERSION_CORPUS_RANK_005: &str = "211110.58467.353926";
 const SUPPORTED_BUILD_VERSION_CORPUS_RANK_006: &str = "211123.48895.355454";
+const SUPPORTED_BUILD_VERSION_CORPUS_RANK_007: &str = "230113.44243.411503";
 const MAX_ADMITTED_TEXT_BYTES: i32 = 10_000;
 
 const KIND_ARRAY: &str = "ArrayProperty";
@@ -104,6 +105,7 @@ enum SupportedReplayHeaderTupleV1 {
     CorpusRank004Exact,
     CorpusRank005Exact,
     CorpusRank006Exact,
+    CorpusRank007Exact,
 }
 
 fn supported_replay_header_tuple_v1(
@@ -144,6 +146,9 @@ fn supported_replay_header_tuple_v1(
         }
         SUPPORTED_BUILD_VERSION_CORPUS_RANK_006 => {
             Some(SupportedReplayHeaderTupleV1::CorpusRank006Exact)
+        }
+        SUPPORTED_BUILD_VERSION_CORPUS_RANK_007 => {
+            Some(SupportedReplayHeaderTupleV1::CorpusRank007Exact)
         }
         _ => None,
     }
@@ -989,6 +994,24 @@ mod tests {
             header.metadata.get("BuildVersion"),
             Some(&FieldValue::Text(
                 SUPPORTED_BUILD_VERSION_CORPUS_RANK_006.to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn minimal_reader_admits_seventh_ranked_corpus_build_exact_tuple() {
+        let bytes = build_replay_bytes(build_header(HeaderSpec {
+            build_version: SUPPORTED_BUILD_VERSION_CORPUS_RANK_007.to_string(),
+            ..HeaderSpec::minimal()
+        }));
+
+        let header = read_synthetic(bytes)
+            .expect("seventh-ranked corpus BuildVersion exact tuple should be admitted");
+
+        assert_eq!(
+            header.metadata.get("BuildVersion"),
+            Some(&FieldValue::Text(
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_007.to_string()
             ))
         );
     }
