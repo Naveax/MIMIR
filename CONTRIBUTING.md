@@ -29,3 +29,7 @@ Do not commit:
 The small checked-in replay corpus exists for deterministic regression/stress testing only.
 
 Do not silently widen MIMIR capability claims. Unsupported or unproven boundaries should remain explicit.
+
+## Contribution authorization
+
+MIMIR is proprietary and is not an open-source project. External contributions are not accepted for incorporation unless the repository owner has expressly authorized the contribution in writing under separate terms sufficient to permit incorporation. Opening an issue, discussion, suggestion, patch, or pull request does not grant any right to use MIMIR or any part of the repository. See `LICENSE`.
