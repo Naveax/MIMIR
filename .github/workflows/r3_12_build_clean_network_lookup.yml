@@ -1,0 +1,67 @@
+name: R3.12 Build Clean Network Lookup Commit
+
+on:
+  push:
+    branches:
+      - agent/r3-12-network-lookup-registry
+
+permissions:
+  contents: write
+
+jobs:
+  build-clean:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build clean source-only commit from verified source blob
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Main = 'd05e5bf24c48a64323b86d8e05d604b23b695afe'
+          $Verified = '277b4a0d2844901f67c4574431085031325e6f36'
+          $Clean = 'agent/r3-12-network-lookup-clean'
+
+          git fetch origin main $Clean agent/r3-12-network-lookup-registry
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $mainHead = (git rev-parse origin/main).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($mainHead -ne $Main) { throw "main moved: expected $Main got $mainHead" }
+
+          git checkout -B $Clean origin/$Clean
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $cleanHead = (git rev-parse HEAD).Trim()
+          if ($cleanHead -ne $Main) { throw "clean branch parent drift: $cleanHead" }
+
+          git checkout $Verified -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git reset HEAD -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "clean reconstruction scope drift: $($changed -join ', ')"
+          }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $verifiedBlob = (git rev-parse "$Verified`:crates/mimir-replay/src/lib.rs").Trim()
+          $workingBlob = (git hash-object crates/mimir-replay/src/lib.rs).Trim()
+          if ($verifiedBlob -ne $workingBlob) {
+            throw "verified blob mismatch: $verifiedBlob vs $workingBlob"
+          }
+
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git add -- crates/mimir-replay/src/lib.rs
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git commit -m 'Add replay network lookup registry'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git push origin HEAD:$Clean
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host "R3_12_VERIFIED_BLOB=$verifiedBlob"
+          Write-Host 'R3_12_CLEAN_BUILD=PASS'
