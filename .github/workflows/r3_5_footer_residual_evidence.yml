@@ -1,0 +1,15 @@
+name: R3.5 Footer Residual Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-5-footer-structure-evidence
+
+jobs:
+  evidence:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+      - name: Scan known footer and report residual bytes
+        shell: pwsh
+        run: python tools/r3_5_footer_residual_evidence.py
