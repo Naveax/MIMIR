@@ -310,6 +310,666 @@ impl ReplayNetworkTimingPreambleReader for MinimalReplayNetworkTimingPreambleRea
     }
 }
 
+/// Conservative network attribute wire-tag registry admitted from the supported replay lane.
+///
+/// Only the 102 attribute names observed in successfully decoded updates are explicitly admitted.
+/// Every other name maps to `NotImplemented`, even if a broader external registry knows it.
+/// This layer performs lookup only; it does not consume network bits or decode payload values.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum ReplayNetworkAttributeTagV1 {
+    ActiveActor,
+    Boolean,
+    Byte,
+    CamSettings,
+    ClubColors,
+    DemolishExtended,
+    DemolishFx,
+    Enum,
+    ExtendedExplosion,
+    Float,
+    Int,
+    Int64,
+    LoadoutsOnline,
+    Location,
+    PartyLeader,
+    PickupNew,
+    PlayerHistoryKey,
+    QWordString,
+    ReplicatedBoost,
+    Reservation,
+    RigidBody,
+    StatEvent,
+    String,
+    TeamLoadout,
+    TeamPaint,
+    UniqueId,
+    NotImplemented,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[serde(rename_all = "snake_case")]
+pub enum ReplayNetworkSpawnTrajectoryV1 {
+    None,
+    Location,
+    LocationAndRotation,
+}
+
+const OBSERVED_NETWORK_ATTRIBUTE_TAGS_V1: [(&str, ReplayNetworkAttributeTagV1); 102] = [
+    ("Engine.Actor:DrawScale", ReplayNetworkAttributeTagV1::Float),
+    ("Engine.Actor:RemoteRole", ReplayNetworkAttributeTagV1::Enum),
+    (
+        "Engine.Actor:bBlockActors",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "Engine.Actor:bCollideActors",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    ("Engine.Actor:bHidden", ReplayNetworkAttributeTagV1::Boolean),
+    (
+        "Engine.GameReplicationInfo:GameClass",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "Engine.GameReplicationInfo:ServerName",
+        ReplayNetworkAttributeTagV1::String,
+    ),
+    (
+        "Engine.Pawn:PlayerReplicationInfo",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "Engine.PlayerReplicationInfo:Ping",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "Engine.PlayerReplicationInfo:PlayerID",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "Engine.PlayerReplicationInfo:PlayerName",
+        ReplayNetworkAttributeTagV1::String,
+    ),
+    (
+        "Engine.PlayerReplicationInfo:Score",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "Engine.PlayerReplicationInfo:Team",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "Engine.PlayerReplicationInfo:UniqueId",
+        ReplayNetworkAttributeTagV1::UniqueId,
+    ),
+    (
+        "Engine.PlayerReplicationInfo:bTimedOut",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    ("Engine.TeamInfo:Score", ReplayNetworkAttributeTagV1::Int),
+    (
+        "ProjectX.GRI_X:GameServerID",
+        ReplayNetworkAttributeTagV1::QWordString,
+    ),
+    (
+        "ProjectX.GRI_X:MatchGUID",
+        ReplayNetworkAttributeTagV1::String,
+    ),
+    (
+        "ProjectX.GRI_X:MatchGuid",
+        ReplayNetworkAttributeTagV1::String,
+    ),
+    (
+        "ProjectX.GRI_X:ReplicatedGamePlaylist",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "ProjectX.GRI_X:ReplicatedServerRegion",
+        ReplayNetworkAttributeTagV1::String,
+    ),
+    (
+        "ProjectX.GRI_X:Reservations",
+        ReplayNetworkAttributeTagV1::Reservation,
+    ),
+    (
+        "ProjectX.GRI_X:bGameStarted",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.Ball_TA:GameEvent",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.Ball_TA:HitTeamNum",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.Ball_TA:ReplicatedExplosionDataExtended",
+        ReplayNetworkAttributeTagV1::ExtendedExplosion,
+    ),
+    (
+        "TAGame.Ball_TA:ReplicatedWorldBounceScale",
+        ReplayNetworkAttributeTagV1::Float,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:CameraPitch",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:CameraYaw",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:PRI",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:ProfileSettings",
+        ReplayNetworkAttributeTagV1::CamSettings,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:bMouseCameraToggleEnabled",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:bUsingBehindView",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:bUsingSecondaryCamera",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.CameraSettingsActor_TA:bUsingSwivel",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.CarComponent_AirActivate_TA:AirActivateCount",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.CarComponent_Boost_TA:ReplicatedBoost",
+        ReplayNetworkAttributeTagV1::ReplicatedBoost,
+    ),
+    (
+        "TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.CarComponent_Dodge_TA:DodgeImpulse",
+        ReplayNetworkAttributeTagV1::Location,
+    ),
+    (
+        "TAGame.CarComponent_Dodge_TA:DodgeTorque",
+        ReplayNetworkAttributeTagV1::Location,
+    ),
+    (
+        "TAGame.CarComponent_DoubleJump_TA:DoubleJumpImpulse",
+        ReplayNetworkAttributeTagV1::Location,
+    ),
+    (
+        "TAGame.CarComponent_FlipCar_TA:FlipCarTime",
+        ReplayNetworkAttributeTagV1::Float,
+    ),
+    (
+        "TAGame.CarComponent_FlipCar_TA:bFlipRight",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.CarComponent_TA:ReplicatedActive",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.CarComponent_TA:Vehicle",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.Car_TA:ClubColors",
+        ReplayNetworkAttributeTagV1::ClubColors,
+    ),
+    (
+        "TAGame.Car_TA:ReplicatedDemolishExtended",
+        ReplayNetworkAttributeTagV1::DemolishExtended,
+    ),
+    (
+        "TAGame.Car_TA:ReplicatedDemolishGoalExplosion",
+        ReplayNetworkAttributeTagV1::DemolishFx,
+    ),
+    (
+        "TAGame.Car_TA:RumblePickups",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.Car_TA:TeamPaint",
+        ReplayNetworkAttributeTagV1::TeamPaint,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:ReplicatedScoredOnTeam",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:ReplicatedStatEvent",
+        ReplayNetworkAttributeTagV1::StatEvent,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:RoundNum",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:SecondsRemaining",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:bBallHasBeenHit",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:bClubMatch",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:bOverTime",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.GameEvent_Soccar_TA:bReadyToStartGame",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.GameEvent_TA:BotSkill",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.GameEvent_TA:MatchStartEpoch",
+        ReplayNetworkAttributeTagV1::Int64,
+    ),
+    (
+        "TAGame.GameEvent_TA:MatchTypeClass",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.GameEvent_TA:ReplicatedRoundCountDownNumber",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.GameEvent_TA:ReplicatedStateName",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.GameEvent_TA:bCanVoteToForfeit",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.GameEvent_TA:bHasLeaveMatchPenalty",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.GameEvent_Team_TA:MaxTeamSize",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.GameEvent_Team_TA:bForfeit",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.PRI_TA:CarDemolitions",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.PRI_TA:ClientLoadouts",
+        ReplayNetworkAttributeTagV1::TeamLoadout,
+    ),
+    (
+        "TAGame.PRI_TA:ClientLoadoutsOnline",
+        ReplayNetworkAttributeTagV1::LoadoutsOnline,
+    ),
+    ("TAGame.PRI_TA:ClubID", ReplayNetworkAttributeTagV1::Int64),
+    (
+        "TAGame.PRI_TA:CurrentVoiceRoom",
+        ReplayNetworkAttributeTagV1::String,
+    ),
+    (
+        "TAGame.PRI_TA:MatchAssists",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    ("TAGame.PRI_TA:MatchGoals", ReplayNetworkAttributeTagV1::Int),
+    ("TAGame.PRI_TA:MatchSaves", ReplayNetworkAttributeTagV1::Int),
+    ("TAGame.PRI_TA:MatchScore", ReplayNetworkAttributeTagV1::Int),
+    ("TAGame.PRI_TA:MatchShots", ReplayNetworkAttributeTagV1::Int),
+    (
+        "TAGame.PRI_TA:PartyLeader",
+        ReplayNetworkAttributeTagV1::PartyLeader,
+    ),
+    (
+        "TAGame.PRI_TA:PersistentCamera",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.PRI_TA:PlayerHistoryKey",
+        ReplayNetworkAttributeTagV1::PlayerHistoryKey,
+    ),
+    (
+        "TAGame.PRI_TA:PlayerHistoryValid",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.PRI_TA:ReplicatedGameEvent",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.PRI_TA:ReplicatedWorstNetQualityBeyondLatency",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.PRI_TA:SelfDemolitions",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.PRI_TA:SpectatorShortcut",
+        ReplayNetworkAttributeTagV1::Int,
+    ),
+    (
+        "TAGame.PRI_TA:SteeringSensitivity",
+        ReplayNetworkAttributeTagV1::Float,
+    ),
+    ("TAGame.PRI_TA:Title", ReplayNetworkAttributeTagV1::Int),
+    (
+        "TAGame.PRI_TA:TotalGameTimePlayed",
+        ReplayNetworkAttributeTagV1::Float,
+    ),
+    (
+        "TAGame.PRI_TA:ViralItemActor",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.PRI_TA:bIsDistracted",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    ("TAGame.PRI_TA:bReady", ReplayNetworkAttributeTagV1::Boolean),
+    (
+        "TAGame.RBActor_TA:ReplicatedRBState",
+        ReplayNetworkAttributeTagV1::RigidBody,
+    ),
+    (
+        "TAGame.RBActor_TA:bReplayActor",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.Team_TA:ClubColors",
+        ReplayNetworkAttributeTagV1::ClubColors,
+    ),
+    ("TAGame.Team_TA:ClubID", ReplayNetworkAttributeTagV1::Int64),
+    (
+        "TAGame.Team_TA:GameEvent",
+        ReplayNetworkAttributeTagV1::ActiveActor,
+    ),
+    (
+        "TAGame.VehiclePickup_TA:NewReplicatedPickupData",
+        ReplayNetworkAttributeTagV1::PickupNew,
+    ),
+    (
+        "TAGame.Vehicle_TA:ReplicatedSteer",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.Vehicle_TA:ReplicatedThrottle",
+        ReplayNetworkAttributeTagV1::Byte,
+    ),
+    (
+        "TAGame.Vehicle_TA:bDriving",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+    (
+        "TAGame.Vehicle_TA:bReplicatedHandbrake",
+        ReplayNetworkAttributeTagV1::Boolean,
+    ),
+];
+
+const OBSERVED_NETWORK_PARENT_CLASSES_V1: [(&str, &str); 65] = [
+    ("Engine.Actor", "Core.Object"),
+    ("Engine.GameReplicationInfo", "Engine.ReplicationInfo"),
+    ("Engine.Info", "Engine.Actor"),
+    ("Engine.Pawn", "Engine.Actor"),
+    ("Engine.PlayerReplicationInfo", "Engine.ReplicationInfo"),
+    ("Engine.ReplicationInfo", "Engine.Info"),
+    ("Engine.TeamInfo", "Engine.Info"),
+    ("ProjectX.GRI_X", "Engine.GameReplicationInfo"),
+    ("ProjectX.NetModeReplicator_X", "Engine.ReplicationInfo"),
+    ("ProjectX.PRI_X", "Engine.PlayerReplicationInfo"),
+    ("ProjectX.Pawn_X", "Engine.Pawn"),
+    ("TAGame.Ball_TA", "TAGame.RBActor_TA"),
+    ("TAGame.CameraSettingsActor_TA", "Engine.ReplicationInfo"),
+    (
+        "TAGame.CarComponent_AirActivate_TA",
+        "TAGame.CarComponent_TA",
+    ),
+    (
+        "TAGame.CarComponent_Boost_TA",
+        "TAGame.CarComponent_AirActivate_TA",
+    ),
+    (
+        "TAGame.CarComponent_Dodge_TA",
+        "TAGame.CarComponent_AirActivate_TA",
+    ),
+    (
+        "TAGame.CarComponent_DoubleJump_TA",
+        "TAGame.CarComponent_AirActivate_TA",
+    ),
+    ("TAGame.CarComponent_FlipCar_TA", "TAGame.CarComponent_TA"),
+    ("TAGame.CarComponent_Jump_TA", "TAGame.CarComponent_TA"),
+    ("TAGame.CarComponent_TA", "Engine.ReplicationInfo"),
+    ("TAGame.Car_TA", "TAGame.Vehicle_TA"),
+    ("TAGame.CrowdActor_TA", "Engine.ReplicationInfo"),
+    ("TAGame.CrowdManager_TA", "Engine.ReplicationInfo"),
+    ("TAGame.GRI_TA", "ProjectX.GRI_X"),
+    ("TAGame.GameEvent_Soccar_TA", "TAGame.GameEvent_Team_TA"),
+    ("TAGame.GameEvent_TA", "Engine.ReplicationInfo"),
+    ("TAGame.GameEvent_Team_TA", "TAGame.GameEvent_TA"),
+    ("TAGame.InMapScoreboard_TA", "Engine.Actor"),
+    ("TAGame.PRI_TA", "ProjectX.PRI_X"),
+    ("TAGame.RBActor_TA", "ProjectX.Pawn_X"),
+    ("TAGame.RumblePickups_TA", "Engine.Actor"),
+    ("TAGame.Team_Soccar_TA", "TAGame.Team_TA"),
+    ("TAGame.Team_TA", "Engine.TeamInfo"),
+    ("TAGame.VehiclePickup_Boost_TA", "TAGame.VehiclePickup_TA"),
+    ("TAGame.VehiclePickup_TA", "Engine.ReplicationInfo"),
+    ("TAGame.Vehicle_TA", "TAGame.RBActor_TA"),
+    ("TAGame.ViralItemActor_TA", "Engine.Actor"),
+    ("Archetypes.Ball.Ball_Default", "TAGame.Ball_TA"),
+    ("Archetypes.Ball.Ball_Puck", "TAGame.Ball_TA"),
+    ("Archetypes.Car.Car_Default", "TAGame.Car_TA"),
+    (
+        "Archetypes.CarComponents.CarComponent_Boost",
+        "TAGame.CarComponent_Boost_TA",
+    ),
+    (
+        "Archetypes.CarComponents.CarComponent_Dodge",
+        "TAGame.CarComponent_Dodge_TA",
+    ),
+    (
+        "Archetypes.CarComponents.CarComponent_DoubleJump",
+        "TAGame.CarComponent_DoubleJump_TA",
+    ),
+    (
+        "Archetypes.CarComponents.CarComponent_FlipCar",
+        "TAGame.CarComponent_FlipCar_TA",
+    ),
+    (
+        "Archetypes.CarComponents.CarComponent_Jump",
+        "TAGame.CarComponent_Jump_TA",
+    ),
+    (
+        "Archetypes.GameEvent.GameEvent_Soccar",
+        "TAGame.GameEvent_Soccar_TA",
+    ),
+    ("Archetypes.Teams.Team0", "TAGame.Team_Soccar_TA"),
+    ("Archetypes.Teams.Team1", "TAGame.Team_Soccar_TA"),
+    (
+        "GameInfo_Soccar.GameInfo.GameInfo_Soccar:GameReplicationInfoArchetype",
+        "TAGame.GRI_TA",
+    ),
+    (
+        "Gameinfo_Hockey.GameInfo.Gameinfo_Hockey:Archetype",
+        "TAGame.GameEvent_Soccar_TA",
+    ),
+    (
+        "Gameinfo_Hockey.GameInfo.Gameinfo_Hockey:GameReplicationInfoArchetype",
+        "TAGame.GRI_TA",
+    ),
+    (
+        "ProjectX.Default__NetModeReplicator_X",
+        "ProjectX.NetModeReplicator_X",
+    ),
+    (
+        "TAGame.Default__CameraSettingsActor_TA",
+        "TAGame.CameraSettingsActor_TA",
+    ),
+    ("TAGame.Default__PRI_TA", "TAGame.PRI_TA"),
+    (
+        "TAGame.Default__RumblePickups_TA",
+        "TAGame.RumblePickups_TA",
+    ),
+    (
+        "TAGame.Default__ViralItemActor_TA",
+        "TAGame.ViralItemActor_TA",
+    ),
+    (
+        "TAGame.ProductAttribute_Painted_TA",
+        "TAGame.ProductAttribute_TA",
+    ),
+    ("TAGame.ProductAttribute_TA", "Core.Object"),
+    (
+        "TAGame.ProductAttribute_TeamEdition_TA",
+        "TAGame.ProductAttribute_TA",
+    ),
+    (
+        "TAGame.ProductAttribute_TitleID_TA",
+        "TAGame.ProductAttribute_TA",
+    ),
+    (
+        "TAGame.ProductAttribute_UserColor_TA",
+        "TAGame.ProductAttribute_TA",
+    ),
+    (
+        "TheWorld:PersistentLevel.CrowdActor_TA",
+        "TAGame.CrowdActor_TA",
+    ),
+    (
+        "TheWorld:PersistentLevel.CrowdManager_TA",
+        "TAGame.CrowdManager_TA",
+    ),
+    (
+        "TheWorld:PersistentLevel.InMapScoreboard_TA",
+        "TAGame.InMapScoreboard_TA",
+    ),
+    (
+        "TheWorld:PersistentLevel.VehiclePickup_Boost_TA",
+        "TAGame.VehiclePickup_Boost_TA",
+    ),
+];
+
+const PINNED_NETWORK_SPAWN_STATS_V1: [(&str, ReplayNetworkSpawnTrajectoryV1); 11] = [
+    ("Engine.Actor", ReplayNetworkSpawnTrajectoryV1::Location),
+    ("Engine.ZoneInfo", ReplayNetworkSpawnTrajectoryV1::None),
+    (
+        "TAGame.BreakOutActor_Platform_TA",
+        ReplayNetworkSpawnTrajectoryV1::None,
+    ),
+    ("TAGame.CrowdActor_TA", ReplayNetworkSpawnTrajectoryV1::None),
+    (
+        "TAGame.CrowdManager_TA",
+        ReplayNetworkSpawnTrajectoryV1::None,
+    ),
+    (
+        "TAGame.HauntedBallTrapTrigger_TA",
+        ReplayNetworkSpawnTrajectoryV1::None,
+    ),
+    (
+        "TAGame.InMapScoreboard_TA",
+        ReplayNetworkSpawnTrajectoryV1::None,
+    ),
+    (
+        "TAGame.PlayerStart_Platform_TA",
+        ReplayNetworkSpawnTrajectoryV1::None,
+    ),
+    (
+        "TAGame.RBActor_TA",
+        ReplayNetworkSpawnTrajectoryV1::LocationAndRotation,
+    ),
+    (
+        "TAGame.VehiclePickup_Boost_TA",
+        ReplayNetworkSpawnTrajectoryV1::None,
+    ),
+    (
+        "TAGame.KeepUpIndicator_TA",
+        ReplayNetworkSpawnTrajectoryV1::LocationAndRotation,
+    ),
+];
+
+const NETWORK_INSTANCE_NORMALIZATION_KINDS_V1: [&str; 6] = [
+    "CrowdActor_TA",
+    "CrowdManager_TA",
+    "VehiclePickup_Boost_TA",
+    "InMapScoreboard_TA",
+    "BreakOutActor_Platform_TA",
+    "PlayerStart_Platform_TA",
+];
+
+const RL_223_BUILD_VERSION_THRESHOLD_V1: &str = "221120.42953.406184";
+
+pub fn replay_network_attribute_tag_v1(name: &str) -> ReplayNetworkAttributeTagV1 {
+    OBSERVED_NETWORK_ATTRIBUTE_TAGS_V1
+        .iter()
+        .find_map(|(candidate, tag)| (*candidate == name).then_some(*tag))
+        .unwrap_or(ReplayNetworkAttributeTagV1::NotImplemented)
+}
+
+pub fn replay_network_object_name_v1(name: &str) -> String {
+    const PERSISTENT_LEVEL_PREFIX: &str = "TheWorld:PersistentLevel.";
+
+    let persistent_tail = if let Some(rest) = name.strip_prefix(PERSISTENT_LEVEL_PREFIX) {
+        Some(rest)
+    } else if let Some((_, suffix)) = name.split_once('.') {
+        suffix.strip_prefix(PERSISTENT_LEVEL_PREFIX)
+    } else {
+        None
+    };
+
+    if let Some(rest) = persistent_tail {
+        for kind in NETWORK_INSTANCE_NORMALIZATION_KINDS_V1 {
+            if rest.starts_with(kind) {
+                return format!("{PERSISTENT_LEVEL_PREFIX}{kind}");
+            }
+        }
+    }
+
+    name.to_string()
+}
+
+pub fn replay_network_parent_class_v1(name: &str) -> Option<&'static str> {
+    let normalized = replay_network_object_name_v1(name);
+    OBSERVED_NETWORK_PARENT_CLASSES_V1
+        .iter()
+        .find_map(|(child, parent)| (*child == normalized.as_str()).then_some(*parent))
+}
+
+pub fn replay_network_spawn_trajectory_class_v1(
+    class_name: &str,
+) -> Option<ReplayNetworkSpawnTrajectoryV1> {
+    PINNED_NETWORK_SPAWN_STATS_V1
+        .iter()
+        .find_map(|(candidate, trajectory)| (*candidate == class_name).then_some(*trajectory))
+}
+
+pub fn replay_network_qword_string_uses_text_v1(build_version: &str) -> bool {
+    build_version >= RL_223_BUILD_VERSION_THRESHOLD_V1
+}
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct MinimalReplayHeaderReader;
 
@@ -4540,5 +5200,188 @@ mod tests {
         encoded.extend_from_slice(bytes);
         encoded.push(0);
         encoded
+    }
+
+    #[test]
+    fn network_lookup_registry_has_exact_observed_attribute_surface() {
+        assert_eq!(OBSERVED_NETWORK_ATTRIBUTE_TAGS_V1.len(), 102);
+        let names = OBSERVED_NETWORK_ATTRIBUTE_TAGS_V1
+            .iter()
+            .map(|(name, _)| *name)
+            .collect::<BTreeSet<_>>();
+        assert_eq!(names.len(), 102);
+        assert!(
+            OBSERVED_NETWORK_ATTRIBUTE_TAGS_V1
+                .iter()
+                .all(|(_, tag)| *tag != ReplayNetworkAttributeTagV1::NotImplemented)
+        );
+        assert_eq!(
+            OBSERVED_NETWORK_ATTRIBUTE_TAGS_V1
+                .iter()
+                .map(|(_, tag)| *tag)
+                .collect::<BTreeSet<_>>()
+                .len(),
+            26
+        );
+    }
+
+    #[test]
+    fn network_lookup_registry_preserves_qword_string_wire_tag() {
+        assert_eq!(
+            replay_network_attribute_tag_v1("ProjectX.GRI_X:GameServerID"),
+            ReplayNetworkAttributeTagV1::QWordString
+        );
+        assert_eq!(
+            replay_network_attribute_tag_v1("TAGame.RBActor_TA:ReplicatedRBState"),
+            ReplayNetworkAttributeTagV1::RigidBody
+        );
+    }
+
+    #[test]
+    fn network_lookup_registry_fails_closed_to_not_implemented() {
+        assert_eq!(
+            replay_network_attribute_tag_v1("TAGame.FutureClass:UnknownProperty"),
+            ReplayNetworkAttributeTagV1::NotImplemented
+        );
+    }
+
+    #[test]
+    fn network_lookup_registry_qword_string_build_threshold_is_exact() {
+        assert!(!replay_network_qword_string_uses_text_v1(
+            "221120.42953.406183"
+        ));
+        assert!(replay_network_qword_string_uses_text_v1(
+            "221120.42953.406184"
+        ));
+        assert!(replay_network_qword_string_uses_text_v1(
+            "230113.44243.411503"
+        ));
+        assert!(!replay_network_qword_string_uses_text_v1(
+            "220826.56130.393105"
+        ));
+    }
+
+    #[test]
+    fn network_lookup_registry_parent_surface_is_unique_and_acyclic() {
+        assert_eq!(OBSERVED_NETWORK_PARENT_CLASSES_V1.len(), 65);
+        let children = OBSERVED_NETWORK_PARENT_CLASSES_V1
+            .iter()
+            .map(|(child, _)| *child)
+            .collect::<BTreeSet<_>>();
+        assert_eq!(children.len(), 65);
+        for (start, _) in OBSERVED_NETWORK_PARENT_CLASSES_V1 {
+            let mut seen = BTreeSet::new();
+            let mut current = start.to_string();
+            while let Some(parent) = replay_network_parent_class_v1(&current) {
+                assert!(seen.insert(current.clone()), "parent cycle at {current}");
+                current = parent.to_string();
+                assert!(seen.len() <= 65);
+            }
+        }
+    }
+
+    #[test]
+    fn network_lookup_registry_normalizes_observed_persistent_instances() {
+        assert_eq!(
+            replay_network_object_name_v1("TheWorld:PersistentLevel.VehiclePickup_Boost_TA_37"),
+            "TheWorld:PersistentLevel.VehiclePickup_Boost_TA"
+        );
+        assert_eq!(
+            replay_network_object_name_v1("Stadium_P.TheWorld:PersistentLevel.CrowdActor_TA_12"),
+            "TheWorld:PersistentLevel.CrowdActor_TA"
+        );
+        assert_eq!(
+            replay_network_parent_class_v1("TheWorld:PersistentLevel.VehiclePickup_Boost_TA_37"),
+            Some("TAGame.VehiclePickup_Boost_TA")
+        );
+        assert_eq!(
+            replay_network_object_name_v1("TAGame.Car_TA"),
+            "TAGame.Car_TA"
+        );
+    }
+
+    #[test]
+    fn network_lookup_registry_spawn_surface_matches_pinned_source() {
+        assert_eq!(PINNED_NETWORK_SPAWN_STATS_V1.len(), 11);
+        assert_eq!(
+            replay_network_spawn_trajectory_class_v1("Engine.Actor"),
+            Some(ReplayNetworkSpawnTrajectoryV1::Location)
+        );
+        assert_eq!(
+            replay_network_spawn_trajectory_class_v1("TAGame.RBActor_TA"),
+            Some(ReplayNetworkSpawnTrajectoryV1::LocationAndRotation)
+        );
+        assert_eq!(
+            replay_network_spawn_trajectory_class_v1("TAGame.KeepUpIndicator_TA"),
+            Some(ReplayNetworkSpawnTrajectoryV1::LocationAndRotation)
+        );
+        assert_eq!(
+            replay_network_spawn_trajectory_class_v1("Unknown.Class"),
+            None
+        );
+    }
+
+    #[test]
+    fn network_lookup_registry_explicit_surface_is_present_in_supported_footer_lane() {
+        let mut paths = vec![
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../external_fixtures/sample_001.replay"),
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../external_fixtures/sample_002.replay"),
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../external_fixtures/sample_003.replay"),
+        ];
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test_corpus/largest_100");
+        if !root.is_dir() || paths.iter().any(|path| !path.is_file()) {
+            eprintln!("skipping R3.12 corpus registry regression; fixtures are absent");
+            return;
+        }
+        let mut corpus = std::fs::read_dir(&root)
+            .expect("largest_100 should be readable")
+            .map(|entry| entry.expect("corpus entry should be readable").path())
+            .filter(|path| path.extension().and_then(|value| value.to_str()) == Some("replay"))
+            .collect::<Vec<_>>();
+        corpus.sort();
+        assert_eq!(corpus.len(), 100);
+        paths.extend(corpus);
+
+        let mut supported = 0usize;
+        let mut explicit_names = BTreeSet::new();
+        let mut fallback_names = BTreeSet::new();
+        for path in paths {
+            let bytes = std::fs::read(&path).expect("replay should be readable");
+            let label = path.file_name().unwrap().to_string_lossy().into_owned();
+            let input = ReplayInput::Memory { label, bytes };
+            if MinimalReplayHeaderReader.read_header(&input).is_err() {
+                continue;
+            }
+            supported += 1;
+            let lookup = MinimalReplayFooterLookupMaterializationReader
+                .read_footer_lookup_materialization(&input)
+                .expect("supported replay footer lookup should materialize");
+            for cache in lookup.net_cache {
+                for property in cache.properties {
+                    let name = &lookup.objects[property.object_index as usize];
+                    if replay_network_attribute_tag_v1(name)
+                        == ReplayNetworkAttributeTagV1::NotImplemented
+                    {
+                        fallback_names.insert(name.clone());
+                    } else {
+                        explicit_names.insert(name.clone());
+                    }
+                }
+            }
+        }
+        assert_eq!(supported, 47);
+        assert_eq!(explicit_names.len(), 102);
+        assert_eq!(
+            explicit_names,
+            OBSERVED_NETWORK_ATTRIBUTE_TAGS_V1
+                .iter()
+                .map(|(name, _)| (*name).to_string())
+                .collect::<BTreeSet<_>>()
+        );
+        assert!(!fallback_names.is_empty());
     }
 }
