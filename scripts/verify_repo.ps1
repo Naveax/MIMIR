@@ -194,13 +194,13 @@ for ($Index = 0; $Index -lt $RankingRows.Count; $Index++) {
     $ExpectedCumulative += $Count
 
     if ([int]$Entry.rank -ne $ExpectedRank) {
-        throw "Replay tuple ranking rank drift at index $Index: expected=$ExpectedRank actual=$($Entry.rank)"
+        throw "Replay tuple ranking rank drift at index ${Index}: expected=$ExpectedRank actual=$($Entry.rank)"
     }
     if ($Count -gt $PreviousCount) {
-        throw "Replay tuple ranking is not frequency-descending at rank $ExpectedRank: previous=$PreviousCount current=$Count"
+        throw "Replay tuple ranking is not frequency-descending at rank ${ExpectedRank}: previous=$PreviousCount current=$Count"
     }
     if ([int]$Entry.cumulative_count -ne $ExpectedCumulative) {
-        throw "Replay tuple ranking cumulative count drift at rank $ExpectedRank: expected=$ExpectedCumulative actual=$($Entry.cumulative_count)"
+        throw "Replay tuple ranking cumulative count drift at rank ${ExpectedRank}: expected=$ExpectedCumulative actual=$($Entry.cumulative_count)"
     }
 
     $PreviousCount = $Count
