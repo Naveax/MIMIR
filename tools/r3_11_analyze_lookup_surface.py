@@ -67,15 +67,18 @@ def normalize_object(name: str) -> str:
 
 
 def parse_dump(path: Path):
-    attrs: set[str] = set()
+    net_attrs: set[str] = set()
+    decoded_attrs: set[str] = set()
     objects: set[str] = set()
     net_classes: set[str] = set()
     spawn_shapes: dict[str, set[str]] = defaultdict(set)
     summaries: dict[str, str] = {}
     for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = raw.strip()
-        if line.startswith("ATTRIBUTE_NAME\t"):
-            attrs.add(line.split("\t", 1)[1])
+        if line.startswith("NET_CACHE_ATTRIBUTE_NAME\t"):
+            net_attrs.add(line.split("\t", 1)[1])
+        elif line.startswith("DECODED_ATTRIBUTE_NAME\t"):
+            decoded_attrs.add(line.split("\t", 1)[1])
         elif line.startswith("OBJECT_NAME\t"):
             objects.add(line.split("\t", 1)[1])
         elif line.startswith("NET_CACHE_CLASS\t"):
@@ -86,7 +89,7 @@ def parse_dump(path: Path):
         elif line.startswith("SUMMARY ") and "=" in line:
             key, value = line[len("SUMMARY ") :].split("=", 1)
             summaries[key] = value
-    return attrs, objects, net_classes, spawn_shapes, summaries
+    return net_attrs, decoded_attrs, objects, net_classes, spawn_shapes, summaries
 
 
 def hierarchy_edges(name: str, parents: dict[str, str]):
@@ -133,10 +136,15 @@ def main() -> int:
     attribute_tags = parse_attribute_tags(data_rs)
     parents = parse_parent_classes(data_rs)
     spawns = parse_spawn_stats(data_rs)
-    attrs, objects, net_classes, spawn_shapes, summaries = parse_dump(args.dump)
+    net_attrs, decoded_attrs, objects, net_classes, spawn_shapes, summaries = parse_dump(args.dump)
 
-    missing_tags = sorted(attrs - attribute_tags.keys())
-    tag_counts = Counter(attribute_tags[name] for name in attrs if name in attribute_tags)
+    # Boxcars intentionally maps a net-cache property absent from ATTRIBUTES to
+    # AttributeTag::NotImplemented. Absence from the static map is therefore an
+    # explicit wire-registry state, not malformed replay evidence.
+    not_implemented_names = sorted(net_attrs - attribute_tags.keys())
+    decoded_not_implemented_names = sorted(decoded_attrs - attribute_tags.keys())
+    net_tag_counts = Counter(attribute_tags.get(name, "NotImplemented") for name in net_attrs)
+    decoded_tag_counts = Counter(attribute_tags.get(name, "NotImplemented") for name in decoded_attrs)
 
     used_edges: set[tuple[str, str]] = set()
     for name in objects:
@@ -167,9 +175,13 @@ def main() -> int:
     print(f"source_attribute_registry_entries={len(attribute_tags)}")
     print(f"source_parent_class_entries={len(parents)}")
     print(f"source_spawn_stats_entries={len(spawns)}")
-    print(f"supported_attribute_names_from_net_cache={len(attrs)}")
-    print(f"supported_attribute_names_missing_authoritative_tag={len(missing_tags)}")
-    print(f"supported_authoritative_tag_kinds={len(tag_counts)}")
+    print(f"supported_attribute_names_from_net_cache={len(net_attrs)}")
+    print(f"supported_attribute_names_known_registry={len(net_attrs) - len(not_implemented_names)}")
+    print(f"supported_attribute_names_not_implemented_fallback={len(not_implemented_names)}")
+    print(f"supported_net_cache_authoritative_tag_kinds={len(net_tag_counts)}")
+    print(f"supported_decoded_attribute_names={len(decoded_attrs)}")
+    print(f"supported_decoded_attribute_names_not_implemented={len(decoded_not_implemented_names)}")
+    print(f"supported_decoded_authoritative_tag_kinds={len(decoded_tag_counts)}")
     print(f"supported_all_object_names={len(objects)}")
     print(f"supported_net_cache_class_names={len(net_classes)}")
     print(f"supported_parent_edges_all_objects={len(used_edges)}")
@@ -182,12 +194,17 @@ def main() -> int:
     print(f"dump_duplicate_object_names={summaries.get('duplicate_object_names', '<missing>')}")
     print(f"dump_net_cache_object_oob={summaries.get('net_cache_object_oob', '<missing>')}")
     print(f"dump_net_property_object_oob={summaries.get('net_property_object_oob', '<missing>')}")
+    print(f"dump_decoded_attribute_object_oob={summaries.get('decoded_attribute_object_oob', '<missing>')}")
     print(f"dump_spawn_object_oob={summaries.get('spawn_object_oob', '<missing>')}")
 
-    for tag, count in sorted(tag_counts.items(), key=lambda item: (-item[1], item[0])):
-        print(f"AUTHORITATIVE_TAG kind={tag} attribute_names={count}")
-    for name in missing_tags:
-        print(f"MISSING_ATTRIBUTE_TAG name={name}")
+    for tag, count in sorted(net_tag_counts.items(), key=lambda item: (-item[1], item[0])):
+        print(f"NET_CACHE_AUTHORITATIVE_TAG kind={tag} attribute_names={count}")
+    for tag, count in sorted(decoded_tag_counts.items(), key=lambda item: (-item[1], item[0])):
+        print(f"DECODED_AUTHORITATIVE_TAG kind={tag} attribute_names={count}")
+    for name in not_implemented_names:
+        print(f"NOT_IMPLEMENTED_FALLBACK name={name}")
+    for name in decoded_not_implemented_names:
+        print(f"DECODED_NOT_IMPLEMENTED name={name}")
     for child, parent in sorted(used_net_edges):
         print(f"NET_CACHE_PARENT_EDGE child={child} parent={parent}")
     for child, parent in sorted(used_edges - used_net_edges):
@@ -201,13 +218,17 @@ def main() -> int:
     for name, observed, candidate in source_shape_mismatches:
         print(f"SPAWN_SHAPE_MISMATCH name={name} observed={observed} source_candidate={candidate}")
 
-    if missing_tags:
-        raise SystemExit("supported net-cache attribute missing from pinned ATTRIBUTES registry")
+    if decoded_not_implemented_names:
+        raise SystemExit("an AttributeTag::NotImplemented stream was observed in decoded updates")
     if summaries.get("net_cache_object_oob") != "0" or summaries.get("net_property_object_oob") != "0":
         raise SystemExit("dump contained out-of-bounds net-cache references")
+    if summaries.get("decoded_attribute_object_oob") != "0":
+        raise SystemExit("dump contained out-of-bounds decoded attribute references")
     if summaries.get("spawn_object_oob") != "0":
         raise SystemExit("dump contained out-of-bounds spawn references")
 
+    print("not_implemented_registry_fallback_admitted=true")
+    print("not_implemented_stream_payload_decode_admitted=false")
     print("global_name_to_decoded_variant_admitted=false")
     print("authoritative_attribute_tag_registry_evidence=true")
     print("parent_hierarchy_surface_evidence=true")
