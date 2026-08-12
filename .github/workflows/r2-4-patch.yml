@@ -27,95 +27,60 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $Path = 'crates/mimir-replay/src/lib.rs'
-          $Text = Get-Content -LiteralPath $Path -Raw
-          $Text = $Text.Replace("`r`n", "`n")
+          $Text = (Get-Content -LiteralPath $Path -Raw).Replace("`r`n", "`n")
 
-          $Old = @'
-          const SUPPORTED_BUILD_VERSION_CORPUS_RANK_001: &str = "220826.56130.393105";
-          const SUPPORTED_BUILD_VERSION_CORPUS_RANK_002: &str = "230224.54624.415510";
-          const MAX_ADMITTED_TEXT_BYTES: i32 = 10_000;
-          '@
-          $New = @'
-          const SUPPORTED_BUILD_VERSION_CORPUS_RANK_001: &str = "220826.56130.393105";
-          const SUPPORTED_BUILD_VERSION_CORPUS_RANK_002: &str = "230224.54624.415510";
-          const SUPPORTED_BUILD_VERSION_CORPUS_RANK_003: &str = "230823.66121.430366";
-          const MAX_ADMITTED_TEXT_BYTES: i32 = 10_000;
-          '@
-          $Count = ([regex]::Matches($Text, [regex]::Escape($Old))).Count
-          if ($Count -ne 1) { throw "constant anchor count expected 1, got $Count" }
-          $Text = $Text.Replace($Old, $New)
-
-          $Old = @'
-              CorpusRank001Exact,
-              CorpusRank002Exact,
+          function Assert-Once([string]$Label, [string]$Marker) {
+            $Count = ([regex]::Matches($script:Text, [regex]::Escape($Marker))).Count
+            if ($Count -ne 1) { throw "$Label marker count expected 1, got $Count" }
           }
-          '@
-          $New = @'
-              CorpusRank001Exact,
-              CorpusRank002Exact,
-              CorpusRank003Exact,
-          }
-          '@
-          $Count = ([regex]::Matches($Text, [regex]::Escape($Old))).Count
-          if ($Count -ne 1) { throw "enum anchor count expected 1, got $Count" }
-          $Text = $Text.Replace($Old, $New)
 
-          $Old = @'
-              SUPPORTED_BUILD_VERSION_CORPUS_RANK_002 => {
-                  Some(SupportedReplayHeaderTupleV1::CorpusRank002Exact)
-              }
-              _ => None,
-          '@
-          $New = @'
-              SUPPORTED_BUILD_VERSION_CORPUS_RANK_002 => {
-                  Some(SupportedReplayHeaderTupleV1::CorpusRank002Exact)
-              }
-              SUPPORTED_BUILD_VERSION_CORPUS_RANK_003 => {
-                  Some(SupportedReplayHeaderTupleV1::CorpusRank003Exact)
-              }
-              _ => None,
-          '@
-          $Count = ([regex]::Matches($Text, [regex]::Escape($Old))).Count
-          if ($Count -ne 1) { throw "match anchor count expected 1, got $Count" }
-          $Text = $Text.Replace($Old, $New)
+          $Marker = 'const SUPPORTED_BUILD_VERSION_CORPUS_RANK_002: &str = "230224.54624.415510";'
+          Assert-Once 'constant' $Marker
+          $Text = $Text.Replace(
+            $Marker,
+            $Marker + "`n" + 'const SUPPORTED_BUILD_VERSION_CORPUS_RANK_003: &str = "230823.66121.430366";'
+          )
 
-          $Old = @'
-              #[test]
-              fn minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple() {
-          '@
-          $New = @'
-              #[test]
-              fn minimal_reader_admits_third_ranked_corpus_build_exact_tuple() {
-                  let bytes = build_replay_bytes(build_header(HeaderSpec {
-                      build_version: SUPPORTED_BUILD_VERSION_CORPUS_RANK_003.to_string(),
-                      ..HeaderSpec::minimal()
-                  }));
+          $Marker = '    CorpusRank002Exact,'
+          Assert-Once 'enum' $Marker
+          $Text = $Text.Replace($Marker, $Marker + "`n    CorpusRank003Exact,")
 
-                  let header = read_synthetic(bytes)
-                      .expect("third-ranked corpus BuildVersion exact tuple should be admitted");
+          $Marker = "        SUPPORTED_BUILD_VERSION_CORPUS_RANK_002 => {`n            Some(SupportedReplayHeaderTupleV1::CorpusRank002Exact)`n        }"
+          Assert-Once 'match' $Marker
+          $Text = $Text.Replace(
+            $Marker,
+            $Marker + "`n        SUPPORTED_BUILD_VERSION_CORPUS_RANK_003 => {`n            Some(SupportedReplayHeaderTupleV1::CorpusRank003Exact)`n        }"
+          )
 
-                  assert_eq!(
-                      header.metadata.get("BuildVersion"),
-                      Some(&FieldValue::Text(
-                          SUPPORTED_BUILD_VERSION_CORPUS_RANK_003.to_string()
-                      ))
-                  );
-              }
-
-              #[test]
-              fn minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple() {
-          '@
-          $Count = ([regex]::Matches($Text, [regex]::Escape($Old))).Count
-          if ($Count -ne 1) { throw "test anchor count expected 1, got $Count" }
-          $Text = $Text.Replace($Old, $New)
+          $Marker = "    #[test]`n    fn minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple() {"
+          Assert-Once 'test insertion' $Marker
+          $Test = @(
+            '    #[test]',
+            '    fn minimal_reader_admits_third_ranked_corpus_build_exact_tuple() {',
+            '        let bytes = build_replay_bytes(build_header(HeaderSpec {',
+            '            build_version: SUPPORTED_BUILD_VERSION_CORPUS_RANK_003.to_string(),',
+            '            ..HeaderSpec::minimal()',
+            '        }));',
+            '',
+            '        let header = read_synthetic(bytes)',
+            '            .expect("third-ranked corpus BuildVersion exact tuple should be admitted");',
+            '',
+            '        assert_eq!(',
+            '            header.metadata.get("BuildVersion"),',
+            '            Some(&FieldValue::Text(',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_003.to_string()',
+            '            ))',
+            '        );',
+            '    }',
+            ''
+          ) -join "`n"
+          $Text = $Text.Replace($Marker, $Test + "`n" + $Marker)
 
           [IO.File]::WriteAllText((Resolve-Path $Path), $Text, [Text.UTF8Encoding]::new($false))
 
           cargo fmt --all
           if ($LASTEXITCODE -ne 0) { throw 'cargo fmt failed' }
 
-          $Diff = git diff -- $Path
-          if (-not $Diff) { throw 'patch produced no source diff' }
           git diff --check
           if ($LASTEXITCODE -ne 0) { throw 'git diff --check failed' }
 
@@ -124,7 +89,7 @@ jobs:
             throw "unexpected changed files: $($Changed -join ', ')"
           }
 
-      - name: Verify exact admission locally on GitHub runner
+      - name: Verify exact admission on GitHub runner
         shell: pwsh
         run: |
           cargo test -p mimir-replay minimal_reader_admits_third_ranked_corpus_build_exact_tuple -- --nocapture
