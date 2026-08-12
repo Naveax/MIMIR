@@ -1,0 +1,53 @@
+name: R3.6 Footer Scaffold Implementation V2
+
+on:
+  push:
+    branches:
+      - agent/r3-6-footer-scaffold-reader
+    paths:
+      - .github/workflows/r3_6_footer_scaffold_implementation_v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-verify:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply bounded footer scaffold patch
+        shell: pwsh
+        run: |
+          python tools/r3_6_apply_footer_scaffold.py
+          python -c "from pathlib import Path; p=Path('crates/mimir-replay/src/lib.rs'); s=p.read_text(encoding='utf-8'); old='            assert_eq!(scaffold.content.boundary.content_crc, scaffold.content.boundary.content_crc);\n'; assert old in s; p.write_text(s.replace(old, '', 1), encoding='utf-8')"
+          cargo fmt --all
+          git diff --check
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.6 V2 pre-validation source scope drift: $($changed -join ', ')"
+          }
+
+      - name: Focused replay verification with committed lock
+        shell: pwsh
+        run: |
+          cargo check --locked -p mimir-replay --all-targets --all-features
+          cargo test --locked -p mimir-replay -- --nocapture
+          cargo clippy --locked -p mimir-replay --all-targets --all-features -- -D warnings
+
+      - name: Reassert source-only tree and commit
+        shell: pwsh
+        run: |
+          git restore --source=HEAD -- Cargo.lock
+          git diff --check
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.6 V2 commit scope drift: $($changed -join ', ')"
+          }
+          git config user.name "Naveax"
+          git config user.email "79841922+Naveax@users.noreply.github.com"
+          git add -- crates/mimir-replay/src/lib.rs
+          git commit -m "Add replay footer scaffold reader"
+          git push origin HEAD:agent/r3-6-footer-scaffold-reader
