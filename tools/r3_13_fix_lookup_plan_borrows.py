@@ -26,5 +26,16 @@ if text.count(needle) != 1:
     raise SystemExit('R3.13 borrow correction struct marker drift')
 text = text.replace(needle, replacement, 1)
 
+needle = '''    loop {
+        let Some(parent) = replay_network_parent_class_v1(&current) else {
+            break;
+        };
+'''
+replacement = '''    while let Some(parent) = replay_network_parent_class_v1(&current) {
+'''
+if text.count(needle) != 1:
+    raise SystemExit('R3.13 hierarchy loop correction marker drift')
+text = text.replace(needle, replacement, 1)
+
 path.write_text(text, encoding='utf-8')
-print('PASS: corrected R3.13 header metadata borrow lifetime')
+print('PASS: corrected R3.13 borrow lifetime and hierarchy loop style')
