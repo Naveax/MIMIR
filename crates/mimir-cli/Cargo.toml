@@ -15,6 +15,7 @@ mimir-config.workspace = true
 mimir-core.workspace = true
 mimir-export.workspace = true
 mimir-io.workspace = true
+mimir-replay.workspace = true
 mimir-score.workspace = true
 mimir-sim-bridge.workspace = true
 mimir-skill.workspace = true

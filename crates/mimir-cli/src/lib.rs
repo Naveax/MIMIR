@@ -17,6 +17,8 @@ use serde::Serialize;
 use std::ffi::OsString;
 use std::path::PathBuf;
 
+mod replay_compat;
+
 #[cfg(test)]
 mod vertical_slice;
 #[cfg(test)]
@@ -70,6 +72,13 @@ pub enum Commands {
         #[arg(long, default_value = "configs/mimir.base.toml")]
         base: PathBuf,
     },
+    #[command(name = "replay-compat-matrix")]
+    ReplayCompatMatrix {
+        #[arg(long, default_value = "test_corpus/largest_100")]
+        corpus_root: PathBuf,
+        #[arg(long, default_value = "artifacts/replay_compatibility_matrix.jsonl")]
+        output: PathBuf,
+    },
     Loop {
         #[arg(long, default_value = "configs/mimir.base.toml")]
         base: PathBuf,
@@ -89,6 +98,7 @@ enum CommandReport {
     Label(LabelReport),
     BuildLibrary(BuildLibraryReport),
     Export(ExportReport),
+    ReplayCompatMatrix(replay_compat::ReplayCompatibilityMatrixReport),
     Loop(LoopReport),
 }
 
@@ -218,6 +228,10 @@ pub fn dispatch(cli: Cli) -> Result<String> {
                 artifact_root: base.artifact_root,
             })
         }
+        Commands::ReplayCompatMatrix {
+            corpus_root,
+            output,
+        } => CommandReport::ReplayCompatMatrix(replay_compat::run(corpus_root, output)?),
         Commands::Loop {
             base,
             loop_config,
@@ -283,6 +297,29 @@ mod tests {
         match cli.command {
             Commands::Loop { fake_sim, .. } => assert!(fake_sim),
             _ => panic!("expected loop command"),
+        }
+    }
+
+    #[test]
+    fn clap_parses_replay_compat_matrix_command() {
+        let cli = Cli::parse_from([
+            "mimir-cli",
+            "replay-compat-matrix",
+            "--corpus-root",
+            "test_corpus/largest_100",
+            "--output",
+            "target/matrix.jsonl",
+        ]);
+
+        match cli.command {
+            Commands::ReplayCompatMatrix {
+                corpus_root,
+                output,
+            } => {
+                assert_eq!(corpus_root, PathBuf::from("test_corpus/largest_100"));
+                assert_eq!(output, PathBuf::from("target/matrix.jsonl"));
+            }
+            _ => panic!("expected replay-compat-matrix command"),
         }
     }
 
