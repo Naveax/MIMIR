@@ -1,0 +1,18 @@
+name: R3.7b Footer Lookup Semantic Refinement
+
+on:
+  push:
+    branches:
+      - agent/r3-7-footer-lookup-evidence
+    paths:
+      - tools/r3_7b_footer_lookup_semantic_refinement.py
+      - .github/workflows/r3_7b_footer_lookup_semantic_refinement.yml
+
+jobs:
+  evidence:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+      - name: Refine footer lookup invariants
+        shell: pwsh
+        run: python tools/r3_7b_footer_lookup_semantic_refinement.py
