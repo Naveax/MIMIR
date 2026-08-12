@@ -1,47 +1,53 @@
-MIMIR PROPRIETARY LICENSE
+MIMIR PROPRIETARY LICENSE — NO LICENSE GRANTED
 
 Copyright (c) 2026 Naveax. All Rights Reserved.
 
-IMPORTANT: THIS SOFTWARE IS PROPRIETARY. NO OPEN-SOURCE OR SOURCE-AVAILABLE LICENSE IS GRANTED.
+IMPORTANT: MIMIR IS PROPRIETARY SOFTWARE. NO LICENSE, PERMISSION, AUTHORIZATION, OR RIGHT OF USE IS GRANTED TO ANY THIRD PARTY.
 
-1. OWNERSHIP AND RESERVATION OF RIGHTS
+1. OWNERSHIP AND COMPLETE RESERVATION OF RIGHTS
 
-MIMIR, including without limitation its source code, object code, binaries, build files, configuration files, documentation, designs, interfaces, data structures, algorithms as expressed in code, tests, examples, assets, and accompanying materials (collectively, the "Software"), is proprietary material protected by applicable copyright and other intellectual-property laws.
+MIMIR, including without limitation its source code, object code, binaries, build files, configuration files, documentation, designs, interfaces, data structures, algorithms as expressed in code, tests, examples, assets, datasets, generated materials, and accompanying materials (collectively, the "Software"), is proprietary material protected by applicable copyright and other intellectual-property laws.
 
-All rights not expressly granted in a separate written agreement signed by the copyright owner are reserved. Publication, disclosure, repository access, possession of a copy, or availability of the Software does not grant any license, permission, waiver, consent, or other right except solely to the minimum extent that cannot be excluded under applicable law or that is independently required by the terms of the hosting service through which the Software is made available.
+All rights are reserved exclusively by the copyright owner. Publication, disclosure, repository access, public visibility, possession of a copy, availability through a hosting service, or knowledge of the Software does not grant any license, permission, authorization, waiver, consent, or other right to any third party.
 
-2. NO PERMISSION TO USE
+2. NO THIRD-PARTY USE
 
-Except where the copyright owner has given prior express written permission, you may not, directly or indirectly, in whole or in part:
+No third party may, directly or indirectly, in whole or in part:
 
-- use, run, execute, install, deploy, host, compile, build, link, load, test, evaluate, or operate the Software;
-- copy, reproduce, download for use outside rights independently provided by the hosting service, archive, mirror, republish, transmit, distribute, redistribute, sublicense, sell, rent, lease, lend, transfer, or otherwise provide the Software to any third party;
+- use, run, execute, install, deploy, host, compile, build, link, load, test, evaluate, benchmark, or otherwise operate the Software;
+- copy, reproduce, archive, mirror, republish, transmit, distribute, redistribute, sublicense, sell, rent, lease, lend, transfer, or otherwise provide the Software or any substantial portion of it to another person or entity;
 - modify, adapt, translate, port, merge, transform, refactor, extend, or create derivative works based on the Software;
-- reverse engineer, decompile, disassemble, decode, analyze for reconstruction, or otherwise attempt to derive implementation details from compiled or packaged forms of the Software, except solely where such restriction is prohibited by mandatory law;
-- use the Software for commercial, non-commercial, personal, educational, academic, research, benchmarking, competitive-analysis, security-evaluation, demonstration, archival, or production purposes;
-- use the Software or any substantial portion, representation, extraction, transformation, output, structural description, or dataset derived from it to train, fine-tune, distill, align, evaluate, benchmark, augment, retrieve for, or otherwise develop any artificial-intelligence, machine-learning, statistical, code-generation, embedding, search, retrieval, or automated-analysis system;
-- scrape, crawl, mine, bulk-index, harvest, or systematically extract the Software or information from it by automated means except to the extent independently permitted by the hosting service and not restrictable by this license;
-- remove, obscure, alter, or misrepresent copyright, ownership, attribution, proprietary, or license notices;
-- use the name "MIMIR", associated branding, or project identity in a way that suggests sponsorship, endorsement, affiliation, authorization, or origin without prior written permission;
-- create or distribute a substitute, clone, reimplementation, or competing implementation using protected expression copied or derived from the Software.
+- reverse engineer, decompile, disassemble, decode, reconstruct, or otherwise attempt to derive implementation details from compiled, packaged, transformed, or distributed forms of the Software;
+- use the Software for commercial, non-commercial, personal, educational, academic, research, experimental, security, competitive-analysis, demonstration, archival, or production purposes;
+- use the Software, its source code, its structure, protected expression, extracted material, transformed material, documentation, outputs, or datasets derived from it to train, fine-tune, distill, align, evaluate, benchmark, augment, retrieve for, or otherwise develop any artificial-intelligence, machine-learning, statistical, code-generation, embedding, search, retrieval, or automated-analysis system;
+- scrape, crawl, mine, bulk-index, harvest, ingest, or systematically extract the Software or information from it by automated means;
+- remove, obscure, alter, replace, or misrepresent copyright, ownership, attribution, proprietary, or license notices;
+- use the name "MIMIR", associated branding, project identity, or protected materials in a manner that suggests sponsorship, endorsement, affiliation, authorization, compatibility, or origin;
+- create, distribute, publish, or operate a substitute, clone, reimplementation, port, fork, competing implementation, or substantially similar work using protected expression copied, reconstructed, translated, transformed, or derived from the Software.
 
-No exception is granted merely because an activity is non-commercial, personal, educational, academic, experimental, or for research.
+No exception is created merely because an activity is non-commercial, personal, educational, academic, experimental, archival, security-related, or conducted for research.
 
-3. NO PATENT, TRADEMARK, OR OTHER LICENSE
+3. NO IMPLIED OR EXPRESS THIRD-PARTY LICENSE
 
-No patent license, trademark license, trade-secret license, database right, publicity right, or other intellectual-property license is granted by implication, estoppel, exhaustion, publication, contribution, or otherwise, except to the extent a right cannot lawfully be withheld.
+No copyright license, patent license, trademark license, trade-secret license, database right, source-code license, binary license, evaluation license, research license, development license, redistribution license, or other intellectual-property right is granted to any third party by this document or by implication, estoppel, publication, disclosure, access, repository visibility, contribution, prior communication, silence, inaction, or possession.
 
-4. WRITTEN PERMISSION ONLY
+There is no permission mechanism under this license. This license grants zero third-party usage rights.
 
-Any permission to use any part of the Software must be expressly granted in a separate written agreement by the copyright owner. Any such permission is limited to the scope stated in that agreement. Silence, prior access, prior collaboration, repository membership, issue participation, pull-request participation, or possession of the Software does not constitute permission.
+4. ACCESS IS NOT AUTHORIZATION
 
-5. CONTRIBUTIONS
+The ability to view, fetch, clone, download, cache, index, receive, or otherwise technically access the Software does not constitute authorization to use it. Technical capability is not a license.
 
-External contributions are not accepted for incorporation unless separately authorized in writing by the repository owner under terms sufficient to permit incorporation into this proprietary project. Submission of an issue, discussion, suggestion, patch, pull request, or other material does not grant the submitter any right to use the Software.
+Repository membership, account access, issue participation, discussion participation, pull-request activity, review activity, possession of credentials, possession of a local copy, or prior access does not create any right to use the Software.
+
+5. NO EXTERNAL CONTRIBUTION LICENSE
+
+External contributions are not accepted for incorporation under this license. Submission of an issue, discussion, suggestion, patch, pull request, code fragment, document, test, dataset, or other material does not grant the submitter any right to use MIMIR or any part of the repository and does not create any reciprocal license obligation for the copyright owner.
 
 6. ENFORCEMENT
 
-Any unauthorized exercise of rights reserved to the copyright owner may constitute infringement or another violation of applicable law. The copyright owner reserves all remedies available under applicable law and contract.
+Any unauthorized exercise of rights reserved to the copyright owner may constitute copyright infringement, breach of applicable law, or another legally actionable violation. The copyright owner reserves all remedies available under applicable law.
+
+No delay, silence, failure to enforce, prior tolerance, or isolated non-enforcement constitutes a waiver of any right.
 
 7. DISCLAIMER OF WARRANTY
 
@@ -49,14 +55,20 @@ TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED "AS 
 
 8. LIMITATION OF LIABILITY
 
-TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT OWNER AND CONTRIBUTORS SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR OTHER DAMAGES ARISING FROM ACCESS TO, POSSESSION OF, ATTEMPTED USE OF, OR INABILITY TO USE THE SOFTWARE.
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT OWNER SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR OTHER DAMAGES ARISING FROM ACCESS TO, POSSESSION OF, ATTEMPTED USE OF, OR INABILITY TO USE THE SOFTWARE.
 
-9. SEVERABILITY
+9. MANDATORY LAW
 
-If any provision of this license is held unenforceable, that provision shall be enforced to the maximum extent permitted and the remaining provisions shall remain in effect.
+Nothing in this license purports to eliminate or restrict a right that applicable mandatory law does not permit the copyright owner to eliminate or restrict. Any such mandatory right exists solely because the law requires it and is not a license or permission granted by the copyright owner.
 
-10. NO OPEN-SOURCE STATUS
+10. SEVERABILITY
 
-The Software is not distributed under any open-source or source-available license unless a separate written agreement expressly states otherwise for a specifically identified portion of the Software.
+If any provision of this license is held unenforceable, that provision shall be enforced to the maximum extent permitted by law and the remaining provisions shall remain in effect.
 
+11. NO OPEN-SOURCE OR SOURCE-AVAILABLE STATUS
+
+The Software is not open source, free software, source-available software, public-domain software, freeware, shareware, or community-licensed software. Public visibility of the repository does not alter its proprietary status or grant third-party usage rights.
+
+NO THIRD-PARTY LICENSE IS GRANTED.
+NO THIRD-PARTY USE IS PERMITTED.
 ALL RIGHTS RESERVED.
