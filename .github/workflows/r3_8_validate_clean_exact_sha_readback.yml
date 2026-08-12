@@ -1,0 +1,70 @@
+name: R3.8 Validate Clean Exact SHA Readback
+
+on:
+  push:
+    branches:
+      - agent/r3-8-footer-lookup-clean-validation
+    paths:
+      - .github/workflows/r3_8_validate_clean_exact_sha_readback.yml
+
+jobs:
+  validate-and-readback:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact clean R3.8 commit
+        uses: actions/checkout@v6
+        with:
+          ref: 3b16a7f6c21b6bde6f61231c90f4b13015d24a5f
+
+      - name: Assert exact checkout
+        shell: pwsh
+        run: |
+          $expected = '3b16a7f6c21b6bde6f61231c90f4b13015d24a5f'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($actual -ne $expected) { throw "exact clean SHA mismatch: expected=$expected actual=$actual" }
+          Write-Host "R3_8_EXACT_CLEAN_SHA=$actual"
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full verifier with concise readback
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $log = Join-Path $env:RUNNER_TEMP 'r3_8_verify_repo.log'
+          & pwsh -NoProfile -File scripts/verify_repo.ps1 *>&1 | Tee-Object -FilePath $log | Out-Null
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            Write-Host "FULL_VERIFIER_EXIT=$code"
+            Get-Content -LiteralPath $log -Tail 250
+            exit $code
+          }
+
+          $required = @(
+            @{ Name='REPLAY_84'; Pattern='test result: ok\. 84 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out' },
+            @{ Name='SKILL_273'; Pattern='test result: ok\. 273 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out' },
+            @{ Name='WORKSPACE_CMD'; Pattern='> cargo test --workspace --all-targets --all-features' },
+            @{ Name='CLIPPY_CMD'; Pattern='> cargo clippy --workspace --all-targets --all-features -- -D warnings' },
+            @{ Name='CORPUS_100'; Pattern='PASS: 100 replay fixtures match manifest size \+ SHA-256\.' },
+            @{ Name='MATRIX_44_56'; Pattern='supported=44 unsupported=56 malformed=0 mapping_error=0 other_error=0' },
+            @{ Name='VERIFY_DONE'; Pattern='PASS: MIMIR repository verification completed with real command arguments\.' }
+          )
+
+          foreach ($item in $required) {
+            $hit = Select-String -LiteralPath $log -Pattern $item.Pattern | Select-Object -First 1
+            if (-not $hit) {
+              Write-Host "READBACK_MISSING=$($item.Name)"
+              Get-Content -LiteralPath $log -Tail 250
+              throw "required R3.8 readback marker missing: $($item.Name)"
+            }
+            Write-Host "READBACK_$($item.Name)=PASS"
+            Write-Host ($hit.Line.Trim())
+          }
+
+          Write-Host 'FULL_VERIFIER_EXIT=0'
+          Write-Host 'R3_8_CLEAN_READBACK=PASS'
