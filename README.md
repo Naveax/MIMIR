@@ -89,4 +89,4 @@ From PowerShell:
 
 ## License
 
-MIMIR is proprietary software. No open-source or source-available license is granted. No permission is granted to use, run, copy, modify, distribute, train AI/ML systems on, benchmark, research, or otherwise exploit the project except by prior express written permission from the copyright owner and the narrow rights that cannot be excluded under applicable law or the hosting service terms. See `LICENSE` for the controlling terms.
+MIMIR is proprietary software. No license, permission, authorization, or right of use is granted to any third party. Third parties may not use, run, compile, copy, modify, distribute, research, benchmark, train AI/ML systems on, or otherwise exploit MIMIR. Public visibility or technical access does not constitute authorization. See `LICENSE` for the controlling terms.
