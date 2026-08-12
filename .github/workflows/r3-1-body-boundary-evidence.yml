@@ -1,0 +1,147 @@
+name: R3.1 Replay Body Boundary Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-1-body-boundary-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Scan checked-in replay body boundaries
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          if (-not [BitConverter]::IsLittleEndian) {
+            throw "evidence scanner requires a little-endian runner"
+          }
+
+          function Read-ReplayBoundary([string]$Path, [string]$Class) {
+            $bytes = [System.IO.File]::ReadAllBytes($Path)
+            $length = [int64]$bytes.LongLength
+            if ($length -lt 16) {
+              return [pscustomobject]@{
+                class = $Class; path = $Path; byte_length = $length; valid = $false;
+                reason = "fewer_than_16_bytes"; header_size = $null; header_end = $null;
+                content_size = $null; content_crc = $null; body_start = $null;
+                computed_end = $null; exact_file_fit = $false; trailing_bytes = $null
+              }
+            }
+
+            $headerSize = [BitConverter]::ToInt32($bytes, 0)
+            if ($headerSize -lt 0) {
+              return [pscustomobject]@{
+                class = $Class; path = $Path; byte_length = $length; valid = $false;
+                reason = "negative_header_size"; header_size = $headerSize; header_end = $null;
+                content_size = $null; content_crc = $null; body_start = $null;
+                computed_end = $null; exact_file_fit = $false; trailing_bytes = $null
+              }
+            }
+
+            $headerEnd = [int64]8 + [int64]$headerSize
+            if ($headerEnd + 8 -gt $length) {
+              return [pscustomobject]@{
+                class = $Class; path = $Path; byte_length = $length; valid = $false;
+                reason = "body_boundary_fields_out_of_bounds"; header_size = $headerSize;
+                header_end = $headerEnd; content_size = $null; content_crc = $null;
+                body_start = $null; computed_end = $null; exact_file_fit = $false;
+                trailing_bytes = $null
+              }
+            }
+
+            $contentSize = [BitConverter]::ToInt32($bytes, [int]$headerEnd)
+            $contentCrc = [BitConverter]::ToUInt32($bytes, [int]($headerEnd + 4))
+            $bodyStart = $headerEnd + 8
+            if ($contentSize -lt 0) {
+              return [pscustomobject]@{
+                class = $Class; path = $Path; byte_length = $length; valid = $false;
+                reason = "negative_content_size"; header_size = $headerSize;
+                header_end = $headerEnd; content_size = $contentSize;
+                content_crc = $contentCrc; body_start = $bodyStart; computed_end = $null;
+                exact_file_fit = $false; trailing_bytes = $null
+              }
+            }
+
+            $computedEnd = $bodyStart + [int64]$contentSize
+            $trailingBytes = $length - $computedEnd
+            [pscustomobject]@{
+              class = $Class; path = $Path; byte_length = $length; valid = $true;
+              reason = "ok"; header_size = $headerSize; header_end = $headerEnd;
+              content_size = $contentSize; content_crc = $contentCrc;
+              body_start = $bodyStart; computed_end = $computedEnd;
+              exact_file_fit = ($computedEnd -eq $length); trailing_bytes = $trailingBytes
+            }
+          }
+
+          $historicalPaths = @(
+            "external_fixtures/sample_001.replay",
+            "external_fixtures/sample_002.replay",
+            "external_fixtures/sample_003.replay"
+          )
+          $expectedHistorical = @{
+            "external_fixtures/sample_001.replay" = @{ header_size = 13200; header_end = 13208; content_size = 2987805; content_crc = [uint32]2323044833; body_start = 13216; byte_length = 3001021 }
+            "external_fixtures/sample_002.replay" = @{ header_size = 11273; header_end = 11281; content_size = 2621614; content_crc = [uint32]3734167123; body_start = 11289; byte_length = 2632903 }
+            "external_fixtures/sample_003.replay" = @{ header_size = 11190; header_end = 11198; content_size = 1627332; content_crc = [uint32]3991282011; body_start = 11206; byte_length = 1638538 }
+          }
+
+          $historical = @()
+          foreach ($path in $historicalPaths) {
+            $row = Read-ReplayBoundary $path "historical_fixture"
+            $historical += $row
+            Write-Host ("R3_1_HISTORICAL " + ($row | ConvertTo-Json -Compress))
+            $expected = $expectedHistorical[$path]
+            foreach ($field in @("header_size", "header_end", "content_size", "content_crc", "body_start", "byte_length")) {
+              if ([int64]$row.$field -ne [int64]$expected[$field]) {
+                throw "historical fixture evidence drift for $path field $field: observed=$($row.$field) expected=$($expected[$field])"
+              }
+            }
+            if (-not $row.valid -or -not $row.exact_file_fit -or $row.trailing_bytes -ne 0) {
+              throw "historical fixture no longer has exact body boundary fit: $path"
+            }
+          }
+
+          $corpusFiles = @(Get-ChildItem -Path "test_corpus/largest_100" -Filter "*.replay" -File | Sort-Object Name)
+          if ($corpusFiles.Count -ne 100) {
+            throw "expected exactly 100 checked-in stress replay files, found $($corpusFiles.Count)"
+          }
+
+          $corpus = @()
+          foreach ($file in $corpusFiles) {
+            $row = Read-ReplayBoundary $file.FullName "largest_100"
+            $corpus += $row
+            if (-not $row.valid -or -not $row.exact_file_fit) {
+              Write-Host ("R3_1_OUTLIER " + ($row | ConvertTo-Json -Compress))
+            }
+          }
+
+          $validCount = @($corpus | Where-Object { $_.valid }).Count
+          $exactCount = @($corpus | Where-Object { $_.valid -and $_.exact_file_fit }).Count
+          $invalidCount = $corpus.Count - $validCount
+          $nonExactCount = @($corpus | Where-Object { $_.valid -and -not $_.exact_file_fit }).Count
+          $negativeTrailing = @($corpus | Where-Object { $_.valid -and $_.trailing_bytes -lt 0 }).Count
+          $positiveTrailing = @($corpus | Where-Object { $_.valid -and $_.trailing_bytes -gt 0 }).Count
+
+          $summary = [pscustomobject]@{
+            historical_scanned = $historical.Count
+            historical_exact_fit = @($historical | Where-Object { $_.valid -and $_.exact_file_fit }).Count
+            corpus_scanned = $corpus.Count
+            corpus_valid_boundary = $validCount
+            corpus_exact_file_fit = $exactCount
+            corpus_invalid_boundary = $invalidCount
+            corpus_non_exact_fit = $nonExactCount
+            corpus_negative_trailing = $negativeTrailing
+            corpus_positive_trailing = $positiveTrailing
+            crc_validation_performed = $false
+            body_semantic_parse_performed = $false
+            frame_decode_performed = $false
+          }
+          Write-Host ("R3_1_SUMMARY " + ($summary | ConvertTo-Json -Compress))
+
+          if ($invalidCount -gt 0 -or $nonExactCount -gt 0) {
+            Write-Warning "R3.1 evidence found corpus boundary outliers; do not admit a universal exact-fit policy from this run."
+          }
