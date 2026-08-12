@@ -97,7 +97,7 @@ jobs:
             $expected = $expectedHistorical[$path]
             foreach ($field in @("header_size", "header_end", "content_size", "content_crc", "body_start", "byte_length")) {
               if ([int64]$row.$field -ne [int64]$expected[$field]) {
-                throw "historical fixture evidence drift for $path field $field: observed=$($row.$field) expected=$($expected[$field])"
+                throw "historical fixture evidence drift for $path field ${field}: observed=$($row.$field) expected=$($expected[$field])"
               }
             }
             if (-not $row.valid -or -not $row.exact_file_fit -or $row.trailing_bytes -ne 0) {
