@@ -1,0 +1,68 @@
+name: R3.10 Boxcars Frame Differential Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-10-boxcars-frame-differential-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run pinned Boxcars full-network probe
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP 'r3_10_boxcars_target'
+          $log = Join-Path $env:RUNNER_TEMP 'r3_10_boxcars_frame_evidence.log'
+
+          & cargo run --manifest-path tools/r3_10_boxcars_probe/Cargo.toml --release *> $log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            Write-Host "R3_10_PROBE_EXIT=$code"
+            Get-Content -LiteralPath $log -Tail 300
+            exit $code
+          }
+
+          Remove-Item -LiteralPath tools/r3_10_boxcars_probe/Cargo.lock -ErrorAction SilentlyContinue
+
+          $required = @(
+            'boxcars_git_rev=c70e77df7af81b436cb545d070bb90c82f562d0b',
+            'expected_replays=103',
+            'SUMMARY files_seen=103',
+            'R3_10_PROBE_COMPLETED=PASS'
+          )
+          foreach ($marker in $required) {
+            if (-not (Select-String -LiteralPath $log -SimpleMatch $marker -Quiet)) {
+              Get-Content -LiteralPath $log -Tail 300
+              throw "missing R3.10 evidence marker: $marker"
+            }
+          }
+
+          Get-Content -LiteralPath $log | Where-Object {
+            $_ -match '^R3\.10 ' -or
+            $_ -match '^boxcars_' -or
+            $_ -match '^crc_policy=' -or
+            $_ -match '^network_policy=' -or
+            $_ -match '^expected_replays=' -or
+            $_ -match '^FAIL\t' -or
+            $_ -match '^SUMMARY ' -or
+            $_ -match '_admitted=' -or
+            $_ -match '^mimir_production_dependency_added=' -or
+            $_ -match '^R3_10_PROBE_COMPLETED='
+          }
+
+          $tracked = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($tracked.Count -ne 0) {
+            throw "R3.10 evidence mutated tracked files: $($tracked -join ', ')"
+          }
+          Write-Host 'R3_10_TRACKED_SOURCE_MUTATION=false'
+          Write-Host 'R3_10_PROBE_EXIT=0'
