@@ -104,6 +104,8 @@ Invoke-VerificationCommand `
         "run",
         "-p",
         "mimir-cli",
+        "--bin",
+        "mimir-cli",
         "--",
         "replay-compat-matrix",
         "--corpus-root",
