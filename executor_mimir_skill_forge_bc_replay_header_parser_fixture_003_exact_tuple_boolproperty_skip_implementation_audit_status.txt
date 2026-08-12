@@ -1,0 +1,41 @@
+MIMIR F003-A1 audit status
+
+STATUS: PASS
+OUTCOME: A — ADMITTED
+DATE: 2026-08-12
+BRANCH: agent/f003-fixture003-bool-skip
+BASE_MAIN: 06e29e3119a165299612a9c78e8b90d81a1e5593
+ACCEPTED_IMPLEMENTATION_HEAD: 890642aef864910d63bc61d73b846bdd57d6650b
+CODE_ACCEPTANCE_CI_RUN: #18 / 31588274140 / success
+EVIDENCE_HEAD_CI_RUN: #22 / 31588780524 / success
+
+ADMITTED:
+- Fixture003Exact exact replay-header tuple
+- BuildVersion 251020.62592.500294 only
+- non-selected BoolProperty skip-only semantics
+- fixture_003 real full checked-in replay header path
+- fixture_003 exact header-only path
+
+AUDIT_PASS:
+- exact allowlist preserved
+- unknown near-neighbor BuildVersion rejected
+- bForfeit absent from metadata
+- BoolProperty -> FieldValue::Boolean not opened
+- selected BoolProperty unsupported
+- fixture_001 regression green
+- fixture_002 regression green
+- fixture_003 full green
+- fixture_003 header-only green
+- ReplayInput::File unsupported
+- CRC validation closed
+- content_crc closed
+- body/network/frame/raw-state/event closed
+- no parser backend dependency
+- no Cargo manifest change
+- no CLI/runtime/export widening
+
+SEPARATE_EXISTING_DEBT:
+- mimir-skill has one absolute-path fixture seam that skips on GitHub; not counted as parser evidence and not part of F003 admission.
+
+NEXT:
+HDR-C1 — three-fixture header lane closure.
