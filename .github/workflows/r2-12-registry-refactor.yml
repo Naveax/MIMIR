@@ -1,0 +1,185 @@
+name: R2.12 Admission Registry Refactor
+
+on:
+  push:
+    branches:
+      - agent/r2-12-top10-admission-registry
+
+permissions:
+  contents: write
+
+jobs:
+  refactor:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          rustup component add rustfmt clippy
+      - name: Apply behavior-preserving exact registry refactor
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $path = "crates/mimir-replay/src/lib.rs"
+          $text = [System.IO.File]::ReadAllText($path).Replace("`r`n", "`n")
+
+          function Assert-UniqueMarker([string]$Source, [string]$Marker, [string]$Label) {
+            $first = $Source.IndexOf($Marker, [System.StringComparison]::Ordinal)
+            $last = $Source.LastIndexOf($Marker, [System.StringComparison]::Ordinal)
+            if ($first -lt 0 -or $first -ne $last) {
+              throw "$Label marker must occur exactly once"
+            }
+            return $first
+          }
+
+          $rank10 = 'const SUPPORTED_BUILD_VERSION_CORPUS_RANK_010: &str = "240717.49861.454952";'
+          [void](Assert-UniqueMarker $text $rank10 "rank10 constant")
+          $registryLines = @(
+            $rank10,
+            'const SUPPORTED_BUILD_VERSIONS_V1: [&str; 13] = [',
+            '    SUPPORTED_BUILD_VERSION_FIXTURE_001,',
+            '    SUPPORTED_BUILD_VERSION_FIXTURE_002,',
+            '    SUPPORTED_BUILD_VERSION_FIXTURE_003,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_001,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_002,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_003,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_004,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_005,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_006,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_007,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_008,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_009,',
+            '    SUPPORTED_BUILD_VERSION_CORPUS_RANK_010,',
+            '];'
+          )
+          $text = $text.Replace($rank10, ($registryLines -join "`n"))
+
+          $enumStartMarker = '#[allow(clippy::enum_variant_names)]'
+          $cursorMarker = "struct HeaderCursor<'a> {"
+          $enumStart = Assert-UniqueMarker $text $enumStartMarker "tuple enum"
+          $cursorStart = Assert-UniqueMarker $text $cursorMarker "HeaderCursor"
+          if ($cursorStart -le $enumStart) { throw "HeaderCursor marker must follow tuple enum" }
+
+          $membershipLines = @(
+            'fn is_supported_replay_header_tuple_v1(',
+            '    major_version: i32,',
+            '    minor_version: i32,',
+            '    net_version: i32,',
+            '    game_type: &str,',
+            '    replay_version: i32,',
+            '    build_version: &str,',
+            ') -> bool {',
+            '    if major_version != SUPPORTED_MAJOR_VERSION',
+            '        || minor_version != SUPPORTED_MINOR_VERSION',
+            '        || net_version != SUPPORTED_NET_VERSION',
+            '        || game_type != SUPPORTED_GAME_TYPE',
+            '        || replay_version != SUPPORTED_REPLAY_VERSION',
+            '    {',
+            '        return false;',
+            '    }',
+            '',
+            '    SUPPORTED_BUILD_VERSIONS_V1.contains(&build_version)',
+            '}',
+            ''
+          )
+          $membership = ($membershipLines -join "`n")
+          $text = $text.Substring(0, $enumStart) + $membership + $text.Substring($cursorStart)
+
+          $parseStartMarker = '    let _supported_tuple = supported_replay_header_tuple_v1('
+          $replayIdMarker = '    let replay_id = parsed'
+          $parseStart = Assert-UniqueMarker $text $parseStartMarker "parser supported-tuple use"
+          $replayIdStart = Assert-UniqueMarker $text $replayIdMarker "replay_id mapping"
+          if ($replayIdStart -le $parseStart) { throw "replay_id marker must follow tuple check" }
+
+          $checkLines = @(
+            '    if !is_supported_replay_header_tuple_v1(',
+            '        major_version,',
+            '        minor_version,',
+            '        net_version,',
+            '        &game_type,',
+            '        replay_version,',
+            '        build_version,',
+            '    ) {',
+            '        return Err(parse_error(',
+            '            "unsupported-version",',
+            '            format!(',
+            '                "unsupported tuple major={major_version}, minor={minor_version}, net={net_version}, game_type={game_type}, ReplayVersion={replay_version}, BuildVersion={build_version}"',
+            '            ),',
+            '        ));',
+            '    }',
+            ''
+          )
+          $check = ($checkLines -join "`n")
+          $text = $text.Substring(0, $parseStart) + $check + $text.Substring($replayIdStart)
+
+          $testMarker = '    #[test]`n    fn unsupported_reader_fails_explicitly() {'
+          $testMarker = $testMarker.Replace('`n', "`n")
+          $testStart = Assert-UniqueMarker $text $testMarker "first test"
+          $registryTestLines = @(
+            '    #[test]',
+            '    fn supported_build_version_registry_v1_contains_only_expected_exact_entries() {',
+            '        assert_eq!(',
+            '            SUPPORTED_BUILD_VERSIONS_V1,',
+            '            [',
+            '                SUPPORTED_BUILD_VERSION_FIXTURE_001,',
+            '                SUPPORTED_BUILD_VERSION_FIXTURE_002,',
+            '                SUPPORTED_BUILD_VERSION_FIXTURE_003,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_001,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_002,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_003,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_004,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_005,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_006,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_007,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_008,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_009,',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_010,',
+            '            ]',
+            '        );',
+            '    }',
+            '',
+            '    #[test]',
+            '    fn supported_build_version_registry_v1_has_no_duplicates() {',
+            '        let unique: BTreeSet<_> = SUPPORTED_BUILD_VERSIONS_V1.iter().copied().collect();',
+            '        assert_eq!(unique.len(), SUPPORTED_BUILD_VERSIONS_V1.len());',
+            '    }',
+            ''
+          )
+          $registryTests = ($registryTestLines -join "`n")
+          $text = $text.Substring(0, $testStart) + $registryTests + $text.Substring($testStart)
+
+          $utf8 = New-Object System.Text.UTF8Encoding($false)
+          [System.IO.File]::WriteAllText($path, $text, $utf8)
+
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed" }
+
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne $path) {
+            throw "unexpected working-tree scope after refactor: $($changed -join ', ')"
+          }
+      - name: Verify replay registry refactor
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { throw "fmt check failed" }
+          cargo test -p mimir-replay -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "mimir-replay tests failed" }
+      - name: Commit source refactor
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crates/mimir-replay/src/lib.rs
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { throw "expected source refactor diff" }
+          git commit -m "Refactor exact replay admissions into registry"
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed" }
+          git push origin HEAD:agent/r2-12-top10-admission-registry
+          if ($LASTEXITCODE -ne 0) { throw "git push failed" }
