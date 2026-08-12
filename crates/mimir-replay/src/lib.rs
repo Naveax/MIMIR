@@ -86,6 +86,7 @@ const KIND_NAME: &str = "NameProperty";
 const KIND_QWORD: &str = "QWordProperty";
 const KIND_STR: &str = "StrProperty";
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SupportedReplayHeaderTupleV1 {
     Fixture001Exact,
