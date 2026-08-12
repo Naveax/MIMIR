@@ -1,0 +1,61 @@
+name: R3.9 Build Clean Network Timing Commit
+
+on:
+  push:
+    branches:
+      - agent/r3-9-network-timing-preamble-reader
+    paths:
+      - .github/workflows/r3_9_build_clean_network_timing.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-clean:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build clean source-only commit from verified source blob
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $SourceSha = 'e642236'
+          $MainSha = '3b16a7f6c21b6bde6f61231c90f4b13015d24a5f'
+          $CleanBranch = 'agent/r3-9-network-timing-clean'
+
+          git fetch origin
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $remoteMain = (git rev-parse origin/main).Trim()
+          if ($remoteMain -ne $MainSha) {
+            throw "main drifted before R3.9 clean reconstruction: expected=$MainSha actual=$remoteMain"
+          }
+
+          git checkout -B $CleanBranch $MainSha
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git checkout $SourceSha -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git reset HEAD -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.9 clean reconstruction scope drift: $($changed -join ', ')"
+          }
+
+          git config user.name "Naveax"
+          git config user.email "79841922+Naveax@users.noreply.github.com"
+          git add -- crates/mimir-replay/src/lib.rs
+          $staged = @(git diff --cached --name-only)
+          if ($staged.Count -ne 1 -or $staged[0] -ne 'crates/mimir-replay/src/lib.rs') {
+            throw "R3.9 clean staged scope drift: $($staged -join ', ')"
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git commit -m "Add replay network timing preamble reader"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git push origin HEAD:$CleanBranch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
