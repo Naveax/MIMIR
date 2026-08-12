@@ -1,0 +1,124 @@
+name: R2.3 exact admission patch
+
+on:
+  push:
+    branches:
+      - agent/replay-compat-admit-230224-v1
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: agent/replay-compat-admit-230224-v1
+          fetch-depth: 0
+
+      - name: Apply exact bounded admission
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Path = 'crates/mimir-replay/src/lib.rs'
+          $Text = (Get-Content -LiteralPath $Path -Raw).Replace("`r`n", "`n")
+
+          function Replace-ExactlyOnce {
+              param(
+                  [Parameter(Mandatory = $true)][string]$Label,
+                  [Parameter(Mandatory = $true)][string]$Old,
+                  [Parameter(Mandatory = $true)][string]$New
+              )
+              $Count = ([regex]::Matches($script:Text, [regex]::Escape($Old))).Count
+              if ($Count -ne 1) {
+                  throw "Expected exactly one $Label anchor, found $Count."
+              }
+              $script:Text = $script:Text.Replace($Old, $New)
+          }
+
+          Replace-ExactlyOnce `
+              -Label 'constant' `
+              -Old 'const SUPPORTED_BUILD_VERSION_CORPUS_RANK_001: &str = "220826.56130.393105";' `
+              -New "const SUPPORTED_BUILD_VERSION_CORPUS_RANK_001: &str = `"220826.56130.393105`";`nconst SUPPORTED_BUILD_VERSION_CORPUS_RANK_002: &str = `"230224.54624.415510`";"
+
+          Replace-ExactlyOnce `
+              -Label 'enum variant' `
+              -Old '    CorpusRank001Exact,' `
+              -New "    CorpusRank001Exact,`n    CorpusRank002Exact,"
+
+          $OldMatch = @'
+                  SUPPORTED_BUILD_VERSION_CORPUS_RANK_001 => {
+                      Some(SupportedReplayHeaderTupleV1::CorpusRank001Exact)
+                  }
+                  _ => None,
+          '@.Replace("`r`n", "`n")
+          $NewMatch = @'
+                  SUPPORTED_BUILD_VERSION_CORPUS_RANK_001 => {
+                      Some(SupportedReplayHeaderTupleV1::CorpusRank001Exact)
+                  }
+                  SUPPORTED_BUILD_VERSION_CORPUS_RANK_002 => {
+                      Some(SupportedReplayHeaderTupleV1::CorpusRank002Exact)
+                  }
+                  _ => None,
+          '@.Replace("`r`n", "`n")
+          Replace-ExactlyOnce -Label 'match arm' -Old $OldMatch -New $NewMatch
+
+          $TestAnchor = @'
+              #[test]
+              fn minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple() {
+          '@.Replace("`r`n", "`n")
+          $NewTest = @'
+              #[test]
+              fn minimal_reader_admits_second_ranked_corpus_build_exact_tuple() {
+                  let bytes = build_replay_bytes(build_header(HeaderSpec {
+                      build_version: SUPPORTED_BUILD_VERSION_CORPUS_RANK_002.to_string(),
+                      ..HeaderSpec::minimal()
+                  }));
+
+                  let header = read_synthetic(bytes)
+                      .expect("second-ranked corpus BuildVersion exact tuple should be admitted");
+
+                  assert_eq!(
+                      header.metadata.get("BuildVersion"),
+                      Some(&FieldValue::Text(
+                          SUPPORTED_BUILD_VERSION_CORPUS_RANK_002.to_string()
+                      ))
+                  );
+              }
+
+              #[test]
+              fn minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple() {
+          '@.Replace("`r`n", "`n")
+          Replace-ExactlyOnce -Label 'test' -Old $TestAnchor -New $NewTest
+
+          [System.IO.File]::WriteAllText((Resolve-Path $Path), $Text, [System.Text.UTF8Encoding]::new($false))
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed: $LASTEXITCODE" }
+
+          $After = Get-Content -LiteralPath $Path -Raw
+          if (-not $After.Contains('SUPPORTED_BUILD_VERSION_CORPUS_RANK_002')) {
+              throw 'Exact corpus rank-2 build admission constant is missing after patch.'
+          }
+          if (-not $After.Contains('minimal_reader_admits_second_ranked_corpus_build_exact_tuple')) {
+              throw 'Exact corpus rank-2 admission unit test is missing after patch.'
+          }
+
+      - name: Commit exact admission
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crates/mimir-replay/src/lib.rs
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --cached --check failed: $LASTEXITCODE" }
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { throw 'Patch workflow produced no source change.' }
+          git commit -m 'Admit second-ranked replay build 230224 exactly'
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed: $LASTEXITCODE" }
+          git push origin HEAD:agent/replay-compat-admit-230224-v1
+          if ($LASTEXITCODE -ne 0) { throw "git push failed: $LASTEXITCODE" }
