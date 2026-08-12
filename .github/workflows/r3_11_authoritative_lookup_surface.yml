@@ -1,0 +1,113 @@
+name: R3.11 Authoritative Lookup Surface Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-10-boxcars-frame-differential-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  lookup-surface:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - name: Checkout MIMIR evidence branch
+        uses: actions/checkout@v6
+
+      - name: Dump supported replay lookup surface and correlate pinned Boxcars data
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Pinned = 'c70e77df7af81b436cb545d070bb90c82f562d0b'
+          $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP 'r3_11_boxcars_target'
+          $dump = Join-Path $env:RUNNER_TEMP 'r3_11_lookup_surface_dump.log'
+          $analysis = Join-Path $env:RUNNER_TEMP 'r3_11_lookup_surface_analysis.log'
+          $boxcarsRoot = Join-Path $env:RUNNER_TEMP 'boxcars-pinned'
+
+          & cargo run --manifest-path tools/r3_10_boxcars_probe/Cargo.toml --release --bin lookup_surface_dump *> $dump
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content -LiteralPath $dump -Tail 400
+            exit $LASTEXITCODE
+          }
+          Remove-Item -LiteralPath tools/r3_10_boxcars_probe/Cargo.lock -ErrorAction SilentlyContinue
+
+          & git clone --filter=blob:none --no-checkout https://github.com/nickbabcock/boxcars $boxcarsRoot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & git -C $boxcarsRoot fetch --depth=1 origin $Pinned
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & git -C $boxcarsRoot checkout --detach $Pinned
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $actual = (& git -C $boxcarsRoot rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($actual -ne $Pinned) {
+            throw "Boxcars pin drift: expected $Pinned got $actual"
+          }
+
+          & python tools/r3_11_analyze_lookup_surface.py `
+            --data-rs (Join-Path $boxcarsRoot 'src/data.rs') `
+            --dump $dump *> $analysis
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content -LiteralPath $dump -Tail 200
+            Get-Content -LiteralPath $analysis -Tail 500
+            exit $LASTEXITCODE
+          }
+
+          $dumpRequired = @(
+            'expected_supported_lane=47',
+            'SUMMARY supported_replays=47',
+            'SUMMARY net_cache_object_oob=0',
+            'SUMMARY net_property_object_oob=0',
+            'SUMMARY spawn_object_oob=0',
+            'R3_11_LOOKUP_SURFACE_DUMP_COMPLETED=PASS'
+          )
+          foreach ($marker in $dumpRequired) {
+            if (-not (Select-String -LiteralPath $dump -SimpleMatch $marker -Quiet)) {
+              throw "missing R3.11 dump marker: $marker"
+            }
+          }
+
+          $analysisRequired = @(
+            'boxcars_git_rev=c70e77df7af81b436cb545d070bb90c82f562d0b',
+            'supported_attribute_names_missing_authoritative_tag=0',
+            'authoritative_attribute_tag_registry_evidence=true',
+            'parent_hierarchy_surface_evidence=true',
+            'production_source_mutation=false',
+            'R3_11_AUTHORITATIVE_LOOKUP_SURFACE_COMPLETED=PASS'
+          )
+          foreach ($marker in $analysisRequired) {
+            if (-not (Select-String -LiteralPath $analysis -SimpleMatch $marker -Quiet)) {
+              Get-Content -LiteralPath $analysis -Tail 500
+              throw "missing R3.11 analysis marker: $marker"
+            }
+          }
+
+          Get-Content -LiteralPath $dump | Where-Object {
+            $_ -match '^R3\.11 ' -or $_ -match '^boxcars_' -or $_ -match '^expected_' -or $_ -match '^SUMMARY ' -or $_ -match '^R3_11_LOOKUP_SURFACE_DUMP_COMPLETED='
+          }
+          Get-Content -LiteralPath $analysis | Where-Object {
+            $_ -match '^R3\.11 ' -or
+            $_ -match '^boxcars_' -or
+            $_ -match '^source_' -or
+            $_ -match '^supported_' -or
+            $_ -match '^dump_' -or
+            $_ -match '^AUTHORITATIVE_TAG ' -or
+            $_ -match '^NET_CACHE_PARENT_EDGE ' -or
+            $_ -match '^SOURCE_SPAWN_KIND ' -or
+            $_ -match '^MULTI_SPAWN_SHAPE ' -or
+            $_ -match '^UNRESOLVED_SPAWN ' -or
+            $_ -match '^SPAWN_SHAPE_MISMATCH ' -or
+            $_ -match '_evidence=' -or
+            $_ -match '_admitted=' -or
+            $_ -match '^production_source_mutation=' -or
+            $_ -match '^R3_11_AUTHORITATIVE_LOOKUP_SURFACE_COMPLETED='
+          }
+
+          $tracked = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($tracked.Count -ne 0) {
+            throw "R3.11 evidence mutated tracked MIMIR files: $($tracked -join ', ')"
+          }
+          Write-Host 'R3_11_TRACKED_SOURCE_MUTATION=false'
+          Write-Host 'R3_11_EVIDENCE_EXIT=0'
