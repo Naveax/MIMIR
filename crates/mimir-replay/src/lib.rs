@@ -77,6 +77,7 @@ const SUPPORTED_BUILD_VERSION_FIXTURE_001: &str = "241206.55345.468477";
 const SUPPORTED_BUILD_VERSION_FIXTURE_002: &str = "250811.43331.492665";
 const SUPPORTED_BUILD_VERSION_FIXTURE_003: &str = "251020.62592.500294";
 const SUPPORTED_BUILD_VERSION_CORPUS_RANK_001: &str = "220826.56130.393105";
+const SUPPORTED_BUILD_VERSION_CORPUS_RANK_002: &str = "230224.54624.415510";
 const MAX_ADMITTED_TEXT_BYTES: i32 = 10_000;
 
 const KIND_ARRAY: &str = "ArrayProperty";
@@ -94,6 +95,7 @@ enum SupportedReplayHeaderTupleV1 {
     Fixture002Exact,
     Fixture003Exact,
     CorpusRank001Exact,
+    CorpusRank002Exact,
 }
 
 fn supported_replay_header_tuple_v1(
@@ -119,6 +121,9 @@ fn supported_replay_header_tuple_v1(
         SUPPORTED_BUILD_VERSION_FIXTURE_003 => Some(SupportedReplayHeaderTupleV1::Fixture003Exact),
         SUPPORTED_BUILD_VERSION_CORPUS_RANK_001 => {
             Some(SupportedReplayHeaderTupleV1::CorpusRank001Exact)
+        }
+        SUPPORTED_BUILD_VERSION_CORPUS_RANK_002 => {
+            Some(SupportedReplayHeaderTupleV1::CorpusRank002Exact)
         }
         _ => None,
     }
@@ -874,6 +879,24 @@ mod tests {
             header.metadata.get("BuildVersion"),
             Some(&FieldValue::Text(
                 SUPPORTED_BUILD_VERSION_CORPUS_RANK_001.to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn minimal_reader_admits_second_ranked_corpus_build_exact_tuple() {
+        let bytes = build_replay_bytes(build_header(HeaderSpec {
+            build_version: SUPPORTED_BUILD_VERSION_CORPUS_RANK_002.to_string(),
+            ..HeaderSpec::minimal()
+        }));
+
+        let header = read_synthetic(bytes)
+            .expect("second-ranked corpus BuildVersion exact tuple should be admitted");
+
+        assert_eq!(
+            header.metadata.get("BuildVersion"),
+            Some(&FieldValue::Text(
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_002.to_string()
             ))
         );
     }
