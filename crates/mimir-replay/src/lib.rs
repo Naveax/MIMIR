@@ -86,6 +86,21 @@ const SUPPORTED_BUILD_VERSION_CORPUS_RANK_007: &str = "230113.44243.411503";
 const SUPPORTED_BUILD_VERSION_CORPUS_RANK_008: &str = "230413.76047.419576";
 const SUPPORTED_BUILD_VERSION_CORPUS_RANK_009: &str = "240425.56865.448852";
 const SUPPORTED_BUILD_VERSION_CORPUS_RANK_010: &str = "240717.49861.454952";
+const SUPPORTED_BUILD_VERSIONS_V1: [&str; 13] = [
+    SUPPORTED_BUILD_VERSION_FIXTURE_001,
+    SUPPORTED_BUILD_VERSION_FIXTURE_002,
+    SUPPORTED_BUILD_VERSION_FIXTURE_003,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_001,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_002,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_003,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_004,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_005,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_006,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_007,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_008,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_009,
+    SUPPORTED_BUILD_VERSION_CORPUS_RANK_010,
+];
 const MAX_ADMITTED_TEXT_BYTES: i32 = 10_000;
 
 const KIND_ARRAY: &str = "ArrayProperty";
@@ -96,79 +111,25 @@ const KIND_NAME: &str = "NameProperty";
 const KIND_QWORD: &str = "QWordProperty";
 const KIND_STR: &str = "StrProperty";
 
-#[allow(clippy::enum_variant_names)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum SupportedReplayHeaderTupleV1 {
-    Fixture001Exact,
-    Fixture002Exact,
-    Fixture003Exact,
-    CorpusRank001Exact,
-    CorpusRank002Exact,
-    CorpusRank003Exact,
-    CorpusRank004Exact,
-    CorpusRank005Exact,
-    CorpusRank006Exact,
-    CorpusRank007Exact,
-    CorpusRank008Exact,
-    CorpusRank009Exact,
-    CorpusRank010Exact,
-}
-
-fn supported_replay_header_tuple_v1(
+fn is_supported_replay_header_tuple_v1(
     major_version: i32,
     minor_version: i32,
     net_version: i32,
     game_type: &str,
     replay_version: i32,
     build_version: &str,
-) -> Option<SupportedReplayHeaderTupleV1> {
+) -> bool {
     if major_version != SUPPORTED_MAJOR_VERSION
         || minor_version != SUPPORTED_MINOR_VERSION
         || net_version != SUPPORTED_NET_VERSION
         || game_type != SUPPORTED_GAME_TYPE
         || replay_version != SUPPORTED_REPLAY_VERSION
     {
-        return None;
+        return false;
     }
 
-    match build_version {
-        SUPPORTED_BUILD_VERSION_FIXTURE_001 => Some(SupportedReplayHeaderTupleV1::Fixture001Exact),
-        SUPPORTED_BUILD_VERSION_FIXTURE_002 => Some(SupportedReplayHeaderTupleV1::Fixture002Exact),
-        SUPPORTED_BUILD_VERSION_FIXTURE_003 => Some(SupportedReplayHeaderTupleV1::Fixture003Exact),
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_001 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank001Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_002 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank002Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_003 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank003Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_004 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank004Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_005 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank005Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_006 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank006Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_007 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank007Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_008 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank008Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_009 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank009Exact)
-        }
-        SUPPORTED_BUILD_VERSION_CORPUS_RANK_010 => {
-            Some(SupportedReplayHeaderTupleV1::CorpusRank010Exact)
-        }
-        _ => None,
-    }
+    SUPPORTED_BUILD_VERSIONS_V1.contains(&build_version)
 }
-
 struct HeaderCursor<'a> {
     bytes: &'a [u8],
     offset: usize,
@@ -341,23 +302,21 @@ fn parse_replay_header_from_memory(label: &str, bytes: &[u8]) -> Result<ReplayHe
         mapping_error("missing required BuildVersion for supported-version tuple")
     })?;
 
-    let _supported_tuple = supported_replay_header_tuple_v1(
+    if !is_supported_replay_header_tuple_v1(
         major_version,
         minor_version,
         net_version,
         &game_type,
         replay_version,
         build_version,
-    )
-    .ok_or_else(|| {
-        parse_error(
+    ) {
+        return Err(parse_error(
             "unsupported-version",
             format!(
                 "unsupported tuple major={major_version}, minor={minor_version}, net={net_version}, game_type={game_type}, ReplayVersion={replay_version}, BuildVersion={build_version}"
             ),
-        )
-    })?;
-
+        ));
+    }
     let replay_id = parsed
         .replay_id
         .ok_or_else(|| mapping_error("missing required Id property for ReplayHeader.replay_id"))?;
@@ -683,6 +642,33 @@ mod tests {
         "/../../external_fixtures/sample_003.replay"
     );
 
+    #[test]
+    fn supported_build_version_registry_v1_contains_only_expected_exact_entries() {
+        assert_eq!(
+            SUPPORTED_BUILD_VERSIONS_V1,
+            [
+                SUPPORTED_BUILD_VERSION_FIXTURE_001,
+                SUPPORTED_BUILD_VERSION_FIXTURE_002,
+                SUPPORTED_BUILD_VERSION_FIXTURE_003,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_001,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_002,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_003,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_004,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_005,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_006,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_007,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_008,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_009,
+                SUPPORTED_BUILD_VERSION_CORPUS_RANK_010,
+            ]
+        );
+    }
+
+    #[test]
+    fn supported_build_version_registry_v1_has_no_duplicates() {
+        let unique: BTreeSet<_> = SUPPORTED_BUILD_VERSIONS_V1.iter().copied().collect();
+        assert_eq!(unique.len(), SUPPORTED_BUILD_VERSIONS_V1.len());
+    }
     #[test]
     fn unsupported_reader_fails_explicitly() {
         let reader = UnsupportedReplayReader;
