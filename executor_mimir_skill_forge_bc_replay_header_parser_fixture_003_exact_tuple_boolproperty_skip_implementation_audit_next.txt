@@ -1,0 +1,27 @@
+MIMIR F003-A1 audit next
+
+Current result:
+Outcome A — fixture_003 exact tuple + bounded non-selected BoolProperty skip-only behavior admitted.
+
+NEXT EXACT PASS:
+HDR-C1 — three-fixture header lane closure
+
+HDR-C1 goals:
+1. Consolidate the admitted exact replay-header lane:
+   - Fixture001Exact
+   - Fixture002Exact
+   - Fixture003Exact
+2. Publish a single current parser capability matrix.
+3. Record exact admitted selected header fields and non-selected skip boundaries.
+4. Lock unsupported boundaries in one place.
+5. Record that ReplayInput::File/source materialization remains a separate unopened layer.
+6. Record that CRC/content/body/network/frame/raw-state/event remain closed.
+7. Carry forward the discovered mimir-skill absolute-path fixture seam as separate test-portability debt.
+8. Decide whether further fixture-specific header widening is required before moving upward.
+
+Expected closure decision if no new contradiction appears:
+- three-fixture exact header lane is stable enough to close as a bounded v1 lane;
+- do not add more fixture-specific header behavior merely for accumulation;
+- next architectural layer becomes replay source materialization policy/planning.
+
+HDR-C1 must not implement source materialization, body parsing, compatibility scanning, or runtime/export behavior.

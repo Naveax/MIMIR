@@ -1,0 +1,81 @@
+MIMIR F003-I1E implementation status
+
+STATUS: PASS
+DATE: 2026-08-12
+BRANCH: agent/f003-fixture003-bool-skip
+BASE_MAIN: 06e29e3119a165299612a9c78e8b90d81a1e5593
+ACCEPTED_CODE_HEAD: 890642aef864910d63bc61d73b846bdd57d6650b
+CI_RUN: #18
+CI_RUN_ID: 31588274140
+CI_JOB_ID: 94087062936
+CI_CONCLUSION: success
+
+IMPLEMENTATION_SCOPE:
+- crates/mimir-replay/src/lib.rs only
+
+IMPLEMENTED:
+- Fixture003Exact exact tuple
+- BuildVersion 251020.62592.500294
+- non-selected BoolProperty skip-only helper
+- BoolProperty size 0 required
+- one separate bool byte consumed
+- accepted bool bytes 0 and 1 only
+- fixture_003 full checked-in replay test
+- fixture_003 header-only test
+- bForfeit absence assertion
+- selected BoolProperty rejection
+- malformed/truncated BoolProperty tests
+- adjacent unknown BuildVersion rejection
+- GitHub-portable repo-relative mimir-replay fixture test paths
+
+GITHUB_VALIDATION:
+- cargo fmt --all -- --check: PASS
+- cargo check --workspace --all-targets --all-features: PASS
+- cargo test -p mimir-replay -- --nocapture: 28 PASS / 0 FAIL
+- cargo test -p mimir-skill -- --nocapture: 273 PASS / 0 FAIL
+- cargo test --workspace --all-targets --all-features: PASS
+- cargo clippy --workspace --all-targets --all-features -- -D warnings: PASS
+- cargo test -p mimir-export -- --list: 173 listed
+- scripts/verify_test_corpus.ps1: PASS, 100 replay fixtures match manifest size + SHA-256
+
+REAL_FIXTURE_RESULTS:
+- fixture_001 full/header-only: PASS
+- fixture_002 full: PASS
+- fixture_002 header-only: PASS
+- fixture_003 full: PASS
+- fixture_003 header-only: PASS
+- fixture_003 bForfeit metadata absent: PASS
+
+NEGATIVE_BOUNDARY_RESULTS:
+- selected BoolProperty: REJECT/PASS
+- nonzero BoolProperty declared size: REJECT/PASS
+- missing BoolProperty value byte: REJECT/PASS
+- BoolProperty value 2: REJECT/PASS
+- unknown BuildVersion 251020.62592.500295: REJECT/PASS
+- ReplayInput::File: still unsupported/PASS
+- header CRC validation: still not performed/PASS
+
+OPENED_BOUNDARIES:
+- exact fixture_003 tuple implementation, pending separate admission
+- bounded non-selected BoolProperty skip-only implementation, pending separate admission
+
+STILL_CLOSED:
+- ReplayInput::File parser support
+- replay source materialization
+- BoolProperty metadata mapping
+- FieldValue::Boolean mapping for header BoolProperty
+- bForfeit metadata mapping
+- selected BoolProperty mapping
+- wildcard/family BuildVersion support
+- broad ReplayVersion=8 support
+- CRC validation
+- content_crc
+- body/network/frame/raw-state/event parsing
+- backend replay parser dependency
+- CLI/runtime/export widening
+
+DISCOVERED_EXISTING_DEBT:
+- one mimir-skill cross-crate fixture seam still uses absolute D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay and skips on GitHub-hosted runners; not counted as fixture parser proof and not fixed inside F003-I1 scope.
+
+NEXT_PASS:
+F003-A1 — fixture_003 implementation audit/admission.

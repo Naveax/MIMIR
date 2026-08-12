@@ -1,0 +1,50 @@
+MIMIR fixture_003 exact tuple + BoolProperty skip-only implementation next
+
+Current implementation status: PASS
+Current evidence pass: F003-I1E complete after GitHub CI validation
+
+NEXT EXACT PASS:
+F003-A1 — fixture_003 implementation audit/admission
+
+F003-A1 must be audit/admission only. Do not add unrelated parser capabilities.
+
+Audit checklist:
+1. Confirm only three exact tuple variants are admitted:
+   - Fixture001Exact
+   - Fixture002Exact
+   - Fixture003Exact
+2. Confirm fixture_003 BuildVersion is exactly 251020.62592.500294.
+3. Confirm unknown BuildVersion 251020.62592.500295 is rejected as unsupported-version.
+4. Confirm no wildcard/prefix/range/regex/date-family BuildVersion logic exists.
+5. Confirm broad ReplayVersion=8 support was not opened.
+6. Confirm BoolProperty support is reachable only from the non-selected property branch.
+7. Confirm non-selected BoolProperty requires declared size 0.
+8. Confirm exactly one separate bool byte is consumed.
+9. Confirm only byte 0 or 1 is accepted.
+10. Confirm invalid/missing BoolProperty bytes preserve malformed/insufficient boundaries.
+11. Confirm bForfeit is not a selected property and is absent from ReplayHeader.metadata.
+12. Confirm BoolProperty -> FieldValue::Boolean mapping was not opened.
+13. Confirm selected BoolProperty remains unsupported-property.
+14. Confirm fixture_001 and fixture_002 exact regressions remain green.
+15. Confirm fixture_003 real full checked-in replay test passed on GitHub.
+16. Confirm fixture_003 exact header-only test passed on GitHub.
+17. Confirm ReplayInput::File remains unsupported-input.
+18. Confirm header_crc remains layout-only and not validated.
+19. Confirm content_crc remains unopened.
+20. Confirm body/network/frame/raw-state/event parsing remains unopened.
+21. Confirm no external replay parser backend dependency was added.
+22. Confirm CLI/runtime/export surfaces were not widened.
+23. Confirm only crates/mimir-replay/src/lib.rs changed in the implementation code lane.
+24. Record the discovered mimir-skill absolute-path fixture seam as separate existing test-portability debt; do not use its skipped result as evidence for or against the mimir-replay fixture_003 implementation.
+25. Re-run/inspect GitHub CI evidence as necessary and issue a formal admission outcome.
+
+Admission outcomes:
+- Outcome A: admit fixture_003 exact tuple + bounded non-selected BoolProperty skip-only lane
+- Outcome B: partial admission with explicit corrections
+- Outcome C: reject implementation
+- Outcome D: additional evidence required
+
+Only Outcome A may proceed to:
+HDR-C1 — three-fixture header lane closure.
+
+Do not proceed directly to replay source materialization or 100-replay compatibility scanning before F003-A1 and HDR-C1 are complete.

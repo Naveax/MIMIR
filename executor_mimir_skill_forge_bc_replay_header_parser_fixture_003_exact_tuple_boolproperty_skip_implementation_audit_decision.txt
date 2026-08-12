@@ -1,0 +1,49 @@
+MIMIR F003-A1 fixture_003 exact tuple + BoolProperty skip-only implementation audit decision
+
+Date: 2026-08-12
+
+OUTCOME: A — ADMITTED
+
+Admitted bounded capability:
+- Fixture003Exact replay header tuple only
+- major=868
+- minor=32
+- net=10
+- game_type=TAGame.Replay_Soccar_TA
+- ReplayVersion=8
+- BuildVersion=251020.62592.500294
+- non-selected BoolProperty skip-only semantics with declared size 0 and one separate value byte limited to 0/1
+- fixture_003 full checked-in replay header parse through ReplayInput::Memory
+- fixture_003 exact header-only parse with header_size=11190 and header_end=11198
+
+Evidence authority:
+- accepted implementation code head: 890642aef864910d63bc61d73b846bdd57d6650b
+- GitHub Actions CI run #18 / run id 31588274140 / conclusion success
+- mimir-replay: 28 pass / 0 fail
+- mimir-skill: 273 pass / 0 fail
+- full workspace tests: pass
+- fmt/check/clippy -D warnings: pass
+- mimir-export: 173 tests listed
+- largest-100 replay manifest size/SHA-256 verification: pass
+- F003-I1E final evidence HEAD CI run #22 / run id 31588780524 / conclusion success
+
+Audit findings:
+- exact allowlist preserved; no wildcard/family BuildVersion logic
+- unknown near-neighbor BuildVersion 251020.62592.500295 rejected
+- BoolProperty reachable only in non-selected skip path
+- bForfeit remains absent from ReplayHeader.metadata
+- no BoolProperty -> FieldValue::Boolean header mapping
+- selected BoolProperty remains unsupported-property
+- fixture_001/002 regressions pass on GitHub-hosted runner
+- fixture_003 full and header-only real checked-in replay tests pass on GitHub-hosted runner
+- ReplayInput::File remains unsupported
+- header CRC remains unvalidated layout-only field
+- content_crc/body/network/frame/raw-state/event boundaries remain closed
+- no external parser dependency, CLI/runtime/export widening, or Cargo manifest change
+
+Separate existing debt:
+- one mimir-skill cross-crate seam test still uses an absolute D:\RocketLeague bot\MIMIR\external_fixtures\sample_001.replay path and skips on GitHub-hosted runners.
+- this skipped seam test is not counted as F003 evidence and does not block the bounded parser admission.
+
+Next exact pass:
+HDR-C1 — three-fixture header lane closure.

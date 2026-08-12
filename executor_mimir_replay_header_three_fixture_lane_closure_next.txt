@@ -1,0 +1,35 @@
+MIMIR HDR-C1 three-fixture replay-header lane closure next
+
+Current result:
+Outcome A — three-fixture exact replay-header lane closed as bounded V1.
+
+NEXT EXACT PASS:
+SRC-P1 — replay source materialization policy
+
+SRC-P1 is policy/planning only. It must decide how a replay file source becomes bounded parser bytes without turning filesystem details into parser semantics.
+
+Preferred candidate shape:
+
+filesystem/materializer
+→ bounded bytes + provenance
+→ ReplayInput::Memory
+→ MinimalReplayHeaderReader
+
+SRC-P1 must decide:
+1. whether ReplayInput::File stays unsupported in MinimalReplayHeaderReader;
+2. the owner crate/module for filesystem materialization;
+3. explicit source-path/provenance contract;
+4. read-size bounds and deterministic IO errors;
+5. optional hash evidence boundary;
+6. whether hash verification is evidence/materialization metadata rather than a parser predicate;
+7. no hidden corpus discovery inside header parsing;
+8. no filename/path/hash/version shortcuts;
+9. no body parsing or CRC validation widening;
+10. exact implementation and audit passes that follow.
+
+Carry-forward debt:
+- plan a separate narrow correction for the mimir-skill absolute-path fixture seam before depending on that seam as CI evidence.
+
+After source materialization is implemented and admitted:
+- plan and implement the 100-replay compatibility scanner;
+- use scanner evidence for future header compatibility expansion rather than wildcarding versions.

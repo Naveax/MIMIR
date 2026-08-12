@@ -1,0 +1,50 @@
+MIMIR HDR-C1 three-fixture replay-header lane closure decision
+
+Date: 2026-08-12
+
+OUTCOME: A — CLOSE THE THREE-FIXTURE EXACT HEADER LANE AS A BOUNDED V1 CAPABILITY
+
+Admitted exact tuples:
+- Fixture001Exact / BuildVersion 241206.55345.468477
+- Fixture002Exact / BuildVersion 250811.43331.492665
+- Fixture003Exact / BuildVersion 251020.62592.500294
+
+Closure meaning:
+- the first bounded real replay-header lane is stable enough to move one architectural layer upward;
+- further fixture-specific header widening must be evidence-driven, not speculative accumulation;
+- unknown BuildVersion values remain unsupported until separately admitted;
+- source materialization is the next layer, not body/frame/raw-state parsing.
+
+Current bounded parser capability:
+- ReplayInput::Memory header parse admitted
+- selected Id/NumFrames/ReplayName/Date/MapName/ReplayVersion/BuildVersion/MaxChannels/MatchType/TeamSize/RecordFPS mappings admitted within the exact lane
+- non-selected Array/Float/Int/Name/QWord/Str skip behavior admitted
+- non-selected BoolProperty skip-only admitted with size=0 and one separate 0/1 byte
+
+Still closed:
+- ReplayInput::File direct parser behavior
+- source materialization
+- wildcard/family BuildVersion
+- broad ReplayVersion=8
+- selected BoolProperty
+- BoolProperty -> FieldValue::Boolean header mapping
+- bForfeit metadata mapping
+- CRC validation and content_crc
+- body/network/frame/raw-state/event parsing
+- external parser backend
+- CLI/runtime/export widening
+
+Evidence:
+- F003 implementation code acceptance GitHub Actions run #18 / 31588274140 / success
+- F003 implementation evidence HEAD GitHub Actions run #22 / 31588780524 / success
+- F003 audit artifact HEAD GitHub Actions run #26 / 31589116319 / success
+- mimir-replay real checked-in fixture_001/002/003 tests executed on GitHub and passed
+- largest-100 replay corpus manifest size/SHA-256 verification passed
+
+Known separate debt carried forward:
+- one mimir-skill cross-crate fixture seam still uses the historical absolute developer-machine replay path and skips on GitHub-hosted runners. It is not counted as header-lane evidence.
+
+Next exact pass:
+SRC-P1 — replay source materialization policy.
+
+100-replay compatibility scanning remains downstream of an admitted source materialization path.
