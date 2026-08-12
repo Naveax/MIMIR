@@ -1,0 +1,82 @@
+name: R3.13 Inherited Resolver Differential Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-13-inherited-resolver-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  differential:
+    runs-on: windows-2025
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run production-registry inherited resolver against pinned Boxcars
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP 'r3_13_target'
+          $log = Join-Path $env:RUNNER_TEMP 'r3_13_differential.log'
+
+          & cargo run --manifest-path tools/r3_13_inherited_resolver_probe/Cargo.toml --release *> $log
+          $code = $LASTEXITCODE
+          if ($code -ne 0) {
+            Write-Host "R3_13_PROBE_EXIT=$code"
+            Get-Content -LiteralPath $log -Tail 500
+            exit $code
+          }
+          Remove-Item -LiteralPath tools/r3_13_inherited_resolver_probe/Cargo.lock -ErrorAction SilentlyContinue
+
+          $required = @(
+            'boxcars_git_rev=c70e77df7af81b436cb545d070bb90c82f562d0b',
+            'registry_source=mimir_replay_production_r3_12',
+            'expected_replays=103',
+            'expected_supported_lane=47',
+            'SUMMARY supported_replays=47',
+            'SUMMARY unsupported_replays=56',
+            'SUMMARY object_table_mismatches=0',
+            'SUMMARY duplicate_local_stream_entries=0',
+            'SUMMARY actor_class_oob=0',
+            'SUMMARY property_object_oob=0',
+            'SUMMARY missing_active_actor=0',
+            'SUMMARY unresolved_stream=0',
+            'SUMMARY property_object_mismatch=0',
+            'SUMMARY decoded_not_implemented_hits=0',
+            'SUMMARY same_frame_new_delete=0',
+            'SUMMARY active_actor_overwrite=0',
+            'SUMMARY delete_missing_actor=0',
+            'network_payload_decoded_by_mimir=false',
+            'inherited_stream_resolver_production_admitted=false',
+            'R3_13_DIFFERENTIAL_EVIDENCE=PASS'
+          )
+          foreach ($marker in $required) {
+            if (-not (Select-String -LiteralPath $log -SimpleMatch $marker -Quiet)) {
+              Get-Content -LiteralPath $log -Tail 500
+              throw "missing R3.13 evidence marker: $marker"
+            }
+          }
+
+          Get-Content -LiteralPath $log | Where-Object {
+            $_ -match '^R3\.13 ' -or
+            $_ -match '^boxcars_' -or
+            $_ -match '^registry_source=' -or
+            $_ -match '^expected_' -or
+            $_ -match '^SUMMARY ' -or
+            $_ -match '^FAILURE_SAMPLE ' -or
+            $_ -match '_decoded_by_mimir=' -or
+            $_ -match '_production_admitted=' -or
+            $_ -match '^R3_13_DIFFERENTIAL_EVIDENCE='
+          }
+
+          $tracked = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($tracked.Count -ne 0) {
+            throw "R3.13 evidence mutated tracked files: $($tracked -join ', ')"
+          }
+          Write-Host 'R3_13_TRACKED_SOURCE_MUTATION=false'
+          Write-Host 'R3_13_PROBE_EXIT=0'
