@@ -16,7 +16,8 @@ and orchestration wiring.
 
 ## Current boundaries
 
-- No bundled Rocket League replay parser.
+- `mimir-replay` includes a bounded real replay-header parser for three exact admitted version/build tuples through `ReplayInput::Memory` only.
+- Replay source materialization, direct `ReplayInput::File` parsing, replay body/network/frame decoding, raw-state extraction, and event extraction remain unimplemented.
 - No bundled RocketSim integration.
 - No disguised intelligence or placeholder heuristics.
 - A deterministic fake sim backend exists only for tests and CLI smoke validation.

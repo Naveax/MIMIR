@@ -13,13 +13,17 @@
 
 ## Extension points
 
-- `mimir-replay` exposes replay input abstractions so a real parser can be added later.
-- Skill Forge replay-slice work is currently bounded to shared contract types only. Real replay
-  parsing, corpus mining, and broader ingestion orchestration remain deferred.
+- `mimir-replay` owns the first bounded real replay-header parser lane: `ReplayInput::Memory`
+  input, three exact admitted version/build tuples, selected header-field mapping, and explicit
+  unsupported/malformed boundaries. Replay source materialization, direct file-backed parser
+  input, body/network/frame decoding, raw-state extraction, and event extraction remain deferred.
+- Skill Forge replay-slice work is currently bounded to shared contract types plus the existing
+  family-specific low-boost-recovery transformation surfaces. Real corpus mining and broader
+  replay ingestion orchestration remain deferred.
 - `mimir-skill` now owns the first family-specific Skill Forge transformation logic:
   low-boost-recovery replay-slice canonicalization plus the minimum event/contact and phase
-  extraction boundary. That logic is deliberately narrow and does not add parser, rollout, export,
-  or runtime behavior.
+  extraction boundary. That logic is deliberately narrow and does not add rollout, export,
+  runtime, or general replay-body parsing behavior.
 - `mimir-anchor`, `mimir-branch`, `mimir-rollout`, and `mimir-teacher` define traits whose
   current implementations only transform explicit caller-provided data.
 - `mimir-sim-bridge` isolates the future simulation boundary behind `SimBackend`.

@@ -1,0 +1,46 @@
+MIMIR HDR-C1 three-fixture replay-header lane closure status
+
+STATUS: PASS
+OUTCOME: A — CLOSED AS BOUNDED V1
+DATE: 2026-08-12
+BRANCH: agent/f003-fixture003-bool-skip
+
+CLOSED_LANE:
+- Fixture001Exact
+- Fixture002Exact
+- Fixture003Exact
+- ReplayInput::Memory only
+- exact BuildVersion allowlist only
+- bounded selected header mappings
+- bounded non-selected known-property skips
+- non-selected BoolProperty skip-only size=0 + one 0/1 byte
+
+REAL_GITHUB_EVIDENCE:
+- code acceptance CI #18 / 31588274140: success
+- implementation evidence CI #22 / 31588780524: success
+- implementation audit CI #26 / 31589116319: success
+- mimir-replay 28 pass / 0 fail on accepted code
+- fixture_001/002/003 real checked-in replay tests executed and passed
+- clippy -D warnings passed
+- largest-100 replay integrity passed
+
+DOC_DRIFT_FIXED_IN_CLOSURE:
+- README no longer claims there is no replay parser at all
+- docs/ARCHITECTURE.md now describes the bounded three-exact-tuple Memory-backed replay-header parser and keeps source/body/frame/raw-state/event work deferred
+
+STILL_CLOSED:
+- ReplayInput::File direct parser behavior
+- replay source materialization
+- wildcard/family BuildVersion
+- broad ReplayVersion=8
+- selected BoolProperty / FieldValue::Boolean header mapping / bForfeit metadata
+- CRC/content_crc
+- body/network/frame/raw-state/event
+- external parser backend
+- CLI/runtime/export parser widening
+
+KNOWN_SEPARATE_DEBT:
+- mimir-skill absolute-path fixture seam skips on GitHub-hosted runner; not counted as header parser evidence.
+
+NEXT:
+SRC-P1 — replay source materialization policy.
