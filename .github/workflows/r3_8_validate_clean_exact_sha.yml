@@ -1,0 +1,38 @@
+name: R3.8 Validate Clean Exact SHA
+
+on:
+  push:
+    branches:
+      - agent/r3-8-footer-lookup-clean-validation
+
+jobs:
+  validate-clean-exact-sha:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact clean R3.8 commit
+        uses: actions/checkout@v6
+        with:
+          ref: 3b16a7f6c21b6bde6f61231c90f4b13015d24a5f
+
+      - name: Assert exact checkout
+        shell: pwsh
+        run: |
+          $expected = '3b16a7f6c21b6bde6f61231c90f4b13015d24a5f'
+          $actual = (git rev-parse HEAD).Trim()
+          if ($actual -ne $expected) { throw "exact clean SHA mismatch: expected=$expected actual=$actual" }
+          Write-Host "R3_8_EXACT_CLEAN_SHA=$actual"
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
