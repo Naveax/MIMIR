@@ -24,7 +24,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $Path = 'crates/mimir-replay/src/lib.rs'
-          $Text = Get-Content -LiteralPath $Path -Raw
+          $Text = (Get-Content -LiteralPath $Path -Raw).Replace("`r`n", "`n")
 
           $OldConstants = @'
           const SUPPORTED_BUILD_VERSION_FIXTURE_003: &str = "251020.62592.500294";
@@ -90,10 +90,10 @@ jobs:
           '@
 
           $Replacements = @(
-              @($OldConstants, $NewConstants, 'constants'),
-              @($OldEnum, $NewEnum, 'enum'),
-              @($OldMatch, $NewMatch, 'match'),
-              @($OldTestAnchor, $NewTestAnchor, 'test')
+              @($OldConstants.Replace("`r`n", "`n"), $NewConstants.Replace("`r`n", "`n"), 'constants'),
+              @($OldEnum.Replace("`r`n", "`n"), $NewEnum.Replace("`r`n", "`n"), 'enum'),
+              @($OldMatch.Replace("`r`n", "`n"), $NewMatch.Replace("`r`n", "`n"), 'match'),
+              @($OldTestAnchor.Replace("`r`n", "`n"), $NewTestAnchor.Replace("`r`n", "`n"), 'test')
           )
 
           foreach ($Replacement in $Replacements) {
@@ -107,7 +107,7 @@ jobs:
               $Text = $Text.Replace($Old, $New)
           }
 
-          Set-Content -LiteralPath $Path -Value $Text -NoNewline
+          [System.IO.File]::WriteAllText((Resolve-Path $Path), $Text, [System.Text.UTF8Encoding]::new($false))
           cargo fmt --all
           if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed: $LASTEXITCODE" }
 
