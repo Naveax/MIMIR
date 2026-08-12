@@ -1,0 +1,106 @@
+name: R2.7 Exact Admission Patch
+
+on:
+  push:
+    branches:
+      - agent/r2-7-admit-rank6-211123
+    paths:
+      - .github/workflows/r2-7-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/r2-7-admit-rank6-211123
+          fetch-depth: 0
+
+      - name: Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Apply exact rank-6 admission
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Path = 'crates/mimir-replay/src/lib.rs'
+          $Text = (Get-Content -LiteralPath $Path -Raw).Replace("`r`n", "`n")
+
+          function Assert-Once([string]$Label, [string]$Marker) {
+            $Count = ([regex]::Matches($script:Text, [regex]::Escape($Marker))).Count
+            if ($Count -ne 1) { throw "$Label marker count expected 1, got $Count" }
+          }
+
+          $Marker = 'const SUPPORTED_BUILD_VERSION_CORPUS_RANK_005: &str = "211110.58467.353926";'
+          Assert-Once 'constant' $Marker
+          $Text = $Text.Replace(
+            $Marker,
+            $Marker + "`n" + 'const SUPPORTED_BUILD_VERSION_CORPUS_RANK_006: &str = "211123.48895.355454";'
+          )
+
+          $Marker = '    CorpusRank005Exact,'
+          Assert-Once 'enum' $Marker
+          $Text = $Text.Replace($Marker, $Marker + "`n    CorpusRank006Exact,")
+
+          $Marker = "        SUPPORTED_BUILD_VERSION_CORPUS_RANK_005 => {`n            Some(SupportedReplayHeaderTupleV1::CorpusRank005Exact)`n        }"
+          Assert-Once 'match' $Marker
+          $Text = $Text.Replace(
+            $Marker,
+            $Marker + "`n        SUPPORTED_BUILD_VERSION_CORPUS_RANK_006 => {`n            Some(SupportedReplayHeaderTupleV1::CorpusRank006Exact)`n        }"
+          )
+
+          $Marker = "    #[test]`n    fn minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple() {"
+          Assert-Once 'test insertion' $Marker
+          $Test = @(
+            '    #[test]',
+            '    fn minimal_reader_admits_sixth_ranked_corpus_build_exact_tuple() {',
+            '        let bytes = build_replay_bytes(build_header(HeaderSpec {',
+            '            build_version: SUPPORTED_BUILD_VERSION_CORPUS_RANK_006.to_string(),',
+            '            ..HeaderSpec::minimal()',
+            '        }));',
+            '',
+            '        let header = read_synthetic(bytes)',
+            '            .expect("sixth-ranked corpus BuildVersion exact tuple should be admitted");',
+            '',
+            '        assert_eq!(',
+            '            header.metadata.get("BuildVersion"),',
+            '            Some(&FieldValue::Text(',
+            '                SUPPORTED_BUILD_VERSION_CORPUS_RANK_006.to_string()',
+            '            ))',
+            '        );',
+            '    }',
+            ''
+          ) -join "`n"
+          $Text = $Text.Replace($Marker, $Test + "`n" + $Marker)
+
+          [IO.File]::WriteAllText((Resolve-Path $Path), $Text, [Text.UTF8Encoding]::new($false))
+
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw 'cargo fmt failed' }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'git diff --check failed' }
+
+          $Changed = @(git diff --name-only)
+          if ($Changed.Count -ne 1 -or $Changed[0] -ne $Path) {
+            throw "unexpected changed files: $($Changed -join ', ')"
+          }
+
+      - name: Verify exact admission on GitHub runner
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay minimal_reader_admits_sixth_ranked_corpus_build_exact_tuple -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test -p mimir-replay minimal_reader_rejects_unknown_build_version_for_otherwise_supported_tuple -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Commit source patch
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crates/mimir-replay/src/lib.rs
+          git commit -m "Admit sixth-ranked replay build 211123 exactly"
+          git push origin HEAD:agent/r2-7-admit-rank6-211123
