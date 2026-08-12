@@ -57,8 +57,10 @@ jobs:
           $dumpRequired = @(
             'expected_supported_lane=47',
             'SUMMARY supported_replays=47',
+            'SUMMARY unique_decoded_attribute_names=102',
             'SUMMARY net_cache_object_oob=0',
             'SUMMARY net_property_object_oob=0',
+            'SUMMARY decoded_attribute_object_oob=0',
             'SUMMARY spawn_object_oob=0',
             'R3_11_LOOKUP_SURFACE_DUMP_COMPLETED=PASS'
           )
@@ -70,7 +72,12 @@ jobs:
 
           $analysisRequired = @(
             'boxcars_git_rev=c70e77df7af81b436cb545d070bb90c82f562d0b',
-            'supported_attribute_names_missing_authoritative_tag=0',
+            'supported_attribute_names_from_net_cache=350',
+            'supported_attribute_names_not_implemented_fallback=132',
+            'supported_decoded_attribute_names=102',
+            'supported_decoded_attribute_names_not_implemented=0',
+            'not_implemented_registry_fallback_admitted=true',
+            'not_implemented_stream_payload_decode_admitted=false',
             'authoritative_attribute_tag_registry_evidence=true',
             'parent_hierarchy_surface_evidence=true',
             'production_source_mutation=false',
@@ -92,7 +99,8 @@ jobs:
             $_ -match '^source_' -or
             $_ -match '^supported_' -or
             $_ -match '^dump_' -or
-            $_ -match '^AUTHORITATIVE_TAG ' -or
+            $_ -match '^NET_CACHE_AUTHORITATIVE_TAG ' -or
+            $_ -match '^DECODED_AUTHORITATIVE_TAG ' -or
             $_ -match '^NET_CACHE_PARENT_EDGE ' -or
             $_ -match '^SOURCE_SPAWN_KIND ' -or
             $_ -match '^MULTI_SPAWN_SHAPE ' -or
