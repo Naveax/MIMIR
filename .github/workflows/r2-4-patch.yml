@@ -28,14 +28,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $Path = 'crates/mimir-replay/src/lib.rs'
           $Text = Get-Content -LiteralPath $Path -Raw
-
-          function Replace-ExactOnce([string]$Label, [string]$Old, [string]$New) {
-            $script:Text = $script:Text.Replace($Old, $New)
-            $oldCount = ([regex]::Matches((Get-Content -LiteralPath $Path -Raw), [regex]::Escape($Old))).Count
-            if ($oldCount -ne 1) {
-              throw "$Label anchor count expected 1, got $oldCount"
-            }
-          }
+          $Text = $Text.Replace("`r`n", "`n")
 
           $Old = @'
           const SUPPORTED_BUILD_VERSION_CORPUS_RANK_001: &str = "220826.56130.393105";
