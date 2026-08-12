@@ -1,0 +1,18 @@
+name: R3.5 Footer Residual Correlation
+
+on:
+  push:
+    branches:
+      - agent/r3-5-footer-structure-evidence
+
+jobs:
+  evidence:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build replay compatibility matrix
+        shell: pwsh
+        run: cargo run -p mimir-cli --bin mimir-cli -- replay-compat-matrix --corpus-root test_corpus/largest_100 --output target/r3_5_footer_matrix.jsonl
+      - name: Correlate residual variant with exact tuple
+        shell: pwsh
+        run: python tools/r3_5_footer_residual_correlate.py
