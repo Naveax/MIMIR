@@ -1,0 +1,61 @@
+name: Temporary R3.15C Continuity Sync
+
+on:
+  push:
+    branches:
+      - tmp/r315c-continuity
+    paths:
+      - 'tools/_tmp_r315c_continuity.py'
+      - 'docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md'
+      - '.github/workflows/_tmp_r315c_continuity.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply continuity update
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_r315c_continuity.py
+          test -s docs/continuity/MIMIR_R3_15C_DECISION.md
+          test -s docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md
+          git diff --check
+
+      - name: Verify knowledge archive
+        shell: pwsh
+        run: |
+          & ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed: $LASTEXITCODE" }
+
+      - name: Enforce continuity-only scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- crates Cargo.toml Cargo.lock external_fixtures test_corpus
+          mapfile -t changed < <(git diff --name-only HEAD)
+          printf '%s\n' "${changed[@]}"
+          for p in "${changed[@]}"; do
+            case "$p" in
+              MIMIR_CONTINUE_HERE.md|MIMIR_KNOWLEDGE_GRAPH.md|docs/continuity/MIMIR_CONTINUITY_STATE.json|docs/continuity/MIMIR_CURRENT_STATE.md|docs/continuity/MIMIR_R3_15C_DECISION.md) ;;
+              *) echo "unexpected durable patch path: $p" >&2; exit 1 ;;
+            esac
+          done
+
+      - name: Commit staged continuity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_R3_15C_DECISION.md
+          git commit -m "Advance continuity to R3.15D"
+          git push origin HEAD:tmp/r315c-continuity
