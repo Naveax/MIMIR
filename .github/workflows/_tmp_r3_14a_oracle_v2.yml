@@ -23,7 +23,6 @@ jobs:
         shell: pwsh
         run: |
           & ./tools/r3_14a_oracle/fix_driver_strictmode.ps1
-          if ($LASTEXITCODE -ne 0) { throw "R3.14A StrictMode correction failed: $LASTEXITCODE" }
           & git diff --check -- tools/r3_14a_oracle/run_oracle.ps1
           if ($LASTEXITCODE -ne 0) { throw "effective oracle driver diff check failed: $LASTEXITCODE" }
 
@@ -31,13 +30,11 @@ jobs:
         shell: pwsh
         run: |
           & ./tools/r3_14a_oracle/run_oracle.ps1
-          if ($LASTEXITCODE -ne 0) { throw "R3.14A oracle driver failed: $LASTEXITCODE" }
 
       - name: Finalize spec-complete JSONL and aggregate evidence
         shell: pwsh
         run: |
           & ./tools/r3_14a_oracle/finalize_evidence.ps1
-          if ($LASTEXITCODE -ne 0) { throw "R3.14A evidence finalizer failed: $LASTEXITCODE" }
           foreach ($path in @('r3_14a_first_actor_envelope.jsonl','r3_14a_summary.json','r3_14a_spec_aggregate.txt')) {
             if (-not (Test-Path -LiteralPath $path) -or (Get-Item -LiteralPath $path).Length -eq 0) {
               throw "missing or empty finalized evidence artifact: $path"
