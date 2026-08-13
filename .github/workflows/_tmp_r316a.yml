@@ -1,0 +1,40 @@
+name: Temporary R3.16A First Property Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r316a-first-property
+    paths:
+      - '.github/workflows/_tmp_r316a.yml'
+      - 'tools/_tmp_r316a_driver.sh'
+      - 'tools/_tmp_r316a_patch.py'
+      - 'tools/_tmp_r316a_select.py'
+      - 'tools/_tmp_r316a_compare.py'
+      - 'crates/mimir-replay/examples/_tmp_r316a_plan.rs'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run exact R3.16A evidence lane
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/_tmp_r316a_driver.sh | tee r3_16a_run.log
+
+      - name: Upload R3.16A evidence bundle
+        uses: actions/upload-artifact@v6
+        with:
+          name: r3-16a-first-property-${{ github.sha }}
+          path: |
+            r3_16a_*
+          if-no-files-found: error
