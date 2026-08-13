@@ -30,14 +30,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'missing admitted base commit' }
           git merge-base --is-ancestor $base HEAD
           if ($LASTEXITCODE -ne 0) { throw 'maintenance branch is not descended from admitted main base' }
-          $before = (Get-FileHash -Algorithm SHA256 -LiteralPath Cargo.lock).Hash.ToLowerInvariant()
-          $expectedText = git show "${base}:Cargo.lock"
-          if ($LASTEXITCODE -ne 0) { throw 'failed to read base Cargo.lock' }
-          $tmp = Join-Path $env:RUNNER_TEMP 'base-Cargo.lock'
-          [IO.File]::WriteAllText($tmp, ($expectedText -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
-          $expected = (Get-FileHash -Algorithm SHA256 -LiteralPath $tmp).Hash.ToLowerInvariant()
-          if ($before -ne $expected) { throw "Cargo.lock preimage drift: before=$before expected=$expected" }
-          Write-Host "STALE_LOCK_PREIMAGE_SHA256=$before"
+          $headBlob = (git rev-parse 'HEAD:Cargo.lock').Trim()
+          if ($LASTEXITCODE -ne 0) { throw 'failed to resolve HEAD Cargo.lock blob' }
+          $baseBlob = (git rev-parse "${base}:Cargo.lock").Trim()
+          if ($LASTEXITCODE -ne 0) { throw 'failed to resolve base Cargo.lock blob' }
+          if ($headBlob -ne $baseBlob) { throw "Cargo.lock committed preimage drift: head=$headBlob base=$baseBlob" }
+          Write-Host "STALE_LOCK_PREIMAGE_BLOB=$headBlob"
 
       - name: Generate Cargo lock synchronization
         shell: pwsh
