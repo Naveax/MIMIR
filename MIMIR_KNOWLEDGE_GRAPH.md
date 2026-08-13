@@ -21,7 +21,7 @@ docs/continuity/               MIMIR_ALL_SOURCES_SUPERBOOK.md
 CURRENT STATE + PASS SPECS              |
         |                              |
         v                              |
-R3.14A/B/C admission chain             |
+R3.14A/B/C/D admission chain            |
         |                              |
         +--------------+---------------+
                        |
@@ -53,20 +53,21 @@ scripts/verify_mimir_knowledge_archive.ps1
 3. [`docs/continuity/MIMIR_CURRENT_STATE.md`](docs/continuity/MIMIR_CURRENT_STATE.md)
 4. [`docs/continuity/MIMIR_R3_14A_DECISION.md`](docs/continuity/MIMIR_R3_14A_DECISION.md)
 5. [`docs/continuity/MIMIR_R3_14B_EXECUTION_SPEC.md`](docs/continuity/MIMIR_R3_14B_EXECUTION_SPEC.md)
-6. [`docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md`](docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md)
-7. [`docs/continuity/MIMIR_PASS_PROTOCOL.md`](docs/continuity/MIMIR_PASS_PROTOCOL.md)
-8. [`docs/continuity/MIMIR_BOUNDARY_LOCKS.md`](docs/continuity/MIMIR_BOUNDARY_LOCKS.md)
-9. [`docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`](docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md)
-10. [`docs/continuity/MIMIR_PROGRESS_LEDGER.md`](docs/continuity/MIMIR_PROGRESS_LEDGER.md)
+6. [`docs/continuity/MIMIR_R3_14C_DECISION.md`](docs/continuity/MIMIR_R3_14C_DECISION.md)
+7. [`docs/continuity/MIMIR_R3_14D_EXECUTION_SPEC.md`](docs/continuity/MIMIR_R3_14D_EXECUTION_SPEC.md)
+8. [`docs/continuity/MIMIR_PASS_PROTOCOL.md`](docs/continuity/MIMIR_PASS_PROTOCOL.md)
+9. [`docs/continuity/MIMIR_BOUNDARY_LOCKS.md`](docs/continuity/MIMIR_BOUNDARY_LOCKS.md)
+10. [`docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`](docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md)
+11. [`docs/continuity/MIMIR_PROGRESS_LEDGER.md`](docs/continuity/MIMIR_PROGRESS_LEDGER.md)
 
 ### B. Multi-source reconstruction second
 
-11. [`MIMIR_ALL_SOURCES_SUPERBOOK.md`](MIMIR_ALL_SOURCES_SUPERBOOK.md)
-12. [`docs/chatgpt-archive/README.md`](docs/chatgpt-archive/README.md)
-13. [`docs/chatgpt-archive/SOURCE_REGISTRY.md`](docs/chatgpt-archive/SOURCE_REGISTRY.md)
-14. [`docs/chatgpt-archive/VALIDATION_MATRIX.md`](docs/chatgpt-archive/VALIDATION_MATRIX.md)
-15. [`docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`](docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md)
-16. Only then inspect individual archived sources relevant to the active pass.
+12. [`MIMIR_ALL_SOURCES_SUPERBOOK.md`](MIMIR_ALL_SOURCES_SUPERBOOK.md)
+13. [`docs/chatgpt-archive/README.md`](docs/chatgpt-archive/README.md)
+14. [`docs/chatgpt-archive/SOURCE_REGISTRY.md`](docs/chatgpt-archive/SOURCE_REGISTRY.md)
+15. [`docs/chatgpt-archive/VALIDATION_MATRIX.md`](docs/chatgpt-archive/VALIDATION_MATRIX.md)
+16. [`docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`](docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md)
+17. Only then inspect individual archived sources relevant to the active pass.
 
 ## Current replay-decoder admission chain
 
@@ -91,13 +92,19 @@ private LSB-first cursor + canonical bounded-u32 contract
 Spec: docs/continuity/MIMIR_R3_14B_EXECUTION_SPEC.md
         |
         v
-R3.14C — ACTIVE
-native private bit cursor + bounded integer primitive implementation
-Spec: docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md
+R3.14C — PRODUCTION / ADMITTED
+private native bit cursor + bounded integer primitive
+Production SHA: bad2db9d5043a7a0087a4fab1d278df5f36c7717
+Decision: docs/continuity/MIMIR_R3_14C_DECISION.md
         |
         v
-R3.14D — CLOSED UNTIL R3.14C ADMISSION
-first actor-envelope production reader
+R3.14D — ACTIVE
+first actor-envelope production reader through new, then STOP
+Spec: docs/continuity/MIMIR_R3_14D_EXECUTION_SPEC.md
+        |
+        v
+R3.14E — CLOSED UNTIL R3.14D ADMISSION
+47-replay native-vs-Boxcars first-envelope differential audit
 ```
 
 Important capability distinction:
@@ -109,11 +116,28 @@ R3.14A oracle evidence
 R3.14B implementation contract
 != production primitive
 
-R3.14C primitive implementation when completed
+R3.14C production primitive
 != actor-envelope production reader
+
+R3.14D reader when implemented
+!= 47-replay differential admission; that is R3.14E
 ```
 
-The production replay capability remains R3.13 until a later production pass is implemented, audited, published, and continuity-synced.
+## R3.14C production identity
+
+```text
+pre-pass main             c42836647673cecc47cc9c89908da1de11d8a222
+production SHA            bad2db9d5043a7a0087a4fab1d278df5f36c7717
+source file               crates/mimir-replay/src/lib.rs
+source Git blob           3ff6c7823f45126595e7e59f7b5fb50980d8234c
+source SHA256             ac1c2ae2919ad0c5d6d8ea615dd5dac82f4c5e5240f33618ef5e74ef9cb1cb92
+focused tests             19
+oracle actor-ID vectors   47 / 47 value + end-bit match
+clean branch CI           31698938025 SUCCESS
+published-main CI         31699241010 SUCCESS
+```
+
+The only replay capability opened by R3.14C is the private/internal LSB-first bit cursor and canonical bounded-u32 primitive. Actor-envelope result parsing remains R3.14D work.
 
 ## R3.14A evidence identity
 
@@ -139,6 +163,16 @@ bit 76              alive
 bit 77              new
 bit 78              R3.14A hard stop
 ```
+
+## Repository reproducibility gate discovered during R3.14C
+
+Before R3.14C publication, a pre-existing stale `Cargo.lock` was repaired separately at:
+
+```text
+c42836647673cecc47cc9c89908da1de11d8a222
+```
+
+The permanent repository verifier now uses Cargo `--locked`. This is build/reproducibility maintenance, not replay capability expansion.
 
 ## Authority rule
 
@@ -178,6 +212,6 @@ Run:
 pwsh -NoProfile -File ./scripts/verify_mimir_knowledge_archive.ps1
 ```
 
-The GitHub workflow `.github/workflows/knowledge-archive.yml` executes the same verification.
+The GitHub workflow `.github/workflows/knowledge-archive.yml` executes the same verification and is configured to trigger for continuity and knowledge-graph changes.
 
 After any admitted replay-decoder milestone, update this graph together with the continuity control plane. A milestone is not fully closed while the graph still points to the previous active pass.

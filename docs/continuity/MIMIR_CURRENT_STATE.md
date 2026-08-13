@@ -2,10 +2,10 @@
 
 **Continuity date:** 2026-08-13  
 **Repository:** `Naveax/MIMIR`  
-**Production code checkpoint:** `ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa`  
-**Production milestone:** `R3.13 — static replay network lookup plan`  
+**Production code checkpoint:** `bad2db9d5043a7a0087a4fab1d278df5f36c7717`
+**Production milestone:** `R3.14C — private native network bit cursor + bounded-u32 primitive`
 **Completed read-only format audit:** `R3.14`  
-**Next exact pass:** `R3.14C — native bit cursor + bounded integer primitive implementation`
+**Next exact pass:** `R3.14D — first actor envelope header native reader`
 
 ---
 
@@ -484,3 +484,35 @@ R3.14C opens only the private primitive implementation boundary. The production 
 Current one-line truth after this admission:
 
 > **MIMIR still has R3.13 as its last production replay capability. R3.14A has proven the first-frame/first-actor cursor over all 47 supported replays, R3.14B has admitted the private native bit-cursor/bounded-int contract, and the next correct production pass is R3.14C primitive implementation only.**
+
+
+---
+
+# 18. R3.14C production admission / R3.14D active
+
+R3.14C is now a production milestone at:
+
+```text
+bad2db9d5043a7a0087a4fab1d278df5f36c7717
+```
+
+Production now contains one private/internal LSB-first network bit cursor and one canonical bounded-u32 decoder with atomic failure behavior. The primitive passed 19 focused tests and all 47 R3.14A actor-ID value/end-bit vectors, then full locked repository validation, clean reconstruction, force-free publication, and published-main CI.
+
+Durable decision:
+
+```text
+docs/continuity/MIMIR_R3_14C_DECISION.md
+```
+
+The first actor-envelope reader is still not production capability. It is the active next pass:
+
+```text
+R3.14D — first actor envelope header native reader
+docs/continuity/MIMIR_R3_14D_EXECUTION_SPEC.md
+```
+
+R3.14D opens only the first frame timing pair and one first actor header through `new`, then stops. The 47-replay native-vs-Boxcars admission remains R3.14E.
+
+Current one-line truth:
+
+> **MIMIR now has native private network bit primitives in production, but it still does not have an admitted actor-envelope reader; the next exact pass is R3.14D and the hard stop remains immediately after the first actor `new` bit.**

@@ -1,9 +1,9 @@
 # MIMIR — Execution Roadmap A→Z
 
-**Scope:** from current R3.14C checkpoint to the full MIMIR target architecture
+**Scope:** from current R3.14D checkpoint to the full MIMIR target architecture
 **Policy:** full vision accepted, staged delivery mandatory  
-**Current production checkpoint:** R3.13 static network lookup plan  
-**Current next pass:** R3.14C native bit cursor + bounded integer primitive implementation
+**Current production checkpoint:** R3.14C private native bit cursor + bounded-u32 primitive
+**Current next pass:** R3.14D first actor envelope header native reader
 
 ---
 
@@ -105,7 +105,7 @@ No actor lifecycle yet.
 
 ---
 
-# C. R3.14C — Native bit cursor + bounded integer primitive implementation — ACTIVE
+# C. R3.14C — Native bit cursor + bounded integer primitive implementation — COMPLETE / PRODUCTION
 
 Production code may now add the minimum generic bit primitives.
 
@@ -130,7 +130,7 @@ Do not implement spawn/property payload here.
 
 ---
 
-# D. R3.14D — First actor envelope header native reader
+# D. R3.14D — First actor envelope header native reader — ACTIVE
 
 Build the smallest production reader using the new cursor:
 

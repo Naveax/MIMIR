@@ -3875,3 +3875,27 @@ Durable current artifacts:
 - `docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md`
 
 Production replay capability still stops at R3.13 until R3.14C is implemented, audited and published. R3.14A/B evidence and contracts are not themselves native actor-envelope parsing.
+
+
+---
+
+## CURRENT REPLAY DECODER ADMISSION UPDATE — R3.14C PRODUCTION / R3.14D ACTIVE
+
+Current repository truth now supersedes earlier superbook passages that stop at the R3.13/R3.14A boundary.
+
+```text
+R3.14C production SHA = bad2db9d5043a7a0087a4fab1d278df5f36c7717
+```
+
+R3.14C admits only the private native network bit cursor and canonical bounded-u32 primitive. It was validated with 19 focused tests, all 47 R3.14A actor-ID vectors, full locked workspace verification, clean reconstruction, force-free publication, and published-main CI.
+
+Active exact pass:
+
+```text
+R3.14D — first actor envelope header native reader
+docs/continuity/MIMIR_R3_14D_EXECUTION_SPEC.md
+```
+
+R3.14D stops after the first actor `new` bit. `name_id`, object/spawn/property/attribute payloads, second actor/frame iteration, actor state, raw state, events, and skills remain closed. R3.14E remains the separate 47-replay native-vs-Boxcars differential audit.
+
+Historical archived parser code remains evidence/migration material; it does not override this current production boundary.
