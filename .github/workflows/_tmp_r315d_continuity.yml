@@ -41,6 +41,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --exit-code -- crates Cargo.toml Cargo.lock external_fixtures test_corpus
+          git add -N docs/continuity/MIMIR_R3_15D_DECISION.md
           mapfile -t changed < <(git diff --name-only HEAD | sort)
           printf '%s\n' "${changed[@]}"
           expected=(
