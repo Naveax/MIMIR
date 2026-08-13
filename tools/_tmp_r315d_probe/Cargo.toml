@@ -1,0 +1,10 @@
+[package]
+name = "r315d-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+mimir-replay = { path = "../../crates/mimir-replay" }
