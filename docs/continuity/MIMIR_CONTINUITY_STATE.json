@@ -6,11 +6,11 @@
   "last_production_code_sha": "bf4bccff82203ed049d33e942681fed07f23beb4",
   "last_production_milestone": "R3.15C",
   "last_production_milestone_name": "first NewActor native reader through spawn trajectory",
-  "last_completed_read_only_audit": "R3.14",
-  "current_pass": "R3.15D",
-  "current_pass_kind": "evidence-only 47-replay first-NewActor native-vs-pinned-Boxcars differential audit",
-  "current_pass_goal": "Compare the R3.15C first NewActor result to exactly one frame-0 actor-0 R3.15A oracle row for every admitted replay identity with exact field and trajectory-stop equality.",
-  "current_pass_stop_boundary": "Evidence only. Production Rust is frozen; property_present, stream/property IDs, attributes, another actor/frame, lifecycle state, raw state, events and skills remain closed.",
+  "last_completed_read_only_audit": "R3.15D",
+  "current_pass": "R3.16A",
+  "current_pass_kind": "evidence-only existing-actor first-property envelope characterization",
+  "current_pass_goal": "Select and characterize one reproducible new == false and property_present == true actor update per admitted replay, resolving stream/property context and stopping exactly at attribute payload_start_bit.",
+  "current_pass_stop_boundary": "Evidence only. Production Rust is frozen; do not consume attribute payload, mutate actor lifecycle state, iterate a native property loop, or widen raw-state/event/skill/runtime surfaces.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -94,10 +94,12 @@
     "docs/continuity/MIMIR_R3_15B_DECISION.md",
     "docs/continuity/MIMIR_R3_15C_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_15C_DECISION.md",
-    "docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_15D_DECISION.md",
+    "docs/continuity/MIMIR_R3_16A_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.15A",
-  "last_completed_evidence_outcome": "A \u2014 exact 47-replay / 169538-NewActor evidence admitted",
+  "last_completed_evidence_pass": "R3.15D",
+  "last_completed_evidence_outcome": "A \u2014 exact 47/47 first-NewActor native-vs-pinned-oracle differential; 0 identity/native/mismatch errors",
   "last_completed_contract_pass": "R3.15B",
   "r3_14a": {
     "outcome": "A",
@@ -263,5 +265,38 @@
     "first_new_actor_reader_in_production": true,
     "property_loop_in_production": false,
     "next_pass": "R3.15D"
+  },
+  "r3_15d": {
+    "outcome": "A \u2014 admitted / complete",
+    "production_source_changed": false,
+    "production_sha": "bf4bccff82203ed049d33e942681fed07f23beb4",
+    "production_source_blob": "f64a5e0d66962f41026b2eb10e176219d4529931",
+    "pre_pass_main_sha": "c59453812b8399aca8056b77c3ae4f45da33e44a",
+    "evidence_head_sha": "10e5d05383dbc09e19af997e896a825d8d16e3ae",
+    "workflow_run": 31736738234,
+    "workflow_job": 94570077736,
+    "normal_ci_run": 31736738075,
+    "evidence_artifact_id": 9195419601,
+    "evidence_artifact_digest": "sha256:f6e11055c11ed0724c45fcc76c13a9da2dbbb285ab3744f9738f0d4a19ecab8a",
+    "r3_15a_parent_artifact_id": 9184200143,
+    "r3_15a_parent_artifact_digest": "sha256:a488b7d1620303e609a517eeb098367edd77f25a71022492d4fb46810290e81d",
+    "r3_15a_full_stream_rows": 169538,
+    "r3_15a_full_stream_sha256": "ef1635d0476606bff202ba6b4d2767a865248fc37ae4fc0dab5755922a4d5dba",
+    "selected_oracle_rows": 47,
+    "selected_oracle_lane_sha256": "a5acaea07b636aac3cfab5de9fcdfd9669a0233242084c2bd6adc793d269b5cc",
+    "replays_total": 47,
+    "native_success": 47,
+    "identity_error_count": 0,
+    "native_error_count": 0,
+    "mismatch_count": 0,
+    "exact_field_gates": 21,
+    "all_field_gate_matches": "21 gates x 47/47",
+    "production_mutation_count": 0,
+    "cargo_mutation_count": 0,
+    "discarded_precanonical_harness_runs": [
+      31719341428,
+      31735271685
+    ],
+    "next_pass": "R3.16A"
   }
 }

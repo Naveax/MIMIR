@@ -2643,3 +2643,18 @@ ACTIVE NEXT PASS    = R3.15D — 47-replay first-NewActor differential audit
 R3.15C adds one additive first-NewActor reader. The independently admitted R3.14D envelope remains preserved; only `is_new == true` advances through raw signed `name_id`, one opaque bit, raw signed `object_id`, static spawn dispatch, and the selected `None | Location | LocationAndRotation` trajectory. The hard stop is the exact trajectory endpoint. Property bits, another actor/frame, lifecycle state, raw state, events and skills remain closed.
 
 Read `docs/continuity/MIMIR_R3_15C_DECISION.md` and `docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md` next.
+
+---
+
+## R3.15D COMPLETE / OUTCOME A / ACTIVE R3.16A
+
+```text
+production code SHA = bf4bccff82203ed049d33e942681fed07f23beb4
+R3.15D evidence head = 10e5d05383dbc09e19af997e896a825d8d16e3ae
+R3.15D outcome       = A / 47 OF 47 EXACT FIRST-NEWACTOR DIFFERENTIAL
+ACTIVE NEXT PASS     = R3.16A — existing-actor first-property envelope evidence
+```
+
+R3.15D recovered and verified the exact R3.15A artifact, revalidated its 169,538-row parent stream identity, selected exactly one frame-0/actor-0 oracle row for each of the 47 admitted replay identities, verified all 47 replay SHA-256 values, then compared the frozen R3.15C native reader against those 47 rows. All 21 admitted fields/presence flags/bit-stop gates matched 47/47; `identity_error_count=0`, `native_error_count=0`, `mismatch_count=0`, and production/Cargo mutation remained zero.
+
+The 169,538-row parent stream was provenance-verified; **only the 47 selected first-NewActor rows were native-differentially compared in R3.15D**. Property payloads and later runtime layers remain closed. Read `docs/continuity/MIMIR_R3_15D_DECISION.md` and `docs/continuity/MIMIR_R3_16A_EXECUTION_SPEC.md` next.

@@ -548,3 +548,9 @@ R3.15B is contract-complete and docs-only. Production remains `7b17cb9033b6c71d4
 ## CURRENT OVERRIDE — R3.15C PRODUCTION / R3.15D ACTIVE
 
 R3.15C is production at `bf4bccff82203ed049d33e942681fed07f23beb4`. It extends only the first `new == true` actor through its static-dispatched spawn trajectory and stops exactly there. R3.15D is evidence-only and must compare the first native NewActor on all 47 admitted replay identities against the exact R3.15A pinned-Boxcars oracle. Property decoding and all later runtime layers remain closed.
+
+---
+
+## CURRENT OVERRIDE — R3.15D OUTCOME A / R3.16A ACTIVE
+
+R3.15D is complete with Outcome A against production `bf4bccff82203ed049d33e942681fed07f23beb4`. Exact evidence run `31736738234` compared 47 admitted first-NewActor rows and produced zero identity, native, or field/stop mismatches. The upstream R3.15A 169,538-row stream was revalidated only as provenance for the 47-row selector; it was not itself a 169,538-row native differential. R3.16A is now the evidence-only existing-actor first-property-envelope pass and must stop before attribute payload consumption or production mutation.
