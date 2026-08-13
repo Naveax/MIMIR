@@ -1,0 +1,63 @@
+name: Temporary MIMIR Knowledge Archive Bootstrap
+
+on:
+  push:
+    branches:
+      - docs/chatgpt-storage-multistage-archive
+    paths:
+      - '.github/workflows/_tmp_bootstrap_mimir_knowledge_archive.yml'
+      - '.github/_tmp_mimir_knowledge_archive_payload.zip'
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: docs/chatgpt-storage-multistage-archive
+      - name: Verify bootstrap payload identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '0a79eede6030c0ca7ceee8f962bbcd0c80826ed4f6be9a80eb9b61f506e6e52a  .github/_tmp_mimir_knowledge_archive_payload.zip' | sha256sum -c -
+      - name: Materialize archive payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from zipfile import ZipFile
+          with ZipFile('.github/_tmp_mimir_knowledge_archive_payload.zip') as z:
+              z.extractall('.')
+          PY
+      - name: Static archive and privacy gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f MIMIR_ALL_SOURCES_SUPERBOOK.md
+          test -f MIMIR_KNOWLEDGE_GRAPH.md
+          test -f docs/chatgpt-archive/README.md
+          test -f docs/chatgpt-archive/SOURCE_REGISTRY.md
+          test -f docs/chatgpt-archive/VALIDATION_MATRIX.md
+          test -f docs/chatgpt-archive/MANIFEST.json
+          test -f docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md
+          test -f scripts/verify_mimir_knowledge_archive.ps1
+          test -f .github/workflows/knowledge-archive.yml
+          test ! -f docs/chatgpt-archive/historical/conversations-011.json
+          test ! -f docs/chatgpt-archive/historical/Naveax_replay_extracted_settings.json
+          grep -q 'MIMIR_CONTINUE_HERE.md' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -q 'MIMIR_ALL_SOURCES_SUPERBOOK.md' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -q 'SOURCE_REGISTRY.md' MIMIR_ALL_SOURCES_SUPERBOOK.md
+          grep -q 'REDACTED_EXTRACT' docs/chatgpt-archive/SOURCE_REGISTRY.md
+      - name: Commit materialized archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add MIMIR_ALL_SOURCES_SUPERBOOK.md MIMIR_KNOWLEDGE_GRAPH.md docs/chatgpt-archive scripts/verify_mimir_knowledge_archive.ps1 .github/workflows/knowledge-archive.yml
+          git diff --cached --check
+          git commit -m 'Add multi-stage ChatGPT knowledge archive for MIMIR'
+          git push origin HEAD:docs/chatgpt-storage-multistage-archive
