@@ -2607,3 +2607,14 @@ ACTIVE NEXT PASS    = R3.15A — NewActor branch read-only differential evidence
 R3.14E evidence run `31705946564`, job `94466421975`, artifact `9183181430` proved exact 47/47 equality for raw time/delta, actor-present/id/alive/new, stop bit, BuildVersion, and structural context with zero mismatch/error and zero production mutation.
 
 R3.15A is evidence-only. Production remains frozen before `name_id` and all NewActor spawn fields.
+---
+
+## R3.15A OUTCOME A ADMITTED / ACTIVE R3.15B
+
+```text
+production code SHA = 7b17cb9033b6c71d476e500380d78402cbb3c56d
+R3.15A              = COMPLETE / OUTCOME A / EVIDENCE-ONLY
+ACTIVE NEXT PASS    = R3.15B — NewActor native contract admission
+```
+
+R3.15A  run `31708322309`, job `94474438951`, artifact `9184200143` admitted 169,538 NewActor rows across all 47 supported replays with zero oracle errors, zero invalid object IDs, zero static-spawn mismatches, and zero production mutation. Production remains frozen after the first actor `new` bit.
