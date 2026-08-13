@@ -1,0 +1,42 @@
+name: Temporary R3.14C Cargo Lock Diagnostic
+
+on:
+  push:
+    branches:
+      - agent/r3-14c-network-bit-primitives
+    paths:
+      - '.github/workflows/_tmp_r3_14c_lock_diag.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/r3-14c-network-bit-primitives
+          fetch-depth: 0
+
+      - name: Diagnose Cargo.lock mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=068e1d6c914ab4932bf0a3db25dc3494dc89b334
+          before="$(sha256sum Cargo.lock | awk '{print $1}')"
+          expected="$(git show ${base}:Cargo.lock | sha256sum | awk '{print $1}')"
+          printf 'LOCK_BEFORE=%s\nLOCK_EXPECTED=%s\n' "$before" "$expected"
+          test "$before" = "$expected"
+
+          cp Cargo.lock /tmp/r3_14c_Cargo.lock.before
+          cargo metadata --format-version 1 > /tmp/r3_14c_metadata.json
+          after="$(sha256sum Cargo.lock | awk '{print $1}')"
+          printf 'LOCK_AFTER=%s\n' "$after"
+          if [ "$after" = "$before" ]; then
+            echo 'LOCK_MUTATION=NONE'
+            exit 0
+          fi
+
+          echo 'LOCK_MUTATION=DETECTED'
+          git diff -- Cargo.lock
+          diff -u /tmp/r3_14c_Cargo.lock.before Cargo.lock || true
+          exit 1
