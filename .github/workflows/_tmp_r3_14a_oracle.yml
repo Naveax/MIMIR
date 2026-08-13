@@ -1,0 +1,335 @@
+name: Temporary R3.14A Pinned Oracle Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-14a-first-actor-envelope-evidence
+    paths:
+      - 'tools/r3_14a_oracle/**'
+      - '.github/workflows/_tmp_r3_14a_oracle.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      BOXCARS_FRAME_DECODER_BLOB: 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+      BOXCARS_BITS_BLOB: d3ca061580e5e78038b2af383ff53971001c91c9
+      SELECTOR_MANIFEST_SHA256: 28bd08e2b6a376020cd6e91fc90c1b34f076734cbd6a441d82d33ac047f19c55
+    steps:
+      - name: Checkout exact MIMIR evidence head
+        uses: actions/checkout@v6
+
+      - name: Verify MIMIR evidence scope and selector identity
+        shell: pwsh
+        run: |
+          $head = (& git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "git rev-parse failed: $LASTEXITCODE" }
+          if ($head -ne $env:GITHUB_SHA) { throw "checkout SHA mismatch: head=$head github=$env:GITHUB_SHA" }
+
+          & git fetch origin main --depth=1
+          if ($LASTEXITCODE -ne 0) { throw "fetch main failed: $LASTEXITCODE" }
+          $productionDrift = @(& git diff --name-only origin/main...HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus)
+          if ($LASTEXITCODE -ne 0) { throw "production-scope diff failed: $LASTEXITCODE" }
+          if ($productionDrift.Count -ne 0) {
+            $productionDrift | ForEach-Object { Write-Host "PRODUCTION_DRIFT $_" }
+            throw "R3.14A evidence branch mutated production/corpus scope"
+          }
+
+          $selector = @(& cargo run --manifest-path tools/r3_14a_selector/Cargo.toml --quiet 2>&1 | ForEach-Object { $_.ToString() })
+          $native = $LASTEXITCODE
+          $selector | Set-Content -Encoding utf8 r3_14a_selector_for_oracle.log
+          if ($native -ne 0) { throw "selector failed: $native" }
+
+          $supported = @($selector | Where-Object { $_ -match '^SUPPORTED\t' })
+          if ($supported.Count -ne 47) { throw "expected 47 supported rows, got $($supported.Count)" }
+          foreach ($marker in @(
+              'SUMMARY total_replays=103',
+              'SUMMARY supported_replays=47',
+              'SUMMARY unsupported_replays=56',
+              'SUMMARY unique_supported_sha256=47',
+              "SUMMARY manifest_sha256=$env:SELECTOR_MANIFEST_SHA256",
+              'R3_14A_SELECTOR=PASS'
+          )) {
+            if (-not (($selector -join "`n").Contains($marker))) { throw "missing selector marker: $marker" }
+          }
+          $supported | Set-Content -Encoding utf8 r3_14a_supported.tsv
+          Write-Host "R3_14A_SELECTOR_IDENTITY=PASS"
+          Write-Host "R3_14A_MIMIR_EVIDENCE_HEAD=$head"
+
+      - name: Clone and pin exact Boxcars oracle
+        shell: pwsh
+        run: |
+          $boxcars = Join-Path $env:RUNNER_TEMP 'boxcars-r3-14a'
+          & git clone --quiet https://github.com/nickbabcock/boxcars.git $boxcars
+          if ($LASTEXITCODE -ne 0) { throw "Boxcars clone failed: $LASTEXITCODE" }
+          & git -C $boxcars checkout --quiet --detach $env:BOXCARS_SHA
+          if ($LASTEXITCODE -ne 0) { throw "Boxcars checkout failed: $LASTEXITCODE" }
+
+          $head = (& git -C $boxcars rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $head -ne $env:BOXCARS_SHA) { throw "Boxcars pin mismatch: $head" }
+          $dirty = @(& git -C $boxcars status --porcelain)
+          if ($LASTEXITCODE -ne 0 -or $dirty.Count -ne 0) { throw "Boxcars tree not clean before instrumentation" }
+
+          $frameBlob = (& git -C $boxcars hash-object src/network/frame_decoder.rs).Trim()
+          $bitsBlob = (& git -C $boxcars hash-object src/bits.rs).Trim()
+          if ($frameBlob -ne $env:BOXCARS_FRAME_DECODER_BLOB) { throw "frame_decoder blob mismatch: $frameBlob" }
+          if ($bitsBlob -ne $env:BOXCARS_BITS_BLOB) { throw "bits blob mismatch: $bitsBlob" }
+
+          @(
+            "boxcars_sha=$head",
+            "frame_decoder_blob=$frameBlob",
+            "bits_blob=$bitsBlob",
+            'prepatch_tree_clean=true'
+          ) | Set-Content -Encoding utf8 r3_14a_oracle_identity.txt
+          "BOXCARS_ROOT=$boxcars" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "R3_14A_ORACLE_PIN=PASS"
+
+      - name: Apply observation-only instrumentation and record patch identity
+        shell: pwsh
+        run: |
+          & python tools/r3_14a_oracle/patch_boxcars.py $env:BOXCARS_ROOT
+          if ($LASTEXITCODE -ne 0) { throw "Boxcars instrumentation patch failed: $LASTEXITCODE" }
+
+          & git -C $env:BOXCARS_ROOT add -N examples/r3_14a_probe.rs
+          if ($LASTEXITCODE -ne 0) { throw "git add -N probe failed: $LASTEXITCODE" }
+          & cargo fmt --manifest-path (Join-Path $env:BOXCARS_ROOT 'Cargo.toml') --all
+          if ($LASTEXITCODE -ne 0) { throw "instrumented Boxcars cargo fmt failed: $LASTEXITCODE" }
+          & git -C $env:BOXCARS_ROOT diff --check
+          if ($LASTEXITCODE -ne 0) { throw "instrumentation diff check failed: $LASTEXITCODE" }
+
+          $changed = @(& git -C $env:BOXCARS_ROOT diff --name-only)
+          if ($LASTEXITCODE -ne 0) { throw "instrumentation changed-path query failed: $LASTEXITCODE" }
+          $expected = @('examples/r3_14a_probe.rs', 'src/network/frame_decoder.rs')
+          if ((Compare-Object $expected $changed).Count -ne 0) {
+            $changed | ForEach-Object { Write-Host "ORACLE_CHANGED $_" }
+            throw "instrumentation changed unexpected Boxcars paths"
+          }
+
+          $patchPath = Join-Path $env:GITHUB_WORKSPACE 'r3_14a_boxcars_instrumentation.patch'
+          & git -C $env:BOXCARS_ROOT diff --binary -- examples/r3_14a_probe.rs src/network/frame_decoder.rs | Set-Content -Encoding utf8 $patchPath
+          if ($LASTEXITCODE -ne 0) { throw "instrumentation patch capture failed: $LASTEXITCODE" }
+          $patchSha = (Get-FileHash -Algorithm SHA256 $patchPath).Hash.ToLowerInvariant()
+          "instrumentation_patch_sha256=$patchSha" | Add-Content -Encoding utf8 r3_14a_oracle_identity.txt
+          $changed | ForEach-Object { "instrumented_path=$_" } | Add-Content -Encoding utf8 r3_14a_oracle_identity.txt
+          Write-Host "R3_14A_ORACLE_PATCH_SHA256=$patchSha"
+
+      - name: Build and regression-check instrumented Boxcars
+        shell: pwsh
+        run: |
+          & cargo check --manifest-path (Join-Path $env:BOXCARS_ROOT 'Cargo.toml') --example r3_14a_probe
+          if ($LASTEXITCODE -ne 0) { throw "instrumented Boxcars example check failed: $LASTEXITCODE" }
+          & cargo test --manifest-path (Join-Path $env:BOXCARS_ROOT 'Cargo.toml') --lib --quiet
+          if ($LASTEXITCODE -ne 0) { throw "instrumented Boxcars library tests failed: $LASTEXITCODE" }
+          & cargo build --manifest-path (Join-Path $env:BOXCARS_ROOT 'Cargo.toml') --example r3_14a_probe --quiet
+          if ($LASTEXITCODE -ne 0) { throw "instrumented Boxcars probe build failed: $LASTEXITCODE" }
+          Write-Host 'R3_14A_ORACLE_INSTRUMENTATION_BUILD=PASS'
+
+      - name: Run 47-replay first-frame first-actor oracle evidence
+        shell: pwsh
+        run: |
+          $probe = Join-Path $env:BOXCARS_ROOT 'target\debug\examples\r3_14a_probe.exe'
+          if (-not (Test-Path -LiteralPath $probe)) { throw "missing probe executable: $probe" }
+          $supported = @(Get-Content r3_14a_supported.tsv | Where-Object { $_ -match '^SUPPORTED\t' })
+          if ($supported.Count -ne 47) { throw "supported TSV drift: $($supported.Count)" }
+
+          Remove-Item r3_14a_oracle.log -ErrorAction SilentlyContinue
+          foreach ($row in $supported) {
+            $parts = $row -split "`t"
+            if ($parts.Count -ne 10) { throw "selector row schema drift: $row" }
+            $relative = $parts[2]
+            $resolved = (Resolve-Path -LiteralPath $relative).Path
+            $env:MIMIR_R3_14A_OBSERVE = '1'
+            $env:MIMIR_R3_14A_LABEL = $relative
+            $lines = @(& $probe $resolved 2>&1 | ForEach-Object { $_.ToString() })
+            $native = $LASTEXITCODE
+            "INPUT`t$relative" | Add-Content -Encoding utf8 r3_14a_oracle.log
+            $lines | Add-Content -Encoding utf8 r3_14a_oracle.log
+            if ($native -ne 0) {
+              $lines | ForEach-Object { Write-Host $_ }
+              throw "pinned Boxcars parse failed for $relative with exit $native"
+            }
+            if (@($lines | Where-Object { $_ -match '^R3_14A_EVIDENCE\t' }).Count -ne 1) {
+              throw "expected exactly one first-frame evidence row for $relative"
+            }
+            if (@($lines | Where-Object { $_ -eq 'R3_14A_ORACLE_PARSE=PASS' }).Count -ne 1) {
+              throw "missing oracle parse PASS for $relative"
+            }
+          }
+          Remove-Item Env:MIMIR_R3_14A_OBSERVE -ErrorAction SilentlyContinue
+          Remove-Item Env:MIMIR_R3_14A_LABEL -ErrorAction SilentlyContinue
+          Write-Host 'R3_14A_ORACLE_PARSE_LOOP=PASS'
+
+      - name: Validate first-envelope schema and aggregate gates
+        shell: pwsh
+        run: |
+          $evidence = @(Get-Content r3_14a_oracle.log | Where-Object { $_ -match '^R3_14A_EVIDENCE\t' })
+          $parsePass = @(Get-Content r3_14a_oracle.log | Where-Object { $_ -eq 'R3_14A_ORACLE_PARSE=PASS' })
+          if ($evidence.Count -ne 47) { throw "expected 47 evidence rows, got $($evidence.Count)" }
+          if ($parsePass.Count -ne 47) { throw "expected 47 oracle parse PASS rows, got $($parsePass.Count)" }
+
+          $selectorRows = @(Get-Content r3_14a_supported.tsv | Where-Object { $_ -match '^SUPPORTED\t' })
+          $selectorByPath = @{}
+          foreach ($row in $selectorRows) {
+            $p = $row -split "`t"
+            $selectorByPath[$p[2]] = [pscustomobject]@{
+              Sha256 = $p[4]
+              MaxChannels = [int]$p[8]
+              ChannelBits = [int]$p[9]
+            }
+          }
+
+          $records = @()
+          foreach ($line in $evidence) {
+            $fields = @{}
+            foreach ($part in (($line -split "`t") | Select-Object -Skip 1)) {
+              $kv = $part -split '=', 2
+              if ($kv.Count -ne 2 -or $fields.ContainsKey($kv[0])) { throw "evidence schema error: $line" }
+              $fields[$kv[0]] = $kv[1]
+            }
+            $records += [pscustomobject]$fields
+          }
+
+          $required = @(
+            'label','frame_start_bit','time_raw_u32','time_f32','delta_raw_u32','delta_f32',
+            'bit_after_time_delta','actor_present_bit_offset','actor_present','actor_id_bound',
+            'actor_id_start_bit','actor_id_value','actor_id_end_bit','actor_id_bits_consumed',
+            'actor_id_discriminator','alive_bit_offset','alive','new_bit_offset','new',
+            'first_actor_header_end_bit','terminal'
+          )
+          $schemaErrors = 0
+          $monotonicityFailures = 0
+          $nonFinite = 0
+          $zeroZero = 0
+          $terminalRows = 0
+          $actorPresentTrue = 0
+          $actorPresentFalse = 0
+          $aliveTrue = 0
+          $aliveFalse = 0
+          $newTrue = 0
+          $newFalse = 0
+          $discriminatorConsumed = 0
+
+          foreach ($r in $records) {
+            foreach ($name in $required) {
+              if ($null -eq $r.PSObject.Properties[$name]) { $schemaErrors++; continue }
+            }
+            if (-not $selectorByPath.ContainsKey($r.label)) { $schemaErrors++; continue }
+
+            $frameStart = [int64]$r.frame_start_bit
+            $afterTD = [int64]$r.bit_after_time_delta
+            $headerEnd = [int64]$r.first_actor_header_end_bit
+            if ($frameStart -lt 0 -or $afterTD -ne ($frameStart + 64) -or $headerEnd -lt $afterTD) { $monotonicityFailures++ }
+
+            $time = [double]::Parse($r.time_f32, [Globalization.CultureInfo]::InvariantCulture)
+            $delta = [double]::Parse($r.delta_f32, [Globalization.CultureInfo]::InvariantCulture)
+            if ([double]::IsNaN($time) -or [double]::IsInfinity($time) -or [double]::IsNaN($delta) -or [double]::IsInfinity($delta)) { $nonFinite++ }
+            if ($time -eq 0.0 -and $delta -eq 0.0) { $zeroZero++ }
+            if ($r.terminal -eq 'true') { $terminalRows++ }
+
+            if ($r.actor_present -eq 'true') {
+              $actorPresentTrue++
+              $selector = $selectorByPath[$r.label]
+              if ([int]$r.actor_id_bound -ne $selector.MaxChannels) { $schemaErrors++ }
+              $presentOffset = [int64]$r.actor_present_bit_offset
+              $idStart = [int64]$r.actor_id_start_bit
+              $idEnd = [int64]$r.actor_id_end_bit
+              $aliveOffset = [int64]$r.alive_bit_offset
+              $consumed = [int]$r.actor_id_bits_consumed
+              $actorId = [int]$r.actor_id_value
+              if ($presentOffset -ne $afterTD -or $idStart -ne ($presentOffset + 1) -or $idEnd -le $idStart -or $aliveOffset -ne $idEnd) { $monotonicityFailures++ }
+              if ($actorId -lt 0 -or $actorId -ge $selector.MaxChannels) { $schemaErrors++ }
+              if ($consumed -ne $selector.ChannelBits -and $consumed -ne ($selector.ChannelBits + 1)) { $schemaErrors++ }
+              if ($consumed -eq ($selector.ChannelBits + 1)) {
+                $discriminatorConsumed++
+                if ($r.actor_id_discriminator -ne '0' -and $r.actor_id_discriminator -ne '1') { $schemaErrors++ }
+              } elseif ($r.actor_id_discriminator -ne 'null') {
+                $schemaErrors++
+              }
+
+              if ($r.alive -eq 'true') {
+                $aliveTrue++
+                $newOffset = [int64]$r.new_bit_offset
+                if ($newOffset -ne ($aliveOffset + 1) -or $headerEnd -ne ($newOffset + 1)) { $monotonicityFailures++ }
+                if ($r.new -eq 'true') { $newTrue++ }
+                elseif ($r.new -eq 'false') { $newFalse++ }
+                else { $schemaErrors++ }
+              } elseif ($r.alive -eq 'false') {
+                $aliveFalse++
+                if ($r.new_bit_offset -ne 'null' -or $r.new -ne 'null' -or $headerEnd -ne ($aliveOffset + 1)) { $schemaErrors++ }
+              } else {
+                $schemaErrors++
+              }
+            } elseif ($r.actor_present -eq 'false') {
+              $actorPresentFalse++
+              $presentOffset = [int64]$r.actor_present_bit_offset
+              if ($presentOffset -ne $afterTD -or $headerEnd -ne ($presentOffset + 1)) { $monotonicityFailures++ }
+              foreach ($name in @('actor_id_bound','actor_id_start_bit','actor_id_value','actor_id_end_bit','actor_id_bits_consumed','actor_id_discriminator','alive_bit_offset','alive','new_bit_offset','new')) {
+                if ($r.$name -ne 'null') { $schemaErrors++ }
+              }
+            } else {
+              $schemaErrors++
+            }
+          }
+
+          $uniqueLabels = @($records.label | Sort-Object -Unique).Count
+          if ($uniqueLabels -ne 47) { throw "expected 47 unique evidence labels, got $uniqueLabels" }
+          if ($nonFinite -ne 0 -or $zeroZero -ne 0 -or $terminalRows -ne 0 -or $schemaErrors -ne 0 -or $monotonicityFailures -ne 0) {
+            throw "R3.14A aggregate failure: nonfinite=$nonFinite zerozero=$zeroZero terminal=$terminalRows schema=$schemaErrors monotonicity=$monotonicityFailures"
+          }
+
+          @(
+            'R3.14A pinned oracle aggregate',
+            "mimir_evidence_head=$env:GITHUB_SHA",
+            "boxcars_sha=$env:BOXCARS_SHA",
+            "selector_manifest_sha256=$env:SELECTOR_MANIFEST_SHA256",
+            'supported_replays=47',
+            'unique_replay_sha256=47',
+            'oracle_parse_success=47',
+            'first_frame_rows=47',
+            "actor_present_true=$actorPresentTrue",
+            "actor_present_false=$actorPresentFalse",
+            "alive_true=$aliveTrue",
+            "alive_false=$aliveFalse",
+            "new_true=$newTrue",
+            "new_false=$newFalse",
+            "actor_id_discriminator_consumed=$discriminatorConsumed",
+            'nonfinite_time_delta=0',
+            'zero_zero_first_frame=0',
+            'terminal_first_frame_rows=0',
+            'schema_errors=0',
+            'bit_monotonicity_failures=0',
+            'production_source_mutation=0',
+            'R3_14A_ORACLE_EVIDENCE=PASS'
+          ) | Set-Content -Encoding utf8 r3_14a_aggregate.txt
+          Get-Content r3_14a_aggregate.txt | ForEach-Object { Write-Host $_ }
+
+      - name: Recheck oracle patch scope after all parses
+        shell: pwsh
+        run: |
+          $head = (& git -C $env:BOXCARS_ROOT rev-parse HEAD).Trim()
+          if ($head -ne $env:BOXCARS_SHA) { throw "oracle HEAD drifted after parse: $head" }
+          $changed = @(& git -C $env:BOXCARS_ROOT diff --name-only)
+          $expected = @('examples/r3_14a_probe.rs', 'src/network/frame_decoder.rs')
+          if ((Compare-Object $expected $changed).Count -ne 0) { throw "oracle patch scope drifted after parse" }
+          $productionDrift = @(& git diff --name-only origin/main...HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus)
+          if ($productionDrift.Count -ne 0) { throw "MIMIR production/corpus scope drifted during oracle pass" }
+          Write-Host 'R3_14A_FINAL_SCOPE=PASS'
+
+      - name: Upload R3.14A evidence bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: r3-14a-pinned-oracle-evidence-${{ github.sha }}
+          path: |
+            r3_14a_selector_for_oracle.log
+            r3_14a_supported.tsv
+            r3_14a_oracle_identity.txt
+            r3_14a_boxcars_instrumentation.patch
+            r3_14a_oracle.log
+            r3_14a_aggregate.txt
+          if-no-files-found: error
+          retention-days: 30
