@@ -5,14 +5,18 @@ on:
   push:
     paths:
       - 'MIMIR_CONTINUE_HERE.md'
+      - 'MIMIR_KNOWLEDGE_GRAPH.md'
       - 'MIMIR_ALL_SOURCES_SUPERBOOK.md'
+      - 'docs/continuity/**'
       - 'docs/chatgpt-archive/**'
       - 'scripts/verify_mimir_knowledge_archive.ps1'
       - '.github/workflows/knowledge-archive.yml'
   pull_request:
     paths:
       - 'MIMIR_CONTINUE_HERE.md'
+      - 'MIMIR_KNOWLEDGE_GRAPH.md'
       - 'MIMIR_ALL_SOURCES_SUPERBOOK.md'
+      - 'docs/continuity/**'
       - 'docs/chatgpt-archive/**'
       - 'scripts/verify_mimir_knowledge_archive.ps1'
       - '.github/workflows/knowledge-archive.yml'
