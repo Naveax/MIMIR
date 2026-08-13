@@ -75,7 +75,7 @@ fn r3_14a_emit(
         .replace('\n', "_");
 
     println!(
-        "R3_14A_EVIDENCE\\tlabel={label}\\tframe_start_bit={frame_start_bit}\\ttime_raw_u32={time_raw_u32}\\ttime_f32={time_f32:?}\\tdelta_raw_u32={delta_raw_u32}\\tdelta_f32={delta_f32:?}\\tbit_after_time_delta={bit_after_time_delta}\\tactor_present_bit_offset={}\\tactor_present={}\\tactor_id_bound={}\\tactor_id_start_bit={}\\tactor_id_value={}\\tactor_id_end_bit={}\\tactor_id_bits_consumed={}\\tactor_id_discriminator={}\\talive_bit_offset={}\\talive={}\\tnew_bit_offset={}\\tnew={}\\tfirst_actor_header_end_bit={first_actor_header_end_bit}\\tterminal={terminal}",
+        "R3_14A_EVIDENCE\tlabel={label}\tframe_start_bit={frame_start_bit}\ttime_raw_u32={time_raw_u32}\ttime_f32={time_f32:?}\tdelta_raw_u32={delta_raw_u32}\tdelta_f32={delta_f32:?}\tbit_after_time_delta={bit_after_time_delta}\tactor_present_bit_offset={}\tactor_present={}\tactor_id_bound={}\tactor_id_start_bit={}\tactor_id_value={}\tactor_id_end_bit={}\tactor_id_bits_consumed={}\tactor_id_discriminator={}\talive_bit_offset={}\talive={}\tnew_bit_offset={}\tnew={}\tfirst_actor_header_end_bit={first_actor_header_end_bit}\tterminal={terminal}",
         r3_14a_optional(actor_present_offset),
         r3_14a_optional(actor_present),
         r3_14a_optional(actor_id_bound),
@@ -91,7 +91,7 @@ fn r3_14a_emit(
     );
 }
 
-'''
+'''.replace(r'\"', '"')
     text = replace_once(text, marker, helper + marker, "instrumentation helper insertion")
 
     original_preamble = r'''        let time = bits
@@ -118,7 +118,7 @@ fn r3_14a_emit(
             .read_bit()
             .ok_or(FrameError::NotEnoughDataFor("Actor data"))?
         {
-'''
+'''.replace(r'\"', '"')
     instrumented_preamble = r'''        let r3_14a_observe = std::env::var_os("MIMIR_R3_14A_OBSERVE").is_some()
             && !R3_14A_EVIDENCE_EMITTED.load(Ordering::Relaxed);
         let r3_14a_total_bits = self.body.network_data.len() * 8;
@@ -216,7 +216,7 @@ fn r3_14a_emit(
             }
             actor_present
         } {
-'''
+'''.replace(r'\"', '"')
     text = replace_once(
         text,
         original_preamble,
@@ -235,7 +235,7 @@ fn r3_14a_emit(
                     .read_bit()
                     .ok_or(FrameError::NotEnoughDataFor("Is new actor"))?
                 {
-'''
+'''.replace(r'\"', '"')
     instrumented_actor_header = r'''            let max = u64::from(self.max_channels);
             let r3_14a_actor_id_start_bit = if r3_14a_observe {
                 r3_14a_offset(bits, r3_14a_total_bits)
@@ -312,7 +312,7 @@ fn r3_14a_emit(
                     R3_14A_EVIDENCE_EMITTED.store(true, Ordering::Relaxed);
                 }
                 if is_new {
-'''
+'''.replace(r'\"', '"')
     text = replace_once(
         text,
         original_actor_header,
@@ -354,7 +354,7 @@ fn r3_14a_emit(
                 deleted_actors.push(actor_id);
                 actors.delete(actor_id);
             }
-'''
+'''.replace(r'\"', '"')
     text = replace_once(
         text,
         original_deleted,
@@ -366,8 +366,7 @@ fn r3_14a_emit(
 
     example_dir = root / "examples"
     example_dir.mkdir(exist_ok=True)
-    (example_dir / "r3_14a_probe.rs").write_text(
-        r'''use boxcars::ParserBuilder;
+    example = r'''use boxcars::ParserBuilder;
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
@@ -386,12 +385,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("R3_14A_ORACLE_PARSE=PASS");
     Ok(())
 }
-''',
-        encoding="utf-8",
-    )
+'''.replace(r'\"', '"')
+    (example_dir / "r3_14a_probe.rs").write_text(example, encoding="utf-8")
 
-    print(f"patched={source}\n")
-    print(f"pinned_frame_decoder_blob={PINNED_FRAME_DECODER_BLOB}\n")
+    print(f"patched={source}")
+    print(f"pinned_frame_decoder_blob={PINNED_FRAME_DECODER_BLOB}")
 
 
 if __name__ == "__main__":
