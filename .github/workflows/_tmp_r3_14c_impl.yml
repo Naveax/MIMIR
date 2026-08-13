@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: agent/r3-14c-network-bit-primitives
+          fetch-depth: 0
 
       - name: Assert exact production base ancestry
         shell: bash
