@@ -2,10 +2,10 @@
 
 **Continuity date:** 2026-08-13  
 **Repository:** `Naveax/MIMIR`  
-**Production code checkpoint:** `bad2db9d5043a7a0087a4fab1d278df5f36c7717`
-**Production milestone:** `R3.14C — private native network bit cursor + bounded-u32 primitive`
+**Production code checkpoint:** `7b17cb9033b6c71d476e500380d78402cbb3c56d`
+**Production milestone:** `R3.14D — first actor envelope header native reader`
 **Completed read-only format audit:** `R3.14`  
-**Next exact pass:** `R3.14D — first actor envelope header native reader`
+**Next exact pass:** `R3.14E — native first-envelope differential audit`
 
 ---
 
@@ -516,3 +516,14 @@ R3.14D opens only the first frame timing pair and one first actor header through
 Current one-line truth:
 
 > **MIMIR now has native private network bit primitives in production, but it still does not have an admitted actor-envelope reader; the next exact pass is R3.14D and the hard stop remains immediately after the first actor `new` bit.**
+
+
+---
+
+# 19. R3.14D production admission / R3.14E active
+
+R3.14D is production at `7b17cb9033b6c71d476e500380d78402cbb3c56d`. The first native reader now materializes one first-frame/first-actor envelope header through `new` only.
+
+Validation: 17 focused tests PASS; locked repository verifier PASS; clean CI `31702049792` SUCCESS; published-main CI `31702341993` SUCCESS; source blob `67752868807c0b7169e46f22762c7a0ea9efce40`; source SHA-256 `06b767622108ca1aea82ee5c0aad6cc503fbcfddaba05012cf022dd901a5a385`.
+
+Active pass: `R3.14E`, evidence-only 47-replay native-vs-pinned-Boxcars differential audit. No production Rust change is allowed.

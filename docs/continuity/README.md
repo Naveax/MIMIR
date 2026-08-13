@@ -23,8 +23,11 @@ Admitted contract that converts R3.14A evidence into the native private bit-curs
 ### `MIMIR_R3_14C_DECISION.md`
 Completed R3.14C production admission for the private native bit cursor and canonical bounded-u32 primitive.
 
-### `MIMIR_R3_14D_EXECUTION_SPEC.md`
-**Şu anda yapılacak exact pass.** First frame + one first actor-envelope header through `new`, then hard stop before `name_id`.
+### `MIMIR_R3_14D_DECISION.md`
+Completed R3.14D production admission for one first actor-envelope header through `new`.
+
+### `MIMIR_R3_14E_EXECUTION_SPEC.md`
+**Şu anda yapılacak exact pass.** Evidence-only 47-replay native-vs-pinned-Boxcars differential audit.
 
 ### `MIMIR_PASS_PROTOCOL.md`
 Her pass için değişmez çalışma protokolü: re-audit, evidence, implementation isolation, fail-fast CI, clean reconstruction, exact-SHA validation, force-free publication ve continuity sync.
