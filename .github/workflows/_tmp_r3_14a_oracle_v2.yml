@@ -1,0 +1,40 @@
+name: Temporary R3.14A Pinned Oracle Evidence V2
+
+on:
+  push:
+    branches:
+      - agent/r3-14a-first-actor-envelope-evidence
+    paths:
+      - 'tools/r3_14a_oracle/**'
+      - '.github/workflows/_tmp_r3_14a_oracle_v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  oracle:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+
+      - name: Run deterministic pinned-oracle driver
+        shell: pwsh
+        run: |
+          & ./tools/r3_14a_oracle/run_oracle.ps1
+          if ($LASTEXITCODE -ne 0) { throw "R3.14A oracle driver failed: $LASTEXITCODE" }
+
+      - name: Upload R3.14A evidence bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: r3-14a-pinned-oracle-evidence-v2-${{ github.sha }}
+          path: |
+            r3_14a_selector_for_oracle.log
+            r3_14a_supported.tsv
+            r3_14a_oracle_identity.txt
+            r3_14a_boxcars_instrumentation.patch
+            r3_14a_oracle.log
+            r3_14a_aggregate.txt
+          if-no-files-found: error
+          retention-days: 30
