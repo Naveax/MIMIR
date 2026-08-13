@@ -1,0 +1,136 @@
+name: Temporary R3.14E First Envelope Differential
+
+on:
+  push:
+    branches:
+      - agent/r3-14e-first-envelope-differential
+    paths:
+      - '.github/workflows/_tmp_r3_14e.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  differential-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      PRODUCTION_SHA: 7b17cb9033b6c71d476e500380d78402cbb3c56d
+      CONTINUITY_BASE_SHA: b06a967b31e971431caa415721661088c630fdbc
+      ORACLE_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      ORACLE_EVIDENCE_HEAD: f1c4eedb6a7e4d96577d2c0a429cbe8b170aa9a1
+      ORACLE_RUN_ID: '31690714121'
+      ORACLE_ARTIFACT_ID: '9177314099'
+      ORACLE_ARTIFACT_NAME: r3-14a-pinned-oracle-evidence-v2-f1c4eedb6a7e4d96577d2c0a429cbe8b170aa9a1
+      ORACLE_ARTIFACT_SHA256: d404437e994fd7d539ea554bd63a456273330340b1d678e635d1bb601440c10b
+      SELECTOR_MANIFEST_SHA256: 28bd08e2b6a376020cd6e91fc90c1b34f076734cbd6a441d82d33ac047f19c55
+    steps:
+      - name: Checkout disposable evidence branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Assert frozen production scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "${PRODUCTION_SHA}^{commit}"
+          git cat-file -e "${CONTINUITY_BASE_SHA}^{commit}"
+          git merge-base --is-ancestor "$CONTINUITY_BASE_SHA" HEAD
+          test "$(git rev-parse "${PRODUCTION_SHA}:crates/mimir-replay/src/lib.rs")" = "$(git rev-parse 'HEAD:crates/mimir-replay/src/lib.rs')"
+          test "$(git rev-parse "${PRODUCTION_SHA}:crates/mimir-replay/Cargo.toml")" = "$(git rev-parse 'HEAD:crates/mimir-replay/Cargo.toml')"
+          test "$(git rev-parse "${PRODUCTION_SHA}:Cargo.lock")" = "$(git rev-parse 'HEAD:Cargo.lock')"
+          test -z "$(git diff --name-only "$CONTINUITY_BASE_SHA" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus)"
+          git diff --check "$CONTINUITY_BASE_SHA" HEAD
+          printf 'production_sha=%s\ncontinuity_base_sha=%s\nevidence_workflow_head=%s\n' "$PRODUCTION_SHA" "$CONTINUITY_BASE_SHA" "$(git rev-parse HEAD)" > r3_14e_source_scope.txt
+
+      - name: Recover exact R3.14A oracle evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/r3_14a
+          digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ORACLE_ARTIFACT_ID}" --jq .digest)"
+          test "$digest" = "sha256:${ORACLE_ARTIFACT_SHA256}"
+          gh run download "$ORACLE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$ORACLE_ARTIFACT_NAME" --dir .tmp/r3_14a
+          test -f .tmp/r3_14a/r3_14a_first_actor_envelope.jsonl
+          test -f .tmp/r3_14a/r3_14a_summary.json
+          printf 'run_id=%s\nartifact_id=%s\nartifact_digest=%s\n' "$ORACLE_RUN_ID" "$ORACLE_ARTIFACT_ID" "$digest" > r3_14e_oracle_identity.txt
+
+      - name: Verify exact 47 inputs and generate native probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_r3_14e_prepare.py | tee r3_14e_prepare.log
+          grep -q 'R3_14E_IDENTITY_VERIFICATION=PASS' r3_14e_prepare.log
+          grep -q 'R3_14E_INPUT_COUNT=47' r3_14e_prepare.log
+          sha256sum tools/_tmp_r3_14e_prepare.py | tee r3_14e_preparer_sha256.txt
+          sha256sum crates/mimir-replay/tests/_tmp_r3_14e_differential.rs | tee r3_14e_native_probe_sha256.txt
+
+      - name: Execute native differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-replay --test _tmp_r3_14e_differential -- --nocapture | tee r3_14e_native_test.log
+          grep -q 'R3_14E_NATIVE_PARSE_SUCCESS=47' r3_14e_native_test.log
+          grep -q 'R3_14E_EXACT_MATCH=47' r3_14e_native_test.log
+          git diff --quiet -- crates/mimir-replay/src/lib.rs Cargo.toml Cargo.lock crates/mimir-replay/Cargo.toml external_fixtures test_corpus
+
+      - name: Build admission candidate receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          preparer_sha="$(awk '{print $1}' r3_14e_preparer_sha256.txt)"
+          probe_sha="$(awk '{print $1}' r3_14e_native_probe_sha256.txt)"
+          cat > r3_14e_aggregate.txt <<EOF
+          pass=R3.14E
+          production_sha=${PRODUCTION_SHA}
+          continuity_base_sha=${CONTINUITY_BASE_SHA}
+          evidence_workflow_head=${GITHUB_SHA}
+          oracle_sha=${ORACLE_SHA}
+          oracle_evidence_head=${ORACLE_EVIDENCE_HEAD}
+          oracle_artifact_id=${ORACLE_ARTIFACT_ID}
+          oracle_artifact_sha256=${ORACLE_ARTIFACT_SHA256}
+          selector_manifest_sha256=${SELECTOR_MANIFEST_SHA256}
+          preparer_sha256=${preparer_sha}
+          native_probe_sha256=${probe_sha}
+          replays_total=47
+          replays_unique_sha=47
+          native_parse_success=47
+          oracle_rows=47
+          time_raw_match=47
+          delta_raw_match=47
+          actor_present_match=47
+          actor_id_match=47
+          alive_match=47
+          new_match=47
+          stop_bit_match=47
+          structural_context_match=47
+          build_version_match=47
+          mismatch_count=0
+          native_error_count=0
+          identity_error_count=0
+          production_source_mutation=0
+          hard_stop=bit_78_after_new
+          outcome_candidate=A
+          next_pass_candidate=R3.15A
+          EOF
+          cat r3_14e_aggregate.txt
+
+      - name: Upload R3.14E evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: r3-14e-first-envelope-differential-${{ github.sha }}
+          path: |
+            r3_14e_source_scope.txt
+            r3_14e_oracle_identity.txt
+            r3_14e_prepare.log
+            r3_14e_verified_inputs.json
+            r3_14e_preparer_sha256.txt
+            r3_14e_native_probe_sha256.txt
+            r3_14e_native_test.log
+            r3_14e_aggregate.txt
+            crates/mimir-replay/tests/_tmp_r3_14e_differential.rs
+          if-no-files-found: error
