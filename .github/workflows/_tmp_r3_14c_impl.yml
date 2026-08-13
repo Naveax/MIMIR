@@ -63,37 +63,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cargo test -p mimir-replay r3_14c_ -- --nocapture
+          cargo test --locked -p mimir-replay r3_14c_ -- --nocapture
 
       - name: Full mimir-replay regression
         shell: bash
         run: |
           set -euo pipefail
-          cargo test -p mimir-replay -- --nocapture
+          cargo test --locked -p mimir-replay -- --nocapture
 
       - name: Workspace check
         shell: bash
         run: |
           set -euo pipefail
-          cargo check --workspace --all-targets --all-features
+          cargo check --locked --workspace --all-targets --all-features
 
       - name: Workspace tests
         shell: bash
         run: |
           set -euo pipefail
-          cargo test --workspace --all-targets --all-features
+          cargo test --locked --workspace --all-targets --all-features
 
       - name: Workspace clippy
         shell: bash
         run: |
           set -euo pipefail
-          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
       - name: Export inventory gate
         shell: bash
         run: |
           set -euo pipefail
-          cargo test -p mimir-export -- --list
+          cargo test --locked -p mimir-export -- --list
 
       - name: Verify checked-in replay corpus
         shell: pwsh
@@ -114,6 +114,11 @@ jobs:
           git diff --check
           changed="$(git diff --name-only)"
           printf 'R3.14C working-tree changes:\n%s\n' "$changed"
+          if ! git diff --quiet -- Cargo.toml Cargo.lock crates/mimir-replay/Cargo.toml; then
+            echo 'ERROR: dependency manifest or Cargo.lock drifted under --locked validation.' >&2
+            git diff -- Cargo.toml Cargo.lock crates/mimir-replay/Cargo.toml >&2
+            exit 1
+          fi
           test "$changed" = 'crates/mimir-replay/src/lib.rs'
 
           if ! grep -q "struct NetworkBitCursor<'a>" crates/mimir-replay/src/lib.rs; then
@@ -132,10 +137,6 @@ jobs:
             echo 'external Boxcars dependency crossed the R3.14C hard stop' >&2
             exit 1
           fi
-          if ! git diff --quiet -- Cargo.toml Cargo.lock crates/mimir-replay/Cargo.toml; then
-            echo 'dependency manifests changed in R3.14C' >&2
-            exit 1
-          fi
 
           git diff -- crates/mimir-replay/src/lib.rs > r3_14c_source.diff
           source_sha256="$(sha256sum crates/mimir-replay/src/lib.rs | awk '{print $1}')"
@@ -152,6 +153,7 @@ jobs:
           corpus_verifier=PASS
           knowledge_archive_verifier=PASS
           hard_stop_scope=PASS
+          cargo_locked=PASS
           EOF
 
       - name: Commit validated production source only
