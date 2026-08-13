@@ -1,0 +1,20 @@
+{
+  "updated_date": "2026-08-13",
+  "current_pass": "R3.15C",
+  "current_pass_kind": "narrow production implementation - first NewActor native reader through spawn trajectory",
+  "current_pass_goal": "Implement one additive native first-NewActor reader under the admitted R3.15B contract and stop at the first NewActor spawn trajectory endpoint.",
+  "current_pass_stop_boundary": "End of first NewActor spawn trajectory; property_present, next actor/frame, lifecycle state, raw state, events and skills remain closed.",
+  "last_completed_contract_pass": "R3.15B",
+  "r3_15b": {
+    "outcome": "ADMITTED / CONTRACT COMPLETE",
+    "production_source_changed": false,
+    "production_sha": "7b17cb9033b6c71d476e500380d78402cbb3c56d",
+    "continuity_base_sha": "fb2bbdec739b440ebbc2465db09bdcc9faac2ce1",
+    "r3_15a_artifact_id": 9184200143,
+    "r3_15a_artifact_sha256": "a488b7d1620303e609a517eeb098367edd77f25a71022492d4fb46810290e81d",
+    "exact_sha_ci_run": 31710371570,
+    "exact_sha_knowledge_archive_run": 31710371562,
+    "published_main_readback_sha": "fb2bbdec739b440ebbc2465db09bdcc9faac2ce1",
+    "next_pass": "R3.15C"
+  }
+}
