@@ -1,0 +1,11 @@
+[package]
+name = "mimir-r3-14a-selector"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+mimir-replay = { path = "../../crates/mimir-replay" }
+mimir-types = { path = "../../crates/mimir-types" }
+
+[workspace]
