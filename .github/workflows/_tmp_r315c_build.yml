@@ -1,0 +1,59 @@
+name: Temporary R3.15C Builder
+
+on:
+  push:
+    branches:
+      - work/r315c-reader
+    paths:
+      - 'tools/_tmp_r315c_apply.py'
+      - '.github/workflows/_tmp_r315c_build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen source and apply deterministic patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object crates/mimir-replay/src/lib.rs)" = "67752868807c0b7169e46f22762c7a0ea9efce40"
+          python tools/_tmp_r315c_apply.py
+          git diff --check -- crates/mimir-replay/src/lib.rs
+
+      - name: Focused formatting and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all
+          cargo fmt --all -- --check
+          cargo test -p mimir-replay --locked r3_15c -- --nocapture
+          cargo check -p mimir-replay --all-targets --all-features --locked
+          cargo clippy -p mimir-replay --all-targets --all-features --locked -- -D warnings
+
+      - name: Enforce production scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git diff --name-only HEAD)
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = "crates/mimir-replay/src/lib.rs"
+          git diff --exit-code -- Cargo.toml Cargo.lock
+
+      - name: Commit candidate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crates/mimir-replay/src/lib.rs
+          git commit -m "Implement R3.15C first NewActor reader"
+          git push origin HEAD:work/r315c-reader
