@@ -1,0 +1,47 @@
+name: Temporary R3.15B Continuity Sync
+
+on:
+  push:
+    branches: [tmp-r315b-continuity-sync]
+    paths: ['.github/workflows/_tmp_r315b_continuity.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Apply continuity update
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_r315b_apply.py
+          grep -q 'R3.15B CONTRACT ADMITTED / ACTIVE R3.15C' MIMIR_CONTINUE_HERE.md
+          grep -q '"current_pass": "R3.15C"' docs/continuity/MIMIR_CONTINUITY_STATE.json
+          git diff --check
+          git diff --quiet -- crates Cargo.toml Cargo.lock external_fixtures test_corpus .github
+      - name: Verify knowledge archive
+        shell: pwsh
+        run: |
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify repository
+        shell: pwsh
+        run: |
+          ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Commit durable continuity update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md
+          git diff --cached --check
+          git commit -m 'Advance continuity to R3.15C'
+          git push origin HEAD:tmp-r315b-continuity-sync
