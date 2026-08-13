@@ -2629,3 +2629,17 @@ ACTIVE NEXT PASS    = R3.15C — first NewActor native reader through spawn traj
 ```
 
 R3.15B changes no production Rust. Read `docs/continuity/MIMIR_R3_15B_DECISION.md` and `docs/continuity/MIMIR_R3_15C_EXECUTION_SPEC.md`. Property decoding, next actor/frame iteration, state, events and skills remain closed.
+
+---
+
+## R3.15C PRODUCTION ADMITTED / ACTIVE R3.15D
+
+```text
+production code SHA = bf4bccff82203ed049d33e942681fed07f23beb4
+R3.15C              = COMPLETE / PRODUCTION
+ACTIVE NEXT PASS    = R3.15D — 47-replay first-NewActor differential audit
+```
+
+R3.15C adds one additive first-NewActor reader. The independently admitted R3.14D envelope remains preserved; only `is_new == true` advances through raw signed `name_id`, one opaque bit, raw signed `object_id`, static spawn dispatch, and the selected `None | Location | LocationAndRotation` trajectory. The hard stop is the exact trajectory endpoint. Property bits, another actor/frame, lifecycle state, raw state, events and skills remain closed.
+
+Read `docs/continuity/MIMIR_R3_15C_DECISION.md` and `docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md` next.
