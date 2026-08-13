@@ -1,0 +1,115 @@
+name: Temporary R3.15D Exact Differential
+
+on:
+  push:
+    branches:
+      - evidence/r315d-exact-v3
+    paths:
+      - '.github/workflows/_tmp_r315d_exact.yml'
+      - 'tools/_tmp_r315d_exact.py'
+      - 'crates/mimir-replay/examples/_tmp_r315d_probe.rs'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  differential:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASE_SHA: c59453812b8399aca8056b77c3ae4f45da33e44a
+      PRODUCTION_SHA: bf4bccff82203ed049d33e942681fed07f23beb4
+      PRODUCTION_SOURCE_BLOB: f64a5e0d66962f41026b2eb10e176219d4529931
+      ORACLE_RUN: '31708322309'
+      ORACLE_ARTIFACT_ID: '9184200143'
+      ORACLE_ARTIFACT_NAME: evidence-next-1e27674625fdff26e05436e882014db5c7c5116d
+      ORACLE_ARTIFACT_DIGEST: sha256:a488b7d1620303e609a517eeb098367edd77f25a71022492d4fb46810290e81d
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen production scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$PRODUCTION_SOURCE_BLOB"
+          git diff --exit-code "$BASE_SHA"..HEAD -- \
+            crates/mimir-replay/src/lib.rs \
+            crates/mimir-replay/Cargo.toml \
+            Cargo.toml Cargo.lock external_fixtures test_corpus
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA"..HEAD | sort)
+          printf '%s\n' "${changed[@]}" | tee r3_15d_source_scope.txt
+          expected=(
+            .github/workflows/_tmp_r315d_exact.yml
+            crates/mimir-replay/examples/_tmp_r315d_probe.rs
+            tools/_tmp_r315d_exact.py
+          )
+          test "${#changed[@]}" -eq 3
+          for i in 0 1 2; do test "${changed[$i]}" = "${expected[$i]}"; done
+          printf 'production_sha=%s\nproduction_source_blob=%s\nproduction_mutation=0\ncargo_mutation=0\n' \
+            "$PRODUCTION_SHA" "$PRODUCTION_SOURCE_BLOB" >> r3_15d_source_scope.txt
+
+      - name: Verify and recover exact R3.15A artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ORACLE_ARTIFACT_ID}" --jq '.digest')"
+          test "$digest" = "$ORACLE_ARTIFACT_DIGEST"
+          printf 'oracle_run=%s\noracle_artifact_id=%s\noracle_artifact_name=%s\noracle_artifact_digest=%s\n' \
+            "$ORACLE_RUN" "$ORACLE_ARTIFACT_ID" "$ORACLE_ARTIFACT_NAME" "$digest" \
+            | tee r3_15d_oracle_artifact_identity.txt
+          mkdir -p .tmp/r3_15a
+          gh run download "$ORACLE_RUN" --repo "$GITHUB_REPOSITORY" --name "$ORACLE_ARTIFACT_NAME" --dir .tmp/r3_15a
+          python tools/_tmp_r315d_exact.py select "$PWD" .tmp/r3_15a
+
+      - name: Build frozen native probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+          cargo build --locked -p mimir-replay --example _tmp_r315d_probe
+
+      - name: Run exact 47 replay native lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > r3_15d_native.tsv
+          while IFS= read -r rel; do
+            test -n "$rel"
+            target/debug/examples/_tmp_r315d_probe "$rel" "$rel" >> r3_15d_native.tsv
+          done < r3_15d_paths.txt
+          test "$(grep -c '^R3_15D_NATIVE' r3_15d_native.tsv)" -eq 47
+          python tools/_tmp_r315d_exact.py compare
+          grep -Fx 'R3_15D_OUTCOME=A' r3_15d_aggregate.txt
+          grep -Fx 'R3_15D_DIFFERENTIAL=PASS' r3_15d_aggregate.txt
+
+      - name: Re-audit frozen source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$PRODUCTION_SOURCE_BLOB"
+          git diff --exit-code "$BASE_SHA"..HEAD -- \
+            crates/mimir-replay/src/lib.rs \
+            crates/mimir-replay/Cargo.toml \
+            Cargo.toml Cargo.lock external_fixtures test_corpus
+
+      - name: Upload R3.15D evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: r3-15d-exact-${{ github.sha }}
+          path: |
+            r3_15d_source_scope.txt
+            r3_15d_oracle_artifact_identity.txt
+            r3_15d_oracle_lane_identity.txt
+            r3_15d_replay_identity.tsv
+            r3_15d_paths.txt
+            r3_15d_oracle_first.jsonl
+            r3_15d_native.tsv
+            r3_15d_comparisons.jsonl
+            r3_15d_summary.json
+            r3_15d_aggregate.txt
+          if-no-files-found: error
