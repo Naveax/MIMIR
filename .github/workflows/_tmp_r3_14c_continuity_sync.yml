@@ -26,6 +26,34 @@ jobs:
           set -euo pipefail
           python tools/_tmp_sync_r3_14c_admission.py
 
+      - name: Normalize only newly introduced markdown hard-break whitespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'docs/continuity/MIMIR_CURRENT_STATE.md': [
+                  ('**Production code checkpoint:** `bad2db9d5043a7a0087a4fab1d278df5f36c7717`  \n', '**Production code checkpoint:** `bad2db9d5043a7a0087a4fab1d278df5f36c7717`\n'),
+                  ('**Production milestone:** `R3.14C — private native network bit cursor + bounded-u32 primitive`  \n', '**Production milestone:** `R3.14C — private native network bit cursor + bounded-u32 primitive`\n'),
+              ],
+              'docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md': [
+                  ('**Current production checkpoint:** R3.14C private native bit cursor + bounded-u32 primitive  \n', '**Current production checkpoint:** R3.14C private native bit cursor + bounded-u32 primitive\n'),
+              ],
+          }
+
+          for path_str, pairs in replacements.items():
+              path = Path(path_str)
+              text = path.read_text(encoding='utf-8')
+              for old, new in pairs:
+                  if text.count(old) != 1:
+                      raise SystemExit(f'{path_str}: expected exactly one whitespace normalization target: {old!r}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text, encoding='utf-8', newline='\n')
+          print('R3_14C_CONTINUITY_WHITESPACE=PASS')
+          PY
+
       - name: Audit continuity-only scope
         shell: bash
         run: |
