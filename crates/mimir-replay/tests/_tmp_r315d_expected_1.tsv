@@ -1,0 +1,10 @@
+external_fixtures/sample_001.replay	f33eefadae8741de7aa0cec6d0bea0120cdf795d16caf3953a517b4ac6c6eaeb	0	78	0	false	25	location	0	0	0	false	null	false	null	false	null	154
+external_fixtures/sample_002.replay	376b00e023186b41408385aed4dee1414ad919a40c92d9ce853f327f63fbcec6	0	78	0	false	23	none	null	null	null	false	null	false	null	false	null	143
+external_fixtures/sample_003.replay	20444c8352123637212a752783a5d4a446a4235985e6530cd2030362f142e2dc	0	78	0	false	25	location	0	0	0	false	null	false	null	false	null	154
+test_corpus/largest_100/003_d137eaa3-af41-4803-8fe7-1eb87d304e2c.replay	bf470fd0b00d39c6facaaa3b9943818957b636c9fa32f5a32b6ee2b817dd82b7	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	false	null	174
+test_corpus/largest_100/010_27f8a623-4388-41da-9473-5f59df5fa93b.replay	e0c2be9ae2fb93354bb533945929c8e4635ee4d9f99e06262e265eca5668f6d7	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	false	null	174
+test_corpus/largest_100/011_39aa142a-baf8-4af3-8b67-6fbca93f23a6.replay	9bcd1d774e19fccc4a2b44ab37be572c7f0a0984633cbe1fb59bf359d7db9734	0	78	0	false	23	none	null	null	null	false	null	false	null	false	null	143
+test_corpus/largest_100/012_0c83fe49-b7f6-427a-ae97-b1a4f53d6117.replay	6cf6c106da87a1f4e0208631205f073a0681a597886edf4f4942d87acdc4db18	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	false	null	174
+test_corpus/largest_100/016_b473f51b-abdd-4896-872f-26fb7d8bd939.replay	5062f578d658c9f2ca5c442f1192e4a5d1fb950b3e2e94ce6433cbf8c0e3b5e2	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	false	null	174
+test_corpus/largest_100/019_bd1a83e2-5ac0-4a79-beba-df8547515782.replay	43b999070d498a13850650da328fbe55bab3b429db25ffb7d1869f37b4326aa4	0	78	0	false	67	location_rotation	0	0	93	false	null	false	null	174
+test_corpus/largest_100/023_d9186df1-af02-4ab1-ba1b-b2c3b6fb1a67.replay	ff338b19658252ff362446ebffa4b6be4f077a36305ec468e398356d41dabb39	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	174
