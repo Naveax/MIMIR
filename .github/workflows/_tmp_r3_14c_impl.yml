@@ -36,7 +36,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python tools/_tmp_r3_14c_apply.py
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tools/_tmp_r3_14c_apply.py')
+          source = path.read_text(encoding='utf-8')
+          old = 'PRIMITIVE_ANCHOR = "use std::path::PathBuf;\\n"'
+          new = 'PRIMITIVE_ANCHOR = "use std::collections::{BTreeMap, BTreeSet};\\nuse std::path::PathBuf;\\n"'
+          if source.count(old) != 1:
+              raise SystemExit(f'R3.14C effective patcher correction expected one anchor declaration, found {source.count(old)}')
+          effective = source.replace(old, new, 1)
+          print('R3_14C_EFFECTIVE_PATCHER_CORRECTION=PASS')
+          exec(compile(effective, str(path), 'exec'), {'__name__': '__main__'})
+          PY
           git diff -- crates/mimir-replay/src/lib.rs
 
       - name: Format source
