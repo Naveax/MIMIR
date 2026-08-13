@@ -1,0 +1,63 @@
+name: Temporary R3.14A-B Continuity Sync V2
+
+on:
+  push:
+    branches:
+      - docs/r3-14a-outcome-a-r3-14b
+    paths:
+      - '.github/workflows/_tmp_r3_14ab_continuity_sync_v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact closure branch
+        uses: actions/checkout@v6
+        with:
+          ref: docs/r3-14a-outcome-a-r3-14b
+
+      - name: Apply deterministic continuity patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_sync_r3_14ab.py
+
+      - name: Audit continuity-only diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          changed="$(git diff --name-only)"
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -Eq '^(crates/|Cargo\.toml$|Cargo\.lock$|external_fixtures/|test_corpus/)'; then
+            echo 'ERROR: continuity sync touched production or corpus scope.' >&2
+            exit 1
+          fi
+          grep -q 'ACTIVE NEXT PASS            = R3.14C' MIMIR_CONTINUE_HERE.md
+          grep -q '"current_pass": "R3.14C"' docs/continuity/MIMIR_CONTINUITY_STATE.json
+          grep -q 'R3.14B — Native bit-cursor / bounded-int contract planning' docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          grep -q 'At R3.14C:' docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          grep -q 'R3.14C — Native bit cursor + bounded integer primitive implementation — ACTIVE' docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md
+          grep -q 'CURRENT REPLAY DECODER ADMISSION UPDATE — R3.14A/B' MIMIR_ALL_SOURCES_SUPERBOOK.md
+
+      - name: Commit continuity synchronization only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_ALL_SOURCES_SUPERBOOK.md \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md \
+            docs/continuity/README.md
+          git diff --cached --check
+          git commit -m 'Advance MIMIR continuity through R3.14A and R3.14B'
+          git push origin HEAD:docs/r3-14a-outcome-a-r3-14b
