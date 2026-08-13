@@ -19,25 +19,36 @@ $replacements = @(
     [pscustomobject]@{
         Old = '$probe = Join-Path $boxcars ''target\debug\examples\r3_14a_probe.exe'''
         New = '$probeRelative = if ($IsWindows) { ''target\debug\examples\r3_14a_probe.exe'' } else { ''target/debug/examples/r3_14a_probe'' }`n$probe = Join-Path $boxcars $probeRelative'
+    },
+    [pscustomobject]@{
+        Old = '    $lines = @(& $probe $resolved 2>&1 | ForEach-Object { $_.ToString() })`n    $native = $LASTEXITCODE'
+        New = '    $lines = @(& $probe $resolved 2>&1 | ForEach-Object { $_.ToString() })`n    $lines = @($lines | ForEach-Object { $_.Replace(''\t'', "`t") })`n    $native = $LASTEXITCODE'
+    },
+    [pscustomobject]@{
+        Old = '    if (@($lines | Where-Object { $_ -match ''^R3_14A_EVIDENCE\t'' }).Count -ne 1) {`n        throw "expected exactly one first-frame evidence row for $relative"`n    }'
+        New = '    $evidenceCount = @($lines | Where-Object { $_ -match ''^R3_14A_EVIDENCE\t'' }).Count`n    if ($evidenceCount -ne 1) {`n        $lines | ForEach-Object { Write-Host "R3_14A_PROBE_OUTPUT $_" }`n        throw "expected exactly one first-frame evidence row for $relative, got $evidenceCount"`n    }'
     }
 )
 
 foreach ($replacement in $replacements) {
-    $count = ([regex]::Matches($text, [regex]::Escape($replacement.Old))).Count
+    $old = $replacement.Old.Replace('`n', [Environment]::NewLine)
+    $new = $replacement.New.Replace('`n', [Environment]::NewLine)
+    $count = ([regex]::Matches($text, [regex]::Escape($old))).Count
     if ($count -ne 1) {
-        throw "Deterministic driver patch expected exactly one match, found $count for: $($replacement.Old)"
+        throw "Deterministic driver patch expected exactly one match, found $count for: $old"
     }
-    $text = $text.Replace($replacement.Old, $replacement.New.Replace('`n', [Environment]::NewLine))
+    $text = $text.Replace($old, $new)
 }
 
 Set-Content -LiteralPath $Path -Value $text -Encoding utf8NoBOM -NoNewline
 
 $effectiveText = Get-Content -Raw -LiteralPath $Path
 foreach ($replacement in $replacements) {
-    if ($effectiveText.Contains($replacement.Old)) {
-        throw "Unsafe or platform-specific driver expression remains after deterministic patch: $($replacement.Old)"
-    }
+    $old = $replacement.Old.Replace('`n', [Environment]::NewLine)
     $expectedNew = $replacement.New.Replace('`n', [Environment]::NewLine)
+    if ($effectiveText.Contains($old)) {
+        throw "Unsafe or unnormalized driver expression remains after deterministic patch: $old"
+    }
     if (-not $effectiveText.Contains($expectedNew)) {
         throw "Expected corrected driver expression missing after patch: $expectedNew"
     }
