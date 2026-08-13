@@ -527,3 +527,8 @@ R3.14D is production at `7b17cb9033b6c71d476e500380d78402cbb3c56d`. The first na
 Validation: 17 focused tests PASS; locked repository verifier PASS; clean CI `31702049792` SUCCESS; published-main CI `31702341993` SUCCESS; source blob `67752868807c0b7169e46f22762c7a0ea9efce40`; source SHA-256 `06b767622108ca1aea82ee5c0aad6cc503fbcfddaba05012cf022dd901a5a385`.
 
 Active pass: `R3.14E`, evidence-only 47-replay native-vs-pinned-Boxcars differential audit. No production Rust change is allowed.
+---
+
+## CURRENT OVERRIDE — R3.14E COMPLETE / R3.15A ACTIVE
+
+R3.14E completed with Outcome A: exact 47/47 native-vs-pinned-Boxcars first-envelope equality and zero mismatch/error. Production code remains `7b17cb9033b6c71d476e500380d78402cbb3c56d`. The active pass is now R3.15A, read-only NewActor branch evidence through the spawn trajectory endpoint. No production `name_id`, object ID, or spawn payload reader is admitted yet.

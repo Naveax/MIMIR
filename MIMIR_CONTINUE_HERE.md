@@ -2591,3 +2591,19 @@ R3.14D production now natively consumes first-frame time/delta through the R3.14
 Still closed: `name_id`, object/spawn/property/stream/attribute payloads, second actor/frame, actor state, raw state, events, skills.
 
 R3.14E is evidence-only: compare the native reader against the exact 47-row R3.14A pinned-Boxcars evidence. Production Rust must not change.
+---
+
+## R3.14E OUTCOME A ADMITTED / ACTIVE R3.15A
+
+> **CURRENT OVERRIDE:** exact source/tests/evidence remain authoritative over prose.
+
+```text
+production code SHA = 7b17cb9033b6c71d476e500380d78402cbb3c56d
+R3.14D              = PRODUCTION + 47/47 DIFFERENTIAL ADMISSION
+R3.14E              = COMPLETE / OUTCOME A
+ACTIVE NEXT PASS    = R3.15A — NewActor branch read-only differential evidence
+```
+
+R3.14E evidence run `31705946564`, job `94466421975`, artifact `9183181430` proved exact 47/47 equality for raw time/delta, actor-present/id/alive/new, stop bit, BuildVersion, and structural context with zero mismatch/error and zero production mutation.
+
+R3.15A is evidence-only. Production remains frozen before `name_id` and all NewActor spawn fields.

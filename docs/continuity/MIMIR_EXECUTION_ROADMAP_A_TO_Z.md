@@ -1300,3 +1300,8 @@ A strong completion bar is:
 - measurable task/policy gain on controlled evaluation.
 
 The current project is at the beginning of the native network-bit layer: **R3.14A next**. Do not let the size of the roadmap tempt a future executor into skipping the next six bits.
+---
+
+## CURRENT EXECUTION OVERRIDE — R3.15A ACTIVE
+
+R3.14E is COMPLETE / OUTCOME A with exact 47/47 first-envelope differential equality. The first incomplete canonical pass is R3.15A, NewActor branch read-only evidence. R3.15B and later passes remain closed.
