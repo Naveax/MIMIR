@@ -1,0 +1,6 @@
+
+---
+
+## LATEST CANONICAL OVERRIDE — R3.15A COMPLETE / R3.15B CURRENT
+
+R3.15A completed with Outcome A. Exact evidence is recorded in `docs/continuity/MIMIR_R3_15A_DECISION.md`. The current canonical pass is the docs-only contract pass `R3.15B`, defined by `docs/continuity/MIMIR_R3_15B_EXECUTION_SPEC.md`.

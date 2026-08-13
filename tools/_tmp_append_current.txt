@@ -1,0 +1,6 @@
+
+---
+
+## CURRENT OVERRIDE — R3.15B
+
+R3.15A is complete with Outcome A. The current pass is R3.15B. See `MIMIR_R3_15A_DECISION.md` and `MIMIR_R3_15B_EXECUTION_SPEC.md` for exact evidence and scope.
