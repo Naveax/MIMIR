@@ -3,6 +3,8 @@ use mimir_replay::{
     ReplayNetworkLookupPlanReader, ReplayReader,
 };
 use mimir_types::FieldValue;
+use sha2::{Digest, Sha256};
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -53,6 +55,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut supported = 0usize;
     let mut unsupported = 0usize;
+    let mut supported_sha256 = BTreeSet::new();
+    let mut manifest_hasher = Sha256::new();
 
     println!("R3.14A MIMIR Supported-Lane Selector");
     println!("expected_replays={EXPECTED_REPLAY_COUNT}");
@@ -96,13 +100,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let build_version = metadata_text(&plan.header, "BuildVersion")?;
         let network = &plan.footer_lookup.scaffold.content;
+        let replay_sha256 = format!("{:x}", Sha256::digest(&bytes));
+        let relative_path = display_path(path);
+        let canonical_row = format!(
+            "{relative_path}\t{}\t{replay_sha256}\t{build_version}\t{}\t{}\t{}\t{}\n",
+            bytes.len(),
+            network.network_start,
+            network.network_size,
+            plan.max_channels,
+            plan.channel_bits,
+        );
+
+        if !supported_sha256.insert(replay_sha256.clone()) {
+            return Err(format!(
+                "duplicate supported replay SHA-256 detected: {replay_sha256}"
+            )
+            .into());
+        }
+        manifest_hasher.update(canonical_row.as_bytes());
         supported += 1;
 
         println!(
-            "SUPPORTED\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "SUPPORTED\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             index + 1,
-            display_path(path),
+            relative_path,
             bytes.len(),
+            replay_sha256,
             build_version,
             network.network_start,
             network.network_size,
@@ -111,14 +134,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
+    let manifest_sha256 = format!("{:x}", manifest_hasher.finalize());
+
+    println!("SUMMARY total_replays={}", paths.len());
     println!("SUMMARY supported_replays={supported}");
     println!("SUMMARY unsupported_replays={unsupported}");
+    println!("SUMMARY unique_supported_sha256={}", supported_sha256.len());
+    println!("SUMMARY manifest_sha256={manifest_sha256}");
 
     if supported != EXPECTED_SUPPORTED_LANE
         || unsupported != EXPECTED_REPLAY_COUNT - EXPECTED_SUPPORTED_LANE
     {
         return Err(format!(
             "supported-lane drift: supported={supported}, unsupported={unsupported}"
+        )
+        .into());
+    }
+
+    if supported_sha256.len() != EXPECTED_SUPPORTED_LANE {
+        return Err(format!(
+            "supported replay SHA-256 identity drift: expected {EXPECTED_SUPPORTED_LANE} unique hashes, found {}",
+            supported_sha256.len()
         )
         .into());
     }
