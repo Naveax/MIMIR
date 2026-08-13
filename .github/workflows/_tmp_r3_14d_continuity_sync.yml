@@ -1,0 +1,53 @@
+name: Temporary R3.14D Continuity Sync
+
+on:
+  push:
+    branches:
+      - docs/r3-14d-admission-r3-14e
+    paths:
+      - '.github/workflows/_tmp_r3_14d_continuity_sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: docs/r3-14d-admission-r3-14e
+          fetch-depth: 0
+      - name: Apply continuity patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_sync_r3_14d_admission.py
+      - name: Audit docs-only scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          changed="$(git diff --name-only)"
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -Eq '^(crates/|Cargo\.toml$|Cargo\.lock$|external_fixtures/|test_corpus/)'; then exit 1; fi
+          grep -q 'ACTIVE NEXT PASS         = R3.14E' MIMIR_CONTINUE_HERE.md
+          grep -q '"last_production_code_sha": "7b17cb9033b6c71d476e500380d78402cbb3c56d"' docs/continuity/MIMIR_CONTINUITY_STATE.json
+          grep -q '"current_pass": "R3.14E"' docs/continuity/MIMIR_CONTINUITY_STATE.json
+          grep -q 'LATEST CANONICAL OVERRIDE — R3.14D PRODUCTION / R3.14E ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -q 'R3.14E — Native first-envelope differential audit — ACTIVE' docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md
+      - name: Verify knowledge archive
+        shell: pwsh
+        run: |
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Commit durable continuity only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_ALL_SOURCES_SUPERBOOK.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md docs/continuity/README.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          git diff --cached --check
+          git commit -m 'Advance continuity to R3.14E'
+          git push origin HEAD:docs/r3-14d-admission-r3-14e
