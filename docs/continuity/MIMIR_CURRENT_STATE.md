@@ -532,3 +532,8 @@ Active pass: `R3.14E`, evidence-only 47-replay native-vs-pinned-Boxcars differen
 ## CURRENT OVERRIDE — R3.14E COMPLETE / R3.15A ACTIVE
 
 R3.14E completed with Outcome A: exact 47/47 native-vs-pinned-Boxcars first-envelope equality and zero mismatch/error. Production code remains `7b17cb9033b6c71d476e500380d78402cbb3c56d`. The active pass is now R3.15A, read-only NewActor branch evidence through the spawn trajectory endpoint. No production `name_id`, object ID, or spawn payload reader is admitted yet.
+---
+
+## CURRENT OVERRIDE — R3.15B
+
+R3.15A is complete with Outcome A. The current pass is R3.15B. See `MIMIR_R3_15A_DECISION.md` and `MIMIR_R3_15B_EXECUTION_SPEC.md` for exact evidence and scope.

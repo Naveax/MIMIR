@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.14D",
   "last_production_milestone_name": "first actor envelope header native reader",
   "last_completed_read_only_audit": "R3.14",
-  "current_pass": "R3.15A",
-  "current_pass_kind": "evidence-only pinned-oracle NewActor branch differential audit",
-  "current_pass_goal": "Instrument every encountered new actor for aggregate distributions and preserve deterministic exact witnesses for the version-gated name_id, opaque bit, raw object_id, static spawn-kind dispatch, and spawn trajectory bit ranges/values.",
-  "current_pass_stop_boundary": "Evidence only. Retained rows stop at the end of each NewActor spawn trajectory. Production Rust remains frozen before name_id; property payloads, actor/frame iteration, state, events, and skills remain closed.",
+  "current_pass": "R3.15B",
+  "current_pass_kind": "planning / contract / docs-only NewActor native contract admission",
+  "current_pass_goal": "Admit the exact additive native contract for the current supported NewActor branch without changing production Rust.",
+  "current_pass_stop_boundary": "Docs-only. Production remains frozen after the first actor new bit; R3.15C is closed until this contract is admitted.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -91,10 +91,12 @@
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
     "docs/continuity/MIMIR_PROGRESS_LEDGER.md",
     "docs/continuity/MIMIR_R3_14E_DECISION.md",
-    "docs/continuity/MIMIR_R3_15A_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_15A_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_15A_DECISION.md",
+    "docs/continuity/MIMIR_R3_15B_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.14E",
-  "last_completed_evidence_outcome": "A \u2014 exact 47/47 native first-envelope differential match",
+  "last_completed_evidence_pass": "R3.15A",
+  "last_completed_evidence_outcome": "A \u2014 exact 47-replay / 169538-NewActor evidence admitted",
   "last_completed_contract_pass": "R3.14B",
   "r3_14a": {
     "outcome": "A",
@@ -201,6 +203,34 @@
     "next_pass": "R3.15A",
     "pre_admission_state": {
       "current_pass": "R3.14E"
+    }
+  },
+  "r3_15a": {
+    "outcome": "A \u2014 admitted / complete",
+    "production_source_changed": false,
+    "production_sha": "7b17cb9033b6c71d476e500380d78402cbb3c56d",
+    "continuity_base_sha": "a51c0c1bf8c8927f4e2f39691ec63403d70bb0a8",
+    "oracle_sha": "c70e77df7af81b436cb545d070bb90c82f562d0b",
+    "evidence_head_sha": "1e27674625fdff26e05436e882014db5c7c5116d",
+    "workflow_run": 31708322309,
+    "workflow_job": 94474438951,
+    "evidence_artifact_id": 9184200143,
+    "evidence_artifact_sha256": "a488b7d1620303e609a517eeb098367edd77f25a71022492d4fb46810290e81d",
+    "instrumentation_patch_sha256": "79010fb8923b365db0764bc56d2cadc48a6d257f2936fbd928fc24c08dc090e8",
+    "driver_sha256": "44ddbd3f22f60b2959b889b46c68b57d9ef0bc8285ca97ba501ed1fd355e66ba",
+    "full_stream_sha256": "ef1635d0476606bff202ba6b4d2767a865248fc37ae4fc0dab5755922a4d5dba",
+    "witness_count": 59,
+    "witness_sha256": "e7dc38f64cee7b458517211e601cdc0133a6a5a799c1f718ab51d330b0e16573",
+    "replays_total": 47,
+    "oracle_decode_success": 47,
+    "new_actor_total": 169538,
+    "spawn_kind_match": 169538,
+    "spawn_kind_mismatch": 0,
+    "name_gate_true": 169538,
+    "name_gate_false": 0,
+    "next_pass": "R3.15B",
+    "pre_admission_state": {
+      "current_pass": "R3.15A"
     }
   }
 }
