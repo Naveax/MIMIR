@@ -44,12 +44,13 @@ Set-Content -LiteralPath $Path -Value $text -Encoding utf8NoBOM -NoNewline
 
 $effectiveText = Get-Content -Raw -LiteralPath $Path
 foreach ($replacement in $replacements) {
-    if ($effectiveText.Contains($replacement.Old)) {
-        throw "Unsafe or unnormalized driver expression remains after deterministic patch: $($replacement.Old)"
-    }
+    $old = $replacement.Old
     $expectedNew = $replacement.New.Replace('`n', [Environment]::NewLine)
     if (-not $effectiveText.Contains($expectedNew)) {
         throw "Expected corrected driver expression missing after patch: $expectedNew"
+    }
+    if (-not $expectedNew.Contains($old) -and $effectiveText.Contains($old)) {
+        throw "Unsafe or platform-specific driver expression remains after deterministic patch: $old"
     }
 }
 
