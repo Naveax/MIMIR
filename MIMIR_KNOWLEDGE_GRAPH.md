@@ -292,3 +292,22 @@ R3.15D full-lane NewActor differential — CLOSED until R3.15C publication
 ```
 
 Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current continuity state, `MIMIR_R3_15B_DECISION.md`, `MIMIR_R3_15C_EXECUTION_SPEC.md`, then pass protocol, boundary locks, roadmap and ledger before the superbook/archive sources.
+
+---
+
+## LATEST CANONICAL OVERRIDE — R3.15C PRODUCTION / R3.15D ACTIVE
+
+```text
+R3.15A NewActor evidence — COMPLETE / OUTCOME A
+        |
+        v
+R3.15B NewActor contract — ADMITTED
+        |
+        v
+R3.15C first NewActor native reader — PRODUCTION bf4bccff82203ed049d33e942681fed07f23beb4
+        |
+        v
+R3.15D 47-replay first-NewActor native-vs-pinned-Boxcars differential — ACTIVE / EVIDENCE ONLY
+```
+
+Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current continuity state, `MIMIR_R3_15C_DECISION.md`, `MIMIR_R3_15D_EXECUTION_SPEC.md`, then pass protocol, boundary locks, roadmap and ledger before the superbook/archive registry/matrix/mapping sources. Current source/tests and exact-SHA evidence remain authoritative.

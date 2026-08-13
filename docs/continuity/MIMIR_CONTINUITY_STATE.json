@@ -3,14 +3,14 @@
   "updated_date": "2026-08-13",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "7b17cb9033b6c71d476e500380d78402cbb3c56d",
-  "last_production_milestone": "R3.14D",
-  "last_production_milestone_name": "first actor envelope header native reader",
+  "last_production_code_sha": "bf4bccff82203ed049d33e942681fed07f23beb4",
+  "last_production_milestone": "R3.15C",
+  "last_production_milestone_name": "first NewActor native reader through spawn trajectory",
   "last_completed_read_only_audit": "R3.14",
-  "current_pass": "R3.15C",
-  "current_pass_kind": "narrow production implementation - first NewActor native reader through spawn trajectory",
-  "current_pass_goal": "Implement one additive native first-NewActor reader under the admitted R3.15B contract and stop at the first NewActor spawn trajectory endpoint.",
-  "current_pass_stop_boundary": "End of first NewActor spawn trajectory; property_present, next actor/frame, lifecycle state, raw state, events and skills remain closed.",
+  "current_pass": "R3.15D",
+  "current_pass_kind": "evidence-only 47-replay first-NewActor native-vs-pinned-Boxcars differential audit",
+  "current_pass_goal": "Compare the R3.15C first NewActor result to exactly one frame-0 actor-0 R3.15A oracle row for every admitted replay identity with exact field and trajectory-stop equality.",
+  "current_pass_stop_boundary": "Evidence only. Production Rust is frozen; property_present, stream/property IDs, attributes, another actor/frame, lifecycle state, raw state, events and skills remain closed.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -50,9 +50,6 @@
   ],
   "bounded_integer_rule": "Not fixed-width. Decode low bits according to bound and preserve the value-dependent extra discriminator-bit behavior used by Rocket League/Boxcars.",
   "closed_now": [
-    "native name_id decode",
-    "native spawn object payload decode",
-    "native spawn trajectory payload decode",
     "native property loop iteration",
     "native attribute payload decode",
     "full actor envelope iteration",
@@ -95,7 +92,9 @@
     "docs/continuity/MIMIR_R3_15A_DECISION.md",
     "docs/continuity/MIMIR_R3_15B_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_15B_DECISION.md",
-    "docs/continuity/MIMIR_R3_15C_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_15C_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_15C_DECISION.md",
+    "docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.15A",
   "last_completed_evidence_outcome": "A \u2014 exact 47-replay / 169538-NewActor evidence admitted",
@@ -246,5 +245,23 @@
     "exact_sha_knowledge_archive_run": 31710371562,
     "published_main_readback_sha": "fb2bbdec739b440ebbc2465db09bdcc9faac2ce1",
     "next_pass": "R3.15C"
+  },
+  "r3_15c": {
+    "outcome": "admitted / production",
+    "pre_pass_main_sha": "77395d40af97620c58b39427a351b23aede84482",
+    "production_sha": "bf4bccff82203ed049d33e942681fed07f23beb4",
+    "production_tree": "62cc2a970704cbf0d6545a02a45a8b1ef46c5c99",
+    "source_file": "crates/mimir-replay/src/lib.rs",
+    "source_git_blob": "f64a5e0d66962f41026b2eb10e176219d4529931",
+    "builder_run": 31714929500,
+    "builder_job": 94497112417,
+    "clean_branch_ci_run": 31715088860,
+    "published_main_ci_run": 31715564598,
+    "focused_tests": 15,
+    "production_scope_file_count": 1,
+    "cargo_dependency_changed": false,
+    "first_new_actor_reader_in_production": true,
+    "property_loop_in_production": false,
+    "next_pass": "R3.15D"
   }
 }
