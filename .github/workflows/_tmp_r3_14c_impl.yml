@@ -1,0 +1,163 @@
+name: Temporary R3.14C Primitive Implementation
+
+on:
+  push:
+    branches:
+      - agent/r3-14c-network-bit-primitives
+    paths:
+      - '.github/workflows/_tmp_r3_14c_impl.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  implement-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact implementation branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/r3-14c-network-bit-primitives
+
+      - name: Assert exact production base ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e 068e1d6c914ab4932bf0a3db25dc3494dc89b334^{commit}
+          if ! git merge-base --is-ancestor 068e1d6c914ab4932bf0a3db25dc3494dc89b334 HEAD; then
+            echo 'R3.14C branch is not descended from admitted main base' >&2
+            exit 1
+          fi
+          test "$(git show 068e1d6c914ab4932bf0a3db25dc3494dc89b334:crates/mimir-replay/Cargo.toml | sha256sum | awk '{print $1}')" = "$(sha256sum crates/mimir-replay/Cargo.toml | awk '{print $1}')"
+          test "$(git show 068e1d6c914ab4932bf0a3db25dc3494dc89b334:Cargo.lock | sha256sum | awk '{print $1}')" = "$(sha256sum Cargo.lock | awk '{print $1}')"
+
+      - name: Apply deterministic R3.14C source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_r3_14c_apply.py
+          git diff -- crates/mimir-replay/src/lib.rs
+
+      - name: Format source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all
+          cargo fmt --all -- --check
+          git diff --check
+
+      - name: Focused R3.14C primitive tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test -p mimir-replay r3_14c_ -- --nocapture
+
+      - name: Full mimir-replay regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test -p mimir-replay -- --nocapture
+
+      - name: Workspace check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --workspace --all-targets --all-features
+
+      - name: Workspace tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --workspace --all-targets --all-features
+
+      - name: Workspace clippy
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Export inventory gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test -p mimir-export -- --list
+
+      - name: Verify checked-in replay corpus
+        shell: pwsh
+        run: |
+          ./scripts/verify_test_corpus.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify MIMIR knowledge archive
+        shell: pwsh
+        run: |
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Audit R3.14C hard stop and source scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          changed="$(git diff --name-only)"
+          printf 'R3.14C working-tree changes:\n%s\n' "$changed"
+          test "$changed" = 'crates/mimir-replay/src/lib.rs'
+
+          if ! grep -q "struct NetworkBitCursor<'a>" crates/mimir-replay/src/lib.rs; then
+            echo 'private NetworkBitCursor missing' >&2
+            exit 1
+          fi
+          if grep -q "pub struct NetworkBitCursor" crates/mimir-replay/src/lib.rs; then
+            echo 'NetworkBitCursor must remain private' >&2
+            exit 1
+          fi
+          if grep -q 'ReplayNetworkFirstActorEnvelope' crates/mimir-replay/src/lib.rs; then
+            echo 'actor-envelope result type crossed the R3.14C hard stop' >&2
+            exit 1
+          fi
+          if grep -Eiq 'boxcars' crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock; then
+            echo 'external Boxcars dependency crossed the R3.14C hard stop' >&2
+            exit 1
+          fi
+          if ! git diff --quiet -- Cargo.toml Cargo.lock crates/mimir-replay/Cargo.toml; then
+            echo 'dependency manifests changed in R3.14C' >&2
+            exit 1
+          fi
+
+          git diff -- crates/mimir-replay/src/lib.rs > r3_14c_source.diff
+          source_sha256="$(sha256sum crates/mimir-replay/src/lib.rs | awk '{print $1}')"
+          cat > r3_14c_validation_receipt.txt <<EOF
+          pass=R3.14C
+          base_main_sha=068e1d6c914ab4932bf0a3db25dc3494dc89b334
+          source_sha256=${source_sha256}
+          focused_tests=PASS
+          mimir_replay_regression=PASS
+          workspace_check=PASS
+          workspace_tests=PASS
+          workspace_clippy=PASS
+          export_inventory=PASS
+          corpus_verifier=PASS
+          knowledge_archive_verifier=PASS
+          hard_stop_scope=PASS
+          EOF
+
+      - name: Commit validated production source only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crates/mimir-replay/src/lib.rs
+          test "$(git diff --cached --name-only)" = 'crates/mimir-replay/src/lib.rs'
+          git diff --cached --check
+          git commit -m 'Add replay network bit primitives'
+          git push origin HEAD:agent/r3-14c-network-bit-primitives
+
+      - name: Upload R3.14C validation evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: r3-14c-validation-${{ github.sha }}
+          path: |
+            r3_14c_source.diff
+            r3_14c_validation_receipt.txt
+          if-no-files-found: error
