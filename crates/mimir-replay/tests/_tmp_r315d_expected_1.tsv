@@ -6,5 +6,5 @@ test_corpus/largest_100/010_27f8a623-4388-41da-9473-5f59df5fa93b.replay	e0c2be9a
 test_corpus/largest_100/011_39aa142a-baf8-4af3-8b67-6fbca93f23a6.replay	9bcd1d774e19fccc4a2b44ab37be572c7f0a0984633cbe1fb59bf359d7db9734	0	78	0	false	23	none	null	null	null	false	null	false	null	false	null	143
 test_corpus/largest_100/012_0c83fe49-b7f6-427a-ae97-b1a4f53d6117.replay	6cf6c106da87a1f4e0208631205f073a0681a597886edf4f4942d87acdc4db18	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	false	null	174
 test_corpus/largest_100/016_b473f51b-abdd-4896-872f-26fb7d8bd939.replay	5062f578d658c9f2ca5c442f1192e4a5d1fb950b3e2e94ce6433cbf8c0e3b5e2	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	false	null	174
-test_corpus/largest_100/019_bd1a83e2-5ac0-4a79-beba-df8547515782.replay	43b999070d498a13850650da328fbe55bab3b429db25ffb7d1869f37b4326aa4	0	78	0	false	67	location_rotation	0	0	93	false	null	false	null	174
-test_corpus/largest_100/023_d9186df1-af02-4ab1-ba1b-b2c3b6fb1a67.replay	ff338b19658252ff362446ebffa4b6be4f077a36305ec468e398356d41dabb39	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	174
+test_corpus/largest_100/019_bd1a83e2-5ac0-4a79-beba-df8547515782.replay	43b999070d498a13850650da328fbe55bab3b429db25ffb7d1869f37b4326aa4	0	78	0	false	67	location_rotation	0	0	93	false	null	false	null	false	null	174
+test_corpus/largest_100/023_d9186df1-af02-4ab1-ba1b-b2c3b6fb1a67.replay	ff338b19658252ff362446ebffa4b6be4f077a36305ec468e398356d41dabb39	0	78	0	false	68	location_rotation	0	0	93	false	null	false	null	false	null	174
