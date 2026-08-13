@@ -1,0 +1,37 @@
+{
+  "schema": "mimir-knowledge-archive-v1",
+  "generated": "2026-08-13",
+  "source_policy": {
+    "current_truth": "fresh GitHub source/tests",
+    "mixed_chat_exports": "redacted extracts only",
+    "private_identifiers": "do not mirror",
+    "historical_capability": "not production unless separately admitted"
+  },
+  "required_paths": [
+    "MIMIR_KNOWLEDGE_GRAPH.md",
+    "MIMIR_CONTINUE_HERE.md",
+    "MIMIR_ALL_SOURCES_SUPERBOOK.md",
+    "docs/chatgpt-archive/README.md",
+    "docs/chatgpt-archive/SOURCE_REGISTRY.md",
+    "docs/chatgpt-archive/VALIDATION_MATRIX.md",
+    "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md",
+    "docs/chatgpt-archive/historical/RL_REPLAY_COACH_V0_2_README.md",
+    "docs/chatgpt-archive/historical/test_rl_replay_analyzer_v0_2.py",
+    "docs/chatgpt-archive/historical/run_rl_replay_coach_v0_2.ps1",
+    "docs/chatgpt-archive/historical/AE6DD28411F1508AD67AA6A178296A08_v0_2.events.jsonl",
+    "docs/chatgpt-archive/historical/rl_replay_analyzer_v0_2_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/historical/AE6DD_body_footer_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/historical/AE6DD_analysis_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/historical/AE6DD_report_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/extracted/conversations-011_MIMIR_EXTRACT.md",
+    "docs/chatgpt-archive/design/MIMIR_MASTER_DESIGN_SPEC_2026-08-12_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/design/MIMIR_MASTER_BLUEPRINT_2026-08-12_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/design/MIMIR_Gabriel_V1_Tam_Mimari_ve_Yol_Haritasi_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/design/MIMIR_DETAILED_EXECUTION_ROADMAP_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/design/MIMIR_TAM_PLAN_TEK_DOSYA_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/design/mimir_sistem_tasarimi_SOURCE_SNAPSHOT.md",
+    "docs/chatgpt-archive/design/gabriel_sistem_tasarimi_SOURCE_SNAPSHOT.md"
+  ],
+  "source_count": 16,
+  "archive_file_count_expected": 25
+}
