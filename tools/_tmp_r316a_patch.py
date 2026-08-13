@@ -75,4 +75,13 @@ s = rep(
     "decode-call",
 )
 p.write_text(s, encoding="utf-8", newline="\n")
+
+# The clone lives below MIMIR's repository root on hosted Windows CI. Without an
+# explicit workspace root Cargo walks upward and incorrectly treats Boxcars as a
+# MIMIR workspace member. This marker changes orchestration only, not oracle code.
+manifest = root / "Cargo.toml"
+manifest_text = manifest.read_text(encoding="utf-8")
+if "\n[workspace]\n" not in f"\n{manifest_text}\n":
+    manifest.write_text(manifest_text.rstrip() + "\n\n[workspace]\n", encoding="utf-8", newline="\n")
+
 print("R3_16A_BOXCARS_PATCH=PASS")
