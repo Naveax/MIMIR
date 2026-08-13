@@ -13,10 +13,7 @@ fn clean(value: &str) -> String {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args().skip(1);
     let rel = args.next().ok_or("missing relative path")?;
-    let actor_object_id: usize = args
-        .next()
-        .ok_or("missing actor object id")?
-        .parse()?;
+    let actor_object_id: usize = args.next().ok_or("missing actor object id")?.parse()?;
     let stream_id: u32 = args.next().ok_or("missing stream id")?.parse()?;
     if args.next().is_some() {
         return Err("too many arguments".into());
