@@ -537,3 +537,8 @@ R3.14E completed with Outcome A: exact 47/47 native-vs-pinned-Boxcars first-enve
 ## CURRENT OVERRIDE — R3.15B
 
 R3.15A is complete with Outcome A. The current pass is R3.15B. See `MIMIR_R3_15A_DECISION.md` and `MIMIR_R3_15B_EXECUTION_SPEC.md` for exact evidence and scope.
+---
+
+## CURRENT OVERRIDE — R3.15B ADMITTED / R3.15C ACTIVE
+
+R3.15B is contract-complete and docs-only. Production remains `7b17cb9033b6c71d476e500380d78402cbb3c56d` until R3.15C is implemented and admitted. R3.15C may extend only the first `new == true` actor through its static-dispatched spawn trajectory, then must stop before property decoding or further actor/frame iteration.

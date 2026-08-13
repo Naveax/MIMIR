@@ -274,3 +274,21 @@ Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/
 ## LATEST CANONICAL OVERRIDE — R3.15A COMPLETE / R3.15B CURRENT
 
 R3.15A completed with Outcome A. Exact evidence is recorded in `docs/continuity/MIMIR_R3_15A_DECISION.md`. The current canonical pass is the docs-only contract pass `R3.15B`, defined by `docs/continuity/MIMIR_R3_15B_EXECUTION_SPEC.md`.
+---
+
+## LATEST CANONICAL OVERRIDE — R3.15B ADMITTED / R3.15C ACTIVE
+
+```text
+R3.15A NewActor evidence — COMPLETE / OUTCOME A
+        |
+        v
+R3.15B NewActor native contract — ADMITTED / CONTRACT COMPLETE
+        |
+        v
+R3.15C first NewActor native reader — ACTIVE / PRODUCTION IMPLEMENTATION
+        |
+        v
+R3.15D full-lane NewActor differential — CLOSED until R3.15C publication
+```
+
+Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current continuity state, `MIMIR_R3_15B_DECISION.md`, `MIMIR_R3_15C_EXECUTION_SPEC.md`, then pass protocol, boundary locks, roadmap and ledger before the superbook/archive sources.
