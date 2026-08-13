@@ -1,0 +1,29 @@
+name: Knowledge Archive
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'MIMIR_CONTINUE_HERE.md'
+      - 'MIMIR_ALL_SOURCES_SUPERBOOK.md'
+      - 'docs/chatgpt-archive/**'
+      - 'scripts/verify_mimir_knowledge_archive.ps1'
+      - '.github/workflows/knowledge-archive.yml'
+  pull_request:
+    paths:
+      - 'MIMIR_CONTINUE_HERE.md'
+      - 'MIMIR_ALL_SOURCES_SUPERBOOK.md'
+      - 'docs/chatgpt-archive/**'
+      - 'scripts/verify_mimir_knowledge_archive.ps1'
+      - '.github/workflows/knowledge-archive.yml'
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify MIMIR knowledge archive
+        shell: pwsh
+        run: |
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
