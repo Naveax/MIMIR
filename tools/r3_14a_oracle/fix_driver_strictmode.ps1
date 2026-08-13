@@ -21,6 +21,10 @@ $replacements = @(
         New = '$probeRelative = if ($IsWindows) { ''target\debug\examples\r3_14a_probe.exe'' } else { ''target/debug/examples/r3_14a_probe'' }`n$probe = Join-Path $boxcars $probeRelative'
     },
     [pscustomobject]@{
+        Old = '    & python tools/r3_14a_oracle/patch_boxcars.py $boxcars'
+        New = '    & python tools/r3_14a_oracle/patch_boxcars.py $boxcars`n    if ($LASTEXITCODE -ne 0) { return }`n    & python tools/r3_14a_oracle/tighten_instrumentation.py $boxcars'
+    },
+    [pscustomobject]@{
         Old = '    $lines = @(& $probe $resolved 2>&1 | ForEach-Object { $_.ToString() })'
         New = '    $lines = @(& $probe $resolved 2>&1 | ForEach-Object { $_.ToString() })`n    $lines = @($lines | ForEach-Object { $_.Replace(''\t'', "`t") })'
     },
