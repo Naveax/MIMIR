@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.14D",
   "last_production_milestone_name": "first actor envelope header native reader",
   "last_completed_read_only_audit": "R3.14",
-  "current_pass": "R3.15B",
-  "current_pass_kind": "planning / contract / docs-only NewActor native contract admission",
-  "current_pass_goal": "Admit the exact additive native contract for the current supported NewActor branch without changing production Rust.",
-  "current_pass_stop_boundary": "Docs-only. Production remains frozen after the first actor new bit; R3.15C is closed until this contract is admitted.",
+  "current_pass": "R3.15C",
+  "current_pass_kind": "narrow production implementation - first NewActor native reader through spawn trajectory",
+  "current_pass_goal": "Implement one additive native first-NewActor reader under the admitted R3.15B contract and stop at the first NewActor spawn trajectory endpoint.",
+  "current_pass_stop_boundary": "End of first NewActor spawn trajectory; property_present, next actor/frame, lifecycle state, raw state, events and skills remain closed.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -93,11 +93,13 @@
     "docs/continuity/MIMIR_R3_14E_DECISION.md",
     "docs/continuity/MIMIR_R3_15A_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_15A_DECISION.md",
-    "docs/continuity/MIMIR_R3_15B_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_15B_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_15B_DECISION.md",
+    "docs/continuity/MIMIR_R3_15C_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.15A",
   "last_completed_evidence_outcome": "A \u2014 exact 47-replay / 169538-NewActor evidence admitted",
-  "last_completed_contract_pass": "R3.14B",
+  "last_completed_contract_pass": "R3.15B",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -232,5 +234,17 @@
     "pre_admission_state": {
       "current_pass": "R3.15A"
     }
+  },
+  "r3_15b": {
+    "outcome": "ADMITTED / CONTRACT COMPLETE",
+    "production_source_changed": false,
+    "production_sha": "7b17cb9033b6c71d476e500380d78402cbb3c56d",
+    "continuity_base_sha": "fb2bbdec739b440ebbc2465db09bdcc9faac2ce1",
+    "r3_15a_artifact_id": 9184200143,
+    "r3_15a_artifact_sha256": "a488b7d1620303e609a517eeb098367edd77f25a71022492d4fb46810290e81d",
+    "exact_sha_ci_run": 31710371570,
+    "exact_sha_knowledge_archive_run": 31710371562,
+    "published_main_readback_sha": "fb2bbdec739b440ebbc2465db09bdcc9faac2ce1",
+    "next_pass": "R3.15C"
   }
 }

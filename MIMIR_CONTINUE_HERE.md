@@ -2618,3 +2618,14 @@ ACTIVE NEXT PASS    = R3.15B — NewActor native contract admission
 ```
 
 R3.15A  run `31708322309`, job `94474438951`, artifact `9184200143` admitted 169,538 NewActor rows across all 47 supported replays with zero oracle errors, zero invalid object IDs, zero static-spawn mismatches, and zero production mutation. Production remains frozen after the first actor `new` bit.
+---
+
+## R3.15B CONTRACT ADMITTED / ACTIVE R3.15C
+
+```text
+production code SHA = 7b17cb9033b6c71d476e500380d78402cbb3c56d
+R3.15B              = ADMITTED / CONTRACT COMPLETE / DOCS-ONLY
+ACTIVE NEXT PASS    = R3.15C — first NewActor native reader through spawn trajectory
+```
+
+R3.15B changes no production Rust. Read `docs/continuity/MIMIR_R3_15B_DECISION.md` and `docs/continuity/MIMIR_R3_15C_EXECUTION_SPEC.md`. Property decoding, next actor/frame iteration, state, events and skills remain closed.
