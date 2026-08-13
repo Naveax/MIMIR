@@ -1,0 +1,37 @@
+name: Temporary Publish R3.15A Continuity
+
+on:
+  push:
+    branches:
+      - tmp-publish-r315a
+    paths:
+      - '.github/workflows/_tmp_publish_r315a.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Verify exact publication state
+        shell: bash
+        run: |
+          set -euo pipefail
+          publish=fb2bbdec739b440ebbc2465db09bdcc9faac2ce1
+          expected_main=a51c0c1bf8c8927f4e2f39691ec63403d70bb0a8
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$expected_main"
+          test "$(git rev-parse "${publish}^")" = "$expected_main"
+          test "$(git diff --name-only "$publish" HEAD)" = ".github/workflows/_tmp_publish_r315a.yml"
+          git merge-base --is-ancestor "$expected_main" "$publish"
+          printf 'expected_main=%s\npublish_sha=%s\n' "$expected_main" "$publish"
+      - name: Force-free fast-forward publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin fb2bbdec739b440ebbc2465db09bdcc9faac2ce1:refs/heads/main
