@@ -1,0 +1,72 @@
+name: Temporary R3.14A Selector Evidence
+
+on:
+  push:
+    branches:
+      - agent/r3-14a-first-actor-envelope-evidence
+    paths:
+      - 'tools/r3_14a_selector/**'
+      - '.github/workflows/_tmp_r3_14a_selector.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  selector:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+
+      - name: Toolchain and exact head readback
+        shell: pwsh
+        run: |
+          rustup show
+          if ($LASTEXITCODE -ne 0) { throw "rustup show failed: $LASTEXITCODE" }
+          $head = (& git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "git rev-parse HEAD failed: $LASTEXITCODE" }
+          if ($head -ne $env:GITHUB_SHA) { throw "checkout SHA mismatch: head=$head github=$env:GITHUB_SHA" }
+          Write-Host "R3_14A_EVIDENCE_HEAD=$head"
+
+      - name: Format check selector
+        shell: pwsh
+        run: |
+          & cargo fmt --manifest-path tools/r3_14a_selector/Cargo.toml -- --check
+          if ($LASTEXITCODE -ne 0) { throw "selector cargo fmt failed: $LASTEXITCODE" }
+
+      - name: Run selector and gate exact lane identity
+        shell: pwsh
+        run: |
+          $lines = @(& cargo run --manifest-path tools/r3_14a_selector/Cargo.toml --quiet 2>&1)
+          $native = $LASTEXITCODE
+          $lines | Set-Content -Encoding utf8 r3_14a_selector.log
+          $lines | ForEach-Object { Write-Host $_ }
+          if ($native -ne 0) { throw "selector failed: $native" }
+
+          $text = $lines -join "`n"
+          foreach ($marker in @(
+              'SUMMARY total_replays=103',
+              'SUMMARY supported_replays=47',
+              'SUMMARY unsupported_replays=56',
+              'SUMMARY unique_supported_sha256=47',
+              'R3_14A_SELECTOR=PASS'
+          )) {
+              if (-not $text.Contains($marker)) { throw "missing selector marker: $marker" }
+          }
+
+          $manifest = $lines | Where-Object { $_ -match '^SUMMARY manifest_sha256=([0-9a-f]{64})$' }
+          if (@($manifest).Count -ne 1) { throw "expected exactly one stable manifest SHA-256 line" }
+          $supportedRows = @($lines | Where-Object { $_ -match '^SUPPORTED\t' })
+          if ($supportedRows.Count -ne 47) { throw "expected 47 supported rows, got $($supportedRows.Count)" }
+
+          Write-Host "R3_14A_SELECTOR_ROWS=$($supportedRows.Count)"
+          Write-Host $manifest
+
+      - name: Upload selector evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r3-14a-selector-evidence-${{ github.sha }}
+          path: r3_14a_selector.log
+          if-no-files-found: error
+          retention-days: 30
