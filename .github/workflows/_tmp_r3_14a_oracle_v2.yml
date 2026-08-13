@@ -19,6 +19,14 @@ jobs:
       - name: Checkout exact evidence head
         uses: actions/checkout@v6
 
+      - name: Apply committed StrictMode driver correction
+        shell: pwsh
+        run: |
+          & ./tools/r3_14a_oracle/fix_driver_strictmode.ps1
+          if ($LASTEXITCODE -ne 0) { throw "R3.14A StrictMode correction failed: $LASTEXITCODE" }
+          & git diff --check -- tools/r3_14a_oracle/run_oracle.ps1
+          if ($LASTEXITCODE -ne 0) { throw "effective oracle driver diff check failed: $LASTEXITCODE" }
+
       - name: Run deterministic pinned-oracle driver
         shell: pwsh
         run: |
@@ -30,6 +38,7 @@ jobs:
         with:
           name: r3-14a-pinned-oracle-evidence-v2-${{ github.sha }}
           path: |
+            r3_14a_effective_driver_sha256.txt
             r3_14a_selector_for_oracle.log
             r3_14a_supported.tsv
             r3_14a_oracle_identity.txt
