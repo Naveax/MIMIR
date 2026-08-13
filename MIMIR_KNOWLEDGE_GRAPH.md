@@ -311,3 +311,22 @@ R3.15D 47-replay first-NewActor native-vs-pinned-Boxcars differential — ACTIVE
 ```
 
 Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current continuity state, `MIMIR_R3_15C_DECISION.md`, `MIMIR_R3_15D_EXECUTION_SPEC.md`, then pass protocol, boundary locks, roadmap and ledger before the superbook/archive registry/matrix/mapping sources. Current source/tests and exact-SHA evidence remain authoritative.
+
+---
+
+## LATEST CANONICAL OVERRIDE — R3.15D COMPLETE / R3.16A ACTIVE
+
+```text
+R3.15C first NewActor native reader — PRODUCTION bf4bccff82203ed049d33e942681fed07f23beb4
+        |
+        v
+R3.15D 47-replay first-NewActor differential — COMPLETE / OUTCOME A
+        |
+        v
+R3.16A existing-actor first-property envelope evidence — ACTIVE / EVIDENCE ONLY
+        |
+        v
+native property envelope / attribute payload — CLOSED until separately admitted
+```
+
+R3.15D's exact evidence head is `10e5d05383dbc09e19af997e896a825d8d16e3ae`. Its immutable evidence artifact is `9195419601` with digest `sha256:f6e11055c11ed0724c45fcc76c13a9da2dbbb285ab3744f9738f0d4a19ecab8a`. The parent R3.15A stream identity (169,538 NewActor rows) was verified, but the R3.15D native differential surface is exactly 47 first-NewActor rows, not 169,538 rows. Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current state, `MIMIR_R3_15D_DECISION.md`, `MIMIR_R3_16A_EXECUTION_SPEC.md`, then pass protocol, boundary locks, roadmap and ledger.
