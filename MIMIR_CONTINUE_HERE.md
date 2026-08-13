@@ -2389,3 +2389,17 @@ At the end of every meaningful MIMIR work session, before handing off:
 ```
 
 If the last checkbox is false, continuity work is not done.
+
+---
+
+## CHATGPT STORAGE KNOWLEDGE GRAPH
+
+The continuity manual is cross-linked to the sanitized historical/design archive. A future session should use these when reconstructing design history, migration candidates, or claims that predate the current Rust repository:
+
+- [All-sources superbook](MIMIR_ALL_SOURCES_SUPERBOOK.md)
+- [Knowledge graph / reading order](MIMIR_KNOWLEDGE_GRAPH.md)
+- [Source registry and classification](docs/chatgpt-archive/SOURCE_REGISTRY.md)
+- [Cross-source validation matrix](docs/chatgpt-archive/VALIDATION_MATRIX.md)
+- [Historical-to-current migration map](docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md)
+
+Do not let a historical snapshot override fresh source/tests. Historical files are evidence, design history, or migration candidates according to their registry classification.
