@@ -1,0 +1,50 @@
+name: Temporary Evidence Next
+
+on:
+  push:
+    branches: [agent/evidence-next]
+    paths:
+      - 'tools/_tmp_evidence_next.py'
+      - 'tools/_tmp_evidence_next.sh'
+      - '.github/workflows/_tmp_evidence_next.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run evidence audit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/_tmp_evidence_next.sh | tee r3_15a_run.log
+
+      - name: Upload evidence bundle
+        uses: actions/upload-artifact@v6
+        with:
+          name: evidence-next-${{ github.sha }}
+          path: |
+            r3_15a_run.log
+            r3_15a_source_scope.txt
+            r3_15a_oracle_artifact_identity.txt
+            r3_15a_paths.txt
+            r3_15a_boxcars_changed_paths.txt
+            r3_15a_boxcars_instrumentation.patch
+            r3_15a_boxcars_instrumentation_sha256.txt
+            r3_15a_boxcars.log
+            r3_15a_mimir_spawn.log
+            r3_15a_new_actor_all.jsonl
+            r3_15a_witnesses.jsonl
+            r3_15a_summary.json
+            r3_15a_aggregate.txt
+            r3_15a_aggregate_driver.log
+            r3_15a_driver_sha256.txt
+          if-no-files-found: error
