@@ -5,7 +5,7 @@
 **Production code checkpoint:** `ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa`  
 **Production milestone:** `R3.13 — static replay network lookup plan`  
 **Completed read-only format audit:** `R3.14`  
-**Next exact pass:** `R3.14A — first frame + first actor envelope header differential evidence`
+**Next exact pass:** `R3.14C — native bit cursor + bounded integer primitive implementation`
 
 ---
 
@@ -437,3 +437,50 @@ The exact pass decomposition is in `MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`.
 # 16. Current one-line truth
 
 > **MIMIR has a production static network lookup plan proven against 3,990,310 supported-corpus attribute updates, but it still has not admitted native actor-envelope bit consumption; the next correct step is R3.14A differential evidence for the first frame and first actor envelope header only.**
+
+
+---
+
+# 17. R3.14A Outcome A + R3.14B admission update
+
+R3.14A is complete with **Outcome A — evidence sufficient**.
+
+Durable decision:
+
+```text
+docs/continuity/MIMIR_R3_14A_DECISION.md
+```
+
+Exact evidence identity:
+
+```text
+production code SHA        = ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa
+evidence head              = f1c4eedb6a7e4d96577d2c0a429cbe8b170aa9a1
+Boxcars SHA                = c70e77df7af81b436cb545d070bb90c82f562d0b
+supported replays          = 47 / 47
+oracle decode success      = 47 / 47
+schema errors              = 0
+bit monotonicity failures  = 0
+production source mutation = 0
+```
+
+The first-envelope evidence consistently stopped at bit 78 after `new`. No `name_id`, object/spawn, property, stream, attribute, second-actor, second-frame, raw-state, event, or skill boundary was admitted.
+
+R3.14B converted that evidence into the narrow native primitive contract and is complete:
+
+```text
+docs/continuity/MIMIR_R3_14B_EXECUTION_SPEC.md
+```
+
+Current exact pass:
+
+```text
+R3.14C — native bit cursor + bounded integer primitive implementation
+spec: docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md
+```
+
+R3.14C opens only the private primitive implementation boundary. The production actor-envelope reader remains closed until R3.14D.
+
+Current one-line truth after this admission:
+
+> **MIMIR still has R3.13 as its last production replay capability. R3.14A has proven the first-frame/first-actor cursor over all 47 supported replays, R3.14B has admitted the private native bit-cursor/bounded-int contract, and the next correct production pass is R3.14C primitive implementation only.**

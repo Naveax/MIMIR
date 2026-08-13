@@ -1,9 +1,9 @@
 # MIMIR — Execution Roadmap A→Z
 
-**Scope:** from current R3.14A checkpoint to the full MIMIR target architecture  
+**Scope:** from current R3.14C checkpoint to the full MIMIR target architecture
 **Policy:** full vision accepted, staged delivery mandatory  
 **Current production checkpoint:** R3.13 static network lookup plan  
-**Current next pass:** R3.14A first-frame/first-actor differential evidence
+**Current next pass:** R3.14C native bit cursor + bounded integer primitive implementation
 
 ---
 
@@ -29,7 +29,7 @@ The roadmap has two zoom levels:
 
 # PART I — NATIVE REPLAY NETWORK DECODER
 
-# A. R3.14A — First frame + first actor envelope oracle evidence
+# A. R3.14A — First frame + first actor envelope oracle evidence — COMPLETE / OUTCOME A
 
 Goal:
 
@@ -65,7 +65,7 @@ Done when:
 
 ---
 
-# B. R3.14B — Evidence admission + native bit-cursor contract
+# B. R3.14B — Evidence admission + native bit-cursor contract — COMPLETE / ADMITTED
 
 This pass converts R3.14A facts into a production implementation contract.
 
@@ -105,7 +105,7 @@ No actor lifecycle yet.
 
 ---
 
-# C. R3.14C — Native bit cursor + bounded integer primitive implementation
+# C. R3.14C — Native bit cursor + bounded integer primitive implementation — ACTIVE
 
 Production code may now add the minimum generic bit primitives.
 

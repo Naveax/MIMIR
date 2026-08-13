@@ -14,8 +14,14 @@ Machine-readable durum özeti. Yeni chat bunu ilk teknik state kaynağı olarak 
 ### `MIMIR_CURRENT_STATE.md`
 İnsan tarafından okunabilir güncel production state, evidence ve açık/kapalı sınırlar.
 
-### `MIMIR_R3_14A_EXECUTION_SPEC.md`
-Şu anda yapılacak exact pass. Bu dosya tamamlandığında bir sonraki exact-pass spec ile değiştirilir veya yeni spec eklenir ve `MIMIR_CONTINUE_HERE.md` pointer'ı güncellenir.
+### `MIMIR_R3_14A_DECISION.md`
+Completed R3.14A Outcome A evidence decision and exact oracle/corpus identities.
+
+### `MIMIR_R3_14B_EXECUTION_SPEC.md`
+Admitted contract that converts R3.14A evidence into the native private bit-cursor/bounded-int primitive rules.
+
+### `MIMIR_R3_14C_EXECUTION_SPEC.md`
+**Şu anda yapılacak exact pass.** Private native bit cursor + bounded integer primitive implementation only; no actor-envelope reader yet.
 
 ### `MIMIR_PASS_PROTOCOL.md`
 Her pass için değişmez çalışma protokolü: re-audit, evidence, implementation isolation, fail-fast CI, clean reconstruction, exact-SHA validation, force-free publication ve continuity sync.
@@ -24,7 +30,7 @@ Her pass için değişmez çalışma protokolü: re-audit, evidence, implementat
 Açık/kapalı capability sınırları ve bunların reopen koşulları.
 
 ### `MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-R3.14A'dan full MIMIR hedef mimarisine kadar uzun vadeli sıra.
+R3.14C'den full MIMIR hedef mimarisine kadar uzun vadeli sıra; completed R3.14A/B tarihçesini de korur.
 
 ### `MIMIR_PROGRESS_LEDGER.md`
 Append-only milestone günlüğü. Her production pass sonunda yeni kayıt eklenir; eski kayıtlar rewrite edilmez.

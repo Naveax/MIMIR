@@ -83,7 +83,7 @@ raw-state decoder
 
 # 4. Native network bit cursor boundary
 
-## EVIDENCE-ONLY — current R3.14/R3.14A work
+## EVIDENCE-ADMITTED — R3.14A / CONTRACT-ADMITTED — R3.14B
 
 Known order:
 
@@ -122,9 +122,9 @@ No shortcut.
 
 Bounded integer is not ordinary fixed width. A value-dependent discriminator bit may be consumed after low bits.
 
-## CLOSED production general primitive
+## OPEN FOR NARROW IMPLEMENTATION — R3.14C
 
-Until R3.14B/C:
+R3.14C may implement one canonical private primitive only. Until R3.14C is admitted:
 
 - do not add an ad-hoc actor-ID bit read;
 - do not implement stream ID using `read_bits(prop_id_bits)` alone;
@@ -497,28 +497,31 @@ A future chat must not reopen a boundary merely because it is “the obvious nex
 
 # 22. Current immediate lock summary
 
-At R3.14A:
+At R3.14C:
 
 ```text
-OPEN:
-  static network lookup plan
+OPEN / PRODUCTION:
+  R3.13 static network lookup plan and earlier structural layers
 
-EVIDENCE TARGET:
-  first frame time/delta
-  first actor_present
-  actor_id bounded decode
-  alive
-  new
+EVIDENCE-ADMITTED:
+  R3.14A first-frame / first-actor envelope order through new
+  bounded actor-ID discriminator behavior
+
+OPEN FOR IMPLEMENTATION NOW:
+  one private LSB-first network bit cursor
+  one private canonical bounded-u32 primitive
+  focused primitive tests
 
 CLOSED:
-  everything after new
+  public/native actor-envelope result reader until R3.14D
+  name_id and everything after new
+  actor lifecycle mutation
   multi-actor
   multi-frame
-  actor state mutation
-  attributes
+  attribute payload decode
   raw state
   events
   skills
 ```
 
-That is the current hard boundary.
+That is the current hard boundary. R3.14C primitive implementation is not permission to decode the first actor envelope.

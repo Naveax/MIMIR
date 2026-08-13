@@ -3852,3 +3852,26 @@ This all-in-one synthesis is part of a multi-stage validation graph. Read and ve
 - [Archive verifier](scripts/verify_mimir_knowledge_archive.ps1)
 
 Current GitHub source/tests remain higher authority than historical snapshots when they conflict.
+
+
+---
+
+## CURRENT REPLAY DECODER ADMISSION UPDATE — R3.14A/B
+
+As of 2026-08-13, current GitHub/evidence truth adds this admission chain:
+
+```text
+R3.13 production static network lookup plan
+→ R3.14 read-only bitstream order audit
+→ R3.14A Outcome A: 47/47 pinned-oracle first-envelope evidence
+→ R3.14B admitted native bit-cursor / bounded-int contract
+→ ACTIVE: R3.14C private primitive implementation
+```
+
+Durable current artifacts:
+
+- `docs/continuity/MIMIR_R3_14A_DECISION.md`
+- `docs/continuity/MIMIR_R3_14B_EXECUTION_SPEC.md`
+- `docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md`
+
+Production replay capability still stops at R3.13 until R3.14C is implemented, audited and published. R3.14A/B evidence and contracts are not themselves native actor-envelope parsing.

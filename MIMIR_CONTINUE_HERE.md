@@ -2403,3 +2403,74 @@ The continuity manual is cross-linked to the sanitized historical/design archive
 - [Historical-to-current migration map](docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md)
 
 Do not let a historical snapshot override fresh source/tests. Historical files are evidence, design history, or migration candidates according to their registry classification.
+
+
+---
+
+## R3.14A OUTCOME A / R3.14B ADMISSION / ACTIVE R3.14C
+
+> **CURRENT OVERRIDE:** This section is newer than earlier R3.14A `current pass` wording in this historical continuation file. Fresh source/tests still outrank this document.
+
+As of the 2026-08-13 R3.14A/R3.14B closure:
+
+```text
+production code checkpoint = ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa
+production milestone        = R3.13 static replay network lookup plan
+R3.14 read-only audit       = complete
+R3.14A evidence             = OUTCOME A / COMPLETE
+R3.14B contract planning    = ADMITTED / COMPLETE
+ACTIVE NEXT PASS            = R3.14C native bit cursor + bounded integer primitive implementation
+```
+
+R3.14A durable decision:
+
+```text
+docs/continuity/MIMIR_R3_14A_DECISION.md
+successful evidence head = f1c4eedb6a7e4d96577d2c0a429cbe8b170aa9a1
+pinned Boxcars            = c70e77df7af81b436cb545d070bb90c82f562d0b
+47 / 47 oracle parse      = PASS
+selector manifest SHA256  = 28bd08e2b6a376020cd6e91fc90c1b34f076734cbd6a441d82d33ac047f19c55
+artifact ZIP SHA256       = d404437e994fd7d539ea554bd63a456273330340b1d678e635d1bb601440c10b
+```
+
+R3.14A exact observed first-envelope cursor across all 47 supported replays:
+
+```text
+frame_start               0
+f32 time + f32 delta       0..64
+actor_present bit          64
+actor_id start             65
+actor_id end               76
+alive bit                  76
+new bit                    77
+hard stop                  78
+```
+
+Current 47-row bounded actor-ID observation:
+
+```text
+bound                      2047
+low_width                  10
+bits_consumed              11
+extra discriminator        consumed in 47 / 47
+extra discriminator value  0 in 47 / 47
+actor_id                   0 in 47 / 47
+```
+
+This is evidence, not a native production actor reader.
+
+R3.14B contract:
+
+```text
+docs/continuity/MIMIR_R3_14B_EXECUTION_SPEC.md
+```
+
+Active R3.14C exact execution spec:
+
+```text
+docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md
+```
+
+R3.14C may implement only private/internal replay-network bit primitives in `crates/mimir-replay/src/lib.rs` plus focused tests. It must not add an actor-envelope production result, external parser dependency, Cargo dependency, support-lane expansion, actor lifecycle mutation, spawn/property/attribute decoding, multi-actor iteration, or multi-frame iteration.
+
+The first production actor-envelope reader remains R3.14D.
