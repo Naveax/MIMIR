@@ -1,5 +1,7 @@
 # MIMIR
 
+> **Active development continuity:** start with [`MIMIR_CONTINUE_HERE.md`](MIMIR_CONTINUE_HERE.md). The detailed current production checkpoint, locked boundaries, exact next pass, and A→Z roadmap live under `docs/continuity/`. Historical planning/executor documents are retained for audit history and may describe older boundaries.
+
 MIMIR is a Rust-first scaffold for trustworthy Rocket League replay research tooling.
 
 This repository intentionally avoids fake replay parsing, fake physics, and fake mining
@@ -14,10 +16,15 @@ and orchestration wiring.
   rollout execution, scoring, skill canonicalization, teacher synthesis, and caching.
 - Make every current implementation narrow and auditable.
 
-## Current boundaries
+## Current replay boundary
 
-- `mimir-replay` includes a bounded real replay-header parser for three exact admitted version/build tuples through `ReplayInput::Memory` only.
-- Replay source materialization, direct `ReplayInput::File` parsing, replay body/network/frame decoding, raw-state extraction, and event extraction remain unimplemented.
+The replay lane has advanced beyond the original three-header-fixture stage. At the R3.13 production checkpoint, `mimir-replay` contains narrow production layers for admitted replay headers, body/content/footer structural boundaries, footer lookup materialization, conservative network attribute/spawn registries, timing/decoder prerequisites, and a static per-replay network lookup plan with inherited stream/property maps, `max_prop_id`, `prop_id_bits`, spawn trajectories, and channel/build-derived flags.
+
+The R3.13 lookup plan **does not consume network payload actor/frame bits**. Native actor-envelope decoding, spawn/property payload decoding, full frame iteration, canonical raw-state extraction, and event extraction remain later boundaries. See `MIMIR_CONTINUE_HERE.md` for the exact current pass and hard stop boundary.
+
+Additional high-level boundaries:
+
+- Current replay parsing remains deliberately admission-scoped rather than wildcard future-version support.
 - No bundled RocketSim integration.
 - No disguised intelligence or placeholder heuristics.
 - A deterministic fake sim backend exists only for tests and CLI smoke validation.
