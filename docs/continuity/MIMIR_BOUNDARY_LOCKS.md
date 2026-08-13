@@ -569,3 +569,19 @@ skills
 ```
 
 R3.14D implementation does not by itself close the oracle differential requirement. `R3.14E` remains required before R3.15.
+
+
+---
+
+## CURRENT OVERRIDE — At R3.14E
+
+OPEN / PRODUCTION at `7b17cb9033b6c71d476e500380d78402cbb3c56d`:
+```text
+private native bit primitives
+first frame timing raw/value native consumption
+one first actor envelope: actor_present -> bounded actor_id -> alive -> new, branch-dependent
+```
+
+R3.14E is EVIDENCE-ONLY differential audit. Production source remains frozen.
+
+Still CLOSED: `name_id`, post-name bit, object/spawn/property/stream/attribute payloads, second actor/frame, actor state, raw state, events, skills.

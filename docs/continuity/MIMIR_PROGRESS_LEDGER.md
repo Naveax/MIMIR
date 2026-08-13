@@ -428,3 +428,30 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.14D — first actor envelope header native reader`.
+
+
+---
+
+## 2026-08-13 — R3.14D — First actor envelope header native reader
+
+Production base SHA: `9c0f81a084b2df0e64496af87c0edc50814bcbc6`
+Production commit SHA: `7b17cb9033b6c71d476e500380d78402cbb3c56d`
+Pass type: narrow production implementation + clean reconstruction + publication
+Outcome: **ADMITTED / PRODUCTION**
+
+What changed:
+- added native first-frame/first-actor result/reader through `new`;
+- consumed timing raw bits through the native cursor and cross-checked timing preamble raw bits;
+- used canonical bounded-u32 for actor ID;
+- preserved branch-dependent `Option` state and stopped before `name_id`.
+
+Validation:
+- 17 focused tests PASS;
+- full locked repository verifier PASS;
+- source blob `67752868807c0b7169e46f22762c7a0ea9efce40`;
+- source SHA-256 `06b767622108ca1aea82ee5c0aad6cc503fbcfddaba05012cf022dd901a5a385`;
+- validation artifact SHA-256 `dab3a48ef1b58cbbbd39c832009fc722d047c21f84c12cb4e8f7cc69313a935d`;
+- clean CI `31702049792` SUCCESS;
+- published-main CI `31702341993` SUCCESS.
+
+Next exact pass: `R3.14E — native first-envelope differential audit`.

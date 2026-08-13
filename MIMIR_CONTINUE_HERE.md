@@ -2568,3 +2568,26 @@ STOP
 Hard stop remains before `name_id` and everything after it. R3.14D implementation is not the 47-replay differential admission; that remains R3.14E.
 
 Repository hygiene note: before R3.14C, stale `Cargo.lock` state was repaired separately at `c42836647673cecc47cc9c89908da1de11d8a222` and `scripts/verify_repo.ps1` now enforces Cargo `--locked`. This is reproducibility maintenance, not replay capability expansion.
+
+
+---
+
+## R3.14D PRODUCTION ADMITTED / ACTIVE R3.14E
+
+> **CURRENT OVERRIDE:** Fresh source/tests and exact-SHA evidence still outrank prose.
+
+```text
+last production code SHA = 7b17cb9033b6c71d476e500380d78402cbb3c56d
+production milestone     = R3.14D — first actor envelope header native reader
+R3.14D                   = COMPLETE / PRODUCTION
+ACTIVE NEXT PASS         = R3.14E — native first-envelope differential audit
+```
+
+R3.14D decision: `docs/continuity/MIMIR_R3_14D_DECISION.md`.
+R3.14E exact spec: `docs/continuity/MIMIR_R3_14E_EXECUTION_SPEC.md`.
+
+R3.14D production now natively consumes first-frame time/delta through the R3.14C cursor, verifies raw timing bits against the admitted timing preamble, then reads exactly one first actor envelope through `actor_present -> bounded actor_id -> alive -> new` according to branch conditions and stops.
+
+Still closed: `name_id`, object/spawn/property/stream/attribute payloads, second actor/frame, actor state, raw state, events, skills.
+
+R3.14E is evidence-only: compare the native reader against the exact 47-row R3.14A pinned-Boxcars evidence. Production Rust must not change.

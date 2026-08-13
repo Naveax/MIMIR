@@ -1,9 +1,9 @@
 # MIMIR — Execution Roadmap A→Z
 
-**Scope:** from current R3.14D checkpoint to the full MIMIR target architecture
+**Scope:** from current R3.14E checkpoint to the full MIMIR target architecture
 **Policy:** full vision accepted, staged delivery mandatory  
-**Current production checkpoint:** R3.14C private native bit cursor + bounded-u32 primitive
-**Current next pass:** R3.14D first actor envelope header native reader
+**Current production checkpoint:** R3.14D first actor envelope header native reader
+**Current next pass:** R3.14E native first-envelope differential audit
 
 ---
 
@@ -130,7 +130,7 @@ Do not implement spawn/property payload here.
 
 ---
 
-# D. R3.14D — First actor envelope header native reader — ACTIVE
+# D. R3.14D — First actor envelope header native reader — COMPLETE / PRODUCTION
 
 Build the smallest production reader using the new cursor:
 
@@ -164,7 +164,7 @@ Corpus expectations:
 
 ---
 
-# E. R3.14E — Native first-envelope differential audit
+# E. R3.14E — Native first-envelope differential audit — ACTIVE
 
 Run MIMIR native reader vs pinned oracle on all 47 supported replays.
 

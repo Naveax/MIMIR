@@ -215,3 +215,39 @@ pwsh -NoProfile -File ./scripts/verify_mimir_knowledge_archive.ps1
 The GitHub workflow `.github/workflows/knowledge-archive.yml` executes the same verification and is configured to trigger for continuity and knowledge-graph changes.
 
 After any admitted replay-decoder milestone, update this graph together with the continuity control plane. A milestone is not fully closed while the graph still points to the previous active pass.
+
+
+---
+
+## LATEST CANONICAL OVERRIDE — R3.14D PRODUCTION / R3.14E ACTIVE
+
+```text
+R3.14C primitives — production
+        |
+        v
+R3.14D first actor envelope reader — PRODUCTION 7b17cb9033b6c71d476e500380d78402cbb3c56d
+        |
+        v
+R3.14E 47-replay native-vs-Boxcars differential audit — ACTIVE / evidence-only
+        |
+        v
+R3.15A NewActor evidence — CLOSED until R3.14E Outcome A
+```
+
+Latest mandatory reading order:
+1. `MIMIR_CONTINUE_HERE.md`
+2. `docs/continuity/MIMIR_CONTINUITY_STATE.json`
+3. `docs/continuity/MIMIR_CURRENT_STATE.md`
+4. `docs/continuity/MIMIR_R3_14D_DECISION.md`
+5. `docs/continuity/MIMIR_R3_14E_EXECUTION_SPEC.md`
+6. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+7. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+8. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+9. `docs/continuity/MIMIR_PROGRESS_LEDGER.md`
+10. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+11. `docs/chatgpt-archive/README.md`
+12. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+13. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+14. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+
+Current code/tests and exact-SHA evidence still outrank every document.
