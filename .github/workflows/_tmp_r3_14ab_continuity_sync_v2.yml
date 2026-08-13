@@ -25,6 +25,42 @@ jobs:
           set -euo pipefail
           python tools/_tmp_sync_r3_14ab.py
 
+      - name: Normalize only newly introduced markdown hard-break whitespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              Path('docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md'): [
+                  ('**Scope:** from current R3.14C checkpoint to the full MIMIR target architecture  \n',
+                   '**Scope:** from current R3.14C checkpoint to the full MIMIR target architecture\n'),
+              ],
+              Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md'): [
+                  ('Production base SHA: `ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa`  \n',
+                   'Production base SHA: `ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa`\n'),
+                  ('Production commit SHA: unchanged; evidence-only pass  \n',
+                   'Production commit SHA: unchanged; evidence-only pass\n'),
+                  ('Pass type: pinned-oracle differential evidence  \n',
+                   'Pass type: pinned-oracle differential evidence\n'),
+                  ('Production commit SHA: unchanged; docs/contract pass  \n',
+                   'Production commit SHA: unchanged; docs/contract pass\n'),
+                  ('Pass type: evidence admission + implementation contract  \n',
+                   'Pass type: evidence admission + implementation contract\n'),
+              ],
+          }
+
+          for path, pairs in replacements.items():
+              text = path.read_text(encoding='utf-8')
+              for old, new in pairs:
+                  count = text.count(old)
+                  if count < 1:
+                      raise SystemExit(f'expected new whitespace target not found in {path}: {old!r}')
+                  text = text.replace(old, new)
+              path.write_text(text, encoding='utf-8', newline='\n')
+          PY
+
       - name: Audit continuity-only diff
         shell: bash
         run: |
