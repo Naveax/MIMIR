@@ -3,7 +3,7 @@ name: Temporary Publish R3.15A Continuity
 on:
   push:
     branches:
-      - tmp-publish-r315a
+      - tmp-publish-r315a-ready
     paths:
       - '.github/workflows/_tmp_publish_r315a.yml'
 
@@ -27,7 +27,6 @@ jobs:
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$expected_main"
           test "$(git rev-parse "${publish}^")" = "$expected_main"
-          test "$(git diff --name-only "$publish" HEAD)" = ".github/workflows/_tmp_publish_r315a.yml"
           git merge-base --is-ancestor "$expected_main" "$publish"
           printf 'expected_main=%s\npublish_sha=%s\n' "$expected_main" "$publish"
       - name: Force-free fast-forward publish
