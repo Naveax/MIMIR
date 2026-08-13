@@ -34,7 +34,7 @@ jobs:
         shell: pwsh
         run: |
           & ./scripts/verify_mimir_knowledge_archive.ps1
-          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed: $LASTEXITCODE" }
+          if (-not $?) { throw "knowledge archive verification failed" }
 
       - name: Enforce continuity-only scope
         shell: bash
