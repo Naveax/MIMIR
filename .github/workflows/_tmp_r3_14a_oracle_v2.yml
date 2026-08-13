@@ -13,13 +13,13 @@ permissions:
 
 jobs:
   oracle:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - name: Checkout exact evidence head
         uses: actions/checkout@v6
 
-      - name: Apply committed StrictMode driver correction
+      - name: Apply committed deterministic driver corrections
         shell: pwsh
         run: |
           & ./tools/r3_14a_oracle/fix_driver_strictmode.ps1
