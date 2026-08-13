@@ -1,0 +1,122 @@
+name: Temporary Cargo Lock Synchronization
+
+on:
+  push:
+    branches:
+      - maintenance/cargo-lock-sync-locked-ci
+    paths:
+      - '.github/workflows/_tmp_cargo_lock_sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-verify:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout maintenance branch
+        uses: actions/checkout@v6
+        with:
+          ref: maintenance/cargo-lock-sync-locked-ci
+          fetch-depth: 0
+
+      - name: Assert exact stale-lock base
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = '068e1d6c914ab4932bf0a3db25dc3494dc89b334'
+          git cat-file -e "$base^{commit}"
+          if ($LASTEXITCODE -ne 0) { throw 'missing admitted base commit' }
+          git merge-base --is-ancestor $base HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'maintenance branch is not descended from admitted main base' }
+          $before = (Get-FileHash -Algorithm SHA256 -LiteralPath Cargo.lock).Hash.ToLowerInvariant()
+          $expectedText = git show "${base}:Cargo.lock"
+          if ($LASTEXITCODE -ne 0) { throw 'failed to read base Cargo.lock' }
+          $tmp = Join-Path $env:RUNNER_TEMP 'base-Cargo.lock'
+          [IO.File]::WriteAllText($tmp, ($expectedText -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
+          $expected = (Get-FileHash -Algorithm SHA256 -LiteralPath $tmp).Hash.ToLowerInvariant()
+          if ($before -ne $expected) { throw "Cargo.lock preimage drift: before=$before expected=$expected" }
+          Write-Host "STALE_LOCK_PREIMAGE_SHA256=$before"
+
+      - name: Generate Cargo lock synchronization
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo metadata --format-version 1 | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "cargo metadata failed: $LASTEXITCODE" }
+
+          $changed = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { throw 'git diff --name-only failed' }
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'Cargo.lock') {
+            throw "Expected only Cargo.lock to change, got: $($changed -join ', ')"
+          }
+
+          $diff = @(git diff --unified=0 -- Cargo.lock)
+          if ($LASTEXITCODE -ne 0) { throw 'git diff Cargo.lock failed' }
+          $added = @($diff | Where-Object { $_ -match '^\+' -and $_ -notmatch '^\+\+\+' })
+          $removed = @($diff | Where-Object { $_ -match '^-' -and $_ -notmatch '^---' })
+          if ($added.Count -ne 1 -or $added[0] -ne '+ "mimir-replay",') {
+            throw "Unexpected Cargo.lock additions: $($added -join ' | ')"
+          }
+          if ($removed.Count -ne 0) {
+            throw "Unexpected Cargo.lock removals: $($removed -join ' | ')"
+          }
+          Write-Host 'CARGO_LOCK_EXACT_DIFF=PASS'
+          git diff -- Cargo.lock
+
+      - name: Run repository verification with locked Cargo
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Audit post-verification lock stability
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $changed = @(git diff --name-only)
+          if ($changed.Count -ne 1 -or $changed[0] -ne 'Cargo.lock') {
+            throw "Post-verification scope drift: $($changed -join ', ')"
+          }
+          $diff = @(git diff --unified=0 -- Cargo.lock)
+          $added = @($diff | Where-Object { $_ -match '^\+' -and $_ -notmatch '^\+\+\+' })
+          $removed = @($diff | Where-Object { $_ -match '^-' -and $_ -notmatch '^---' })
+          if ($added.Count -ne 1 -or $added[0] -ne '+ "mimir-replay",' -or $removed.Count -ne 0) {
+            throw 'Cargo.lock diff changed during locked verification'
+          }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'git diff --check failed' }
+          git diff -- Cargo.lock | Set-Content -Encoding utf8NoBOM cargo_lock_sync.diff
+          $lockSha = (Get-FileHash -Algorithm SHA256 -LiteralPath Cargo.lock).Hash.ToLowerInvariant()
+          @(
+            'maintenance=cargo-lock-sync',
+            'base_main_sha=068e1d6c914ab4932bf0a3db25dc3494dc89b334',
+            "cargo_lock_sha256=$lockSha",
+            'exact_diff=add mimir-replay to mimir-cli dependency list',
+            'verify_repo_locked=PASS'
+          ) | Set-Content -Encoding utf8NoBOM cargo_lock_sync_receipt.txt
+
+      - name: Commit synchronized Cargo.lock only
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Cargo.lock
+          $staged = @(git diff --cached --name-only)
+          if ($staged.Count -ne 1 -or $staged[0] -ne 'Cargo.lock') { throw "Unexpected staged scope: $($staged -join ', ')" }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw 'cached diff check failed' }
+          git commit -m 'Synchronize Cargo lock for mimir-cli replay dependency'
+          if ($LASTEXITCODE -ne 0) { throw 'Cargo.lock commit failed' }
+          git push origin HEAD:maintenance/cargo-lock-sync-locked-ci
+          if ($LASTEXITCODE -ne 0) { throw 'Cargo.lock push failed' }
+
+      - name: Upload lock synchronization evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: cargo-lock-sync-${{ github.sha }}
+          path: |
+            cargo_lock_sync.diff
+            cargo_lock_sync_receipt.txt
+          if-no-files-found: error
