@@ -367,3 +367,64 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.14C — native bit cursor + bounded integer primitive implementation`.
+
+
+---
+
+## 2026-08-13 — Repository hygiene — Cargo lock synchronization / locked verification
+
+Production SHA: `c42836647673cecc47cc9c89908da1de11d8a222`
+Pass type: repository reproducibility maintenance
+Outcome: **CLOSED / PRODUCTION HYGIENE**
+
+What changed:
+- synchronized the pre-existing stale `Cargo.lock` entry so `mimir-cli` records its already-existing `mimir-replay` workspace dependency;
+- changed `scripts/verify_repo.ps1` so dependency-resolving Cargo commands run with `--locked`.
+
+Important negative fact:
+- this did not widen replay support or add a replay capability;
+- it was separated from R3.14C so the replay milestone remained one-source-file only.
+
+---
+
+## 2026-08-13 — R3.14C — Native bit cursor + bounded integer primitive implementation
+
+Production base SHA: `c42836647673cecc47cc9c89908da1de11d8a222`
+Production commit SHA: `bad2db9d5043a7a0087a4fab1d278df5f36c7717`
+Pass type: narrow production implementation + clean reconstruction + publication
+Outcome: **ADMITTED / PRODUCTION**
+
+What changed:
+- added private `NetworkBitCursor` to `crates/mimir-replay/src/lib.rs`;
+- added LSB-first `read_bit` and `read_bits_le`;
+- added one canonical bounded-u32 primitive;
+- added atomic truncation/error cursor behavior;
+- added 19 focused tests, including all 47 R3.14A actor-ID value/end-bit vectors.
+
+Evidence / validation:
+- source Git blob `3ff6c7823f45126595e7e59f7b5fb50980d8234c`;
+- source SHA-256 `ac1c2ae2919ad0c5d6d8ea615dd5dac82f4c5e5240f33618ef5e74ef9cb1cb92`;
+- validation head `349f20328cef6e7f0a3c46b279a787583442a652`;
+- validation artifact SHA-256 `0f64e842d0ced4c5566717954be2a684f6735080e9eb8edac9c03e2218d295d7`;
+- focused tests `19/19`;
+- oracle actor-ID vectors `47/47` value match and `47/47` end-bit match;
+- full mimir-replay regression PASS;
+- workspace check/test PASS;
+- clippy `-D warnings` PASS;
+- corpus + knowledge verifiers PASS;
+- clean branch CI run `31698938025` SUCCESS;
+- published-main CI run `31699241010` SUCCESS.
+
+Boundaries opened:
+- private native network bit cursor;
+- private canonical bounded-u32 primitive.
+
+Boundaries still closed:
+- first actor-envelope production reader;
+- all fields after `new`;
+- actor lifecycle state;
+- multi-actor / multi-frame;
+- raw state / events / skills.
+
+Next exact pass:
+- `R3.14D — first actor envelope header native reader`.

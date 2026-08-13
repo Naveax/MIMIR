@@ -2474,3 +2474,97 @@ docs/continuity/MIMIR_R3_14C_EXECUTION_SPEC.md
 R3.14C may implement only private/internal replay-network bit primitives in `crates/mimir-replay/src/lib.rs` plus focused tests. It must not add an actor-envelope production result, external parser dependency, Cargo dependency, support-lane expansion, actor lifecycle mutation, spawn/property/attribute decoding, multi-actor iteration, or multi-frame iteration.
 
 The first production actor-envelope reader remains R3.14D.
+
+
+---
+
+## R3.14C PRODUCTION ADMITTED / ACTIVE R3.14D
+
+> **CURRENT OVERRIDE:** This section supersedes earlier R3.14C `ACTIVE` wording in this historical continuation file. Fresh code/tests and exact-SHA evidence still outrank prose.
+
+Current exact state:
+
+```text
+main / last production code SHA = bad2db9d5043a7a0087a4fab1d278df5f36c7717
+production milestone            = R3.14C — private native network bit cursor + bounded-u32 primitive
+R3.14A                          = COMPLETE / Outcome A
+R3.14B                          = COMPLETE / contract admitted
+R3.14C                          = COMPLETE / PRODUCTION
+ACTIVE NEXT PASS                = R3.14D — first actor envelope header native reader
+```
+
+R3.14C durable decision:
+
+```text
+docs/continuity/MIMIR_R3_14C_DECISION.md
+```
+
+R3.14C clean production identity:
+
+```text
+pre-pass main              = c42836647673cecc47cc9c89908da1de11d8a222
+production SHA             = bad2db9d5043a7a0087a4fab1d278df5f36c7717
+source file                = crates/mimir-replay/src/lib.rs
+source Git blob            = 3ff6c7823f45126595e7e59f7b5fb50980d8234c
+source SHA256              = ac1c2ae2919ad0c5d6d8ea615dd5dac82f4c5e5240f33618ef5e74ef9cb1cb92
+clean branch CI            = 31698938025 SUCCESS
+published-main CI          = 31699241010 SUCCESS
+```
+
+Validation evidence:
+
+```text
+focused tests              = 19 PASS
+R3.14A actor-id vectors    = 47/47 value match
+R3.14A end-bit vectors     = 47/47 match
+mimir-replay regression    = PASS
+workspace check/test       = PASS
+clippy -D warnings         = PASS
+corpus verifier            = PASS
+knowledge verifier         = PASS
+Cargo locked               = PASS
+hard-stop source scope     = PASS
+```
+
+What R3.14C opened:
+
+```text
+private NetworkBitCursor
+private LSB-first read_bit/read_bits_le
+private canonical read_bounded_u32
+atomic truncation/error cursor behavior
+```
+
+What R3.14C did NOT open:
+
+```text
+actor-envelope production result
+actor_present/actor_id/alive/new replay reader
+name_id/object/spawn/property/stream/attribute payloads
+actor state
+multi-actor
+multi-frame
+raw state/events/skills
+```
+
+The exact R3.14D execution spec is:
+
+```text
+docs/continuity/MIMIR_R3_14D_EXECUTION_SPEC.md
+```
+
+R3.14D may consume only:
+
+```text
+first frame time raw/value
+first frame delta raw/value
+actor_present
+bounded actor_id if present
+alive if present
+new if alive
+STOP
+```
+
+Hard stop remains before `name_id` and everything after it. R3.14D implementation is not the 47-replay differential admission; that remains R3.14E.
+
+Repository hygiene note: before R3.14C, stale `Cargo.lock` state was repaired separately at `c42836647673cecc47cc9c89908da1de11d8a222` and `scripts/verify_repo.ps1` now enforces Cargo `--locked`. This is reproducibility maintenance, not replay capability expansion.

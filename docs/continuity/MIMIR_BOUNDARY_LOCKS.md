@@ -525,3 +525,47 @@ CLOSED:
 ```
 
 That is the current hard boundary. R3.14C primitive implementation is not permission to decode the first actor envelope.
+
+
+---
+
+## CURRENT OVERRIDE — At R3.14D
+
+R3.14C is now OPEN / PRODUCTION at `bad2db9d5043a7a0087a4fab1d278df5f36c7717` for only:
+
+```text
+private LSB-first NetworkBitCursor
+private read_bit / read_bits_le
+private canonical bounded-u32 primitive
+```
+
+R3.14D is the active narrow implementation boundary:
+
+```text
+first frame time + delta
+first actor_present
+bounded actor_id if present
+alive if present
+new if alive
+STOP
+```
+
+Still CLOSED:
+
+```text
+name_id
+post-name one-bit field
+object_id
+spawn payload
+property_present loop
+stream_id production path
+attribute payload
+second actor
+second frame
+actor lifecycle mutation
+raw state
+events
+skills
+```
+
+R3.14D implementation does not by itself close the oracle differential requirement. `R3.14E` remains required before R3.15.
