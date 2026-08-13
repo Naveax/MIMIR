@@ -37,6 +37,19 @@ jobs:
         run: |
           set -euo pipefail
           python tools/_tmp_r3_14d_apply.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('crates/mimir-replay/src/lib.rs')
+          text = path.read_text(encoding='utf-8')
+          anchor = '''    #[test]\n    fn r3_14d_bounded_actor_id_discriminator_one_path() {\n'''
+          test = '''    #[test]\n    fn r3_14d_bounded_actor_id_discriminator_zero_path() {\n        let (mut network, mut bit) = r3_14d_network_prefix(1.0, 0.01);\n        r3_14d_append_bit(&mut network, &mut bit, true);\n        r3_14d_append_bounded(&mut network, &mut bit, 0, 2047, 10);\n        r3_14d_append_bit(&mut network, &mut bit, false);\n        let decoded = decode_network_first_actor_header(\n            &network,\n            2047,\n            10,\n            1.0f32.to_bits(),\n            0.01f32.to_bits(),\n        )\n        .expect("discriminator zero path");\n        assert_eq!(decoded.actor_id, Some(0));\n        assert_eq!(decoded.stop_bit, 77);\n    }\n\n'''
+          if text.count(anchor) != 1:
+              raise SystemExit(f'expected one discriminator-one anchor, found {text.count(anchor)}')
+          if 'fn r3_14d_bounded_actor_id_discriminator_zero_path()' in text:
+              raise SystemExit('discriminator-zero test already present')
+          path.write_text(text.replace(anchor, test + anchor, 1), encoding='utf-8', newline='\n')
+          print('R3_14D_DISCRIMINATOR_ZERO_TEST=PASS')
+          PY
           git diff -- crates/mimir-replay/src/lib.rs
 
       - name: Format and diff hygiene
@@ -85,7 +98,14 @@ jobs:
           grep -q 'f32::from_bits(time_raw_u32)' crates/mimir-replay/src/lib.rs
           grep -q 'f32::from_bits(delta_raw_u32)' crates/mimir-replay/src/lib.rs
 
-          test "$(grep -c '^    fn r3_14d_' crates/mimir-replay/src/lib.rs)" -eq 17
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          count = text.count('#[test]\n    fn r3_14d_')
+          if count != 17:
+              raise SystemExit(f'expected 17 R3.14D focused tests, found {count}')
+          print('R3_14D_FOCUSED_TEST_COUNT=17')
+          PY
 
           added="$(git diff -U0 -- crates/mimir-replay/src/lib.rs | grep '^+' | grep -v '^+++' || true)"
           if printf '%s\n' "$added" | grep -Eq 'pub (name_id|object_id|spawn|stream_id|attribute)|read_(name_id|object_id|spawn|stream_id|attribute)|second_actor|second_frame'; then
