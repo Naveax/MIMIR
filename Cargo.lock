@@ -333,6 +333,7 @@ dependencies = [
  "mimir-core",
  "mimir-export",
  "mimir-io",
+ "mimir-replay",
  "mimir-score",
  "mimir-sim-bridge",
  "mimir-skill",

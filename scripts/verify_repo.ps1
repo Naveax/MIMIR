@@ -53,24 +53,25 @@ Invoke-VerificationCommand `
 
 Invoke-VerificationCommand `
     -Executable "cargo" `
-    -CommandArguments @("check", "--workspace", "--all-targets", "--all-features")
+    -CommandArguments @("check", "--locked", "--workspace", "--all-targets", "--all-features")
 
 Invoke-VerificationCommand `
     -Executable "cargo" `
-    -CommandArguments @("test", "-p", "mimir-replay", "--", "--nocapture")
+    -CommandArguments @("test", "--locked", "-p", "mimir-replay", "--", "--nocapture")
 
 Invoke-VerificationCommand `
     -Executable "cargo" `
-    -CommandArguments @("test", "-p", "mimir-skill", "--", "--nocapture")
+    -CommandArguments @("test", "--locked", "-p", "mimir-skill", "--", "--nocapture")
 
 Invoke-VerificationCommand `
     -Executable "cargo" `
-    -CommandArguments @("test", "--workspace", "--all-targets", "--all-features")
+    -CommandArguments @("test", "--locked", "--workspace", "--all-targets", "--all-features")
 
 Invoke-VerificationCommand `
     -Executable "cargo" `
     -CommandArguments @(
         "clippy",
+        "--locked",
         "--workspace",
         "--all-targets",
         "--all-features",
@@ -81,7 +82,7 @@ Invoke-VerificationCommand `
 
 Invoke-VerificationCommand `
     -Executable "cargo" `
-    -CommandArguments @("test", "-p", "mimir-export", "--", "--list")
+    -CommandArguments @("test", "--locked", "-p", "mimir-export", "--", "--list")
 
 $CorpusVerifier = Join-Path $PSScriptRoot "verify_test_corpus.ps1"
 
@@ -102,6 +103,7 @@ Invoke-VerificationCommand `
     -Executable "cargo" `
     -CommandArguments @(
         "run",
+        "--locked",
         "-p",
         "mimir-cli",
         "--bin",
@@ -145,6 +147,7 @@ Invoke-VerificationCommand `
     -Executable "cargo" `
     -CommandArguments @(
         "run",
+        "--locked",
         "-p",
         "mimir-cli",
         "--bin",
