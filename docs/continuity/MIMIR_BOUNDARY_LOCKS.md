@@ -585,3 +585,16 @@ one first actor envelope: actor_present -> bounded actor_id -> alive -> new, bra
 R3.14E is EVIDENCE-ONLY differential audit. Production source remains frozen.
 
 Still CLOSED: `name_id`, post-name bit, object/spawn/property/stream/attribute payloads, second actor/frame, actor state, raw state, events, skills.
+---
+
+## CURRENT OVERRIDE — At R3.15A
+
+OPEN / ADMITTED:
+
+```text
+R3.14D first actor envelope through new
+R3.14E 47/47 differential admission
+static object-index spawn-kind lookup plan
+```
+
+R3.15A is EVIDENCE-ONLY. It may instrument pinned Boxcars through one NewActor spawn trajectory and compare static spawn-kind selection. Production decoding remains CLOSED for `name_id`, opaque post-new bit, `object_id`, location/rotation spawn payloads, properties, actor/frame iteration, state, events, and skills.

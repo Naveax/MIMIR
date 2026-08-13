@@ -100,3 +100,7 @@ network payload bits decoded
 ```
 
 Bu ayrım continuity dokümanlarında özellikle korunur.
+### Current replay-decoder pass
+
+- `MIMIR_R3_14E_DECISION.md` — exact 47-replay first-envelope differential admission, Outcome A.
+- `MIMIR_R3_15A_EXECUTION_SPEC.md` — active evidence-only NewActor branch pass.

@@ -12,3 +12,8 @@ R3.14E must use the exact 47 replay identities and oracle rows from R3.14A, pinn
 Require 47/47 exact equality for time raw u32, delta raw u32, actor_present, actor_id, alive, new, stop_bit, plus structural context. No production Rust changes. Hard stop remains before name_id and every later network/semantic layer.
 
 If Outcome A, next is R3.15A NewActor read-only differential evidence.
+---
+
+## CURRENT HANDOFF OVERRIDE — R3.15A
+
+Fresh main must show R3.14E Outcome A admitted. Read `MIMIR_R3_14E_DECISION.md` and `MIMIR_R3_15A_EXECUTION_SPEC.md`. Continue only with pinned-Boxcars NewActor branch evidence. Do not change production Rust and stop retained evidence at each NewActor spawn trajectory endpoint.

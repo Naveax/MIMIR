@@ -251,3 +251,21 @@ Latest mandatory reading order:
 14. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 Current code/tests and exact-SHA evidence still outrank every document.
+---
+
+## LATEST CANONICAL OVERRIDE — R3.14E ADMITTED / R3.15A ACTIVE
+
+```text
+R3.14D native first actor envelope — PRODUCTION 7b17cb9033b6c71d476e500380d78402cbb3c56d
+        |
+        v
+R3.14E exact 47-replay differential — COMPLETE / OUTCOME A
+        |
+        v
+R3.15A NewActor branch read-only evidence — ACTIVE
+        |
+        v
+R3.15B NewActor contract — CLOSED until R3.15A admission
+```
+
+Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current continuity state, `MIMIR_R3_14E_DECISION.md`, and `MIMIR_R3_15A_EXECUTION_SPEC.md`, then pass protocol/boundary locks/roadmap/ledger before the superbook and archive registry/matrix/mapping documents.

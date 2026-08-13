@@ -455,3 +455,15 @@ Validation:
 - published-main CI `31702341993` SUCCESS.
 
 Next exact pass: `R3.14E — native first-envelope differential audit`.
+---
+
+## 2026-08-13 — R3.14E admitted
+
+- Production base remained `7b17cb9033b6c71d476e500380d78402cbb3c56d`.
+- Exact 47 replay identities verified.
+- Pinned Boxcars oracle identity verified.
+- Native first-envelope exact matches: 47/47 for all required fields and structural context.
+- Mismatch/native-error/identity-error: 0/0/0.
+- Production source mutation: 0.
+- Outcome A admitted.
+- Next: R3.15A evidence-only NewActor branch audit.

@@ -3906,3 +3906,8 @@ Historical archived parser code remains evidence/migration material; it does not
 ## CURRENT REPLAY DECODER ADMISSION UPDATE — R3.14D PRODUCTION / R3.14E ACTIVE
 
 Current production code SHA is `7b17cb9033b6c71d476e500380d78402cbb3c56d`. MIMIR now has one native first actor-envelope reader through `new`, but fields after `new` remain closed. Active pass R3.14E is evidence-only and must compare all 47 current supported replay identities against the exact R3.14A pinned-Boxcars evidence before R3.15A can open. Historical parser sources remain evidence/migration material only.
+---
+
+## CURRENT REPLAY DECODER ADMISSION UPDATE — R3.14E OUTCOME A / R3.15A ACTIVE
+
+The native R3.14D first-envelope reader is now differentially admitted 47/47 against the exact pinned R3.14A Boxcars oracle. R3.15A is the evidence-only NewActor branch pass. It studies the version-gated name ID, opaque bit, raw object ID, static spawn-kind dispatch, and location/rotation trajectory wire ranges without changing production Rust.
