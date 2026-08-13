@@ -112,10 +112,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
         if !supported_sha256.insert(replay_sha256.clone()) {
-            return Err(format!(
-                "duplicate supported replay SHA-256 detected: {replay_sha256}"
-            )
-            .into());
+            return Err(
+                format!("duplicate supported replay SHA-256 detected: {replay_sha256}").into(),
+            );
         }
         manifest_hasher.update(canonical_row.as_bytes());
         supported += 1;
