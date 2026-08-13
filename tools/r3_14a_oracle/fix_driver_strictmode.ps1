@@ -28,9 +28,14 @@ foreach ($replacement in $replacements) {
 
 Set-Content -LiteralPath $Path -Value $text -Encoding utf8NoBOM -NoNewline
 
-$remainingUnsafe = Select-String -LiteralPath $Path -SimpleMatch '(Compare-Object $expectedOracleChanged'
-if ($remainingUnsafe) {
-    throw 'Unsafe Compare-Object Count expression remains after deterministic driver patch.'
+$effectiveText = Get-Content -Raw -LiteralPath $Path
+foreach ($replacement in $replacements) {
+    if ($effectiveText.Contains($replacement.Old)) {
+        throw "Unsafe Compare-Object expression remains after deterministic driver patch: $($replacement.Old)"
+    }
+    if (-not $effectiveText.Contains($replacement.New)) {
+        throw "Expected StrictMode-safe Compare-Object expression missing after patch: $($replacement.New)"
+    }
 }
 
 $effectiveSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $Path).Hash.ToLowerInvariant()
