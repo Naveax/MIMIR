@@ -3,14 +3,14 @@
   "updated_date": "2026-08-14",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "ebc0fa31ba90a8496c3d1719e436d2c17b605ff7",
-  "last_production_milestone": "R3.16B",
-  "last_production_milestone_name": "native existing-actor first-property envelope header implementation",
+  "last_production_code_sha": "c3d4c73ca34febb9f0383c59132a8bc8a363b06b",
+  "last_production_milestone": "R3.17C",
+  "last_production_milestone_name": "native primitive scalar attribute decoder implementation",
   "last_completed_read_only_audit": "R3.17A",
-  "current_pass": "R3.17C",
-  "current_pass_kind": "production implementation / primitive scalar one-value decoder",
-  "current_pass_goal": "Implement the admitted Boolean/Byte/Enum/Float/Int/Int64 one-scalar decoder from payload_start_bit using the existing LSB-first cursor, with exact value representation and atomic truncation behavior.",
-  "current_pass_stop_boundary": "Decode at most one admitted primitive scalar and stop at its exact payload_end_bit; no second property, actor/frame iteration, lifecycle mutation, spatial/compound payloads, raw-state/event/skill/runtime/export widening, Cargo change or corpus change.",
+  "current_pass": "R3.17D",
+  "current_pass_kind": "evidence-only exact native primitive scalar differential",
+  "current_pass_goal": "Compare the published native primitive scalar decoder against all 96 immutable R3.17A scalar witnesses at the exact replay/network bit positions.",
+  "current_pass_stop_boundary": "Evidence-only: 96/96 exact native comparison; no production/Cargo/corpus change and no second property, actor/frame iteration, lifecycle mutation or wider attribute family.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -107,7 +107,9 @@
     "docs/continuity/MIMIR_R3_17A_DECISION.md",
     "docs/continuity/MIMIR_R3_17B_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_17B_DECISION.md",
-    "docs/continuity/MIMIR_R3_17C_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_17C_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_17C_DECISION.md",
+    "docs/continuity/MIMIR_R3_17D_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.17A",
   "last_completed_evidence_outcome": "A — all six primitive scalar candidate tags observed; 2,141,139 total occurrences; fixed widths exact; zero shape/monotonicity/unexpected-shape errors; immutable receipt stream PASS",
@@ -520,5 +522,34 @@
     "atomic_truncation_failure": true,
     "unsupported_tag_zero_consumption": true,
     "next_pass": "R3.17C"
+  },
+  "r3_17c": {
+    "outcome": "published / production",
+    "base_sha": "85430b9eedb3bf16d66abcd895d68fbc7217818e",
+    "production_sha": "c3d4c73ca34febb9f0383c59132a8bc8a363b06b",
+    "source_git_blob": "54e1bfb918ec1bd42a61cfa0131ca27412082ac5",
+    "test_git_blob": "0293831df88723d6cf1e7fd13870bec6108d383a",
+    "focused_tests": "11/11 PASS",
+    "clean_files": 2,
+    "implementation_run": 31795745652,
+    "implementation_job": 94752360261,
+    "candidate_ci_run": 31796122522,
+    "candidate_ci_job": 94753517283,
+    "candidate_knowledge_run": 31796266602,
+    "candidate_knowledge_job": 94753955749,
+    "published_main_ci_run": 31796509896,
+    "published_main_ci_job": 94754670068,
+    "published_main_knowledge_run": 31796560814,
+    "published_main_knowledge_job": 94754827522,
+    "primitive_tags": [
+      "Boolean",
+      "Byte",
+      "Enum",
+      "Float",
+      "Int",
+      "Int64"
+    ],
+    "one_scalar_only": true,
+    "next_pass": "R3.17D"
   }
 }

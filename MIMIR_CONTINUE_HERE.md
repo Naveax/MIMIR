@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  ebc0fa31ba90a8496c3d1719e436d2c17b605ff7
+  c3d4c73ca34febb9f0383c59132a8bc8a363b06b
 
 LAST_PRODUCTION_MILESTONE:
-  R3.16B — native existing-actor first-property envelope header implementation
+  R3.17C — native primitive scalar attribute decoder implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.17A — primitive scalar attribute wire-format evidence / Outcome A
@@ -61,10 +61,10 @@ LAST_COMPLETED_CONTRACT_PASS:
   R3.17B — primitive scalar attribute wire contract / Outcome A
 
 CURRENT_PASS:
-  R3.17C — primitive scalar attribute decoder implementation
+  R3.17D — primitive scalar native differential
 
 CURRENT_PASS_TYPE:
-  production implementation / one-scalar decoder / bounded additive change
+  evidence-only / exact native-vs-oracle differential / NO production Rust change
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -77,60 +77,53 @@ PINNED_BOXCARS_ORACLE:
   exact SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
 
 CURRENT_PRODUCTION_HARD_STOP:
-  existing-actor first-property header stops exactly at payload_start_bit
-  NO native attribute payload bit is admitted yet
+  one already-resolved primitive scalar payload may be decoded natively
+  stop exactly at payload_end_bit / stop_bit after that one scalar
+  NO second property, next actor, next frame, compound or spatial attribute is admitted
 
 R3_17A_AUTHORITY:
-  canonical evidence base: ded95e8ae512876b46453585be05b8358025314a
   evidence head: 4cd21ea6db14c9becc11c17149af9201071859bc
   evidence run/job: 31792028292 / 94740870175 SUCCESS
-  exact-head normal CI: 31792028275 / 94740869974 SUCCESS
-  artifact: 9216016802
-  artifact SHA256: 59fe6d40b15bd3267e776abff48ef96c138314ca514b5e0d44c003b1edf117af
   replay identity rows: 47
-  bounded witness rows: 96
-  scalar occurrences: 2,141,139
+  bounded scalar witness rows: 96
+  scalar observations: 2,141,139
   receipt stream: PASS
-  production mutation: 0
-  Cargo mutation: 0
-  corpus mutation: 0
-
-R3_17A_OBSERVED_FIXED_WIDTHS:
-  Boolean: 84,545 occurrences / 47 replays / 1 bit
-  Byte: 1,730,595 occurrences / 47 replays / 8 bits
-  Enum: 180,624 occurrences / 47 replays / 11 bits
-  Float: 33,857 occurrences / 47 replays / 32 bits
-  Int: 109,920 occurrences / 47 replays / 32 bits
-  Int64: 1,598 occurrences / 14 replays / 64 bits
-  shape mismatch: 0
-  bit monotonicity failure: 0
-  unexpected tag shape: 0
 
 R3_17B_ADMITTED_CONTRACT:
-  Boolean / Byte / Enum / Float / Int / Int64 scalar wire contracts
-  LSB-first from the current payload_start_bit; no byte-alignment assumption
-  fixed-width exact cursor consumption
-  Float preserves raw u32 bits alongside f32 interpretation
-  signed integer interpretation follows the pinned oracle source contract
-  truncation and unsupported-tag failure must be atomic / zero-consumption
+  Boolean=1 bit / Byte=8 / Enum=11 / Float=32 / Int=32 / Int64=64
+  LSB-first, no byte-alignment assumption, fixed-width exact consumption
+  Float identity includes raw u32 bits; signed integer semantics preserve bit patterns
+  truncation and unsupported tags fail without widening the cursor boundary
 
-R3_17C_IMPLEMENTATION_SCOPE:
-  add one narrow native scalar decoder from payload_start_bit + admitted attribute tag
-  reuse the existing private LSB-first NetworkBitCursor and atomic read_bits_le rule
-  decode exactly one Boolean / Byte / Enum / Float / Int / Int64 payload
-  preserve Float raw u32 bits plus f32 interpretation
-  return exact payload start/end/width and stop exactly after that scalar
+R3_17C_PRODUCTION_CLOSURE:
+  base: 85430b9eedb3bf16d66abcd895d68fbc7217818e
+  production SHA: c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+  source Git blob: 54e1bfb918ec1bd42a61cfa0131ca27412082ac5
+  focused test Git blob: 0293831df88723d6cf1e7fd13870bec6108d383a
+  clean diff: exactly 2 files, +465/-0
+  focused tests: 11/11 PASS
+  disposable implementation run/job: 31795745652 / 94752360261 SUCCESS
+  candidate CI: 31796122522 / 94753517283 SUCCESS
+  candidate Knowledge Archive: 31796266602 / 94753955749 SUCCESS
+  published-main CI: 31796509896 / 94754670068 SUCCESS
+  published-main Knowledge Archive: 31796560814 / 94754827522 SUCCESS
 
-R3_17C_HARD_STOP:
-  no RigidBody / ActiveActor / spatial-family decoder
-  no property-loop continuation or second property
-  no next actor or next frame iteration
-  no lifecycle mutation
+R3_17D_OPEN_BOUNDARY:
+  recover the immutable R3.17A 96-witness receipt from exact job logs
+  run the native R3.17C decoder on the same replay/network bit positions and admitted tags
+  compare exact tag, start/end/width, scalar value, Float raw bits and stop_bit
+  require 96/96 exact equality and zero production/Cargo/corpus mutation
+
+R3_17D_HARD_STOP:
+  no production Rust change
+  no second property / property loop continuation
+  no RigidBody / ActiveActor / spatial or compound decoder
+  no actor/frame iteration or lifecycle mutation
   no raw-state/event/skill/runtime/export widening
-  no Cargo dependency or replay corpus change
+  no support-lane, Cargo or corpus change
 
-NEXT PASS IF R3.17C OUTCOME A:
-  R3.17D — primitive scalar native differential
+NEXT PASS IF R3.17D OUTCOME A:
+  select the next bounded attribute-family pass from the execution roadmap; do not widen by analogy
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

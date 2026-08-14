@@ -2,84 +2,69 @@
 
 **Continuity date:** 2026-08-14
 **Repository:** `Naveax/MIMIR`
-**Pre-contract canonical main:** `2e27638812111f73d06ef9e52955f10a26cfebd4`
-**Production code checkpoint:** `ebc0fa31ba90a8496c3d1719e436d2c17b605ff7`
-**Production milestone:** `R3.16B — native existing-actor first-property envelope header implementation`
-**Completed evidence pass:** `R3.17A — Outcome A`
+**Canonical production SHA:** `c3d4c73ca34febb9f0383c59132a8bc8a363b06b`
+**Production milestone:** `R3.17C — native primitive scalar attribute decoder implementation`
+**Completed evidence authority:** `R3.17A — Outcome A`
 **Completed contract pass:** `R3.17B — Outcome A`
-**Current exact pass:** `R3.17C — primitive scalar attribute decoder implementation`
-
----
+**Current exact pass:** `R3.17D — primitive scalar native differential`
 
 ## 1. Truthful production boundary
 
-Production behavior is still unchanged from R3.16B at this continuity checkpoint. MIMIR resolves one existing-actor property header through `stream_id`, inherited/static property lookup, object/tag identity and `payload_start_bit`, then stops before consuming the attribute payload.
-
-R3.17A supplied evidence and R3.17B admitted the wire contract. Neither pass by itself grants runtime decode capability.
-
-## 2. R3.17A immutable evidence authority
+MIMIR can now decode exactly one already-resolved primitive scalar payload for:
 
 ```text
-canonical evidence base       ded95e8ae512876b46453585be05b8358025314a
-evidence head                 4cd21ea6db14c9becc11c17149af9201071859bc
-workflow run/job              31792028292 / 94740870175  SUCCESS
-exact-head normal CI          31792028275 / 94740869974  SUCCESS
-artifact id                   9216016802
-artifact zip SHA-256          59fe6d40b15bd3267e776abff48ef96c138314ca514b5e0d44c003b1edf117af
-replay identity rows          47
-bounded witness rows          96
-oracle parse success          47 / 47
-scalar occurrences            2,141,139
-shape mismatch                0
-bit monotonicity failure      0
-unexpected tag shape          0
-production mutation           0
-Cargo mutation                0
-corpus mutation               0
-receipt stream                PASS
+Boolean  1 bit
+Byte     8 bits
+Enum     11 bits
+Float    32 bits, raw u32 + f32 interpretation
+Int      32 bits, signed two's-complement interpretation
+Int64    64 bits, signed two's-complement interpretation
 ```
 
-## 3. R3.17B admitted primitive scalar contract
+The caller supplies `payload_start_bit` and `ReplayNetworkAttributeTagV1`. The native decoder reuses the existing LSB-first `NetworkBitCursor`, requires no byte alignment, and returns exact `payload_start_bit`, `payload_end_bit`, `payload_width`, value and `stop_bit`.
+
+Production stops exactly after that one scalar. It does not continue the property loop.
+
+## 2. R3.17C production identity
 
 ```text
-Boolean   width 1    semantic bool
-Byte      width 8    semantic u8
-Enum      width 11   numeric u16, 0..=2047; no enum-name mapping
-Float     width 32   exact raw u32 identity + f32::from_bits(raw)
-Int       width 32   signed i32 using the identical two's-complement bit pattern
-Int64     width 64   signed i64 using the identical two's-complement bit pattern
+pre-pass main                85430b9eedb3bf16d66abcd895d68fbc7217818e
+clean production SHA         c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+production source blob       54e1bfb918ec1bd42a61cfa0131ca27412082ac5
+focused test blob            0293831df88723d6cf1e7fd13870bec6108d383a
+clean diff                   2 files, +465/-0
+focused tests                11/11 PASS
+disposable run/job           31795745652 / 94752360261 SUCCESS
+candidate CI                 31796122522 / 94753517283 SUCCESS
+candidate Knowledge          31796266602 / 94753955749 SUCCESS
+published-main CI            31796509896 / 94754670068 SUCCESS
+published-main Knowledge     31796560814 / 94754827522 SUCCESS
 ```
 
-Common rule: start exactly at `payload_start_bit`, consume LSB-first with no byte-alignment requirement, and advance exactly the admitted fixed width on success. If fewer than the required bits remain, fail closed with zero cursor advance. A tag outside this six-tag family is unsupported and consumes zero payload bits.
+## 3. R3.17D exact next pass
 
-Float raw bits are part of the result contract so NaN payloads and signed zero remain bit-exact. Enum remains a numeric wire value only.
+R3.17D is evidence-only. Recover the immutable R3.17A `r3_17a_scalar_witnesses.jsonl` receipt from job `94740870175` and compare all 96 rows against the native decoder at the same replay/network bit positions.
 
-## 4. R3.17C exact implementation boundary
-
-R3.17C may add one narrow decoder that accepts network bytes, an admitted `payload_start_bit` and the already-resolved `ReplayNetworkAttributeTagV1`, and returns exactly one typed scalar plus start/end/width metadata.
-
-The implementation must reuse the existing private LSB-first `NetworkBitCursor` / `read_bits_le` semantics. It must not infer a second property or depend on actor lifecycle state.
-
-Expected value semantics:
+Required exact comparisons:
 
 ```text
-Boolean(bool)
-Byte(u8)
-Enum(u16)
-Float { raw_bits: u32, value: f32 }
-Int(i32)
-Int64(i64)
+attribute tag
+payload_start_bit
+payload_end_bit
+payload_width
+Boolean / Byte / Enum / Int / Int64 value
+Float raw u32 bits and f32.to_bits()
+stop_bit == payload_end_bit
 ```
 
-A successful decoder stops exactly at `payload_end_bit = payload_start_bit + width`. Poison bits after that point remain unread.
+Admission requires 96/96 exact equality, no missing replay identity, no native error, and zero production/Cargo/corpus mutation.
 
-## 5. Still closed
+## 4. Still closed
 
 ```text
-RigidBody / ActiveActor / spatial payload families
-property-loop continuation / second property
-next actor iteration
-next frame iteration
+second property / property-loop continuation
+next actor / next frame iteration
+RigidBody / ActiveActor / Location / other spatial or compound attribute payloads
 actor lifecycle mutation
 raw-state materialization
 semantic events
@@ -88,8 +73,4 @@ skill mining
 counterfactual rollout execution
 training/runtime/export widening
 support-lane expansion
-Cargo dependency changes
-replay corpus changes
 ```
-
-Outcome A for R3.17C opens `R3.17D — primitive scalar native differential` against the frozen R3.17A witness authority.
