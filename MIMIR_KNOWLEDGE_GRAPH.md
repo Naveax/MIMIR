@@ -330,3 +330,27 @@ native property envelope / attribute payload — CLOSED until separately admitte
 ```
 
 R3.15D's exact evidence head is `10e5d05383dbc09e19af997e896a825d8d16e3ae`. Its immutable evidence artifact is `9195419601` with digest `sha256:f6e11055c11ed0724c45fcc76c13a9da2dbbb285ab3744f9738f0d4a19ecab8a`. The parent R3.15A stream identity (169,538 NewActor rows) was verified, but the R3.15D native differential surface is exactly 47 first-NewActor rows, not 169,538 rows. Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current state, `MIMIR_R3_15D_DECISION.md`, `MIMIR_R3_16A_EXECUTION_SPEC.md`, then pass protocol, boundary locks, roadmap and ledger.
+
+---
+
+## LATEST CANONICAL OVERRIDE — R3.16A COMPLETE / R3.16B ACTIVE
+
+```text
+R3.15C first NewActor native reader — PRODUCTION bf4bccff82203ed049d33e942681fed07f23beb4
+        |
+        v
+R3.15D first-NewActor differential — COMPLETE / OUTCOME A
+        |
+        v
+R3.16A existing-actor first-property evidence — COMPLETE / OUTCOME A
+        |
+        v
+R3.16B native existing-actor first-property envelope header — ACTIVE / IMPLEMENTATION
+        |
+        v
+attribute payload / second property — CLOSED
+```
+
+R3.16A exact evidence head is `31b858de7d855cbc32501e03282c8db6bf68ecd0`; final CI run/job is `31748905111 / 94609885915`. The exact final job log carries 13 bounded evidence records and ends `R3_16A_RECEIPT_STREAM=PASS`; there is no separately uploaded R3.16A Actions artifact. All 47 replay identities produced a selected existing-actor property row, all stream/property resolutions matched the admitted lookup-plan family, and all error/mismatch/mutation counters were zero.
+
+Latest mandatory reading order begins with `MIMIR_CONTINUE_HERE.md`, structured/current state, `docs/continuity/MIMIR_R3_16A_DECISION.md`, `docs/continuity/MIMIR_R3_16B_EXECUTION_SPEC.md`, then pass protocol, boundary locks, roadmap and ledger. R3.16B must stop at `payload_start_bit`; attribute payload decoding and property-loop iteration remain closed.

@@ -554,3 +554,15 @@ R3.15C is production at `bf4bccff82203ed049d33e942681fed07f23beb4`. It extends o
 ## CURRENT OVERRIDE — R3.15D OUTCOME A / R3.16A ACTIVE
 
 R3.15D is complete with Outcome A against production `bf4bccff82203ed049d33e942681fed07f23beb4`. Exact evidence run `31736738234` compared 47 admitted first-NewActor rows and produced zero identity, native, or field/stop mismatches. The upstream R3.15A 169,538-row stream was revalidated only as provenance for the 47-row selector; it was not itself a 169,538-row native differential. R3.16A is now the evidence-only existing-actor first-property-envelope pass and must stop before attribute payload consumption or production mutation.
+
+---
+
+## CURRENT OVERRIDE — R3.16A OUTCOME A / R3.16B ACTIVE
+
+R3.16A is complete with Outcome A against frozen production `bf4bccff82203ed049d33e942681fed07f23beb4`. Exact evidence head `31b858de7d855cbc32501e03282c8db6bf68ecd0`, final CI run/job `31748905111 / 94609885915`, selected exactly one reproducible existing-actor first-property row for every one of the 47 admitted replay identities. All 47 stream IDs resolved through the admitted lookup-plan family; unresolved streams, property-object mismatches, invalid property IDs, oracle errors, payload-start monotonicity failures and differential mismatches were all zero. Production and Cargo mutation counts were zero.
+
+R3.16A did not upload a separate Actions artifact. Its immutable publication surface is the exact final job-log receipt stream, containing 13 bounded evidence records and ending `R3_16A_RECEIPT_STREAM=PASS`.
+
+The active pass is now `R3.16B — native existing-actor first-property envelope header implementation`. It may consume only `property_present` and, when true, one canonical bounded `stream_id`, resolve property metadata through `ReplayNetworkLookupPlanV1`, record `payload_start_bit`, and stop. Attribute payloads, a second property, lifecycle mutation, later actor/frame iteration, raw state, events and skills remain closed.
+
+Read `docs/continuity/MIMIR_R3_16A_DECISION.md` and `docs/continuity/MIMIR_R3_16B_EXECUTION_SPEC.md` next.

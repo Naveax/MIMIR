@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-08-13",
+  "updated_date": "2026-08-14",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "bf4bccff82203ed049d33e942681fed07f23beb4",
   "last_production_milestone": "R3.15C",
   "last_production_milestone_name": "first NewActor native reader through spawn trajectory",
-  "last_completed_read_only_audit": "R3.15D",
-  "current_pass": "R3.16A",
-  "current_pass_kind": "evidence-only existing-actor first-property envelope characterization",
-  "current_pass_goal": "Select and characterize one reproducible new == false and property_present == true actor update per admitted replay, resolving stream/property context and stopping exactly at attribute payload_start_bit.",
-  "current_pass_stop_boundary": "Evidence only. Production Rust is frozen; do not consume attribute payload, mutate actor lifecycle state, iterate a native property loop, or widen raw-state/event/skill/runtime surfaces.",
+  "last_completed_read_only_audit": "R3.16A",
+  "current_pass": "R3.16B",
+  "current_pass_kind": "narrow native existing-actor first-property envelope header implementation",
+  "current_pass_goal": "Extend only the admitted existing-actor branch through one property_present decision and, when true, one canonical bounded stream_id plus ReplayNetworkLookupPlanV1 resolution, stopping exactly at payload_start_bit.",
+  "current_pass_stop_boundary": "Do not consume any attribute payload, iterate a second property, mutate actor lifecycle state, iterate another actor/frame, widen support, or expose raw-state/event/skill/runtime surfaces.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -50,8 +50,9 @@
   ],
   "bounded_integer_rule": "Not fixed-width. Decode low bits according to bound and preserve the value-dependent extra discriminator-bit behavior used by Rocket League/Boxcars.",
   "closed_now": [
-    "native property loop iteration",
     "native attribute payload decode",
+    "native property loop iteration beyond the first admitted header",
+    "second property consumption",
     "full actor envelope iteration",
     "full frame iteration",
     "actor state table mutation",
@@ -96,10 +97,12 @@
     "docs/continuity/MIMIR_R3_15C_DECISION.md",
     "docs/continuity/MIMIR_R3_15D_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_15D_DECISION.md",
-    "docs/continuity/MIMIR_R3_16A_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_16A_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_16A_DECISION.md",
+    "docs/continuity/MIMIR_R3_16B_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.15D",
-  "last_completed_evidence_outcome": "A \u2014 exact 47/47 first-NewActor native-vs-pinned-oracle differential; 0 identity/native/mismatch errors",
+  "last_completed_evidence_pass": "R3.16A",
+  "last_completed_evidence_outcome": "A — 47/47 existing-actor first-property envelope rows resolved exactly; zero identity/oracle/lookup/mismatch/mutation errors; immutable job-log receipt PASS",
   "last_completed_contract_pass": "R3.15B",
   "r3_14a": {
     "outcome": "A",
@@ -180,7 +183,7 @@
     "differential_47_replay_admitted": true
   },
   "r3_14e": {
-    "outcome": "A \u2014 admitted / complete",
+    "outcome": "A — admitted / complete",
     "production_source_changed": false,
     "production_sha": "7b17cb9033b6c71d476e500380d78402cbb3c56d",
     "continuity_base_sha": "b06a967b31e971431caa415721661088c630fdbc",
@@ -209,7 +212,7 @@
     }
   },
   "r3_15a": {
-    "outcome": "A \u2014 admitted / complete",
+    "outcome": "A — admitted / complete",
     "production_source_changed": false,
     "production_sha": "7b17cb9033b6c71d476e500380d78402cbb3c56d",
     "continuity_base_sha": "a51c0c1bf8c8927f4e2f39691ec63403d70bb0a8",
@@ -267,7 +270,7 @@
     "next_pass": "R3.15D"
   },
   "r3_15d": {
-    "outcome": "A \u2014 admitted / complete",
+    "outcome": "A — admitted / complete",
     "production_source_changed": false,
     "production_sha": "bf4bccff82203ed049d33e942681fed07f23beb4",
     "production_source_blob": "f64a5e0d66962f41026b2eb10e176219d4529931",
@@ -298,5 +301,62 @@
       31735271685
     ],
     "next_pass": "R3.16A"
+  },
+  "r3_16a": {
+    "outcome": "A — admitted / complete",
+    "production_source_changed": false,
+    "production_sha": "bf4bccff82203ed049d33e942681fed07f23beb4",
+    "production_source_blob": "f64a5e0d66962f41026b2eb10e176219d4529931",
+    "pre_pass_main_sha": "76cbcc2094189e637e135f8c7d99e999e32311a0",
+    "evidence_head_sha": "31b858de7d855cbc32501e03282c8db6bf68ecd0",
+    "workflow_run": 31748905111,
+    "workflow_job": 94609885915,
+    "evidence_receipt_kind": "exact GitHub Actions job-log bounded receipt stream",
+    "evidence_actions_artifact_count": 0,
+    "evidence_receipt_file_count": 13,
+    "evidence_receipt_terminal": "R3_16A_RECEIPT_STREAM=PASS",
+    "oracle_sha": "c70e77df7af81b436cb545d070bb90c82f562d0b",
+    "parent_pass": "R3.15D",
+    "parent_artifact_id": 9195419601,
+    "parent_artifact_digest": "sha256:f6e11055c11ed0724c45fcc76c13a9da2dbbb285ab3744f9738f0d4a19ecab8a",
+    "boxcars_instrumentation_patch_sha256": "33e8de056b7dcbe003a5f1de13eac8c699693d37807e6b2aaee7522060a7e201",
+    "boxcars_log_sha256": "c50f9a205bab401d782b6f4eccd95f2f45bc2d102df59c32cff5d00dbddb0ffc",
+    "replays_total": 47,
+    "oracle_decode_success": 47,
+    "selected_existing_actor_property_rows": 47,
+    "replays_without_candidate": 0,
+    "property_present_true": 47,
+    "stream_id_resolved": 47,
+    "stream_id_unresolved": 0,
+    "property_object_resolved": 47,
+    "property_object_mismatch": 0,
+    "invalid_property_object_id": 0,
+    "payload_start_monotonicity_failures": 0,
+    "oracle_error_count": 0,
+    "mismatch_count": 0,
+    "production_mutation_count": 0,
+    "cargo_mutation_count": 0,
+    "stream_id_min": 17,
+    "stream_id_max": 42,
+    "prop_id_bits_distribution": {
+      "4": 7,
+      "5": 38,
+      "6": 2
+    },
+    "stream_id_consumed_width_distribution": {
+      "5": 11,
+      "6": 35,
+      "7": 1
+    },
+    "attribute_tag_distribution": {
+      "RigidBody": 33,
+      "ActiveActor": 11,
+      "Byte": 1,
+      "Float": 1,
+      "Int": 1
+    },
+    "attribute_payload_consumed": false,
+    "property_loop_admitted": false,
+    "next_pass": "R3.16B"
   }
 }

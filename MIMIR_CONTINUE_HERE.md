@@ -2658,3 +2658,25 @@ ACTIVE NEXT PASS     = R3.16A — existing-actor first-property envelope evidenc
 R3.15D recovered and verified the exact R3.15A artifact, revalidated its 169,538-row parent stream identity, selected exactly one frame-0/actor-0 oracle row for each of the 47 admitted replay identities, verified all 47 replay SHA-256 values, then compared the frozen R3.15C native reader against those 47 rows. All 21 admitted fields/presence flags/bit-stop gates matched 47/47; `identity_error_count=0`, `native_error_count=0`, `mismatch_count=0`, and production/Cargo mutation remained zero.
 
 The 169,538-row parent stream was provenance-verified; **only the 47 selected first-NewActor rows were native-differentially compared in R3.15D**. Property payloads and later runtime layers remain closed. Read `docs/continuity/MIMIR_R3_15D_DECISION.md` and `docs/continuity/MIMIR_R3_16A_EXECUTION_SPEC.md` next.
+
+---
+
+## R3.16A COMPLETE / OUTCOME A / ACTIVE R3.16B
+
+```text
+production code SHA = bf4bccff82203ed049d33e942681fed07f23beb4
+R3.16A evidence head = 31b858de7d855cbc32501e03282c8db6bf68ecd0
+R3.16A final run/job = 31748905111 / 94609885915
+R3.16A outcome       = A / 47 OF 47 EXISTING-ACTOR FIRST-PROPERTY ROWS RESOLVED
+ACTIVE NEXT PASS     = R3.16B — native existing-actor first-property envelope header implementation
+```
+
+R3.16A selected the earliest reproducible `actor_present == true && alive == true && new == false && property_present == true` row for every one of the exact 47 admitted replay identities. All 47 stream IDs resolved through the admitted `ReplayNetworkLookupPlanV1` family; unresolved streams, property-object mismatches, invalid property IDs, oracle errors, payload-start monotonicity failures, differential mismatches, production mutations and Cargo mutations were all zero.
+
+The exact final GitHub Actions job log is the immutable R3.16A receipt surface. It serializes 13 bounded evidence records and ends `R3_16A_RECEIPT_STREAM=PASS`. No separate R3.16A Actions artifact was uploaded or is claimed.
+
+Observed first-property tags were `RigidBody=33`, `ActiveActor=11`, `Byte=1`, `Float=1`, `Int=1`. These are lookup tags only, **not admitted payload decoders**. `prop_id_bits` distribution was `4:7, 5:38, 6:2`; actual canonical bounded stream-ID consumption was `5 bits:11, 6 bits:35, 7 bits:1`, proving again that stream IDs must not be treated as fixed-width reads.
+
+R3.16B may extend only one existing-actor branch through `property_present`, one canonical bounded `stream_id` when present, existing inherited/static lookup resolution, and `payload_start_bit`, then HARD STOP. Attribute payload consumption, second-property/property-loop iteration, lifecycle mutation, later actor/frame iteration, raw state, events, slices, skills, training/runtime/export widening and support-lane expansion remain closed.
+
+Read `docs/continuity/MIMIR_R3_16A_DECISION.md` and `docs/continuity/MIMIR_R3_16B_EXECUTION_SPEC.md` next.
