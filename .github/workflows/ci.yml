@@ -29,7 +29,7 @@ jobs:
           if ($second -ge 0) { throw "R3.16B insertion marker is not unique" }
 
           $additionLines = Get-Content $patchPath |
-            Where-Object { $_ -match '^\+(?!\+\+\+)' } |
+            Where-Object { ($_ -match '^\+') -and ($_ -notmatch '^\+\+\+') } |
             ForEach-Object { $_.Substring(1) }
           if ($additionLines.Count -lt 100) { throw "R3.16B patch payload is unexpectedly small" }
           $addition = ($additionLines -join "`n") + "`n`n"
