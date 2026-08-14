@@ -118,7 +118,10 @@ jobs:
 
           foreach ($file in $files) {
             $src = Join-Path $stage $file
-            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $file) | Out-Null
+            $parent = Split-Path -Parent $file
+            if ($parent) {
+              New-Item -ItemType Directory -Force -Path $parent | Out-Null
+            }
             Copy-Item -LiteralPath $src -Destination $file
           }
           git add -- $files
