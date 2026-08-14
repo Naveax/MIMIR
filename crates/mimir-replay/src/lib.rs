@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
+mod k3_admitted_groups;
+
 /// Private LSB-first cursor for Rocket League replay network payload bits.
 ///
 /// R3.14C deliberately keeps this primitive internal. Replay-envelope semantics
@@ -1939,6 +1941,441 @@ pub fn decode_replay_network_k2_v1(
         })?;
 
     Ok(ReplayNetworkK2DecodeV1 {
+        attribute_tag,
+        payload_start_bit,
+        payload_end_bit,
+        payload_width,
+        value,
+    })
+}
+
+/// Caller-resolved context for one R3.17J-admitted K3 payload decode.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkK3DecodeContextV1 {
+    pub version_major: i32,
+    pub version_minor: i32,
+    pub net_version: i32,
+    pub is_rl_223: bool,
+}
+
+/// One decoded net10 vector plus exact structural codec metadata.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReplayNetworkVector3V1 {
+    pub selected_size_bits: u8,
+    pub component_width: u8,
+    pub raw_x: u32,
+    pub raw_y: u32,
+    pub raw_z: u32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+/// One exact 56-bit quaternion decode used by the admitted net10 RigidBody lane.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReplayNetworkQuaternion56V1 {
+    pub largest: u8,
+    pub raw_a: u32,
+    pub raw_b: u32,
+    pub raw_c: u32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
+}
+
+/// One evidence-admitted RigidBody value.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReplayNetworkRigidBodyV1 {
+    pub sleeping: bool,
+    pub location: ReplayNetworkVector3V1,
+    pub rotation: ReplayNetworkQuaternion56V1,
+    pub linear_velocity: Option<ReplayNetworkVector3V1>,
+    pub angular_velocity: Option<ReplayNetworkVector3V1>,
+}
+
+/// One evidence-admitted ReplicatedBoost value.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkReplicatedBoostV1 {
+    pub grant_count: u8,
+    pub boost_amount: u8,
+    pub unused1: u8,
+    pub unused2: u8,
+}
+
+/// One evidence-admitted PickupNew value.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkPickupNewV1 {
+    pub instigator: Option<i32>,
+    pub picked_up: u8,
+}
+
+/// Semantic value returned by the direct one-value K3 decoder.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ReplayNetworkK3ValueV1 {
+    Location(ReplayNetworkVector3V1),
+    RigidBody(ReplayNetworkRigidBodyV1),
+    ReplicatedBoost(ReplayNetworkReplicatedBoostV1),
+    PickupNew(ReplayNetworkPickupNewV1),
+}
+
+/// Exactly one already-resolved evidence-admitted K3 payload decode.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReplayNetworkK3DecodeV1 {
+    pub attribute_tag: ReplayNetworkAttributeTagV1,
+    pub payload_start_bit: u64,
+    pub payload_end_bit: u64,
+    pub payload_width: u64,
+    pub value: ReplayNetworkK3ValueV1,
+}
+
+fn replay_network_k3_error(category: &str, detail: impl Into<String>) -> MimirError {
+    MimirError::message(format!(
+        "replay network k3 error: {category}: {}",
+        detail.into()
+    ))
+}
+
+fn network_k3_reset_cursor(cursor: &mut NetworkBitCursor<'_>, start: usize) {
+    cursor.bit_position = start;
+    debug_assert_eq!(cursor.position_bits(), start);
+}
+
+fn network_k3_read_bits(cursor: &mut NetworkBitCursor<'_>, width: usize) -> Result<u64> {
+    if cursor.remaining_bits() < width {
+        return Err(replay_network_k3_error(
+            "insufficient-bits",
+            format!(
+                "need {width} bits at position {}, but only {} remain",
+                cursor.position_bits(),
+                cursor.remaining_bits()
+            ),
+        ));
+    }
+    cursor.read_bits_le(width).map_err(|error| {
+        replay_network_k3_error(
+            "insufficient-bits",
+            format!("bounded K3 bit read failed unexpectedly: {error}"),
+        )
+    })
+}
+
+fn validate_network_k3_context(context: ReplayNetworkK3DecodeContextV1) -> Result<()> {
+    if context.version_major != 868 || context.version_minor != 32 || context.net_version != 10 {
+        return Err(replay_network_k3_error(
+            "unadmitted-context",
+            format!(
+                "K3 requires replay version 868.32 / net10, got {}.{} / net{}",
+                context.version_major, context.version_minor, context.net_version
+            ),
+        ));
+    }
+    Ok(())
+}
+
+fn decode_network_vector3_v1(cursor: &mut NetworkBitCursor<'_>) -> Result<ReplayNetworkVector3V1> {
+    let low = network_k3_read_bits(cursor, 4)? as u8;
+    let candidate = low.checked_add(16).ok_or_else(|| {
+        replay_network_k3_error("invalid-k3-value", "vector size candidate overflows u8")
+    })?;
+    let selected_size_bits = if candidate < 22 {
+        if network_k3_read_bits(cursor, 1)? != 0 {
+            candidate
+        } else {
+            low
+        }
+    } else {
+        low
+    };
+
+    if selected_size_bits >= 20 {
+        return Err(replay_network_k3_error(
+            "unadmitted-k3-shape",
+            format!("vector selected size {selected_size_bits} is not admitted"),
+        ));
+    }
+
+    let component_width = selected_size_bits.checked_add(2).ok_or_else(|| {
+        replay_network_k3_error("invalid-k3-value", "vector component width overflows u8")
+    })?;
+    let bias_shift = selected_size_bits.checked_add(1).ok_or_else(|| {
+        replay_network_k3_error("invalid-k3-value", "vector bias shift overflows u8")
+    })?;
+    let bias = 1u64.checked_shl(u32::from(bias_shift)).ok_or_else(|| {
+        replay_network_k3_error("invalid-k3-value", "vector bias shift exceeds u64")
+    })?;
+    let width = usize::from(component_width);
+    let raw_x = network_k3_read_bits(cursor, width)?;
+    let raw_y = network_k3_read_bits(cursor, width)?;
+    let raw_z = network_k3_read_bits(cursor, width)?;
+
+    let to_semantic = |raw: u64| -> Result<f32> {
+        let signed = i64::try_from(raw)
+            .map_err(|_| replay_network_k3_error("invalid-k3-value", "vector raw exceeds i64"))?
+            .checked_sub(i64::try_from(bias).map_err(|_| {
+                replay_network_k3_error("invalid-k3-value", "vector bias exceeds i64")
+            })?)
+            .ok_or_else(|| {
+                replay_network_k3_error("invalid-k3-value", "vector signed subtraction overflow")
+            })?;
+        Ok((signed as f32) / 100.0)
+    };
+
+    Ok(ReplayNetworkVector3V1 {
+        selected_size_bits,
+        component_width,
+        raw_x: u32::try_from(raw_x).map_err(|_| {
+            replay_network_k3_error("invalid-k3-value", "vector x raw does not fit u32")
+        })?,
+        raw_y: u32::try_from(raw_y).map_err(|_| {
+            replay_network_k3_error("invalid-k3-value", "vector y raw does not fit u32")
+        })?,
+        raw_z: u32::try_from(raw_z).map_err(|_| {
+            replay_network_k3_error("invalid-k3-value", "vector z raw does not fit u32")
+        })?,
+        x: to_semantic(raw_x)?,
+        y: to_semantic(raw_y)?,
+        z: to_semantic(raw_z)?,
+    })
+}
+
+fn decode_network_quaternion56_v1(
+    cursor: &mut NetworkBitCursor<'_>,
+) -> Result<ReplayNetworkQuaternion56V1> {
+    let largest = network_k3_read_bits(cursor, 2)? as u8;
+    let raw_a = network_k3_read_bits(cursor, 18)? as u32;
+    let raw_b = network_k3_read_bits(cursor, 18)? as u32;
+    let raw_c = network_k3_read_bits(cursor, 18)? as u32;
+
+    let unpack = |raw: u32| -> f32 {
+        let pos_range = (raw as f32) / 262_143.0_f32;
+        let range = (pos_range - 0.5_f32) * 2.0_f32;
+        range * std::f32::consts::FRAC_1_SQRT_2
+    };
+    let a = unpack(raw_a);
+    let b = unpack(raw_b);
+    let c = unpack(raw_c);
+    if !a.is_finite() || !b.is_finite() || !c.is_finite() {
+        return Err(replay_network_k3_error(
+            "invalid-k3-value",
+            "quaternion unpack produced a non-finite component",
+        ));
+    }
+
+    let radicand = 1.0_f32 - a * a - b * b - c * c;
+    if !radicand.is_finite() || radicand < 0.0 {
+        return Err(replay_network_k3_error(
+            "invalid-k3-value",
+            format!("quaternion reconstruction radicand is invalid: {radicand}"),
+        ));
+    }
+    let extra = radicand.sqrt();
+    let (x, y, z, w) = match largest {
+        0 => (extra, a, b, c),
+        1 => (a, extra, b, c),
+        2 => (a, b, extra, c),
+        3 => (a, b, c, extra),
+        _ => unreachable!("two bits cannot decode outside 0..=3"),
+    };
+    if !x.is_finite() || !y.is_finite() || !z.is_finite() || !w.is_finite() {
+        return Err(replay_network_k3_error(
+            "invalid-k3-value",
+            "quaternion reconstruction produced a non-finite component",
+        ));
+    }
+
+    Ok(ReplayNetworkQuaternion56V1 {
+        largest,
+        raw_a,
+        raw_b,
+        raw_c,
+        x,
+        y,
+        z,
+        w,
+    })
+}
+
+fn network_k3_location_code(context: ReplayNetworkK3DecodeContextV1, size: u8) -> u32 {
+    ((context.is_rl_223 as u32) << 5) | u32::from(size)
+}
+
+fn network_k3_rigid_body_code(
+    context: ReplayNetworkK3DecodeContextV1,
+    sleeping: bool,
+    location_size: u8,
+    linear_size: Option<u8>,
+    angular_size: Option<u8>,
+) -> u32 {
+    let linear = u32::from(linear_size.unwrap_or(31));
+    let angular = u32::from(angular_size.unwrap_or(31));
+    ((context.is_rl_223 as u32) << 16)
+        | ((sleeping as u32) << 15)
+        | (u32::from(location_size) << 10)
+        | (linear << 5)
+        | angular
+}
+
+fn network_k3_pickup_new_code(context: ReplayNetworkK3DecodeContextV1, some_i32: bool) -> u32 {
+    ((context.is_rl_223 as u32) << 1) | (some_i32 as u32)
+}
+
+/// Decode exactly one already-resolved R3.17J-admitted K3 payload.
+///
+/// The decoder is intentionally stateless and one-value only. It never advances into a
+/// second property, actor or frame. Every failure discards the partial value and resets
+/// the internal cursor to the supplied payload start.
+pub fn decode_replay_network_k3_v1(
+    network_bytes: &[u8],
+    payload_start_bit: u64,
+    attribute_tag: ReplayNetworkAttributeTagV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> Result<ReplayNetworkK3DecodeV1> {
+    let total_bits = network_bytes.len().checked_mul(8).ok_or_else(|| {
+        replay_network_k3_error("invalid-start", "network bit length overflows usize")
+    })?;
+    let total_bits_u64 = u64::try_from(total_bits).map_err(|_| {
+        replay_network_k3_error("invalid-start", "network bit length does not fit u64")
+    })?;
+    if payload_start_bit > total_bits_u64 {
+        return Err(replay_network_k3_error(
+            "invalid-start",
+            format!(
+                "payload start {payload_start_bit} exceeds network length {total_bits_u64} bits"
+            ),
+        ));
+    }
+    let start = usize::try_from(payload_start_bit).map_err(|_| {
+        replay_network_k3_error(
+            "invalid-start",
+            format!("payload start {payload_start_bit} does not fit usize"),
+        )
+    })?;
+    validate_network_k3_context(context)?;
+
+    let mut cursor = NetworkBitCursor::new(network_bytes);
+    network_k3_reset_cursor(&mut cursor, start);
+    let decoded = (|| -> Result<ReplayNetworkK3ValueV1> {
+        match attribute_tag {
+            ReplayNetworkAttributeTagV1::Location => {
+                let value = decode_network_vector3_v1(&mut cursor)?;
+                let code = network_k3_location_code(context, value.selected_size_bits);
+                if !k3_admitted_groups::location_contains(code) {
+                    return Err(replay_network_k3_error(
+                        "unadmitted-k3-shape",
+                        format!("Location structural code {code} is absent from R3.17J"),
+                    ));
+                }
+                Ok(ReplayNetworkK3ValueV1::Location(value))
+            }
+            ReplayNetworkAttributeTagV1::RigidBody => {
+                let sleeping = network_k3_read_bits(&mut cursor, 1)? != 0;
+                let location = decode_network_vector3_v1(&mut cursor)?;
+                let rotation = decode_network_quaternion56_v1(&mut cursor)?;
+                let (linear_velocity, angular_velocity) = if sleeping {
+                    (None, None)
+                } else {
+                    (
+                        Some(decode_network_vector3_v1(&mut cursor)?),
+                        Some(decode_network_vector3_v1(&mut cursor)?),
+                    )
+                };
+                let code = network_k3_rigid_body_code(
+                    context,
+                    sleeping,
+                    location.selected_size_bits,
+                    linear_velocity
+                        .as_ref()
+                        .map(|value| value.selected_size_bits),
+                    angular_velocity
+                        .as_ref()
+                        .map(|value| value.selected_size_bits),
+                );
+                if !k3_admitted_groups::rigid_body_contains(code) {
+                    return Err(replay_network_k3_error(
+                        "unadmitted-k3-shape",
+                        format!("RigidBody structural code {code} is absent from R3.17J"),
+                    ));
+                }
+                Ok(ReplayNetworkK3ValueV1::RigidBody(
+                    ReplayNetworkRigidBodyV1 {
+                        sleeping,
+                        location,
+                        rotation,
+                        linear_velocity,
+                        angular_velocity,
+                    },
+                ))
+            }
+            ReplayNetworkAttributeTagV1::ReplicatedBoost => {
+                let code = context.is_rl_223 as u32;
+                if !k3_admitted_groups::replicated_boost_contains(code) {
+                    return Err(replay_network_k3_error(
+                        "unadmitted-k3-shape",
+                        format!("ReplicatedBoost structural code {code} is absent from R3.17J"),
+                    ));
+                }
+                let grant_count = network_k3_read_bits(&mut cursor, 8)? as u8;
+                let boost_amount = network_k3_read_bits(&mut cursor, 8)? as u8;
+                let unused1 = network_k3_read_bits(&mut cursor, 8)? as u8;
+                let unused2 = network_k3_read_bits(&mut cursor, 8)? as u8;
+                Ok(ReplayNetworkK3ValueV1::ReplicatedBoost(
+                    ReplayNetworkReplicatedBoostV1 {
+                        grant_count,
+                        boost_amount,
+                        unused1,
+                        unused2,
+                    },
+                ))
+            }
+            ReplayNetworkAttributeTagV1::PickupNew => {
+                let some_i32 = network_k3_read_bits(&mut cursor, 1)? != 0;
+                let instigator = if some_i32 {
+                    Some(network_k3_read_bits(&mut cursor, 32)? as u32 as i32)
+                } else {
+                    None
+                };
+                let picked_up = network_k3_read_bits(&mut cursor, 8)? as u8;
+                let code = network_k3_pickup_new_code(context, some_i32);
+                if !k3_admitted_groups::pickup_new_contains(code) {
+                    return Err(replay_network_k3_error(
+                        "unadmitted-k3-shape",
+                        format!("PickupNew structural code {code} is absent from R3.17J"),
+                    ));
+                }
+                Ok(ReplayNetworkK3ValueV1::PickupNew(
+                    ReplayNetworkPickupNewV1 {
+                        instigator,
+                        picked_up,
+                    },
+                ))
+            }
+            _ => Err(replay_network_k3_error(
+                "unsupported-k3-tag",
+                format!("attribute tag {attribute_tag:?} is not an admitted K3 tag"),
+            )),
+        }
+    })();
+
+    let value = match decoded {
+        Ok(value) => value,
+        Err(error) => {
+            network_k3_reset_cursor(&mut cursor, start);
+            return Err(error);
+        }
+    };
+    let payload_end_bit = u64::try_from(cursor.position_bits()).map_err(|_| {
+        network_k3_reset_cursor(&mut cursor, start);
+        replay_network_k3_error("invalid-start", "decoded end bit does not fit u64")
+    })?;
+    let payload_width = payload_end_bit
+        .checked_sub(payload_start_bit)
+        .ok_or_else(|| {
+            network_k3_reset_cursor(&mut cursor, start);
+            replay_network_k3_error("invalid-start", "decoded end bit precedes payload start")
+        })?;
+
+    Ok(ReplayNetworkK3DecodeV1 {
         attribute_tag,
         payload_start_bit,
         payload_end_bit,
