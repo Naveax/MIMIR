@@ -28,7 +28,7 @@ impl BitWriter {
     }
 
     fn into_bytes(self) -> Vec<u8> {
-        let mut bytes = vec![0u8; (self.bits.len() + 7) / 8];
+        let mut bytes = vec![0u8; self.bits.len().div_ceil(8)];
         for (index, bit) in self.bits.into_iter().enumerate() {
             if bit {
                 bytes[index / 8] |= 1 << (index % 8);
