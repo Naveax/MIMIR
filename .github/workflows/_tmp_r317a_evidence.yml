@@ -31,8 +31,12 @@ jobs:
           test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$PROD_BLOB"
           git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null || git fetch --quiet --depth=1 origin "$BASE_SHA"
           git diff --exit-code "$BASE_SHA"..HEAD -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
-          test "$(sha256sum tools/_tmp_r317a_paths.txt | awk '{print $1}')" = "$PATHS_SHA"
-          test "$(sha256sum tools/_tmp_r317a_identity.tsv | awk '{print $1}')" = "$IDENTITY_SHA"
+          ACTUAL_PATHS_SHA="$(git show HEAD:tools/_tmp_r317a_paths.txt | sha256sum | awk '{print $1}')"
+          ACTUAL_IDENTITY_SHA="$(git show HEAD:tools/_tmp_r317a_identity.tsv | sha256sum | awk '{print $1}')"
+          echo "R3_17A_PATHS_SHA=$ACTUAL_PATHS_SHA"
+          echo "R3_17A_IDENTITY_SHA=$ACTUAL_IDENTITY_SHA"
+          test "$ACTUAL_PATHS_SHA" = "$PATHS_SHA"
+          test "$ACTUAL_IDENTITY_SHA" = "$IDENTITY_SHA"
 
           python - <<'PY'
           import hashlib
