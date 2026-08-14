@@ -52,16 +52,16 @@ LAST_PRODUCTION_MILESTONE:
   R3.16B — native existing-actor first-property envelope header implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.16A — existing-actor first-property envelope evidence / Outcome A
+  R3.17A — primitive scalar attribute wire-format evidence / Outcome A
 
 LAST_COMPLETED_CONTINUITY_CHECK:
   R3.16C — post-implementation continuity repair and capability-boundary check
 
 CURRENT_PASS:
-  R3.17A — primitive scalar attribute wire-format evidence
+  R3.17B — primitive scalar attribute contract admission
 
 CURRENT_PASS_TYPE:
-  evidence-only / pinned oracle instrumentation / NO production Rust change
+  contract-only / docs-state / NO production Rust change
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -77,37 +77,51 @@ CURRENT_PRODUCTION_HARD_STOP:
   existing-actor first-property header stops exactly at payload_start_bit
   NO native attribute payload bit is admitted yet
 
-R3_16B_CLOSURE:
-  base main SHA: fc020729396ad9f62ee4b8fd8fe6808f5bdb5489
-  production SHA: ebc0fa31ba90a8496c3d1719e436d2c17b605ff7
-  production source blob: 625ab2322e35f5f835871d42b9efeb04f5c299ab
-  production source SHA256: 186eb5c2d25a42c6028e4149adbb8fa5ac2807c4f1d187ab389ce565a7a5db28
-  focused tests: 8/8 PASS
-  frozen differential: 47/47 PASS
-  clean diff: exactly 2 files, +331/-0
-  post-main CI: 31788526050 / 94729854512 SUCCESS
-  post-main Knowledge Archive: 31788566184 / 94729983908 SUCCESS
+R3_17A_AUTHORITY:
+  canonical evidence base: ded95e8ae512876b46453585be05b8358025314a
+  evidence head: 4cd21ea6db14c9becc11c17149af9201071859bc
+  evidence run/job: 31792028292 / 94740870175 SUCCESS
+  exact-head normal CI: 31792028275 / 94740869974 SUCCESS
+  artifact: 9216016802
+  artifact SHA256: 59fe6d40b15bd3267e776abff48ef96c138314ca514b5e0d44c003b1edf117af
+  replay identity rows: 47
+  bounded witness rows: 96
+  scalar occurrences: 2,141,139
+  receipt stream: PASS
+  production mutation: 0
+  Cargo mutation: 0
+  corpus mutation: 0
 
-R3_17A_OPEN_BOUNDARY:
-  evidence may observe primitive scalar attribute payload wire formats through the pinned oracle
-  candidate family: Boolean, Byte, Int, Int64, Float, Enum
-  record corpus frequency, exact bit spans, values, truncation-relevant structure, and identity
-  zero-observation tags remain unadmitted rather than guessed
+R3_17A_OBSERVED_FIXED_WIDTHS:
+  Boolean: 84,545 occurrences / 47 replays / 1 bit
+  Byte: 1,730,595 occurrences / 47 replays / 8 bits
+  Enum: 180,624 occurrences / 47 replays / 11 bits
+  Float: 33,857 occurrences / 47 replays / 32 bits
+  Int: 109,920 occurrences / 47 replays / 32 bits
+  Int64: 1,598 occurrences / 14 replays / 64 bits
+  shape mismatch: 0
+  bit monotonicity failure: 0
+  unexpected tag shape: 0
 
-R3_17A_HARD_STOP:
+R3_17B_CONTRACT_SCOPE:
+  admit only Boolean / Byte / Enum / Float / Int / Int64 scalar wire contracts
+  LSB-first from the current payload_start_bit; no byte-alignment assumption
+  fixed-width exact cursor consumption
+  Float preserves raw u32 bits alongside f32 interpretation
+  signed integer interpretation follows the pinned oracle source contract
+  truncation and unsupported-tag failure must be atomic / zero-consumption
+
+R3_17B_HARD_STOP:
   production Rust unchanged
-  no native payload decoder
-  no RigidBody / ActiveActor / spatial-family implementation
-  no property-loop iteration
-  no second property, actor, or frame
-  no actor lifecycle mutation
+  no native scalar payload implementation yet
+  no RigidBody / ActiveActor / spatial-family contract or implementation
+  no second property, actor, or frame iteration
+  no lifecycle mutation
   no raw-state/event/skill/runtime/export widening
+  no Cargo or corpus change
 
-IN_FLIGHT_NON_PRODUCTION_BRANCH:
-  none admitted at continuity sync time
-
-NEXT PASS IF R3.17A OUTCOME A:
-  R3.17B — primitive scalar attribute contract admission
+NEXT PASS IF R3.17B OUTCOME A:
+  R3.17C — primitive scalar attribute decoder implementation
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

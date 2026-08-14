@@ -2,77 +2,87 @@
 
 **Continuity date:** 2026-08-14
 **Repository:** `Naveax/MIMIR`
-**Canonical main / production checkpoint:** `ebc0fa31ba90a8496c3d1719e436d2c17b605ff7`
+**Pre-admission canonical main:** `ded95e8ae512876b46453585be05b8358025314a`
+**Production code checkpoint:** `ebc0fa31ba90a8496c3d1719e436d2c17b605ff7`
 **Production milestone:** `R3.16B — native existing-actor first-property envelope header implementation`
-**Completed continuity check:** `R3.16C`
-**Next exact pass:** `R3.17A — primitive scalar attribute wire-format evidence`
+**Completed evidence pass:** `R3.17A — Outcome A`
+**Current exact pass:** `R3.17B — primitive scalar attribute contract admission`
 
 ---
 
-## 1. Current truthful production boundary
+## 1. Truthful production boundary
 
-MIMIR can natively advance through the admitted replay network prefix far enough to:
+Production behavior is unchanged from R3.16B. MIMIR can resolve one existing-actor property header through `stream_id`, inherited/static property lookup, object/tag identity and `payload_start_bit`, then stops before consuming the attribute payload.
+
+R3.17A did not widen production. It measured the next wire layer through a pinned external oracle only.
+
+## 2. R3.17A immutable evidence authority
 
 ```text
-frame time/delta
-first actor present/id/alive/new envelope
-NewActor name/object/spawn trajectory branch
-existing-actor one-property-present decision
-one canonical bounded stream_id
-existing static/inherited property lookup resolution
-resolved property object/tag metadata
-payload_start_bit
+canonical evidence base       ded95e8ae512876b46453585be05b8358025314a
+evidence head                 4cd21ea6db14c9becc11c17149af9201071859bc
+workflow run/job              31792028292 / 94740870175  SUCCESS
+exact-head normal CI          31792028275 / 94740869974  SUCCESS
+artifact id                   9216016802
+artifact zip SHA-256          59fe6d40b15bd3267e776abff48ef96c138314ca514b5e0d44c003b1edf117af
+artifact size                 51,639,177 bytes
+replay identity rows          47
+bounded witness rows          96
+oracle parse success          47 / 47
+scalar occurrences            2,141,139
+shape mismatch                0
+bit monotonicity failure      0
+unexpected tag shape          0
+production mutation           0
+Cargo mutation                0
+corpus mutation               0
+receipt stream                PASS
 ```
 
-Production then **stops before the first attribute payload bit**.
+The bounded job-log receipt includes all 47 replay identities, 96 witnesses, aggregate/summary content and content hashes. The expiring artifact is therefore not the sole audit authority.
 
-The R3.16B production result is intentionally a header/context primitive. It does not scan for later existing actors, iterate a property loop, mutate actor lifecycle state, or decode attribute values.
-
-## 2. R3.16B admitted identity
+## 3. Observed primitive scalar family
 
 ```text
-pre-pass canonical main       fc020729396ad9f62ee4b8fd8fe6808f5bdb5489
-clean production SHA          ebc0fa31ba90a8496c3d1719e436d2c17b605ff7
-production source             crates/mimir-replay/src/lib.rs
-source Git blob               625ab2322e35f5f835871d42b9efeb04f5c299ab
-source SHA-256                186eb5c2d25a42c6028e4149adbb8fa5ac2807c4f1d187ab389ce565a7a5db28
-permanent focused test        crates/mimir-replay/tests/r3_16b_property_header.rs
-test Git blob                 0fea53e1758e7b0b5f8d2a14b98cbce5feb400c2
-clean diff                    2 files, +331 / -0
-focused tests                 8 / 8 PASS
-frozen oracle rows            47
-native differential           47 / 47 PASS
+Boolean   84,545 occurrences    47 replays   width 1
+Byte   1,730,595 occurrences    47 replays   width 8
+Enum     180,624 occurrences    47 replays   width 11
+Float     33,857 occurrences    47 replays   width 32
+Int      109,920 occurrences    47 replays   width 32
+Int64      1,598 occurrences    14 replays   width 64
 ```
 
-R3.16B reuses the canonical bounded-u32 primitive. `prop_id_bits` is not treated as a fixed-width permission; actual stream-ID consumption remains value/bound dependent.
+All six candidate tags were observed. No candidate remains a zero-observation placeholder.
 
-## 3. R3.16B hosted validation and publication closure
+Important receipt hashes:
 
 ```text
-disposable full verifier + differential run/job  31787682424 / 94727174844  SUCCESS
-candidate PR CI run/job                           31788230442 / 94728918384  SUCCESS
-candidate Knowledge Archive run/job               31788291777 / 94729116078  SUCCESS
-published-main CI run/job                         31788526050 / 94729854512  SUCCESS
-published-main Knowledge Archive run/job           31788566184 / 94729983908  SUCCESS
-publication                                        force=false fast-forward
+instrumentation patch  f10fc6206aaba14b8afd368c5ede8d8ce6bc1e4a7a56049be9d7012aa8b82877
+full scalar oracle     af5c72982501bedb4a6283a0aca473b3620682ad797267aa625c37cce9a515a1
+96 witnesses           b2e8800e55fd3760f77b7ac880aa2147f93d0aa00f65a0911cdbb89415ac68d9
+summary                a2f8a7c8efb87083986bb635d9c2c81e992556bbe9a41263d7bfd453c404ce2c
+aggregate              b5cf40d45a2f9f4bd6914b99117ec252d72afb5d955a0999770faf1f2764b34e
 ```
 
-The clean production commit contains only `crates/mimir-replay/src/lib.rs` and `crates/mimir-replay/tests/r3_16b_property_header.rs` relative to its parent. Temporary evidence/publisher machinery did not enter canonical production history.
+## 4. R3.17B current contract pass
 
-## 4. Current closed boundaries
+R3.17B may admit only the six evidence-backed primitive scalar wire contracts. It is docs/state only; no Rust code is modified.
 
-Still closed:
+The common contract is LSB-first at the existing payload cursor with no byte-alignment assumption. Successful decode consumes exactly the tag's admitted fixed width. Insufficient input or a non-admitted tag must fail atomically without advancing the cursor.
+
+Float identity is the raw 32-bit pattern first; `f32` is its interpretation. Signed integer semantics are pinned to the oracle source contract, while the replay corpus evidence establishes the exact consumed widths on the supported lane.
+
+## 5. Still closed
 
 ```text
-native attribute payload decoding of every tag
+native scalar payload decoder
+RigidBody / ActiveActor / spatial payload families
 second property / property loop
-complete existing-actor update parsing
 next actor iteration
 next frame iteration
-actor lifecycle state-table mutation
+actor lifecycle mutation
 raw-state materialization
-semantic ball/car/player reconstruction
-event extraction
+semantic events
 replay slicing
 skill mining
 counterfactual rollout execution
@@ -80,23 +90,4 @@ training/runtime/export widening
 support-lane expansion
 ```
 
-Observed tag names are not payload contracts. In particular, seeing `RigidBody`, `ActiveActor`, `Byte`, `Float`, or `Int` in oracle evidence does not mean MIMIR can natively decode those payloads.
-
-## 5. R3.17A exact next pass
-
-R3.17A is evidence-only and begins the roadmap's attribute decoder family program with primitive scalar payloads:
-
-```text
-Boolean
-Byte
-Int
-Int64
-Float
-Enum
-```
-
-The pass must use the pinned Boxcars revision and the exact supported 47-replay lane. It should measure actual occurrences first, then collect exact payload start/end bits, raw/decoded values, tag/object identity, and enough surrounding structure to define truncation/fail-closed rules later.
-
-A tag with zero usable observations is **not admitted by analogy**. It remains closed or receives a targeted evidence follow-up.
-
-R3.17A changes no production Rust. Outcome A may open `R3.17B — primitive scalar attribute contract admission`.
+Outcome A for R3.17B opens `R3.17C — primitive scalar attribute decoder implementation`.

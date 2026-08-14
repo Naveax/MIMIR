@@ -17,9 +17,8 @@ MIMIR_CONTINUE_HERE.md
         v                               v
 docs/continuity/                MIMIR_ALL_SOURCES_SUPERBOOK.md
 CURRENT_STATE + STATE.json              |
-R3.16B decision                         |
-R3.16C continuity decision              |
-R3.17A execution spec                   |
+R3.17A decision                         |
+R3.17B execution spec                   |
         |                               |
         +---------------+---------------+
                         |
@@ -41,17 +40,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 1. `MIMIR_CONTINUE_HERE.md`
 2. `docs/continuity/MIMIR_CONTINUITY_STATE.json`
 3. `docs/continuity/MIMIR_CURRENT_STATE.md`
-4. `docs/continuity/MIMIR_R3_16B_DECISION.md`
-5. `docs/continuity/MIMIR_R3_16C_EXECUTION_SPEC.md`
-6. `docs/continuity/MIMIR_R3_16C_DECISION.md`
-7. `docs/continuity/MIMIR_R3_17A_EXECUTION_SPEC.md`
-8. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-9. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-10. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-11. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-12. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-13. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-14. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+4. `docs/continuity/MIMIR_R3_17A_EXECUTION_SPEC.md`
+5. `docs/continuity/MIMIR_R3_17A_DECISION.md`
+6. `docs/continuity/MIMIR_R3_17B_EXECUTION_SPEC.md`
+7. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+8. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+9. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+10. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+11. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+12. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+13. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -64,35 +62,49 @@ R3.13 static network lookup plan
        production SHA ebc0fa31ba90a8496c3d1719e436d2c17b605ff7
        exact hard stop payload_start_bit
   -> R3.16C continuity/check: CLOSED / Outcome A
-  -> R3.17A primitive scalar attribute wire-format evidence: ACTIVE
+  -> R3.17A primitive scalar wire-format evidence: CLOSED / Outcome A
+       2,141,139 scalar observations
+       47 replay identities + 96 bounded witnesses frozen in immutable job log
+  -> R3.17B primitive scalar wire contract: ACTIVE
 ```
+
+## R3.17A observed scalar shapes
+
+```text
+Boolean   1 bit    84,545 occurrences    47 replays
+Byte      8 bits   1,730,595 occurrences 47 replays
+Enum      11 bits  180,624 occurrences   47 replays
+Float     32 bits  33,857 occurrences    47 replays
+Int       32 bits  109,920 occurrences   47 replays
+Int64     64 bits  1,598 occurrences     14 replays
+```
+
+There were zero scalar shape mismatches, zero bit-monotonicity failures and zero unexpected scalar widths on the exact supported lane.
 
 ## Current capability lock
 
-MIMIR can resolve one existing-actor property header through `stream_id`, property lookup and tag identity, then stops at `payload_start_bit`.
+MIMIR still stops at `payload_start_bit`. R3.17A proves wire evidence; it does not add a native payload decoder.
 
-It still **cannot natively decode any attribute payload**. Oracle visibility into `RigidBody`, `ActiveActor`, `Byte`, `Float`, `Int`, or any other tag is not production capability.
+R3.17B is contract-only. It may admit the six observed scalar wire contracts, exact LSB-first widths, value representations and atomic truncation behavior. It cannot admit spatial/compound tags or production decoding.
 
-R3.17A is evidence-only for the primitive scalar family (`Boolean`, `Byte`, `Int`, `Int64`, `Float`, `Enum`). Zero-observation tags remain closed.
-
-## R3.16B closure identity
+## R3.17A evidence identity
 
 ```text
-base main                 fc020729396ad9f62ee4b8fd8fe6808f5bdb5489
-production SHA            ebc0fa31ba90a8496c3d1719e436d2c17b605ff7
-source blob               625ab2322e35f5f835871d42b9efeb04f5c299ab
-source SHA256             186eb5c2d25a42c6028e4149adbb8fa5ac2807c4f1d187ab389ce565a7a5db28
-focused tests             8/8 PASS
-native differential       47/47 PASS
-post-main CI              31788526050 / 94729854512 SUCCESS
-post-main knowledge       31788566184 / 94729983908 SUCCESS
+evidence head             4cd21ea6db14c9becc11c17149af9201071859bc
+run/job                    31792028292 / 94740870175 SUCCESS
+artifact                   9216016802
+artifact SHA256            59fe6d40b15bd3267e776abff48ef96c138314ca514b5e0d44c003b1edf117af
+full oracle SHA256         af5c72982501bedb4a6283a0aca473b3620682ad797267aa625c37cce9a515a1
+witness SHA256             b2e8800e55fd3760f77b7ac880aa2147f93d0aa00f65a0911cdbb89415ac68d9
+aggregate SHA256           b5cf40d45a2f9f4bd6914b99117ec252d72afb5d955a0999770faf1f2764b34e
+receipt stream             PASS
 ```
 
 ## Authority rule
 
 ```text
 current code/tests
-> exact-SHA CI/evidence
+> exact-SHA CI/evidence + immutable receipt stream
 > MIMIR_CONTINUE_HERE.md
 > docs/continuity/MIMIR_CONTINUITY_STATE.json
 > docs/continuity/MIMIR_CURRENT_STATE.md
