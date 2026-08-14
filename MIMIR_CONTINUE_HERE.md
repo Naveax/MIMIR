@@ -57,11 +57,14 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
 LAST_COMPLETED_CONTINUITY_CHECK:
   R3.16C — post-implementation continuity repair and capability-boundary check
 
+LAST_COMPLETED_CONTRACT_PASS:
+  R3.17B — primitive scalar attribute wire contract / Outcome A
+
 CURRENT_PASS:
-  R3.17B — primitive scalar attribute contract admission
+  R3.17C — primitive scalar attribute decoder implementation
 
 CURRENT_PASS_TYPE:
-  contract-only / docs-state / NO production Rust change
+  production implementation / one-scalar decoder / bounded additive change
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -103,25 +106,31 @@ R3_17A_OBSERVED_FIXED_WIDTHS:
   bit monotonicity failure: 0
   unexpected tag shape: 0
 
-R3_17B_CONTRACT_SCOPE:
-  admit only Boolean / Byte / Enum / Float / Int / Int64 scalar wire contracts
+R3_17B_ADMITTED_CONTRACT:
+  Boolean / Byte / Enum / Float / Int / Int64 scalar wire contracts
   LSB-first from the current payload_start_bit; no byte-alignment assumption
   fixed-width exact cursor consumption
   Float preserves raw u32 bits alongside f32 interpretation
   signed integer interpretation follows the pinned oracle source contract
   truncation and unsupported-tag failure must be atomic / zero-consumption
 
-R3_17B_HARD_STOP:
-  production Rust unchanged
-  no native scalar payload implementation yet
-  no RigidBody / ActiveActor / spatial-family contract or implementation
-  no second property, actor, or frame iteration
+R3_17C_IMPLEMENTATION_SCOPE:
+  add one narrow native scalar decoder from payload_start_bit + admitted attribute tag
+  reuse the existing private LSB-first NetworkBitCursor and atomic read_bits_le rule
+  decode exactly one Boolean / Byte / Enum / Float / Int / Int64 payload
+  preserve Float raw u32 bits plus f32 interpretation
+  return exact payload start/end/width and stop exactly after that scalar
+
+R3_17C_HARD_STOP:
+  no RigidBody / ActiveActor / spatial-family decoder
+  no property-loop continuation or second property
+  no next actor or next frame iteration
   no lifecycle mutation
   no raw-state/event/skill/runtime/export widening
-  no Cargo or corpus change
+  no Cargo dependency or replay corpus change
 
-NEXT PASS IF R3.17B OUTCOME A:
-  R3.17C — primitive scalar attribute decoder implementation
+NEXT PASS IF R3.17C OUTCOME A:
+  R3.17D — primitive scalar native differential
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.16B",
   "last_production_milestone_name": "native existing-actor first-property envelope header implementation",
   "last_completed_read_only_audit": "R3.17A",
-  "current_pass": "R3.17B",
-  "current_pass_kind": "contract-only primitive scalar attribute wire contract admission",
-  "current_pass_goal": "Admit only the evidence-backed Boolean/Byte/Enum/Float/Int/Int64 wire contracts, including exact widths, representations, cursor rules and atomic truncation semantics, without changing production Rust.",
-  "current_pass_stop_boundary": "No production payload decoder yet; no spatial families, property loop, actor/frame iteration, lifecycle mutation, raw-state/event/skill/runtime/export widening, Cargo change or corpus change.",
+  "current_pass": "R3.17C",
+  "current_pass_kind": "production implementation / primitive scalar one-value decoder",
+  "current_pass_goal": "Implement the admitted Boolean/Byte/Enum/Float/Int/Int64 one-scalar decoder from payload_start_bit using the existing LSB-first cursor, with exact value representation and atomic truncation behavior.",
+  "current_pass_stop_boundary": "Decode at most one admitted primitive scalar and stop at its exact payload_end_bit; no second property, actor/frame iteration, lifecycle mutation, spatial/compound payloads, raw-state/event/skill/runtime/export widening, Cargo change or corpus change.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -105,11 +105,13 @@
     "docs/continuity/MIMIR_R3_16C_DECISION.md",
     "docs/continuity/MIMIR_R3_17A_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_17A_DECISION.md",
-    "docs/continuity/MIMIR_R3_17B_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_17B_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_17B_DECISION.md",
+    "docs/continuity/MIMIR_R3_17C_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.17A",
   "last_completed_evidence_outcome": "A — all six primitive scalar candidate tags observed; 2,141,139 total occurrences; fixed widths exact; zero shape/monotonicity/unexpected-shape errors; immutable receipt stream PASS",
-  "last_completed_contract_pass": "R3.15B",
+  "last_completed_contract_pass": "R3.17B",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -476,5 +478,47 @@
     "corpus_mutation_count": 0,
     "receipt_stream": "PASS",
     "next_pass": "R3.17B"
+  },
+  "r3_17b": {
+    "outcome": "A — admitted / contract complete",
+    "production_source_changed": false,
+    "production_code_sha": "ebc0fa31ba90a8496c3d1719e436d2c17b605ff7",
+    "continuity_base_sha": "2e27638812111f73d06ef9e52955f10a26cfebd4",
+    "evidence_head_sha": "4cd21ea6db14c9becc11c17149af9201071859bc",
+    "evidence_run": 31792028292,
+    "evidence_job": 94740870175,
+    "artifact_id": 9216016802,
+    "artifact_sha256": "59fe6d40b15bd3267e776abff48ef96c138314ca514b5e0d44c003b1edf117af",
+    "contracts": {
+      "Boolean": {
+        "width_bits": 1,
+        "semantic": "bool"
+      },
+      "Byte": {
+        "width_bits": 8,
+        "semantic": "u8"
+      },
+      "Enum": {
+        "width_bits": 11,
+        "semantic": "u16 numeric 0..=2047"
+      },
+      "Float": {
+        "width_bits": 32,
+        "semantic": "raw u32 identity + f32::from_bits"
+      },
+      "Int": {
+        "width_bits": 32,
+        "semantic": "i32 two's-complement bit pattern"
+      },
+      "Int64": {
+        "width_bits": 64,
+        "semantic": "i64 two's-complement bit pattern"
+      }
+    },
+    "lsb_first": true,
+    "byte_alignment_required": false,
+    "atomic_truncation_failure": true,
+    "unsupported_tag_zero_consumption": true,
+    "next_pass": "R3.17C"
   }
 }

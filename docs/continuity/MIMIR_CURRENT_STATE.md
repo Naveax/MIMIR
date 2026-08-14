@@ -2,19 +2,20 @@
 
 **Continuity date:** 2026-08-14
 **Repository:** `Naveax/MIMIR`
-**Pre-admission canonical main:** `ded95e8ae512876b46453585be05b8358025314a`
+**Pre-contract canonical main:** `2e27638812111f73d06ef9e52955f10a26cfebd4`
 **Production code checkpoint:** `ebc0fa31ba90a8496c3d1719e436d2c17b605ff7`
 **Production milestone:** `R3.16B — native existing-actor first-property envelope header implementation`
 **Completed evidence pass:** `R3.17A — Outcome A`
-**Current exact pass:** `R3.17B — primitive scalar attribute contract admission`
+**Completed contract pass:** `R3.17B — Outcome A`
+**Current exact pass:** `R3.17C — primitive scalar attribute decoder implementation`
 
 ---
 
 ## 1. Truthful production boundary
 
-Production behavior is unchanged from R3.16B. MIMIR can resolve one existing-actor property header through `stream_id`, inherited/static property lookup, object/tag identity and `payload_start_bit`, then stops before consuming the attribute payload.
+Production behavior is still unchanged from R3.16B at this continuity checkpoint. MIMIR resolves one existing-actor property header through `stream_id`, inherited/static property lookup, object/tag identity and `payload_start_bit`, then stops before consuming the attribute payload.
 
-R3.17A did not widen production. It measured the next wire layer through a pinned external oracle only.
+R3.17A supplied evidence and R3.17B admitted the wire contract. Neither pass by itself grants runtime decode capability.
 
 ## 2. R3.17A immutable evidence authority
 
@@ -25,7 +26,6 @@ workflow run/job              31792028292 / 94740870175  SUCCESS
 exact-head normal CI          31792028275 / 94740869974  SUCCESS
 artifact id                   9216016802
 artifact zip SHA-256          59fe6d40b15bd3267e776abff48ef96c138314ca514b5e0d44c003b1edf117af
-artifact size                 51,639,177 bytes
 replay identity rows          47
 bounded witness rows          96
 oracle parse success          47 / 47
@@ -39,45 +39,45 @@ corpus mutation               0
 receipt stream                PASS
 ```
 
-The bounded job-log receipt includes all 47 replay identities, 96 witnesses, aggregate/summary content and content hashes. The expiring artifact is therefore not the sole audit authority.
-
-## 3. Observed primitive scalar family
+## 3. R3.17B admitted primitive scalar contract
 
 ```text
-Boolean   84,545 occurrences    47 replays   width 1
-Byte   1,730,595 occurrences    47 replays   width 8
-Enum     180,624 occurrences    47 replays   width 11
-Float     33,857 occurrences    47 replays   width 32
-Int      109,920 occurrences    47 replays   width 32
-Int64      1,598 occurrences    14 replays   width 64
+Boolean   width 1    semantic bool
+Byte      width 8    semantic u8
+Enum      width 11   numeric u16, 0..=2047; no enum-name mapping
+Float     width 32   exact raw u32 identity + f32::from_bits(raw)
+Int       width 32   signed i32 using the identical two's-complement bit pattern
+Int64     width 64   signed i64 using the identical two's-complement bit pattern
 ```
 
-All six candidate tags were observed. No candidate remains a zero-observation placeholder.
+Common rule: start exactly at `payload_start_bit`, consume LSB-first with no byte-alignment requirement, and advance exactly the admitted fixed width on success. If fewer than the required bits remain, fail closed with zero cursor advance. A tag outside this six-tag family is unsupported and consumes zero payload bits.
 
-Important receipt hashes:
+Float raw bits are part of the result contract so NaN payloads and signed zero remain bit-exact. Enum remains a numeric wire value only.
+
+## 4. R3.17C exact implementation boundary
+
+R3.17C may add one narrow decoder that accepts network bytes, an admitted `payload_start_bit` and the already-resolved `ReplayNetworkAttributeTagV1`, and returns exactly one typed scalar plus start/end/width metadata.
+
+The implementation must reuse the existing private LSB-first `NetworkBitCursor` / `read_bits_le` semantics. It must not infer a second property or depend on actor lifecycle state.
+
+Expected value semantics:
 
 ```text
-instrumentation patch  f10fc6206aaba14b8afd368c5ede8d8ce6bc1e4a7a56049be9d7012aa8b82877
-full scalar oracle     af5c72982501bedb4a6283a0aca473b3620682ad797267aa625c37cce9a515a1
-96 witnesses           b2e8800e55fd3760f77b7ac880aa2147f93d0aa00f65a0911cdbb89415ac68d9
-summary                a2f8a7c8efb87083986bb635d9c2c81e992556bbe9a41263d7bfd453c404ce2c
-aggregate              b5cf40d45a2f9f4bd6914b99117ec252d72afb5d955a0999770faf1f2764b34e
+Boolean(bool)
+Byte(u8)
+Enum(u16)
+Float { raw_bits: u32, value: f32 }
+Int(i32)
+Int64(i64)
 ```
 
-## 4. R3.17B current contract pass
-
-R3.17B may admit only the six evidence-backed primitive scalar wire contracts. It is docs/state only; no Rust code is modified.
-
-The common contract is LSB-first at the existing payload cursor with no byte-alignment assumption. Successful decode consumes exactly the tag's admitted fixed width. Insufficient input or a non-admitted tag must fail atomically without advancing the cursor.
-
-Float identity is the raw 32-bit pattern first; `f32` is its interpretation. Signed integer semantics are pinned to the oracle source contract, while the replay corpus evidence establishes the exact consumed widths on the supported lane.
+A successful decoder stops exactly at `payload_end_bit = payload_start_bit + width`. Poison bits after that point remain unread.
 
 ## 5. Still closed
 
 ```text
-native scalar payload decoder
 RigidBody / ActiveActor / spatial payload families
-second property / property loop
+property-loop continuation / second property
 next actor iteration
 next frame iteration
 actor lifecycle mutation
@@ -88,6 +88,8 @@ skill mining
 counterfactual rollout execution
 training/runtime/export widening
 support-lane expansion
+Cargo dependency changes
+replay corpus changes
 ```
 
-Outcome A for R3.17B opens `R3.17C — primitive scalar attribute decoder implementation`.
+Outcome A for R3.17C opens `R3.17D — primitive scalar native differential` against the frozen R3.17A witness authority.

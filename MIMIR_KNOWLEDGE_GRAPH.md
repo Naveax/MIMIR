@@ -18,7 +18,8 @@ MIMIR_CONTINUE_HERE.md
 docs/continuity/                MIMIR_ALL_SOURCES_SUPERBOOK.md
 CURRENT_STATE + STATE.json              |
 R3.17A decision                         |
-R3.17B execution spec                   |
+R3.17B decision                         |
+R3.17C execution spec                   |
         |                               |
         +---------------+---------------+
                         |
@@ -43,13 +44,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 4. `docs/continuity/MIMIR_R3_17A_EXECUTION_SPEC.md`
 5. `docs/continuity/MIMIR_R3_17A_DECISION.md`
 6. `docs/continuity/MIMIR_R3_17B_EXECUTION_SPEC.md`
-7. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-8. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-9. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-10. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-11. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-12. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-13. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+7. `docs/continuity/MIMIR_R3_17B_DECISION.md`
+8. `docs/continuity/MIMIR_R3_17C_EXECUTION_SPEC.md`
+9. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+10. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+11. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+12. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+13. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+14. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+15. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -65,27 +68,30 @@ R3.13 static network lookup plan
   -> R3.17A primitive scalar wire-format evidence: CLOSED / Outcome A
        2,141,139 scalar observations
        47 replay identities + 96 bounded witnesses frozen in immutable job log
-  -> R3.17B primitive scalar wire contract: ACTIVE
+  -> R3.17B primitive scalar wire contract: CLOSED / Outcome A
+       Boolean=1, Byte=8, Enum=11, Float=32, Int=32, Int64=64 bits
+       LSB-first, unaligned starts allowed, atomic truncation failure
+  -> R3.17C primitive scalar native decoder: ACTIVE
 ```
 
-## R3.17A observed scalar shapes
+## R3.17B admitted scalar contract
 
 ```text
-Boolean   1 bit    84,545 occurrences    47 replays
-Byte      8 bits   1,730,595 occurrences 47 replays
-Enum      11 bits  180,624 occurrences   47 replays
-Float     32 bits  33,857 occurrences    47 replays
-Int       32 bits  109,920 occurrences   47 replays
-Int64     64 bits  1,598 occurrences     14 replays
+Boolean   1 bit   bool
+Byte      8 bits  u8
+Enum      11 bits u16 numeric 0..=2047
+Float     32 bits raw u32 identity + f32::from_bits interpretation
+Int       32 bits signed i32 from identical two's-complement bit pattern
+Int64     64 bits signed i64 from identical two's-complement bit pattern
 ```
 
-There were zero scalar shape mismatches, zero bit-monotonicity failures and zero unexpected scalar widths on the exact supported lane.
+All values begin exactly at `payload_start_bit`, use the existing LSB-first network cursor, require no byte alignment, consume exactly the admitted width on success, and fail without cursor advance on truncation. Unsupported/compound tags are outside the contract and must not consume payload bits.
 
 ## Current capability lock
 
-MIMIR still stops at `payload_start_bit`. R3.17A proves wire evidence; it does not add a native payload decoder.
+MIMIR production still stops at `payload_start_bit`. R3.17B admits a contract only; it does not itself decode payload bits.
 
-R3.17B is contract-only. It may admit the six observed scalar wire contracts, exact LSB-first widths, value representations and atomic truncation behavior. It cannot admit spatial/compound tags or production decoding.
+R3.17C may add exactly one scalar decoder for the six admitted tags. It may not continue to a second property, actor or frame, and may not decode spatial or compound attribute families.
 
 ## R3.17A evidence identity
 
