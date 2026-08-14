@@ -23,7 +23,8 @@ R3.17E K2 evidence decision             |
 R3.17F K2 contract decision             |
 R3.17G K2 production decision           |
 R3.17H K2 differential decision         |
-R3.17I active K3 evidence spec           |
+R3.17I K3 evidence decision               |
+R3.17J active K3 contract spec            |
         |                               |
         +---------------+---------------+
                         |
@@ -57,13 +58,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 13. `docs/continuity/MIMIR_R3_17H_EXECUTION_SPEC.md`
 14. `docs/continuity/MIMIR_R3_17H_DECISION.md`
 15. `docs/continuity/MIMIR_R3_17I_EXECUTION_SPEC.md`
-16. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-17. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-18. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-19. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-20. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-21. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-22. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+16. `docs/continuity/MIMIR_R3_17I_DECISION.md`
+17. `docs/continuity/MIMIR_R3_17J_EXECUTION_SPEC.md`
+18. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+19. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+20. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+21. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+22. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+23. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+24. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -92,7 +95,13 @@ R3.13 static network lookup plan
       exact-head CI 31809282903 / 94795705073 SUCCESS
       artifact 9222624242 / sha256:d6c773d593c3c50957507a19056e85aef8b769fdc03fd88c6d693b1258c0af28
       469/469 exact on decode/variant/width/end/context/semantic; 7/7 negatives PASS
- -> R3.17I K3 spatial/physics wire evidence: ACTIVE
+ -> R3.17I K3 spatial/physics wire evidence: OUTCOME A / CLOSED
+      authority 8962ddc6bd77b5469fa7ebc93c95334e5725a8ab
+      run/job 31812804986 / 94807233173 SUCCESS
+      exact-head CI 31812804992 / 94807233091 SUCCESS
+      artifact 9223916983 / sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
+      47/47 / 1699169 occurrences / 1950 exact groups / 6276 witnesses / 0 structural failures
+ -> R3.17J K3 evidence-supported contract admission: ACTIVE / CONTRACT-ONLY
 ```
 
 ## Current capability lock
@@ -101,7 +110,7 @@ Production can natively decode exactly one already-resolved K1 scalar or one R3.
 
 R3.17H closed Outcome A without widening production: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I is evidence-only for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; native K3 decode remains closed. Property-loop continuation, next actor/frame iteration, lifecycle mutation and K4 gameplay-structured families remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew` without widening production. R3.17J is contract-only and may admit only the observed R3.17I wire/context shapes; native K3 decode remains closed. Property-loop continuation, next actor/frame iteration, lifecycle mutation and K4 gameplay-structured families remain closed.
 
 ## R3.17G production closure
 
@@ -134,6 +143,30 @@ variant / width / end       469/469 exact
 context / semantic          469/469 exact
 negative controls           7/7 PASS
 privacy scan                PASS
+production/Cargo/corpus     0/0/0 mutations
+outcome                     A
+```
+
+
+## R3.17I K3 evidence closure
+
+```text
+authority head              8962ddc6bd77b5469fa7ebc93c95334e5725a8ab
+authority run/job           31812804986 / 94807233173 SUCCESS
+exact-head normal CI        31812804992 / 94807233091 SUCCESS
+artifact                    9223916983
+artifact digest             sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
+replays                     47/47
+K3 occurrences              1699169
+exact context groups        1950
+privacy-safe witnesses      6276
+Location                    26734 / 47 replays / 7 structural shapes
+RigidBody                   1550254 / 47 replays / awake 1548807 / sleeping 1447 / quat56 only
+ReplicatedBoost             11058 / 11 replays / u8x4 / RL223=true only observed
+PickupNew                   111123 / 47 replays / None 90312 / SomeI32 20811
+zero-tag/unclassified       0/0
+bit/raw-payload failures    0/0
+privacy                     PASS
 production/Cargo/corpus     0/0/0 mutations
 outcome                     A
 ```

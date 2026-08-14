@@ -58,10 +58,10 @@ LAST_COMPLETED_CONTRACT_PASS:
   R3.17F — evidence-supported K2 object/reference/text contract / Outcome A
 
 CURRENT_PASS:
-  R3.17I — K3 spatial/physics wire-format evidence
+  R3.17J — K3 contract admission for evidence-supported shapes only
 
 CURRENT_PASS_TYPE:
-  read-only evidence / pinned-oracle instrumentation / NO production Rust change
+  contract-only / docs + test-vector planning / NO production Rust change
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -135,22 +135,38 @@ R3_17H_AUDIT_CLOSURE:
   negative controls: 7/7 PASS; privacy scan: PASS
   production/Cargo/corpus mutation: 0/0/0
 
-R3_17I_OPEN_BOUNDARY:
-  evidence-only K3 spatial/physics family: Location / RigidBody / ReplicatedBoost / PickupNew
-  use the same exact 47 supported replay identities and pinned Boxcars SHA
-  characterize exact payload start/end/width, version/context gates, field boundaries and observed shapes
-  select privacy-safe witnesses for every observed shape/context family
-  a missing/unobserved tag or ambiguous shape is Outcome B, not permission to infer a contract from oracle source
+R3_17I_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 9bfa837c69c4751f70ca63a17c65f0f89877ff32
+  authority head: 8962ddc6bd77b5469fa7ebc93c95334e5725a8ab
+  authority run/job: 31812804986 / 94807233173 SUCCESS
+  exact-head normal CI: 31812804992 / 94807233091 SUCCESS
+  artifact: 9223916983
+  artifact digest: sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
+  47/47 oracle decode; 1699169 K3 occurrences; exact groups 1950; privacy-safe witnesses 6276
+  Location: 26734 / 47 replays / 7 observed vector shapes / exact context groups 11
+  RigidBody: 1550254 / 47 replays / 1169 observed structural shapes / exact context groups 1934
+  ReplicatedBoost: 11058 / 11 replays / exact u8x4 / RL223=true observed only
+  PickupNew: 111123 / 47 replays / None=90312 / SomeI32=20811
+  RigidBody awake=1548807 / sleeping=1447 / rotation=quat56 only
+  version context: 868.32 / net10 only; Location/RigidBody/PickupNew observed in RL223 false+true
+  zero-tag/unclassified/bit-monotonicity/raw-payload failures: 0/0/0/0
+  privacy-safe output: PASS; production/Cargo/corpus mutation: 0/0/0
 
-R3_17I_HARD_STOP:
-  no production Rust implementation in the evidence pass
-  no K3 contract admission by analogy; only observed shapes may become future candidates
+R3_17J_OPEN_BOUNDARY:
+  contract-only for the R3.17I evidence-supported K3 shapes; production Rust mutation forbidden
+  freeze shared net10 vector prefix/component semantics only for observed size/header outcomes
+  freeze Location, RigidBody, ReplicatedBoost and PickupNew context gates and atomic failure behavior
+  preserve exact one-value end-bit semantics and privacy-safe evidence-derived test-vector requirements
+  unseen vector size/header outcomes, quat48, other net/version contexts and unsupported branch combinations stay closed
+
+R3_17J_HARD_STOP:
+  no native K3 implementation during contract admission
   no second property / property-loop continuation
   no K4, lifecycle, raw-state, event, skill, runtime or export widening
   no Cargo, fixture, corpus or support-lane change
 
-NEXT PASS IF R3.17I OUTCOME A:
-  R3.17J — contract admission for evidence-supported K3 shapes only
+NEXT PASS IF R3.17J OUTCOME A:
+  R3.17K — direct native K3 decoder implementation for contract-admitted variants only
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
