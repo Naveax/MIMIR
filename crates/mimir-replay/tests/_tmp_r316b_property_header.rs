@@ -86,11 +86,19 @@ fn r3_16b_payload_bits_are_opaque_and_do_not_change_header_result() {
 
 #[test]
 fn r3_16b_unresolved_stream_fails_closed() {
-    let plan = sample_001_lookup_plan();
+    let mut plan = sample_001_lookup_plan();
+    let actor_lookup = plan
+        .object_lookups
+        .get_mut(47)
+        .and_then(Option::as_mut)
+        .expect("sample_001 actor object 47 lookup");
+    assert!(actor_lookup.properties.iter().any(|property| property.stream_id == 0));
+    actor_lookup.properties.retain(|property| property.stream_id != 0);
+
     let error = decode_replay_network_existing_actor_first_property_header_v1(
         &[0x01], 0, 47, &plan,
     )
-    .expect_err("stream zero must not be guessed into a property");
+    .expect_err("synthetically unmapped stream zero must fail closed");
 
     assert!(format!("{error}").contains("unresolved-stream-id"));
 }
