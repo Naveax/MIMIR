@@ -40,7 +40,10 @@ jobs:
           docs/continuity/MIMIR_R3_17H_DECISION.md
           docs/continuity/MIMIR_R3_17I_EXECUTION_SPEC.md
           EOF
-          git diff --name-only "$BASE" | sort > "$RUNNER_TEMP/actual.txt"
+          {
+            git diff --name-only "$BASE"
+            git ls-files --others --exclude-standard
+          } | sort -u > "$RUNNER_TEMP/actual.txt"
           sort "$RUNNER_TEMP/expected.txt" > "$RUNNER_TEMP/expected-sorted.txt"
           diff -u "$RUNNER_TEMP/expected-sorted.txt" "$RUNNER_TEMP/actual.txt"
           git diff --check
