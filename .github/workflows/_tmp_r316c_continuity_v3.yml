@@ -1,0 +1,84 @@
+name: R3.16C Continuity Admission v3
+
+on:
+  push:
+    branches:
+      - agent/r3-16c-continuity-sync
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout disposable branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply R3.16C continuity repair
+        shell: pwsh
+        run: |
+          python tools/_tmp_r316c_continuity_sync.py
+          if ($LASTEXITCODE -ne 0) { throw "R3.16C continuity patch failed" }
+          $docs = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_16B_DECISION.md',
+            'docs/continuity/MIMIR_R3_16C_EXECUTION_SPEC.md',
+            'docs/continuity/MIMIR_R3_16C_DECISION.md',
+            'docs/continuity/MIMIR_R3_17A_EXECUTION_SPEC.md'
+          )
+          foreach ($path in $docs) {
+            $raw = [System.IO.File]::ReadAllText($path)
+            $raw = [System.Text.RegularExpressions.Regex]::Replace($raw, '[ \t]+(?=\r?$)', '', [System.Text.RegularExpressions.RegexOptions]::Multiline)
+            [System.IO.File]::WriteAllText($path, $raw, [System.Text.UTF8Encoding]::new($false))
+          }
+          Write-Host 'R3_16C_FULL_DOC_WHITESPACE_NORMALIZATION=PASS'
+
+      - name: Verify exact docs-only scope before validation
+        shell: pwsh
+        run: |
+          $allowed = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_16B_DECISION.md',
+            'docs/continuity/MIMIR_R3_16C_EXECUTION_SPEC.md',
+            'docs/continuity/MIMIR_R3_16C_DECISION.md',
+            'docs/continuity/MIMIR_R3_17A_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $changed = @(git status --porcelain | ForEach-Object { $_.Substring(3) } | Sort-Object)
+          if ($LASTEXITCODE -ne 0) { throw "git status failed" }
+          if (($changed -join "`n") -ne ($allowed -join "`n")) {
+            Write-Host "Expected:"; $allowed | ForEach-Object { Write-Host "  $_" }
+            Write-Host "Observed:"; $changed | ForEach-Object { Write-Host "  $_" }
+            throw "R3.16C scope drift before validation"
+          }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "R3.16C diff check failed" }
+          Write-Host "R3_16C_PREVALIDATION_SCOPE=PASS"
+
+      - name: Knowledge continuity verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed" }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed" }
+
+      - name: Publish clean R3.16C candidate
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tools/_tmp_r316c_publish_clean.ps1
+          if ($LASTEXITCODE -ne 0) { throw "R3.16C clean publisher failed" }
