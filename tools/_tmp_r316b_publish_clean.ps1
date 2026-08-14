@@ -53,10 +53,15 @@ Copy-Item -LiteralPath $testCopy -Destination $permanentTest -Force
 
 cargo fmt --all
 if ($LASTEXITCODE -ne 0) { throw "clean candidate rustfmt failed" }
-git diff --check -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_16b_property_header.rs
-if ($LASTEXITCODE -ne 0) { throw "clean candidate diff check failed" }
 
-$changed = @(git diff --name-only $baseSha --)
+# Stage exactly the intended production/test files before path accounting. The permanent test is a
+# new file on the canonical base, so an unstaged `git diff` would deliberately omit it.
+git add -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_16b_property_header.rs
+if ($LASTEXITCODE -ne 0) { throw "clean candidate staging failed" }
+git diff --cached --check
+if ($LASTEXITCODE -ne 0) { throw "clean candidate staged diff check failed" }
+
+$changed = @(git diff --cached --name-only $baseSha --)
 $expected = @(
     "crates/mimir-replay/src/lib.rs",
     "crates/mimir-replay/tests/r3_16b_property_header.rs"
@@ -78,9 +83,14 @@ if ($sourceHash -ne "186eb5c2d25a42c6028e4149adbb8fa5ac2807c4f1d187ab389ce565a7a
 cargo test --locked -p mimir-replay --test r3_16b_property_header -- --nocapture
 if ($LASTEXITCODE -ne 0) { throw "clean candidate focused tests failed" }
 
-git add -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_16b_property_header.rs
+# Focused testing must not introduce additional tracked changes outside the staged two-file set.
+$unstaged = @(git diff --name-only --)
+if ($unstaged.Count -ne 0) {
+    throw "clean candidate focused test introduced unstaged changes: $($unstaged -join ', ')"
+}
 git diff --cached --check
-if ($LASTEXITCODE -ne 0) { throw "clean candidate staged diff check failed" }
+if ($LASTEXITCODE -ne 0) { throw "clean candidate staged diff drifted after focused test" }
+
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git commit -m "Implement R3.16B existing-actor property header"
