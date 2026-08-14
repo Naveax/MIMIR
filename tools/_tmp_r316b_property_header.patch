@@ -1,7 +1,7 @@
 diff --git a/crates/mimir-replay/src/lib.rs b/crates/mimir-replay/src/lib.rs
 --- a/crates/mimir-replay/src/lib.rs
 +++ b/crates/mimir-replay/src/lib.rs
-@@ -1298,6 +1298,156 @@ impl ReplayNetworkLookupPlanReader for MinimalReplayNetworkLookupPlanReader {
+@@ -1298,6 +1298,186 @@ impl ReplayNetworkLookupPlanReader for MinimalReplayNetworkLookupPlanReader {
      }
  }
  
