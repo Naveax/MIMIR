@@ -42,6 +42,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "R3.16B patched diff check failed" }
           git diff --quiet -- crates/mimir-replay/src/lib.rs
           if ($LASTEXITCODE -eq 0) { throw "R3.16B semantic patch produced no production diff" }
+          $global:LASTEXITCODE = 0
+          Write-Host "R3_16B_SEMANTIC_PATCH=PASS"
 
       - name: Toolchain
         shell: pwsh
