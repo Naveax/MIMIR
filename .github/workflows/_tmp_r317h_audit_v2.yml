@@ -23,13 +23,13 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: bash tools/_tmp_r317h_run.sh
+        run: bash tools/_tmp_r317h_run_v3.sh
 
       - name: Upload privacy-safe R3.17H audit evidence
         id: audit_upload
         uses: actions/upload-artifact@v4
         with:
-          name: r317h-native-k2-differential-v2
+          name: r317h-native-k2-differential-v3
           path: |
             r3_17h_source_scope.txt
             r3_17h_replay_identity.tsv
