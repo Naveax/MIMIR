@@ -1,7 +1,7 @@
 use mimir_replay::{
-    decode_replay_network_primitive_scalar_v1, MinimalReplayContentScaffoldReader,
-    ReplayContentScaffoldReader, ReplayInput, ReplayNetworkAttributeTagV1,
-    ReplayNetworkPrimitiveScalarValueV1,
+    MinimalReplayContentScaffoldReader, ReplayContentScaffoldReader, ReplayInput,
+    ReplayNetworkAttributeTagV1, ReplayNetworkPrimitiveScalarValueV1,
+    decode_replay_network_primitive_scalar_v1,
 };
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -64,7 +64,11 @@ fn load_witnesses(path: &Path) -> Vec<WitnessRow> {
 fn native_value_repr(value: &ReplayNetworkPrimitiveScalarValueV1) -> String {
     match value {
         ReplayNetworkPrimitiveScalarValueV1::Boolean(value) => {
-            if *value { "1".to_owned() } else { "0".to_owned() }
+            if *value {
+                "1".to_owned()
+            } else {
+                "0".to_owned()
+            }
         }
         ReplayNetworkPrimitiveScalarValueV1::Byte(value) => value.to_string(),
         ReplayNetworkPrimitiveScalarValueV1::Enum(value) => value.to_string(),
@@ -89,7 +93,11 @@ fn r3_17d_native_scalar_decoder_matches_all_96_frozen_r3_17a_witnesses() {
         .unwrap_or_else(|| root.join("target/r317d_comparison.tsv"));
 
     let rows = load_witnesses(&witness_path);
-    assert_eq!(rows.len(), 96, "R3.17D requires the exact 96 frozen witnesses");
+    assert_eq!(
+        rows.len(),
+        96,
+        "R3.17D requires the exact 96 frozen witnesses"
+    );
 
     let mut tag_counts: BTreeMap<String, usize> = BTreeMap::new();
     for row in &rows {
@@ -139,19 +147,19 @@ fn r3_17d_native_scalar_decoder_matches_all_96_frozen_r3_17a_witnesses() {
                 row.tag_name
             );
 
-            let native = decode_replay_network_primitive_scalar_v1(
-                network,
-                row.payload_start_bit,
-                row.tag,
-            )
-            .unwrap_or_else(|error| {
-                panic!(
-                    "{relative_path} {} @{} native decode: {error}",
-                    row.tag_name, row.payload_start_bit
-                )
-            });
+            let native =
+                decode_replay_network_primitive_scalar_v1(network, row.payload_start_bit, row.tag)
+                    .unwrap_or_else(|error| {
+                        panic!(
+                            "{relative_path} {} @{} native decode: {error}",
+                            row.tag_name, row.payload_start_bit
+                        )
+                    });
 
-            assert_eq!(native.attribute_tag, row.tag, "{relative_path}: attribute tag");
+            assert_eq!(
+                native.attribute_tag, row.tag,
+                "{relative_path}: attribute tag"
+            );
             assert_eq!(
                 native.payload_start_bit, row.payload_start_bit,
                 "{relative_path} {}: payload_start_bit",
