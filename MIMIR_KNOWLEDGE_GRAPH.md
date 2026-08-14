@@ -19,7 +19,8 @@ docs/continuity/                MIMIR_ALL_SOURCES_SUPERBOOK.md
 CURRENT_STATE + STATE.json              |
 R3.17C production decision              |
 R3.17D differential decision            |
-R3.17E K2 execution spec                |
+R3.17E K2 evidence decision             |
+R3.17F active contract spec             |
         |                               |
         +---------------+---------------+
                         |
@@ -45,13 +46,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 5. `docs/continuity/MIMIR_R3_17D_EXECUTION_SPEC.md`
 6. `docs/continuity/MIMIR_R3_17D_DECISION.md`
 7. `docs/continuity/MIMIR_R3_17E_EXECUTION_SPEC.md`
-8. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-9. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-10. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-11. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-12. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-13. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-14. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+8. `docs/continuity/MIMIR_R3_17E_DECISION.md`
+9. `docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md`
+10. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+11. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+12. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+13. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+14. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+15. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+16. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -60,36 +63,46 @@ R3.13 static network lookup plan
  -> R3.14 actor envelope primitives
  -> R3.15 NewActor branch
  -> R3.16 existing-actor first-property header
- -> R3.17A-D K1 primitive scalar wave: EVIDENCE + CONTRACT + PRODUCTION + 96/96 AUDIT CLOSED
-      production SHA c3d4c73ca34febb9f0383c59132a8bc8a363b06b
-      source blob 54e1bfb918ec1bd42a61cfa0131ca27412082ac5
-      R3.17D authority 31798478106 / 94760722134 SUCCESS
-      exact comparison f10fa74e2975e1d13c8f23c5a570409667b0c4057428439a414b47f8aaa39f73
- -> R3.17E K2 object/reference/text wire-format evidence: ACTIVE
+ -> R3.17A-D K1 primitive scalar wave: CLOSED
+      production c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+      R3.17D 31798478106 / 94760722134 SUCCESS / 96/96 exact
+ -> R3.17E K2 object/reference/text evidence: OUTCOME A / CLOSED
+      evidence 19db534a3668f84f1c5ce36ef1252c52841d890f
+      authority 31801482588 / 94770260529 SUCCESS
+      artifact 9219554878 / sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
+      47/47 / 110539 K2 occurrences / 0 structural failures
+ -> R3.17F evidence-supported K2 contract admission: ACTIVE
 ```
 
 ## Current capability lock
 
-MIMIR may natively decode exactly one already-resolved K1 primitive scalar payload for Boolean, Byte, Enum, Float, Int or Int64. K2 (`ActiveActor`, `String`, `QWordString`, `UniqueId`, `PartyLeader`) remains evidence-only and has no native payload permission.
+Production remains exactly at R3.17C: one already-resolved K1 primitive scalar payload may be decoded natively. R3.17E admitted K2 evidence, not native K2 production capability.
+
+R3.17F may freeze contracts only for observed K2 semantic variants. Unseen variants remain closed. PartyLeader `None` and non-Epic PartyLeader variants are not authorized by R3.17E.
 
 Property-loop continuation, next actor/frame iteration, lifecycle mutation, K3 spatial/physics and K4 gameplay-structured families remain closed.
 
-## R3.17D closure identity
+## R3.17E closure identity
 
 ```text
-evidence head              e8f1522fb6289368bbd254d2f839091452377e9e
-authority run/job          31798478106 / 94760722134 SUCCESS
-normal CI                  31798478071 / 94760722233 SUCCESS
-artifact                   9218372907
-artifact SHA256            db049fbfd8514bb1cd661ab6b73ddf517d9786e961d764e62bc4e6137ce83e6f
-identity TSV SHA256        b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
-witness JSONL SHA256       b2e8800e55fd3760f77b7ac880aa2147f93d0aa00f65a0911cdbb89415ac68d9
-witness TSV SHA256         ee7f1baaa7696056172e28da2fed0848975ff1d2440113bb4d242f49d0b9da6e
-comparison TSV SHA256      f10fa74e2975e1d13c8f23c5a570409667b0c4057428439a414b47f8aaa39f73
-aggregate SHA256           fcc1d93ff55f3cee89211fc77a2842adca33f32f94705390610edf749df1540d
-receipt file SHA256        c86e904254c6ce5a1eeeff03df9f9961ffd9169fce391d34849b54ddfccbe268
-exact native match         96/96
-receipt stream             PASS
+evidence head              19db534a3668f84f1c5ce36ef1252c52841d890f
+authority run/job          31801482588 / 94770260529 SUCCESS
+normal CI                  31801482499 / 94770260054 SUCCESS
+artifact                   9219554878
+artifact digest            sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
+aggregate SHA256           335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751
+summary SHA256             9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e
+oracle JSONL SHA256        196f4e4d2a588137ad12372cb2f0af79d7fca422c0bc2c5dea95506fa72cac4d
+witness JSONL SHA256       7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b
+receipt manifest SHA256    400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc
+47/47 oracle decode        PASS
+K2 occurrences             110539
+shape/unclassified         0
+bit monotonicity failures  0
+raw-payload shape failures 0
+privacy-safe output        PASS
+production/Cargo/corpus    0/0/0 mutations
+outcome                    A
 ```
 
 ## Authority rule

@@ -52,19 +52,16 @@ LAST_PRODUCTION_MILESTONE:
   R3.17C — native primitive scalar attribute decoder implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.17D — primitive scalar native differential / Outcome A / 96/96 exact
-
-LAST_COMPLETED_CONTINUITY_CHECK:
-  R3.16C — post-implementation continuity repair and capability-boundary check
+  R3.17E — K2 object/reference/text wire evidence / Outcome A / 47/47 / 110539 occurrences
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17B — primitive scalar attribute wire contract / Outcome A
 
 CURRENT_PASS:
-  R3.17E — object/reference/text attribute wire-format evidence
+  R3.17F — evidence-supported K2 object/reference/text contract admission
 
 CURRENT_PASS_TYPE:
-  evidence-only / pinned oracle instrumentation / NO production Rust change
+  contract-only / NO production Rust capability widening
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -77,47 +74,45 @@ PINNED_BOXCARS_ORACLE:
   exact SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
 
 CURRENT_PRODUCTION_HARD_STOP:
-  one already-resolved primitive scalar payload may be decoded natively
+  one already-resolved K1 primitive scalar payload may be decoded natively
   stop exactly at payload_end_bit / stop_bit after that one scalar
-  NO second property, next actor, next frame, K2 object/reference/text, compound or spatial family is admitted
+  NO native K2 decoder, second property, next actor, next frame, K3 or K4 family is admitted
 
-R3_17C_PRODUCTION_CLOSURE:
-  production SHA: c3d4c73ca34febb9f0383c59132a8bc8a363b06b
-  source Git blob: 54e1bfb918ec1bd42a61cfa0131ca27412082ac5
-  focused tests: 11/11 PASS
-  published-main CI: 31796509896 / 94754670068 SUCCESS
-  published-main Knowledge Archive: 31796560814 / 94754827522 SUCCESS
+R3_17E_EVIDENCE_CLOSURE:
+  evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
+  authority run/job: 31801482588 / 94770260529 SUCCESS
+  exact-head normal CI: 31801482499 / 94770260054 SUCCESS
+  artifact: 9219554878
+  artifact digest: sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
+  47/47 oracle decode; 110539 K2 occurrences
+  ActiveActor: 86200; String: 14670; QWordString: 2920; UniqueId: 6443; PartyLeader: 306
+  shape/unclassified: 0; bit monotonicity: 0; raw-payload-shape failures: 0
+  privacy-safe output: PASS
+  production/Cargo/corpus mutation: 0/0/0
+  aggregate SHA256: 335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751
+  summary SHA256: 9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e
+  oracle JSONL SHA256: 196f4e4d2a588137ad12372cb2f0af79d7fca422c0bc2c5dea95506fa72cac4d
+  witnesses JSONL SHA256: 7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b
+  receipt manifest SHA256: 400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc
 
-R3_17D_EVIDENCE_CLOSURE:
-  exact evidence head: e8f1522fb6289368bbd254d2f839091452377e9e
-  authority run/job: 31798478106 / 94760722134 SUCCESS
-  exact-head normal CI: 31798478071 / 94760722233 SUCCESS
-  frozen witness rows: 96
-  native decode success: 96
-  exact match: 96/96
-  mismatch/native/identity/unsupported errors: 0
-  production/Cargo/corpus mutation: 0
-  comparison SHA256: f10fa74e2975e1d13c8f23c5a570409667b0c4057428439a414b47f8aaa39f73
-  artifact: 9218372907 / sha256:db049fbfd8514bb1cd661ab6b73ddf517d9786e961d764e62bc4e6137ce83e6f
-  immutable receipt stream: PASS
+R3_17F_OPEN_BOUNDARY:
+  contract only for R3.17E-observed K2 semantic variants
+  ActiveActor33
+  String observed Empty / Windows1252 / UTF16 branches
+  QWordString observed legacy QWord64 + RL223 Windows1252 branches
+  UniqueId observed Steam / PlayStation / PsyNet / Epic shapes only
+  PartyLeader only observed Some(Epic, Windows1252 declared=33)
+  unseen variants remain unadmitted
 
-R3_17E_OPEN_BOUNDARY:
-  roadmap wave K2 only: ActiveActor / String / QWordString / UniqueId / PartyLeader
-  measure real supported-corpus occurrence counts before selecting witnesses
-  record exact payload start/end bits, lossless values/bytes, object-reference behavior, text encoding/version gates and truncation structure
-  zero-observation or ambiguous-shape tags remain unadmitted
-
-R3_17E_HARD_STOP:
-  production Rust unchanged
-  no native K2 decoder
+R3_17F_HARD_STOP:
+  no production K2 implementation in the contract pass
+  no inferred unseen K2 variants
   no second property / property-loop continuation
-  no spatial/physics K3 or gameplay-structured K4 family
-  no actor/frame iteration or lifecycle mutation
-  no raw-state/event/skill/runtime/export widening
+  no K3/K4, lifecycle, raw-state, event, skill, runtime or export widening
   no Cargo, fixture, corpus or support-lane change
 
-NEXT PASS IF R3.17E OUTCOME A:
-  R3.17F — object/reference/text attribute contract admission for evidence-supported K2 tags only
+NEXT PASS IF R3.17F OUTCOME A:
+  R3.17G — direct native K2 decoder implementation for contract-admitted variants only
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
