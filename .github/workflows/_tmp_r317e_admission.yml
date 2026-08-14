@@ -1,0 +1,139 @@
+name: R3.17E Clean Evidence Admission
+
+on:
+  push:
+    branches:
+      - agent/r317e-admission-sync
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  admission:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout disposable admission branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply R3.17E admission sync
+        shell: pwsh
+        run: |
+          python tools/_tmp_r317e_admission_sync.py
+          if ($LASTEXITCODE -ne 0) { throw "R3.17E admission sync failed" }
+
+      - name: Verify exact six-file continuity scope
+        shell: pwsh
+        run: |
+          $allowed = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_17E_DECISION.md',
+            'docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $changed = @(git status --porcelain | ForEach-Object { $_.Substring(3) } | Sort-Object)
+          if ($LASTEXITCODE -ne 0) { throw "git status failed" }
+          if (($changed -join "`n") -ne ($allowed -join "`n")) {
+            Write-Host "Expected:"; $allowed | ForEach-Object { Write-Host "  $_" }
+            Write-Host "Observed:"; $changed | ForEach-Object { Write-Host "  $_" }
+            throw "R3.17E admission scope drift"
+          }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "R3.17E admission diff check failed" }
+          Write-Host 'R3_17E_ADMISSION_SCOPE=PASS'
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed" }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed" }
+
+      - name: Publish clean R3.17E admission candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = 'cfe4882f99dbce5e8148e476c177a0586b1e7986'
+          $candidate = 'candidate/r3-17e-admission-clean'
+          $allowed = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_17E_DECISION.md',
+            'docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md'
+          ) | Sort-Object
+
+          git ls-remote --exit-code --heads origin "refs/heads/$candidate" *> $null
+          if ($LASTEXITCODE -eq 0) { throw "clean candidate already exists" }
+          $global:LASTEXITCODE = 0
+
+          $changed = @(git status --porcelain | ForEach-Object { $_.Substring(3) } | Sort-Object)
+          if (($changed -join "`n") -ne ($allowed -join "`n")) { throw "post-validation scope drift" }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "post-validation diff check failed" }
+
+          $stashRoot = Join-Path $env:RUNNER_TEMP 'r317e-admission-clean'
+          Remove-Item -Recurse -Force $stashRoot -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force $stashRoot | Out-Null
+          foreach ($rel in $allowed) {
+            $src = Join-Path $PWD $rel
+            if (-not (Test-Path -LiteralPath $src -PathType Leaf)) { throw "missing admission file: $rel" }
+            $dst = Join-Path $stashRoot $rel
+            New-Item -ItemType Directory -Force (Split-Path -Parent $dst) | Out-Null
+            Copy-Item -LiteralPath $src -Destination $dst
+          }
+
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch origin main failed" }
+          $freshMain = (git rev-parse origin/main).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "git rev-parse origin/main failed" }
+          if ($freshMain -ne $base) { throw "canonical main drifted: expected $base got $freshMain" }
+
+          git reset --hard $base
+          if ($LASTEXITCODE -ne 0) { throw "git reset failed" }
+          git clean -fd
+          if ($LASTEXITCODE -ne 0) { throw "git clean failed" }
+          git switch -c $candidate $base
+          if ($LASTEXITCODE -ne 0) { throw "candidate branch creation failed" }
+
+          foreach ($rel in $allowed) {
+            $src = Join-Path $stashRoot $rel
+            $dst = Join-Path $PWD $rel
+            New-Item -ItemType Directory -Force (Split-Path -Parent $dst) | Out-Null
+            Copy-Item -LiteralPath $src -Destination $dst
+          }
+
+          git add -- $allowed
+          if ($LASTEXITCODE -ne 0) { throw "git add failed" }
+          $staged = @(git diff --cached --name-only | Sort-Object)
+          if ($LASTEXITCODE -ne 0) { throw "staged path query failed" }
+          if (($staged -join "`n") -ne ($allowed -join "`n")) {
+            Write-Host "Expected staged:"; $allowed | ForEach-Object { Write-Host "  $_" }
+            Write-Host "Observed staged:"; $staged | ForEach-Object { Write-Host "  $_" }
+            throw "clean candidate staged scope mismatch"
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate diff check failed" }
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Admit R3.17E and open R3.17F'
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate commit failed" }
+          $candidateSha = (git rev-parse HEAD).Trim()
+          Write-Host "R3_17E_ADMISSION_CANDIDATE_SHA=$candidateSha"
+
+          git push origin "HEAD:refs/heads/$candidate"
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate push failed" }
+          Write-Host 'R3_17E_ADMISSION_CLEAN_PUBLISH=PASS'
