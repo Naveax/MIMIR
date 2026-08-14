@@ -1,0 +1,160 @@
+name: R3.17A Primitive Scalar Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r317a-primitive-scalar-attributes
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout evidence branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen production and replay identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_SHA='ded95e8ae512876b46453585be05b8358025314a'
+          PROD_BLOB='625ab2322e35f5f835871d42b9efeb04f5c299ab'
+          PATHS_SHA='2ecbeea804f193796a539baee1e968719f03c0cd706efff0c22a61e6ef943dae'
+          IDENTITY_SHA='b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf'
+
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$PROD_BLOB"
+          git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null || git fetch --quiet --depth=1 origin "$BASE_SHA"
+          git diff --exit-code "$BASE_SHA"..HEAD -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          test "$(sha256sum tools/_tmp_r317a_paths.txt | awk '{print $1}')" = "$PATHS_SHA"
+          test "$(sha256sum tools/_tmp_r317a_identity.tsv | awk '{print $1}')" = "$IDENTITY_SHA"
+
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          paths = [x.strip().replace('\\','/') for x in Path('tools/_tmp_r317a_paths.txt').read_text(encoding='utf-8').splitlines() if x.strip()]
+          if len(paths) != 47 or len(set(paths)) != 47:
+              raise SystemExit(f'expected 47 unique replay paths, got {len(paths)}')
+          ids = {}
+          for line in Path('tools/_tmp_r317a_identity.tsv').read_text(encoding='utf-8').splitlines():
+              if not line.strip():
+                  continue
+              fields = line.split('\t')
+              if len(fields) != 3 or fields[2] != 'PASS':
+                  raise SystemExit(f'bad identity row: {line!r}')
+              ids[fields[0].replace('\\','/')] = fields[1].lower()
+          if set(paths) != set(ids):
+              raise SystemExit('selector/identity set mismatch')
+          def sha256(path: Path) -> str:
+              h = hashlib.sha256()
+              with path.open('rb') as handle:
+                  for chunk in iter(lambda: handle.read(1 << 20), b''):
+                      h.update(chunk)
+              return h.hexdigest()
+          for rel in paths:
+              path = Path(rel)
+              if not path.is_file():
+                  raise SystemExit(f'missing replay: {rel}')
+              actual = sha256(path)
+              if actual != ids[rel]:
+                  raise SystemExit(f'SHA mismatch for {rel}: {actual} != {ids[rel]}')
+          Path('r3_17a_replay_identity.tsv').write_text(
+              ''.join(f'{rel}\t{ids[rel]}\tPASS\n' for rel in paths),
+              encoding='utf-8', newline='\n'
+          )
+          print('R3_17A_SELECTOR_IDENTITY=PASS rows=47')
+          PY
+
+          printf 'base_sha=%s\nproduction_source_blob=%s\nproduction_mutation_count=0\ncargo_mutation_count=0\ncorpus_mutation_count=0\n' "$BASE_SHA" "$PROD_BLOB" > r3_17a_source_scope.txt
+          git diff --name-only "$BASE_SHA"..HEAD | sort >> r3_17a_source_scope.txt
+
+      - name: Build pinned Boxcars scalar oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS_SHA='c70e77df7af81b436cb545d070bb90c82f562d0b'
+          FRAME_BLOB='6f2ff153d3a27cdacccc65e3f23851489077a7d8'
+          ATTR_BLOB='5e2d5bc1cd8187af30c3ea95193ad987645cb76e'
+          BOXCARS="$PWD/.tmp/boxcars-r317a"
+          rm -rf "$BOXCARS"
+          mkdir -p .tmp
+          git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+          git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" rev-parse HEAD)" = "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" hash-object src/network/frame_decoder.rs)" = "$FRAME_BLOB"
+          test "$(git -C "$BOXCARS" hash-object src/network/attributes.rs)" = "$ATTR_BLOB"
+
+          python tools/_tmp_r317a_patch.py "$BOXCARS"
+          git -C "$BOXCARS" add -N examples/r3_17a_probe.rs
+          git -C "$BOXCARS" diff --check
+          git -C "$BOXCARS" diff --binary -- src/network/frame_decoder.rs examples/r3_17a_probe.rs Cargo.toml > r3_17a_boxcars_instrumentation.patch
+          sha256sum r3_17a_boxcars_instrumentation.patch > r3_17a_boxcars_instrumentation_sha256.txt
+          sha256sum tools/_tmp_r317a_patch.py tools/_tmp_r317a_analyze.py tools/_tmp_r317a_paths.txt tools/_tmp_r317a_identity.tsv > r3_17a_driver_sha256.txt
+
+          cargo check --manifest-path "$BOXCARS/Cargo.toml" --example r3_17a_probe
+          cargo test --manifest-path "$BOXCARS/Cargo.toml" --lib --quiet
+          cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_17a_probe --quiet
+          echo "R3_17A_BOXCARS_BUILD=PASS"
+
+      - name: Scan exact 47 replay lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r317a"
+          EXE=''
+          case "${OSTYPE:-}" in msys*|cygwin*) EXE='.exe' ;; esac
+          PROBE="$BOXCARS/target/debug/examples/r3_17a_probe$EXE"
+          test -x "$PROBE"
+          : > r3_17a_boxcars.log
+          while IFS= read -r rel; do
+            test -n "$rel"
+            MIMIR_R3_17A_LABEL="$rel" "$PROBE" "$PWD/$rel" >> r3_17a_boxcars.log 2>&1
+          done < tools/_tmp_r317a_paths.txt
+          test "$(grep -c '^R3_17A_ORACLE_PARSE=PASS$' r3_17a_boxcars.log)" -eq 47
+          sha256sum r3_17a_boxcars.log > r3_17a_boxcars_log_sha256.txt
+          echo "R3_17A_47_REPLAY_SCAN=PASS"
+
+      - name: Analyze scalar wire evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_r317a_analyze.py r3_17a_boxcars.log
+          grep -Fx 'R3_17A_OUTCOME=A' r3_17a_aggregate.txt
+          grep -Fx 'R3_17A_EVIDENCE=PASS' r3_17a_aggregate.txt
+          echo 'R3_17A_ANALYSIS=PASS'
+
+      - name: Final no-mutation gate and bounded receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_SHA='ded95e8ae512876b46453585be05b8358025314a'
+          PROD_BLOB='625ab2322e35f5f835871d42b9efeb04f5c299ab'
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$PROD_BLOB"
+          git diff --exit-code "$BASE_SHA"..HEAD -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          printf 'R3_17A_PRODUCTION_MUTATION=0\nR3_17A_CARGO_MUTATION=0\nR3_17A_CORPUS_MUTATION=0\n'
+          cat r3_17a_aggregate.txt
+          echo 'R3_17A_RECEIPT=PASS'
+
+      - name: Upload R3.17A evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r317a-primitive-scalar-evidence
+          path: |
+            r3_17a_source_scope.txt
+            r3_17a_replay_identity.tsv
+            r3_17a_boxcars_instrumentation.patch
+            r3_17a_boxcars_instrumentation_sha256.txt
+            r3_17a_driver_sha256.txt
+            r3_17a_boxcars_log_sha256.txt
+            r3_17a_scalar_oracle.jsonl
+            r3_17a_scalar_witnesses.jsonl
+            r3_17a_summary.json
+            r3_17a_aggregate.txt
+          if-no-files-found: warn
+          retention-days: 1
