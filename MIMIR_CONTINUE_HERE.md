@@ -55,13 +55,13 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.17H — native K2 differential audit / Outcome A / 469 of 469 exact / 7 of 7 negatives
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.17F — evidence-supported K2 object/reference/text contract / Outcome A
+  R3.17J — evidence-supported K3 spatial/physics contract / Outcome A / 1950 exact groups
 
 CURRENT_PASS:
-  R3.17J — K3 contract admission for evidence-supported shapes only
+  R3.17K — direct native K3 decoder implementation for contract-admitted variants only
 
 CURRENT_PASS_TYPE:
-  contract-only / docs + test-vector planning / NO production Rust change
+  production implementation / direct one-value K3 decoder + exhaustive focused tests
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -152,21 +152,32 @@ R3_17I_EVIDENCE_CLOSURE:
   zero-tag/unclassified/bit-monotonicity/raw-payload failures: 0/0/0/0
   privacy-safe output: PASS; production/Cargo/corpus mutation: 0/0/0
 
-R3_17J_OPEN_BOUNDARY:
-  contract-only for the R3.17I evidence-supported K3 shapes; production Rust mutation forbidden
-  freeze shared net10 vector prefix/component semantics only for observed size/header outcomes
-  freeze Location, RigidBody, ReplicatedBoost and PickupNew context gates and atomic failure behavior
-  preserve exact one-value end-bit semantics and privacy-safe evidence-derived test-vector requirements
-  unseen vector size/header outcomes, quat48, other net/version contexts and unsupported branch combinations stay closed
+R3_17J_CONTRACT_CLOSURE:
+  Outcome A / docs-only / production Rust unchanged
+  exact context: version 868.32 / net10; RL223 acceptance remains tag/shape-specific
+  common rule: LSB-first, unaligned allowed, checked arithmetic, atomic failure, exact one-value end
+  shared vector codec: net10 4-bit low + conditional discriminator; selected size 20/21 rejected
+  exact durable groups: 1950 = Location 11 + RigidBody 1934 + PickupNew 4 + ReplicatedBoost 1
+  RigidBody: sleeping bit + location + quat56 + awake-only linear/angular; quat48 rejected
+  exact structural allowlist SHA256: 9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+  cross-product widening: 0
+  production/Cargo/corpus mutation: 0/0/0
 
-R3_17J_HARD_STOP:
-  no native K3 implementation during contract admission
+R3_17K_OPEN_BOUNDARY:
+  implement separate direct one-value K3 API for Location / RigidBody / ReplicatedBoost / PickupNew
+  preserve exact 1950-entry structural/context allowlist; do not replace it with field-range unions
+  focused tests synthesize every admitted group and exhaustively reject absent current-lane tuples
+  exact end-bit + rollback semantics remain mandatory
+  preferred production scope: lib.rs + k3_admitted_groups.rs + r3_17k focused integration test
+
+R3_17K_HARD_STOP:
   no second property / property-loop continuation
-  no K4, lifecycle, raw-state, event, skill, runtime or export widening
+  no next actor / next frame / lifecycle mutation
+  no K4, raw-state, event, replay-slice, skill, runtime or export widening
   no Cargo, fixture, corpus or support-lane change
 
-NEXT PASS IF R3.17J OUTCOME A:
-  R3.17K — direct native K3 decoder implementation for contract-admitted variants only
+NEXT PASS IF R3.17K OUTCOME A IS PUBLISHED:
+  R3.17L — native K3 differential audit against regenerated immutable R3.17I witness identities
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

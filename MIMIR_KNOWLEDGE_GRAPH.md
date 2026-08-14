@@ -24,7 +24,8 @@ R3.17F K2 contract decision             |
 R3.17G K2 production decision           |
 R3.17H K2 differential decision         |
 R3.17I K3 evidence decision               |
-R3.17J active K3 contract spec            |
+R3.17J K3 contract decision               |
+R3.17K active K3 implementation spec      |
         |                               |
         +---------------+---------------+
                         |
@@ -60,13 +61,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 15. `docs/continuity/MIMIR_R3_17I_EXECUTION_SPEC.md`
 16. `docs/continuity/MIMIR_R3_17I_DECISION.md`
 17. `docs/continuity/MIMIR_R3_17J_EXECUTION_SPEC.md`
-18. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-19. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-20. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-21. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-22. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-23. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-24. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+18. `docs/continuity/MIMIR_R3_17J_DECISION.md`
+19. `docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json`
+20. `docs/continuity/MIMIR_R3_17K_EXECUTION_SPEC.md`
+21. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+22. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+23. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+24. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+25. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+26. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+27. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -101,7 +105,11 @@ R3.13 static network lookup plan
       exact-head CI 31812804992 / 94807233091 SUCCESS
       artifact 9223916983 / sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
       47/47 / 1699169 occurrences / 1950 exact groups / 6276 witnesses / 0 structural failures
- -> R3.17J K3 evidence-supported contract admission: ACTIVE / CONTRACT-ONLY
+ -> R3.17J K3 evidence-supported contract admission: OUTCOME A / CLOSED
+      exact groups 1950 / cross-product widening 0
+      allowlist sha256:9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+      quat48 + vector20/21 + Boost RL223=false remain rejected
+ -> R3.17K direct native K3 decoder implementation: ACTIVE
 ```
 
 ## Current capability lock
@@ -110,7 +118,7 @@ Production can natively decode exactly one already-resolved K1 scalar or one R3.
 
 R3.17H closed Outcome A without widening production: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew` without widening production. R3.17J is contract-only and may admit only the observed R3.17I wire/context shapes; native K3 decode remains closed. Property-loop continuation, next actor/frame iteration, lifecycle mutation and K4 gameplay-structured families remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew` without widening production. R3.17J then froze exactly 1,950 structural/context groups with zero cross-product widening. R3.17K is the active production implementation pass; native K3 decode remains closed until that clean implementation is published and validated. Property-loop continuation, next actor/frame iteration, lifecycle mutation and K4 gameplay-structured families remain closed.
 
 ## R3.17G production closure
 
@@ -169,6 +177,26 @@ bit/raw-payload failures    0/0
 privacy                     PASS
 production/Cargo/corpus     0/0/0 mutations
 outcome                     A
+```
+
+
+## R3.17J K3 contract closure
+
+```text
+outcome                     A / contract-only
+version context             868.32 / net10 only
+exact groups                1950
+Location                    11
+RigidBody                   1934
+PickupNew                   4
+ReplicatedBoost             1
+allowlist SHA256            9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+vector size 20/21           rejected
+RigidBody quat48            rejected
+Boost RL223=false           rejected
+cross-product widening      0
+production/Cargo/corpus     0/0/0 mutations
+next                        R3.17K direct native K3 implementation
 ```
 
 ## Authority rule

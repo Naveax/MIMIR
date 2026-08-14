@@ -6,63 +6,56 @@
 **Production milestone:** `R3.17G — direct native evidence-admitted K2 decoder implementation`
 **Completed K2 native differential:** `R3.17H — Outcome A / 469 of 469 exact / 7 of 7 negatives`
 **Completed K3 evidence:** `R3.17I — Outcome A / 47 of 47 / 1699169 occurrences / 1950 exact groups`
-**Current exact pass:** `R3.17J — K3 contract admission for evidence-supported shapes only`
+**Completed K3 contract:** `R3.17J — Outcome A / 1950 exact groups / zero cross-product widening`
+**Current exact pass:** `R3.17K — direct native K3 decoder implementation`
 
 ## 1. Truthful production boundary
 
-Production remains exactly R3.17G. R3.17I is evidence-only and did not add a K3 decoder. MIMIR may still decode only one already-resolved K1 scalar or one R3.17F-admitted K2 payload and stop at the exact end bit.
+Production remains exactly R3.17G. R3.17J froze the K3 contract but did not implement it. MIMIR may still decode only one already-resolved K1 scalar or one R3.17F-admitted K2 payload and stop at the exact end bit.
 
 ```text
 production SHA               9bfa837c69c4751f70ca63a17c65f0f89877ff32
 production source blob       7288238cfb5338653552435be6af41f0dd7a4e85
 R3.17I authority head        8962ddc6bd77b5469fa7ebc93c95334e5725a8ab
 R3.17I run/job               31812804986 / 94807233173 SUCCESS
-R3.17I exact-head CI         31812804992 / 94807233091 SUCCESS
 R3.17I artifact              9223916983
 R3.17I artifact digest       sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
+R3.17J groups SHA256         04e93bdbc964f89d0c3ec79cd11f714f8f2fb74d2dadc7c2bb6e2098cd93a22b
+R3.17J allowlist SHA256      9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
 ```
 
-## 2. R3.17I closure
+## 2. R3.17J contract closure
 
 ```text
-oracle decode                47 / 47
-K3 occurrences               1,699,169
-Location                     26,734 / 47 replays / 7 observed vector shapes
-RigidBody                    1,550,254 / 47 replays
-  awake                      1,548,807
-  sleeping                   1,447
-  rotation                   quat56 only observed
-ReplicatedBoost              11,058 / 11 replays / u8x4 / RL223=true only observed
-PickupNew                    111,123 / 47 replays
-  None                       90,312
-  SomeI32                    20,811
-exact context groups         1,950
-privacy-safe witnesses       6,276
-zero tags                    0
-unclassified                 0
-bit monotonicity failures    0
-raw payload shape failures   0
-privacy                      PASS
+contract outcome             A
+version context              868.32 / net10 only
+durable exact groups         1950 / 1950
+Location groups              11
+RigidBody groups             1934
+PickupNew groups             4
+ReplicatedBoost groups       1
+cross-product widening       0
+vector size 20/21            rejected
+RigidBody quat48             rejected
+ReplicatedBoost RL223=false  rejected
+atomic failure               required
+exact one-value end          required
 production/Cargo/corpus      0 / 0 / 0 mutations
-outcome                      A
 ```
 
-All observed K3 entries are version 868.32 / net10. `Location`, `RigidBody`, and `PickupNew` occur under both RL223 false and true. `ReplicatedBoost` is observed only under RL223 true. RigidBody uses only the 56-bit quaternion representation in this evidence lane; the older 48-bit representation remains unadmitted.
+The exact structural/context allowlist is stored in `docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json`. RigidBody acceptance is based on exact context + sleeping + location/linear/angular tuples, not independent field ranges.
 
-## 3. R3.17J exact next pass
+## 3. R3.17K exact next pass
 
-R3.17J is contract-only. Freeze the exact observed net10 vector prefix/component rule, field order, context gates, end-bit semantics, truncation/malformed behavior, and privacy-safe evidence-derived test-vector contract for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`.
+Implement a separate direct K3 one-value API for exactly `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`. Preserve the 1,950-entry contract exactly, keep quat56-only RigidBody, fail closed on absent structural tuples, and stop at the first bit after one K3 value.
 
-The shared vector candidate may admit only evidence-supported size/header outcomes. RigidBody must preserve sleeping versus awake velocity presence and quat56-only evidence. `ReplicatedBoost` remains restricted to its observed RL223=true context unless separately evidenced. `PickupNew` may consider only the observed `None` and `SomeI32` branches.
-
-No production Rust change is allowed in R3.17J. Outcome A may open `R3.17K — direct native K3 decoder implementation for contract-admitted variants only`.
+Focused tests must synthesize all 1,950 admitted groups and exhaustively reject absent current-lane structural combinations. Full `mimir-replay`, workspace clippy, repository verification, exact-candidate CI and published-main CI are mandatory before capability admission.
 
 ## 4. Still closed
 
 ```text
-native K3/K4 payload decode
-unobserved vector size/header outcomes
-RigidBody quat48 / other version contexts
+native K3 until R3.17K is published
+K4 payload decode
 second property / property-loop continuation
 next actor / next frame iteration
 actor lifecycle mutation
