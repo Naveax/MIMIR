@@ -20,17 +20,28 @@ jobs:
         shell: pwsh
         run: |
           $patchPath = "tools/_tmp_r316b_property_header.patch"
-          $patch = Get-Content -Raw $patchPath
-          $patch = $patch.Replace("@@ -1298,6 +1298,186 @@", "@@ -1310,6 +1310,186 @@")
-          Set-Content -NoNewline -Encoding utf8 $patchPath $patch
-          git apply --check $patchPath
-          if ($LASTEXITCODE -ne 0) { throw "R3.16B patch check failed" }
-          git apply $patchPath
-          if ($LASTEXITCODE -ne 0) { throw "R3.16B patch apply failed" }
+          $sourcePath = "crates/mimir-replay/src/lib.rs"
+          $marker = 'fn network_lookup_plan_error(category: &str, detail: impl Into<String>) -> MimirError {'
+          $source = Get-Content -Raw $sourcePath
+          $first = $source.IndexOf($marker, [System.StringComparison]::Ordinal)
+          if ($first -lt 0) { throw "R3.16B insertion marker is missing" }
+          $second = $source.IndexOf($marker, $first + $marker.Length, [System.StringComparison]::Ordinal)
+          if ($second -ge 0) { throw "R3.16B insertion marker is not unique" }
+
+          $additionLines = Get-Content $patchPath |
+            Where-Object { $_ -match '^\+(?!\+\+\+)' } |
+            ForEach-Object { $_.Substring(1) }
+          if ($additionLines.Count -lt 100) { throw "R3.16B patch payload is unexpectedly small" }
+          $addition = ($additionLines -join "`n") + "`n`n"
+          $patched = $source.Substring(0, $first) + $addition + $source.Substring($first)
+          Set-Content -NoNewline -Encoding utf8 $sourcePath $patched
+
           cargo fmt --all
           if ($LASTEXITCODE -ne 0) { throw "R3.16B formatting failed" }
           git diff --check -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/_tmp_r316b_property_header.rs
           if ($LASTEXITCODE -ne 0) { throw "R3.16B patched diff check failed" }
+          git diff --quiet -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -eq 0) { throw "R3.16B semantic patch produced no production diff" }
 
       - name: Toolchain
         shell: pwsh
