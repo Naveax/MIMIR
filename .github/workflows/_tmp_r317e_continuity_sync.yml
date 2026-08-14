@@ -1,0 +1,500 @@
+name: tmp-r317e-continuity-sync
+
+on:
+  push:
+    branches:
+      - agent/r317e-continuity-sync
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  promote-docs-only:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify exact admission base
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "cfe4882f99dbce5e8148e476c177a0586b1e7986"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "54e1bfb918ec1bd42a61cfa0131ca27412082ac5"
+
+      - name: Apply R3.17E Outcome A continuity admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          root = Path('.')
+
+          canonical = '''REPOSITORY: Naveax/MIMIR
+          DEFAULT_BRANCH: main
+          LANGUAGE: Rust 2024 workspace
+          RUST_VERSION_FLOOR: 1.85
+
+          LAST_PRODUCTION_CODE_SHA:
+            c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+
+          LAST_PRODUCTION_MILESTONE:
+            R3.17C — native primitive scalar attribute decoder implementation
+
+          LAST_COMPLETED_READ_ONLY_AUDIT:
+            R3.17E — K2 object/reference/text wire evidence / Outcome A / 47 of 47 / 110539 occurrences
+
+          LAST_COMPLETED_CONTRACT_PASS:
+            R3.17B — primitive scalar attribute wire contract / Outcome A
+
+          CURRENT_PASS:
+            R3.17F — evidence-supported K2 object/reference/text attribute contract admission
+
+          CURRENT_PASS_TYPE:
+            contract-only / TDD contract freeze / NO production capability widening yet
+
+          CURRENT_SUPPORTED_REPLAY_LANE:
+            47 replays
+
+          CHECKED_IN_REPLAY_SET:
+            103 total = 3 historical fixtures + largest_100 stress corpus
+
+          PINNED_BOXCARS_ORACLE:
+            repository: nickbabcock/boxcars
+            exact SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+
+          CURRENT_PRODUCTION_HARD_STOP:
+            one already-resolved K1 primitive scalar payload may be decoded natively
+            stop exactly at payload_end_bit / stop_bit after that one scalar
+            NO native K2 payload decoder, second property, next actor, next frame, K3 or K4 family is admitted
+
+          R3_17E_EVIDENCE_CLOSURE:
+            evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
+            authority run/job: 31801482588 / 94770260529 SUCCESS
+            exact-head normal CI: 31801482499 / 94770260054 SUCCESS
+            artifact: 9219554878
+            artifact digest: sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
+            replays: 47 / oracle decode success: 47
+            K2 occurrences: 110539
+            ActiveActor: 86200 / 47 replays / exact 33-bit shape
+            String: 14670 / 47 replays / Empty + Windows1252 + UTF16 observed
+            QWordString: 2920 / 47 replays / legacy QWord64 + RL223 Windows1252 text observed
+            UniqueId: 6443 / 47 replays / Steam + PlayStation + PsyNet + Epic observed
+            PartyLeader: 306 / 1 replay / Some(Epic, Windows1252 declared=33) only observed
+            shape mismatch or unclassified: 0
+            bit monotonicity failures: 0
+            raw payload shape failures: 0
+            privacy-safe public evidence: PASS
+            production/Cargo/corpus mutation: 0 / 0 / 0
+            aggregate SHA256: 335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751
+            summary SHA256: 9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e
+            oracle JSONL SHA256: 196f4e4d2a588137ad12372cb2f0af79d7fca422c0bc2c5dea95506fa72cac4d
+            witnesses JSONL SHA256: 7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b
+            receipt manifest SHA256: 400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc
+
+          R3_17F_OPEN_BOUNDARY:
+            contract only for evidence-supported K2 semantic variants
+            ActiveActor 33-bit bool+actor-ref structure
+            String signed i32 length with observed Empty / Windows1252 / UTF16 branches
+            QWordString observed legacy 64-bit QWord branch and RL223 Windows1252 text branch
+            UniqueId only observed Steam / PlayStation / PsyNet / Epic shapes and their evidence-supported version widths
+            PartyLeader only observed Some(Epic, Windows1252 declared=33); None and other platforms remain unadmitted
+            atomic/truncation behavior must be frozen before production implementation
+
+          R3_17F_HARD_STOP:
+            no production Rust implementation in the contract pass
+            no inferred unseen K2 variants
+            no second property / property-loop continuation
+            no K3/K4, lifecycle, raw-state, event, skill, runtime or export widening
+            no Cargo, fixture, corpus or support-lane change
+
+          NEXT PASS IF R3.17F CONTRACT IS ADMITTED:
+            R3.17G — direct native K2 decoder implementation for contract-admitted variants only
+          '''
+
+          p = root / 'MIMIR_CONTINUE_HERE.md'
+          txt = p.read_text(encoding='utf-8')
+          anchor = '# 1. CANONICAL CURRENT STATE BLOCK'
+          a = txt.index(anchor)
+          fence_start = txt.index('```text', a)
+          fence_end = txt.index('```', fence_start + len('```text'))
+          txt = txt[:fence_start] + '```text\n' + canonical + '```' + txt[fence_end+3:]
+          p.write_text(txt, encoding='utf-8', newline='\n')
+
+          graph = '''# MIMIR — KNOWLEDGE GRAPH / MULTI-STAGE CONTINUITY GATE
+
+> **Role:** Root cross-link and verification graph for all MIMIR knowledge sources.
+>
+> Current source/tests and exact-SHA evidence outrank prose. `MIMIR_CONTINUE_HERE.md` remains the execution handbook.
+
+## Canonical graph
+
+```text
+fresh GitHub source/tests + exact-SHA evidence
+        |
+        v
+MIMIR_CONTINUE_HERE.md
+        |
+        +-------------------------------+
+        |                               |
+        v                               v
+docs/continuity/                MIMIR_ALL_SOURCES_SUPERBOOK.md
+CURRENT_STATE + STATE.json              |
+R3.17C production decision              |
+R3.17D differential decision            |
+R3.17E K2 evidence decision             |
+R3.17F active contract spec             |
+        |                               |
+        +---------------+---------------+
+                        |
+                        v
+docs/chatgpt-archive/SOURCE_REGISTRY.md
+                        |
+                        v
+docs/chatgpt-archive/VALIDATION_MATRIX.md
+                        |
+                        v
+docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md
+                        |
+                        v
+scripts/verify_mimir_knowledge_archive.ps1
+```
+
+## Mandatory reading order
+
+1. `MIMIR_CONTINUE_HERE.md`
+2. `docs/continuity/MIMIR_CONTINUITY_STATE.json`
+3. `docs/continuity/MIMIR_CURRENT_STATE.md`
+4. `docs/continuity/MIMIR_R3_17C_DECISION.md`
+5. `docs/continuity/MIMIR_R3_17D_EXECUTION_SPEC.md`
+6. `docs/continuity/MIMIR_R3_17D_DECISION.md`
+7. `docs/continuity/MIMIR_R3_17E_EXECUTION_SPEC.md`
+8. `docs/continuity/MIMIR_R3_17E_DECISION.md`
+9. `docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md`
+10. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+11. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+12. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+13. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+14. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+15. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+16. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+
+## Current replay-decoder chain
+
+```text
+R3.13 static network lookup plan
+ -> R3.14 actor envelope primitives
+ -> R3.15 NewActor branch
+ -> R3.16 existing-actor first-property header
+ -> R3.17A-D K1 primitive scalar wave: CLOSED
+      production SHA c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+      R3.17D authority 31798478106 / 94760722134 SUCCESS / 96 of 96 exact
+ -> R3.17E K2 object/reference/text evidence: OUTCOME A / CLOSED
+      evidence SHA 19db534a3668f84f1c5ce36ef1252c52841d890f
+      authority 31801482588 / 94770260529 SUCCESS
+      artifact 9219554878 / sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
+      47 of 47 oracle parses / 110539 K2 occurrences / 0 structural failures
+ -> R3.17F evidence-supported K2 contract admission: ACTIVE
+```
+
+## Current capability lock
+
+Production capability is unchanged from R3.17C: MIMIR may natively decode exactly one already-resolved K1 primitive scalar payload for Boolean, Byte, Enum, Float, Int or Int64. R3.17E admitted K2 **evidence**, not a native K2 decoder.
+
+R3.17F may freeze contracts only for actually observed K2 semantic variants. Unseen variants remain closed. In particular, PartyLeader `None` and non-Epic PartyLeader variants are not production-authorized by R3.17E.
+
+Property-loop continuation, next actor/frame iteration, lifecycle mutation, K3 spatial/physics and K4 gameplay-structured families remain closed.
+
+## R3.17E closure identity
+
+```text
+evidence head              19db534a3668f84f1c5ce36ef1252c52841d890f
+authority run/job          31801482588 / 94770260529 SUCCESS
+normal CI                  31801482499 / 94770260054 SUCCESS
+artifact                   9219554878
+artifact digest            sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
+aggregate SHA256           335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751
+summary SHA256             9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e
+oracle JSONL SHA256        196f4e4d2a588137ad12372cb2f0af79d7fca422c0bc2c5dea95506fa72cac4d
+witness JSONL SHA256       7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b
+receipt manifest SHA256    400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc
+47/47 oracle decode        PASS
+K2 occurrences             110539
+shape/unclassified         0
+bit monotonicity failures  0
+raw-payload shape failures 0
+privacy-safe output        PASS
+production/Cargo/corpus    0 / 0 / 0 mutations
+outcome                    A
+```
+
+## Authority rule
+
+```text
+current code/tests
+> exact-SHA CI/evidence + immutable receipt streams
+> MIMIR_CONTINUE_HERE.md
+> docs/continuity/MIMIR_CONTINUITY_STATE.json
+> docs/continuity/MIMIR_CURRENT_STATE.md
+> admitted decision / active pass specs
+> boundary locks
+> roadmap
+> historical artifacts/chat memory
+```
+
+## Verification
+
+Run `scripts/verify_mimir_knowledge_archive.ps1`.
+'''
+          (root / 'MIMIR_KNOWLEDGE_GRAPH.md').write_text(graph, encoding='utf-8', newline='\n')
+
+          current = '''# MIMIR — Current Canonical State
+
+**Continuity date:** 2026-08-14  
+**Repository:** `Naveax/MIMIR`  
+**Canonical production SHA:** `c3d4c73ca34febb9f0383c59132a8bc8a363b06b`  
+**Production milestone:** `R3.17C — native primitive scalar attribute decoder implementation`  
+**Completed K1 differential:** `R3.17D — Outcome A / 96 of 96 exact`  
+**Completed K2 evidence:** `R3.17E — Outcome A / 47 of 47 / 110539 occurrences`  
+**Current exact pass:** `R3.17F — evidence-supported K2 object/reference/text contract admission`
+
+## 1. Truthful production boundary
+
+Production capability is unchanged from R3.17C. MIMIR can natively decode exactly one already-resolved K1 primitive scalar payload for Boolean, Byte, Enum, Float, Int or Int64 and stops exactly after that value. No K2 decoder is admitted yet.
+
+## 2. R3.17E closure authority
+
+```text
+evidence head                  19db534a3668f84f1c5ce36ef1252c52841d890f
+authority run/job              31801482588 / 94770260529 SUCCESS
+exact-head normal CI           31801482499 / 94770260054 SUCCESS
+artifact id                    9219554878
+artifact digest                sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
+replays / oracle success       47 / 47
+K2 occurrences                 110539
+ActiveActor                    86200 / 47 replays
+String                         14670 / 47 replays
+QWordString                    2920 / 47 replays
+UniqueId                       6443 / 47 replays
+PartyLeader                    306 / 1 replay
+shape/unclassified errors      0
+bit monotonicity failures      0
+raw payload shape failures     0
+privacy-safe output            PASS
+production/Cargo/corpus mut.   0 / 0 / 0
+aggregate SHA256               335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751
+summary SHA256                 9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e
+```
+
+## 3. R3.17F exact next pass
+
+Freeze an implementation contract only for K2 semantic variants actually supported by R3.17E evidence: ActiveActor33; String Empty/Windows1252/UTF16; QWordString legacy QWord64 and observed RL223 Windows1252 text; observed UniqueId Steam/PlayStation/PsyNet/Epic; PartyLeader only the observed Some(Epic, Windows1252 declared=33) shape.
+
+Do not widen from Boxcars type names alone. Unseen PartyLeader `None`, other PartyLeader platforms, unseen UniqueId systems, unseen QWordString UTF16/empty branches and other unobserved combinations remain closed unless a later evidence pass admits them.
+
+## 4. Still closed
+
+```text
+native K2 production decoder
+second property / property-loop continuation
+next actor / next frame iteration
+K3 Location/RigidBody/ReplicatedBoost/PickupNew
+K4 gameplay structured attribute family
+actor lifecycle mutation
+raw-state materialization and semantic events
+replay slicing / skill mining / counterfactual rollout
+training/runtime/export widening
+support-lane expansion
+```
+'''
+          (root / 'docs/continuity/MIMIR_CURRENT_STATE.md').write_text(current, encoding='utf-8', newline='\n')
+
+          sp = root / 'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+          state = json.loads(sp.read_text(encoding='utf-8'))
+          state['updated_date'] = '2026-08-14'
+          state['last_completed_read_only_audit'] = 'R3.17E'
+          state['last_completed_evidence_pass'] = 'R3.17E'
+          state['last_completed_evidence_outcome'] = 'A — 47/47 oracle decode; 110539 K2 occurrences; zero shape/unclassified, monotonicity, raw-payload-shape and production/Cargo/corpus mutation failures; privacy-safe output PASS'
+          state['current_pass'] = 'R3.17F'
+          state['current_pass_kind'] = 'contract-only evidence-supported K2 object/reference/text wire contract admission'
+          state['current_pass_goal'] = 'Freeze exact atomic decoding contracts only for R3.17E-observed K2 semantic variants before any production implementation.'
+          state['current_pass_stop_boundary'] = 'Contract only; no production K2 decoder, inferred unseen variants, second property, actor/frame iteration, lifecycle, K3/K4, Cargo/corpus/support-lane widening.'
+          state['r3_17e'] = {
+              'outcome': 'A — admitted / complete',
+              'production_source_changed': False,
+              'base_main_sha': 'cfe4882f99dbce5e8148e476c177a0586b1e7986',
+              'production_sha': 'c3d4c73ca34febb9f0383c59132a8bc8a363b06b',
+              'production_source_blob': '54e1bfb918ec1bd42a61cfa0131ca27412082ac5',
+              'evidence_head_sha': '19db534a3668f84f1c5ce36ef1252c52841d890f',
+              'authority_run': 31801482588,
+              'authority_job': 94770260529,
+              'normal_ci_run': 31801482499,
+              'normal_ci_job': 94770260054,
+              'artifact_id': 9219554878,
+              'artifact_digest': 'sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc',
+              'replays_total': 47,
+              'oracle_decode_success': 47,
+              'k2_occurrences_total': 110539,
+              'tag_occurrences': {'ActiveActor':86200,'String':14670,'QWordString':2920,'UniqueId':6443,'PartyLeader':306},
+              'shape_mismatch_or_unclassified_count': 0,
+              'bit_monotonicity_failure_count': 0,
+              'raw_payload_shape_failure_count': 0,
+              'privacy_safe_output': True,
+              'production_mutation_count': 0,
+              'cargo_mutation_count': 0,
+              'corpus_mutation_count': 0,
+              'aggregate_sha256': '335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751',
+              'summary_sha256': '9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e',
+              'oracle_jsonl_sha256': '196f4e4d2a588137ad12372cb2f0af79d7fca422c0bc2c5dea95506fa72cac4d',
+              'witness_jsonl_sha256': '7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b',
+              'receipt_manifest_sha256': '400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc',
+              'next_pass': 'R3.17F'
+          }
+          desired = [
+              'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md','docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+              'docs/continuity/MIMIR_R3_17C_DECISION.md','docs/continuity/MIMIR_R3_17D_EXECUTION_SPEC.md','docs/continuity/MIMIR_R3_17D_DECISION.md',
+              'docs/continuity/MIMIR_R3_17E_EXECUTION_SPEC.md','docs/continuity/MIMIR_R3_17E_DECISION.md','docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md',
+              'docs/continuity/MIMIR_PASS_PROTOCOL.md','docs/continuity/MIMIR_BOUNDARY_LOCKS.md','docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md',
+              'MIMIR_ALL_SOURCES_SUPERBOOK.md','docs/chatgpt-archive/SOURCE_REGISTRY.md','docs/chatgpt-archive/VALIDATION_MATRIX.md','docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md'
+          ]
+          state['next_files_to_read'] = desired
+          sp.write_text(json.dumps(state, indent=2, ensure_ascii=False) + '\n', encoding='utf-8', newline='\n')
+
+          decision = '''# MIMIR R3.17E — K2 Wire Evidence Decision
+
+**Decision:** Outcome A — ADMITTED / COMPLETE  
+**Date:** 2026-08-14  
+**Production capability change:** none
+
+## Authority
+
+- Canonical base main: `cfe4882f99dbce5e8148e476c177a0586b1e7986`
+- Production SHA: `c3d4c73ca34febb9f0383c59132a8bc8a363b06b`
+- Production source blob: `54e1bfb918ec1bd42a61cfa0131ca27412082ac5`
+- Evidence head: `19db534a3668f84f1c5ce36ef1252c52841d890f`
+- Authority run/job: `31801482588 / 94770260529` SUCCESS
+- Exact-head normal CI: `31801482499 / 94770260054` SUCCESS
+- Artifact: `9219554878`
+- Artifact digest: `sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc`
+
+## Admission results
+
+The pinned Boxcars oracle parsed all 47 supported replays. The complete K2 scan yielded 110,539 occurrences: ActiveActor 86,200; String 14,670; QWordString 2,920; UniqueId 6,443; PartyLeader 306. Shape/unclassified, bit-monotonicity and raw-payload-shape failure counts are all zero. Privacy-safe public evidence passed. Production, Cargo and corpus mutation counts are all zero.
+
+## Evidence-supported semantic surface
+
+- `ActiveActor`: exact 33-bit shape.
+- `String`: observed signed-length Empty, Windows1252 and UTF16 branches.
+- `QWordString`: observed legacy QWord64 plus RL223 Windows1252 text branches.
+- `UniqueId`: observed Steam, PlayStation, PsyNet and Epic shapes only.
+- `PartyLeader`: only `Some(Epic, Windows1252, declared=33)` was observed, on one replay.
+
+Unseen variants are not admitted by inference. In particular, PartyLeader `None` and other PartyLeader platforms remain closed.
+
+## Immutable hashes
+
+```text
+aggregate                 335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751
+summary                   9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e
+oracle JSONL              196f4e4d2a588137ad12372cb2f0af79d7fca422c0bc2c5dea95506fa72cac4d
+witness JSONL             7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b
+receipt manifest          400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc
+replay identity TSV       b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+instrumentation patch     e7b1244051c0e0f2a74f227bdd4029b9f54956d6486fcb619d550c27cfe4c660
+```
+
+## Next authority
+
+R3.17F is opened as a contract-only pass. Production Rust remains at the R3.17C capability boundary until a later implementation pass is separately admitted.
+'''
+          (root / 'docs/continuity/MIMIR_R3_17E_DECISION.md').write_text(decision, encoding='utf-8', newline='\n')
+
+          spec = '''# MIMIR R3.17F — Evidence-Supported K2 Contract Admission Spec
+
+**Pass type:** contract-only  
+**Production implementation:** forbidden in this pass  
+**Input authority:** R3.17E Outcome A exact evidence
+
+## Goal
+
+Freeze deterministic, atomic decoding contracts for only the K2 semantic variants actually observed by R3.17E, so a later production implementation pass can be TDD-driven without guessing wire behavior.
+
+## In scope
+
+1. `ActiveActor`: 33-bit payload contract consisting of active flag plus actor reference semantics.
+2. `String`: signed i32 length branch contract for observed Empty, Windows1252 and UTF16 forms, including exact payload-end and truncation behavior.
+3. `QWordString`: observed legacy 64-bit QWord branch and observed RL223 Windows1252 text branch.
+4. `UniqueId`: observed Steam, PlayStation, PsyNet and Epic variants only, with evidence-supported net-version width rules and Epic text/local structure.
+5. `PartyLeader`: only observed `Some(Epic, Windows1252, declared=33)` structure.
+6. Atomic failure semantics: insufficient input or malformed declared shape must not partially advance the externally visible cursor/result.
+7. Exact boundary tests must be derived from immutable R3.17E witness identities/hashes; no cleartext identities enter public fixtures.
+
+## Explicitly not admitted
+
+- PartyLeader `None` or non-Epic PartyLeader variants.
+- Unobserved UniqueId systems or width/version combinations.
+- Unobserved QWordString UTF16/empty combinations.
+- Any K2 shape inferred solely from Boxcars source or type names rather than supported-corpus evidence.
+- Production decoder implementation.
+- Second property or property-loop continuation.
+- Next actor/frame iteration, actor lifecycle mutation.
+- K3/K4 families, raw-state/event/skill/runtime/export widening.
+- Cargo, fixture, corpus or support-lane widening unless separately admitted.
+
+## Admission gate
+
+Outcome A requires a complete contract table for every admitted observed shape, deterministic success/end-bit semantics, explicit malformed/truncation rules, privacy-safe test vectors, and zero contradiction with the R3.17E evidence artifact. Outcome B means targeted evidence is still required for a specific shape. Outcome C stops the wave.
+
+## Next pass on Outcome A
+
+`R3.17G — direct native K2 decoder implementation for contract-admitted variants only`.
+'''
+          (root / 'docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md').write_text(spec, encoding='utf-8', newline='\n')
+
+          for rel, heading in [
+              ('docs/continuity/MIMIR_PROGRESS_LEDGER.md', 'R3.17E CURRENT OVERRIDE'),
+              ('docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md', 'R3.17E CURRENT HANDOFF OVERRIDE'),
+          ]:
+              q = root / rel
+              old = q.read_text(encoding='utf-8')
+              marker = '<!-- R3_17E_CURRENT_OVERRIDE -->'
+              if marker not in old:
+                  prefix = f'''{marker}\n# {heading}\n\nAs of 2026-08-14, R3.17E is admitted Outcome A from evidence head `19db534a3668f84f1c5ce36ef1252c52841d890f`, authority `31801482588 / 94770260529`, artifact `9219554878`. Production remains `c3d4c73ca34febb9f0383c59132a8bc8a363b06b`. The current canonical pass is R3.17F contract-only. Read `MIMIR_CONTINUE_HERE.md`, `MIMIR_KNOWLEDGE_GRAPH.md`, `MIMIR_R3_17E_DECISION.md` and `MIMIR_R3_17F_EXECUTION_SPEC.md` before using older ledger/handoff history below.\n\n---\n\n'''
+                  q.write_text(prefix + old, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Verify docs-only diff and archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only > /tmp/changed.txt
+          cat /tmp/changed.txt
+          test "$(git diff --name-only -- crates/mimir-replay/src/lib.rs Cargo.toml Cargo.lock crates | wc -l)" -eq 0
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+
+      - name: Create clean docs-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C candidate/r317e-admission
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_R3_17E_DECISION.md \
+            docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md
+          git commit -m "Admit R3.17E and open R3.17F"
+          test "$(git diff HEAD^ HEAD --name-only | grep -Ev '^(MIMIR_CONTINUE_HERE.md|MIMIR_KNOWLEDGE_GRAPH.md|docs/continuity/MIMIR_CONTINUITY_STATE.json|docs/continuity/MIMIR_CURRENT_STATE.md|docs/continuity/MIMIR_PROGRESS_LEDGER.md|docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md|docs/continuity/MIMIR_R3_17E_DECISION.md|docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md)$' | wc -l)" -eq 0
+          git push origin HEAD:refs/heads/candidate/r317e-admission --force
+          echo "CANDIDATE_SHA=$(git rev-parse HEAD)"
