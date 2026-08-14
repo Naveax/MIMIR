@@ -19,9 +19,13 @@ jobs:
       - name: Apply disposable R3.16B production patch
         shell: pwsh
         run: |
-          git apply --check tools/_tmp_r316b_property_header.patch
+          $patchPath = "tools/_tmp_r316b_property_header.patch"
+          $patch = Get-Content -Raw $patchPath
+          $patch = $patch.Replace("@@ -1298,6 +1298,186 @@", "@@ -1310,6 +1310,186 @@")
+          Set-Content -NoNewline -Encoding utf8 $patchPath $patch
+          git apply --check $patchPath
           if ($LASTEXITCODE -ne 0) { throw "R3.16B patch check failed" }
-          git apply tools/_tmp_r316b_property_header.patch
+          git apply $patchPath
           if ($LASTEXITCODE -ne 0) { throw "R3.16B patch apply failed" }
           cargo fmt --all
           if ($LASTEXITCODE -ne 0) { throw "R3.16B formatting failed" }
