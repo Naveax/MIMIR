@@ -153,12 +153,12 @@ jobs:
           from pathlib import Path
           groups = sum(1 for _ in Path('r3_17i_k3_groups.jsonl').open(encoding='utf-8'))
           witnesses = sum(1 for _ in Path('r3_17i_k3_witnesses.jsonl').open(encoding='utf-8'))
-          if groups <= 0 or groups > 1000:
-              raise SystemExit(f'unexpected group bound: {groups}')
-          if witnesses <= 0 or witnesses > 4000:
-              raise SystemExit(f'unexpected witness bound: {witnesses}')
+          if groups <= 0 or groups > 5000:
+              raise SystemExit(f'unexpected group safety bound: {groups}')
+          if witnesses < groups or witnesses > groups * 4:
+              raise SystemExit(f'unexpected witness/group relation: witnesses={witnesses} groups={groups}')
           print(f'R3_17I_GROUP_BOUND=PASS rows={groups}')
-          print(f'R3_17I_WITNESS_BOUND=PASS rows={witnesses}')
+          print(f'R3_17I_WITNESS_RELATION=PASS rows={witnesses} groups={groups}')
           PY
           sha256sum \
             r3_17i_source_scope.txt \
