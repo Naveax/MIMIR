@@ -20,8 +20,13 @@ jobs:
         shell: pwsh
         run: |
           git apply --check tools/_tmp_r316b_property_header.patch
+          if ($LASTEXITCODE -ne 0) { throw "R3.16B patch check failed" }
           git apply tools/_tmp_r316b_property_header.patch
-          git diff --check -- crates/mimir-replay/src/lib.rs
+          if ($LASTEXITCODE -ne 0) { throw "R3.16B patch apply failed" }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "R3.16B formatting failed" }
+          git diff --check -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/_tmp_r316b_property_header.rs
+          if ($LASTEXITCODE -ne 0) { throw "R3.16B patched diff check failed" }
 
       - name: Toolchain
         shell: pwsh
