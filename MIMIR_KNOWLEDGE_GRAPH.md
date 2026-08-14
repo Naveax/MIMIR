@@ -20,7 +20,8 @@ CURRENT_STATE + STATE.json              |
 R3.17C production decision              |
 R3.17D differential decision            |
 R3.17E K2 evidence decision             |
-R3.17F active contract spec             |
+R3.17F K2 contract decision             |
+R3.17G active implementation spec       |
         |                               |
         +---------------+---------------+
                         |
@@ -48,13 +49,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 7. `docs/continuity/MIMIR_R3_17E_EXECUTION_SPEC.md`
 8. `docs/continuity/MIMIR_R3_17E_DECISION.md`
 9. `docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md`
-10. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-11. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-12. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-13. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-14. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-15. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-16. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+10. `docs/continuity/MIMIR_R3_17F_DECISION.md`
+11. `docs/continuity/MIMIR_R3_17G_EXECUTION_SPEC.md`
+12. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+13. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+14. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+15. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+16. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+17. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+18. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -71,14 +74,15 @@ R3.13 static network lookup plan
       authority 31801482588 / 94770260529 SUCCESS
       artifact 9219554878 / sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
       47/47 / 110539 K2 occurrences / 0 structural failures
- -> R3.17F evidence-supported K2 contract admission: ACTIVE
+ -> R3.17F evidence-supported K2 contract admission: OUTCOME A / CLOSED
+ -> R3.17G direct native K2 decoder implementation: ACTIVE
 ```
 
 ## Current capability lock
 
 Production remains exactly at R3.17C: one already-resolved K1 primitive scalar payload may be decoded natively. R3.17E admitted K2 evidence, not native K2 production capability.
 
-R3.17F may freeze contracts only for observed K2 semantic variants. Unseen variants remain closed. PartyLeader `None` and non-Epic PartyLeader variants are not authorized by R3.17E.
+R3.17F admitted atomic contracts only for evidence-supported K2 shapes. R3.17G may implement exactly one already-resolved K2 payload under those contracts; native K2 capability is not claimed until production publication succeeds. PartyLeader `None`, non-Epic PartyLeader and other unseen K2 variants remain closed.
 
 Property-loop continuation, next actor/frame iteration, lifecycle mutation, K3 spatial/physics and K4 gameplay-structured families remain closed.
 
@@ -103,6 +107,22 @@ raw-payload shape failures 0
 privacy-safe output        PASS
 production/Cargo/corpus    0/0/0 mutations
 outcome                    A
+```
+
+## R3.17F contract closure
+
+```text
+outcome                    A / contract complete
+production Rust            unchanged at c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+contract base              b4b4449a99dabbb97120d5393c3d5b1462b6f81e
+ActiveActor                33-bit exact reference contract
+String                     Empty / Windows1252 / UTF16 atomic contract
+QWordString                legacy QWord64 / RL223 positive Windows1252
+UniqueId                   Steam / PlayStation / PsyNet / Epic(declared=33), net10
+PartyLeader                Some(Epic declared=33) only, net10 + RL223 true
+atomic failure             0-bit consumption from payload start
+privacy-safe G vectors     synthetic only
+next pass                  R3.17G production implementation
 ```
 
 ## Authority rule

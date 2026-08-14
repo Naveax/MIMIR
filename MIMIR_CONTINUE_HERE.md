@@ -55,13 +55,13 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.17E — K2 object/reference/text wire evidence / Outcome A / 47/47 / 110539 occurrences
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.17B — primitive scalar attribute wire contract / Outcome A
+  R3.17F — evidence-supported K2 object/reference/text contract / Outcome A
 
 CURRENT_PASS:
-  R3.17F — evidence-supported K2 object/reference/text contract admission
+  R3.17G — direct native K2 decoder implementation for contract-admitted variants only
 
 CURRENT_PASS_TYPE:
-  contract-only / NO production Rust capability widening
+  production implementation / one already-resolved K2 payload only
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -95,24 +95,31 @@ R3_17E_EVIDENCE_CLOSURE:
   witnesses JSONL SHA256: 7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b
   receipt manifest SHA256: 400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc
 
-R3_17F_OPEN_BOUNDARY:
-  contract only for R3.17E-observed K2 semantic variants
-  ActiveActor33
-  String observed Empty / Windows1252 / UTF16 branches
-  QWordString observed legacy QWord64 + RL223 Windows1252 branches
-  UniqueId observed Steam / PlayStation / PsyNet / Epic shapes only
-  PartyLeader only observed Some(Epic, Windows1252 declared=33)
-  unseen variants remain unadmitted
+R3_17F_CONTRACT_CLOSURE:
+  Outcome A / docs-only / production Rust unchanged
+  common rule: LSB-first, unaligned allowed, exact one-value end bit, atomic failure
+  context: net_version + already-resolved is_rl_223; current UniqueId/PartyLeader lane net_version=10
+  ActiveActor: exact 1-bit active + 32-bit signed actor reference
+  String: signed i32 Empty / Windows1252 / UTF16 with checked lengths
+  QWordString: legacy QWord64 or RL223 positive Windows1252 only
+  UniqueId: Steam / PlayStation / PsyNet / Epic(declared=33) only
+  PartyLeader: only Some(Epic, Windows1252 declared=33), net10 + RL223 true
+  unseen shapes/context combinations remain unadmitted
 
-R3_17F_HARD_STOP:
-  no production K2 implementation in the contract pass
-  no inferred unseen K2 variants
+R3_17G_OPEN_BOUNDARY:
+  implement direct native one-value K2 decoder only for R3.17F-admitted shapes
+  reuse NetworkBitCursor and atomic rollback semantics
+  synthetic privacy-safe focused vectors only
+  expected source scope: crates/mimir-replay/src/lib.rs + r3_17g focused test
+
+R3_17G_HARD_STOP:
   no second property / property-loop continuation
+  no unobserved K2 variants
   no K3/K4, lifecycle, raw-state, event, skill, runtime or export widening
   no Cargo, fixture, corpus or support-lane change
 
-NEXT PASS IF R3.17F OUTCOME A:
-  R3.17G — direct native K2 decoder implementation for contract-admitted variants only
+NEXT PASS IF R3.17G PUBLISHES CLEANLY:
+  R3.17H — native K2 differential audit against immutable R3.17E evidence-supported witnesses
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

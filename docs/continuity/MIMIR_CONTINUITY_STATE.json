@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.17C",
   "last_production_milestone_name": "native primitive scalar attribute decoder implementation",
   "last_completed_read_only_audit": "R3.17E",
-  "current_pass": "R3.17F",
-  "current_pass_kind": "contract-only evidence-supported K2 object/reference/text contract admission",
-  "current_pass_goal": "Freeze exact atomic contracts only for R3.17E-observed K2 semantic variants before any production implementation.",
-  "current_pass_stop_boundary": "Contract only; no production K2 decoder, unseen variants, second property, actor/frame iteration, lifecycle, K3/K4 or support-lane widening.",
+  "current_pass": "R3.17G",
+  "current_pass_kind": "production direct native K2 decoder implementation for contract-admitted variants only",
+  "current_pass_goal": "Implement exactly one already-resolved K2 payload decoder for R3.17F-admitted shapes using the existing LSB-first cursor and atomic failure semantics.",
+  "current_pass_stop_boundary": "One K2 payload only; no unseen variants, second property, actor/frame iteration, lifecycle, K3/K4, Cargo/corpus/support-lane or downstream widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -85,6 +85,8 @@
     "docs/continuity/MIMIR_R3_17E_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_17E_DECISION.md",
     "docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_17F_DECISION.md",
+    "docs/continuity/MIMIR_R3_17G_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -95,7 +97,7 @@
   ],
   "last_completed_evidence_pass": "R3.17E",
   "last_completed_evidence_outcome": "A — 47/47 oracle decode; 110539 K2 occurrences; zero structural/mutation failures; privacy-safe output PASS",
-  "last_completed_contract_pass": "R3.17B",
+  "last_completed_contract_pass": "R3.17F",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -601,5 +603,39 @@
     "witness_jsonl_sha256": "7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b",
     "receipt_manifest_sha256": "400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc",
     "next_pass": "R3.17F"
+  },
+  "last_completed_contract_outcome": "A — atomic evidence-supported K2 contract admitted; production Rust unchanged",
+  "r3_17f": {
+    "outcome": "A — admitted / contract complete",
+    "production_source_changed": false,
+    "continuity_base_sha": "b4b4449a99dabbb97120d5393c3d5b1462b6f81e",
+    "production_sha": "c3d4c73ca34febb9f0383c59132a8bc8a363b06b",
+    "evidence_head_sha": "19db534a3668f84f1c5ce36ef1252c52841d890f",
+    "oracle_sha": "c70e77df7af81b436cb545d070bb90c82f562d0b",
+    "authority_run": 31801482588,
+    "authority_job": 94770260529,
+    "artifact_id": 9219554878,
+    "artifact_digest": "sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc",
+    "atomic_failure_zero_consumption": true,
+    "active_actor_width_bits": 33,
+    "string_branches": [
+      "Empty",
+      "Windows1252",
+      "UTF16"
+    ],
+    "qword_string_branches": [
+      "legacy-QWord64",
+      "RL223-positive-Windows1252"
+    ],
+    "unique_id_net_version": 10,
+    "unique_id_systems": [
+      "Steam",
+      "PlayStation",
+      "PsyNet",
+      "Epic-Windows1252-declared-33"
+    ],
+    "party_leader": "Some(Epic-Windows1252-declared-33) only; net_version=10; is_rl_223=true",
+    "privacy_safe_test_policy": "synthetic identities/text only",
+    "next_pass": "R3.17G"
   }
 }
