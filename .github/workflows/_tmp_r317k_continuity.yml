@@ -15,9 +15,9 @@ jobs:
     env:
       BASE_MAIN: 7390e3b145372252caaa8fa1fe3e0cd13b83336c
       PROD_TREE: eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
-      LIB_BLOB: d811879bb647de5e5bb56930244b9fddaa4ec583
-      GROUP_BLOB: 2e7cc89699c2754a4ac66eb091d6422700715a23
-      TEST_BLOB: bbad0b405f4f27af309c3b71f2f3ba0a4da60c7b
+      LIB_BLOB: 28d213f831c8968e6756a6ccea2cd7aa6cdbdfba
+      GROUP_BLOB: da545a7144fefabab7f5be4f07fde71311065293
+      TEST_BLOB: 4d1434cc0e59a6e5c72a8404c102a87d71b8b223
       ALLOWLIST_SHA: 9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
 
     steps:
@@ -52,6 +52,8 @@ jobs:
           $ErrorActionPreference = "Stop"
           python tools/_tmp_r317k_continuity.py
           if ($LASTEXITCODE -ne 0) { throw "continuity generator failed" }
+          python tools/_tmp_r317k_blob_receipt_fix.py
+          if ($LASTEXITCODE -ne 0) { throw "blob receipt correction failed" }
 
       - name: Normalize state reading order
         shell: pwsh
@@ -113,24 +115,43 @@ jobs:
           import json
           from pathlib import Path
           prod = '7390e3b145372252caaa8fa1fe3e0cd13b83336c'
+          lib = '28d213f831c8968e6756a6ccea2cd7aa6cdbdfba'
+          groups = 'da545a7144fefabab7f5be4f07fde71311065293'
+          test = '4d1434cc0e59a6e5c72a8404c102a87d71b8b223'
+          stale = {
+              'd811879bb647de5e5bb56930244b9fddaa4ec583',
+              '2e7cc89699c2754a4ac66eb091d6422700715a23',
+              'bbad0b405f4f27af309c3b71f2f3ba0a4da60c7b',
+          }
           state = json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
           assert state['last_production_code_sha'] == prod
           assert state['last_production_milestone'] == 'R3.17K'
           assert state['current_pass'] == 'R3.17L'
           assert state['r3_17k']['production_sha'] == prod
+          assert state['r3_17k']['source_lib_blob'] == lib
+          assert state['r3_17k']['source_k3_groups_blob'] == groups
+          assert state['r3_17k']['focused_test_blob'] == test
           assert state['r3_17k']['canonical_groups_total'] == 1950
           assert 'native K3/K4 attribute payload decode' not in state['closed_now']
           assert 'native K4 attribute payload decode' in state['closed_now']
-          cont = Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
-          graph = Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
-          current = Path('docs/continuity/MIMIR_CURRENT_STATE.md').read_text(encoding='utf-8')
-          decision = Path('docs/continuity/MIMIR_R3_17K_DECISION.md').read_text(encoding='utf-8')
-          spec = Path('docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md').read_text(encoding='utf-8')
-          for text in [cont, graph, current, decision]:
+          paths = [
+              Path('MIMIR_CONTINUE_HERE.md'),
+              Path('MIMIR_KNOWLEDGE_GRAPH.md'),
+              Path('docs/continuity/MIMIR_CONTINUITY_STATE.json'),
+              Path('docs/continuity/MIMIR_CURRENT_STATE.md'),
+              Path('docs/continuity/MIMIR_R3_17K_DECISION.md'),
+              Path('docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md'),
+          ]
+          texts = [p.read_text(encoding='utf-8') for p in paths]
+          for text in texts[:4] + [texts[4]]:
               assert prod in text
-          assert 'R3.17L' in cont and 'R3.17L' in graph and 'R3.17L' in current and 'R3.17L' in spec
-          assert '1950/1950' in decision
-          assert 'production Rust' in spec or 'Production mutation' in spec
+          for bad in stale:
+              assert all(bad not in text for text in texts), bad
+          assert all(x in texts[4] for x in [lib, groups, test])
+          assert all(x in texts[5] for x in [lib, groups, test])
+          assert 'R3.17L' in texts[0] and 'R3.17L' in texts[1] and 'R3.17L' in texts[3] and 'R3.17L' in texts[5]
+          assert '1950/1950' in texts[4]
+          assert 'production Rust' in texts[5] or 'Production mutation' in texts[5]
           print('continuity semantic anchors PASS')
           '@ | python -
           if ($LASTEXITCODE -ne 0) { throw "continuity semantic anchors failed" }
