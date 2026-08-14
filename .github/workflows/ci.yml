@@ -1,4 +1,4 @@
-name: R3.16B Knowledge Dispatch
+name: R3.16B Main Knowledge Dispatch
 
 on:
   push:
@@ -14,11 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Dispatch exact-candidate Knowledge Archive
+      - name: Dispatch exact-main Knowledge Archive
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh workflow run knowledge-archive.yml \
             --repo Naveax/MIMIR \
-            --ref candidate/r3-16b-property-header-clean
-          echo "R3_16B_KNOWLEDGE_DISPATCH=PASS"
+            --ref main
+          echo "R3_16B_MAIN_KNOWLEDGE_DISPATCH=PASS"
