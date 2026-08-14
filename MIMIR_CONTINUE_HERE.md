@@ -46,16 +46,19 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa
+  ebc0fa31ba90a8496c3d1719e436d2c17b605ff7
 
 LAST_PRODUCTION_MILESTONE:
-  R3.13 — static replay network lookup plan
+  R3.16B — native existing-actor first-property envelope header implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.14 — first native network bitstream format audit
+  R3.16A — existing-actor first-property envelope evidence / Outcome A
+
+LAST_COMPLETED_CONTINUITY_CHECK:
+  R3.16C — post-implementation continuity repair and capability-boundary check
 
 CURRENT_PASS:
-  R3.14A — first frame + first actor envelope differential evidence
+  R3.17A — primitive scalar attribute wire-format evidence
 
 CURRENT_PASS_TYPE:
   evidence-only / pinned oracle instrumentation / NO production Rust change
@@ -70,35 +73,41 @@ PINNED_BOXCARS_ORACLE:
   repository: nickbabcock/boxcars
   exact SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
 
-CURRENT_HARD_STOP:
-  after first actor envelope fields time/delta/actor_present/actor_id/alive/new
-  DO NOT cross into name_id/object_id/spawn/property payload in R3.14A
+CURRENT_PRODUCTION_HARD_STOP:
+  existing-actor first-property header stops exactly at payload_start_bit
+  NO native attribute payload bit is admitted yet
+
+R3_16B_CLOSURE:
+  base main SHA: fc020729396ad9f62ee4b8fd8fe6808f5bdb5489
+  production SHA: ebc0fa31ba90a8496c3d1719e436d2c17b605ff7
+  production source blob: 625ab2322e35f5f835871d42b9efeb04f5c299ab
+  production source SHA256: 186eb5c2d25a42c6028e4149adbb8fa5ac2807c4f1d187ab389ce565a7a5db28
+  focused tests: 8/8 PASS
+  frozen differential: 47/47 PASS
+  clean diff: exactly 2 files, +331/-0
+  post-main CI: 31788526050 / 94729854512 SUCCESS
+  post-main Knowledge Archive: 31788566184 / 94729983908 SUCCESS
+
+R3_17A_OPEN_BOUNDARY:
+  evidence may observe primitive scalar attribute payload wire formats through the pinned oracle
+  candidate family: Boolean, Byte, Int, Int64, Float, Enum
+  record corpus frequency, exact bit spans, values, truncation-relevant structure, and identity
+  zero-observation tags remain unadmitted rather than guessed
+
+R3_17A_HARD_STOP:
+  production Rust unchanged
+  no native payload decoder
+  no RigidBody / ActiveActor / spatial-family implementation
+  no property-loop iteration
+  no second property, actor, or frame
+  no actor lifecycle mutation
+  no raw-state/event/skill/runtime/export widening
 
 IN_FLIGHT_NON_PRODUCTION_BRANCH:
-  agent/r3-14a-first-actor-envelope-evidence
+  none admitted at continuity sync time
 
-IN_FLIGHT_BRANCH_HEAD_AT_LAST_SYNC:
-  f5713deee1a5a41620be257f07163cb33605c758
-
-IN_FLIGHT_WORK_ALREADY DONE:
-  - R3.14A evidence branch created from continuity main.
-  - pinned Boxcars SHA recovered and independently confirmed.
-  - historical R3.10 probe hard-pins the same Boxcars SHA.
-  - supported-lane selection mechanism recovered from R3.13 evidence.
-  - tools/r3_14a_selector/Cargo.toml created on evidence branch.
-  - tools/r3_14a_selector/src/main.rs created on evidence branch.
-  - selector uses MIMIR production header admission + static lookup-plan reader.
-  - selector expects exact 103 checked-in inputs and exact 47 supported / 56 unsupported split.
-
-IN_FLIGHT_WORK NOT YET CLAIMED COMPLETE:
-  - selector GitHub Actions validation has not yet been recorded here as complete.
-  - Boxcars observation-only instrumentation patch not yet admitted.
-  - 47/47 first-frame/first-actor evidence rows not yet collected.
-  - R3.14A aggregate report not yet admitted.
-  - R3.14A Outcome A/B/C not yet chosen.
-
-NEXT PASS IF R3.14A OUTCOME A:
-  R3.14B — evidence admission + native bit-cursor / bounded-integer contract
+NEXT PASS IF R3.17A OUTCOME A:
+  R3.17B — primitive scalar attribute contract admission
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
