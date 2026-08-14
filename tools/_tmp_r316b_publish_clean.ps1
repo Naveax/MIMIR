@@ -15,6 +15,14 @@ $existing = git ls-remote --heads origin "refs/heads/$candidateBranch"
 if ($LASTEXITCODE -ne 0) { throw "failed to query candidate branch" }
 if ($existing) { throw "candidate branch already exists: $candidateBranch" }
 
+# Disposable verification runs intentionally mutate tracked test/source files via cargo fmt and the
+# semantic production patch. Everything needed for clean reconstruction is already preserved in
+# RUNNER_TEMP, so discard that disposable working-tree state before crossing to the canonical base.
+git reset --hard HEAD
+if ($LASTEXITCODE -ne 0) { throw "failed to reset disposable working tree" }
+git clean -fd
+if ($LASTEXITCODE -ne 0) { throw "failed to clean disposable working tree" }
+
 git fetch --no-tags origin $baseSha
 if ($LASTEXITCODE -ne 0) { throw "failed to fetch canonical R3.16B base $baseSha" }
 git checkout --detach $baseSha
