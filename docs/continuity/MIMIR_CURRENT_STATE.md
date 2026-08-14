@@ -4,73 +4,67 @@
 **Repository:** `Naveax/MIMIR`
 **Canonical production SHA:** `c3d4c73ca34febb9f0383c59132a8bc8a363b06b`
 **Production milestone:** `R3.17C — native primitive scalar attribute decoder implementation`
-**Completed evidence authority:** `R3.17A — Outcome A`
-**Completed contract pass:** `R3.17B — Outcome A`
-**Current exact pass:** `R3.17D — primitive scalar native differential`
+**Completed native differential:** `R3.17D — Outcome A / 96 of 96 exact`
+**Current exact pass:** `R3.17E — object/reference/text attribute wire-format evidence`
 
 ## 1. Truthful production boundary
 
-MIMIR can now decode exactly one already-resolved primitive scalar payload for:
+MIMIR can natively decode exactly one already-resolved primitive scalar payload for Boolean, Byte, Enum, Float, Int or Int64 and stops exactly after that value. R3.17D independently reproduced the immutable R3.17A 96-witness set at 96/96 exact equality.
+
+No K2 object/reference/text payload is native production capability yet.
+
+## 2. R3.17D closure authority
 
 ```text
-Boolean  1 bit
-Byte     8 bits
-Enum     11 bits
-Float    32 bits, raw u32 + f32 interpretation
-Int      32 bits, signed two's-complement interpretation
-Int64    64 bits, signed two's-complement interpretation
+production SHA                 c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+production source blob         54e1bfb918ec1bd42a61cfa0131ca27412082ac5
+evidence head                  e8f1522fb6289368bbd254d2f839091452377e9e
+authority run/job              31798478106 / 94760722134 SUCCESS
+exact-head normal CI           31798478071 / 94760722233 SUCCESS
+witness rows                   96
+native decode success          96
+exact match                    96/96
+mismatch count                 0
+native error count             0
+identity error count           0
+unsupported tag count          0
+production/Cargo/corpus mut.   0 / 0 / 0
+artifact id                    9218372907
+artifact zip SHA-256           db049fbfd8514bb1cd661ab6b73ddf517d9786e961d764e62bc4e6137ce83e6f
+identity TSV SHA-256           b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+witness JSONL SHA-256          b2e8800e55fd3760f77b7ac880aa2147f93d0aa00f65a0911cdbb89415ac68d9
+witness TSV SHA-256            ee7f1baaa7696056172e28da2fed0848975ff1d2440113bb4d242f49d0b9da6e
+comparison TSV SHA-256         f10fa74e2975e1d13c8f23c5a570409667b0c4057428439a414b47f8aaa39f73
+immutable receipt stream       PASS
 ```
 
-The caller supplies `payload_start_bit` and `ReplayNetworkAttributeTagV1`. The native decoder reuses the existing LSB-first `NetworkBitCursor`, requires no byte alignment, and returns exact `payload_start_bit`, `payload_end_bit`, `payload_width`, value and `stop_bit`.
+## 3. R3.17E exact next pass
 
-Production stops exactly after that one scalar. It does not continue the property loop.
-
-## 2. R3.17C production identity
+Roadmap K2 is the next attribute decoder wave:
 
 ```text
-pre-pass main                85430b9eedb3bf16d66abcd895d68fbc7217818e
-clean production SHA         c3d4c73ca34febb9f0383c59132a8bc8a363b06b
-production source blob       54e1bfb918ec1bd42a61cfa0131ca27412082ac5
-focused test blob            0293831df88723d6cf1e7fd13870bec6108d383a
-clean diff                   2 files, +465/-0
-focused tests                11/11 PASS
-disposable run/job           31795745652 / 94752360261 SUCCESS
-candidate CI                 31796122522 / 94753517283 SUCCESS
-candidate Knowledge          31796266602 / 94753955749 SUCCESS
-published-main CI            31796509896 / 94754670068 SUCCESS
-published-main Knowledge     31796560814 / 94754827522 SUCCESS
+ActiveActor
+String
+QWordString
+UniqueId
+PartyLeader
 ```
 
-## 3. R3.17D exact next pass
+R3.17E is evidence-only. Scan the exact supported 47-replay lane with pinned Boxcars, measure full occurrence counts first, then freeze bounded reproducible witnesses only for actually observed shapes.
 
-R3.17D is evidence-only. Recover the immutable R3.17A `r3_17a_scalar_witnesses.jsonl` receipt from job `94740870175` and compare all 96 rows against the native decoder at the same replay/network bit positions.
-
-Required exact comparisons:
-
-```text
-attribute tag
-payload_start_bit
-payload_end_bit
-payload_width
-Boolean / Byte / Enum / Int / Int64 value
-Float raw u32 bits and f32.to_bits()
-stop_bit == payload_end_bit
-```
-
-Admission requires 96/96 exact equality, no missing replay identity, no native error, and zero production/Cargo/corpus mutation.
+For each tag, evidence must determine exact bit span/value representation and any context/version gates. In particular, do not assume actor-reference structure, string encoding, fixed width, optionality or UniqueId/PartyLeader layouts from type names. Zero-observation tags remain closed.
 
 ## 4. Still closed
 
 ```text
+native K2 object/reference/text decoder
 second property / property-loop continuation
 next actor / next frame iteration
-RigidBody / ActiveActor / Location / other spatial or compound attribute payloads
+K3 Location/RigidBody/ReplicatedBoost/PickupNew
+K4 gameplay structured attribute family
 actor lifecycle mutation
-raw-state materialization
-semantic events
-replay slicing
-skill mining
-counterfactual rollout execution
+raw-state materialization and semantic events
+replay slicing / skill mining / counterfactual rollout
 training/runtime/export widening
 support-lane expansion
 ```
