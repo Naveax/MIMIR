@@ -1,0 +1,190 @@
+diff --git a/crates/mimir-replay/src/lib.rs b/crates/mimir-replay/src/lib.rs
+--- a/crates/mimir-replay/src/lib.rs
++++ b/crates/mimir-replay/src/lib.rs
+@@ -1298,6 +1298,156 @@ impl ReplayNetworkLookupPlanReader for MinimalReplayNetworkLookupPlanReader {
+     }
+ }
+ 
++/// Native existing-actor first-property envelope header admitted by R3.16A.
++///
++/// This result stops exactly at the selected property's payload boundary. It never decodes or
++/// consumes the attribute payload, never iterates to a second property, and never mutates actor
++/// state. `payload_start_bit` is present only when `property_present == true` and resolution
++/// succeeds.
++#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
++pub struct ReplayNetworkExistingActorFirstPropertyHeaderV1 {
++    pub actor_object_index: u32,
++    pub property_present: bool,
++    pub property_present_start_bit: u64,
++    pub property_present_end_bit: u64,
++    pub stream_id: Option<u32>,
++    pub stream_id_bound: Option<u32>,
++    pub prop_id_bits: Option<u8>,
++    pub stream_id_start_bit: Option<u64>,
++    pub stream_id_end_bit: Option<u64>,
++    pub resolved_property_object_index: Option<u32>,
++    pub resolved_property_object_name: Option<String>,
++    pub resolved_attribute_tag: Option<ReplayNetworkAttributeTagV1>,
++    pub payload_start_bit: Option<u64>,
++    pub stop_bit: u64,
++}
++
++/// Decode exactly one existing-actor property envelope header from an already admitted cursor.
++///
++/// `property_start_bit` must identify the first property-present bit after an alive existing
++/// actor (`new == false`). The caller supplies the already materialized static/inherited lookup
++/// plan. This function consumes no attribute payload bits and performs no actor/frame iteration.
++pub fn decode_replay_network_existing_actor_first_property_header_v1(
++    network_bytes: &[u8],
++    property_start_bit: u64,
++    actor_object_index: u32,
++    lookup_plan: &ReplayNetworkLookupPlanV1,
++) -> Result<ReplayNetworkExistingActorFirstPropertyHeaderV1> {
++    let start = usize::try_from(property_start_bit).map_err(|_| {
++        network_existing_actor_property_error(
++            "invalid-position",
++            format!("property start bit {property_start_bit} does not fit usize"),
++        )
++    })?;
++    let total_bits = network_bytes.len().checked_mul(8).ok_or_else(|| {
++        network_existing_actor_property_error(
++            "invalid-length",
++            "network bit length overflows usize",
++        )
++    })?;
++    if start > total_bits {
++        return Err(network_existing_actor_property_error(
++            "invalid-position",
++            format!(
++                "property start bit {property_start_bit} exceeds network bit length {total_bits}"
++            ),
++        ));
++    }
++
++    let mut cursor = NetworkBitCursor::new(network_bytes);
++    cursor.bit_position = start;
++
++    let property_present_start_bit = network_position_to_u64(cursor.position_bits())?;
++    let property_present = cursor.read_bit()?;
++    let property_present_end_bit = network_position_to_u64(cursor.position_bits())?;
++
++    if !property_present {
++        return Ok(ReplayNetworkExistingActorFirstPropertyHeaderV1 {
++            actor_object_index,
++            property_present,
++            property_present_start_bit,
++            property_present_end_bit,
++            stream_id: None,
++            stream_id_bound: None,
++            prop_id_bits: None,
++            stream_id_start_bit: None,
++            stream_id_end_bit: None,
++            resolved_property_object_index: None,
++            resolved_property_object_name: None,
++            resolved_attribute_tag: None,
++            payload_start_bit: None,
++            stop_bit: property_present_end_bit,
++        });
++    }
++
++    let actor_slot = usize::try_from(actor_object_index).map_err(|_| {
++        network_existing_actor_property_error(
++            "invalid-actor-object",
++            format!("actor object index {actor_object_index} does not fit usize"),
++        )
++    })?;
++    let object_lookup = lookup_plan
++        .object_lookups
++        .get(actor_slot)
++        .and_then(Option::as_ref)
++        .ok_or_else(|| {
++            network_existing_actor_property_error(
++                "missing-actor-lookup",
++                format!("no admitted object lookup for actor object {actor_object_index}"),
++            )
++        })?;
++    if object_lookup.object_index != actor_object_index {
++        return Err(network_existing_actor_property_error(
++            "actor-lookup-identity-mismatch",
++            format!(
++                "actor object {actor_object_index} resolved to lookup object {}",
++                object_lookup.object_index
++            ),
++        ));
++    }
++
++    let stream_id_start_bit = network_position_to_u64(cursor.position_bits())?;
++    let stream_id = cursor.read_bounded_u32(object_lookup.max_prop_id, object_lookup.prop_id_bits)?;
++    let stream_id_end_bit = network_position_to_u64(cursor.position_bits())?;
++
++    let property = object_lookup
++        .properties
++        .iter()
++        .find(|property| property.stream_id == stream_id)
++        .ok_or_else(|| {
++            network_existing_actor_property_error(
++                "unresolved-stream-id",
++                format!(
++                    "stream id {stream_id} is not resolved for actor object {actor_object_index}"
++                ),
++            )
++        })?;
++    let property_slot = usize::try_from(property.object_index).map_err(|_| {
++        network_existing_actor_property_error(
++            "invalid-property-object",
++            format!("property object index {} does not fit usize", property.object_index),
++        )
++    })?;
++    let property_name = lookup_plan
++        .footer_lookup
++        .objects
++        .get(property_slot)
++        .cloned()
++        .ok_or_else(|| {
++            network_existing_actor_property_error(
++                "invalid-property-object",
++                format!(
++                    "property object index {} is outside object table length {}",
++                    property.object_index,
++                    lookup_plan.footer_lookup.objects.len()
++                ),
++            )
++        })?;
++
++    Ok(ReplayNetworkExistingActorFirstPropertyHeaderV1 {
++        actor_object_index,
++        property_present,
++        property_present_start_bit,
++        property_present_end_bit,
++        stream_id: Some(stream_id),
++        stream_id_bound: Some(object_lookup.max_prop_id),
++        prop_id_bits: Some(object_lookup.prop_id_bits),
++        stream_id_start_bit: Some(stream_id_start_bit),
++        stream_id_end_bit: Some(stream_id_end_bit),
++        resolved_property_object_index: Some(property.object_index),
++        resolved_property_object_name: Some(property_name),
++        resolved_attribute_tag: Some(property.tag),
++        payload_start_bit: Some(stream_id_end_bit),
++        stop_bit: stream_id_end_bit,
++    })
++}
++
++fn network_existing_actor_property_error(category: &str, detail: impl Into<String>) -> MimirError {
++    MimirError::message(format!(
++        "replay existing actor property header error: {category}: {}",
++        detail.into()
++    ))
++}
++
++fn network_position_to_u64(position: usize) -> Result<u64> {
++    u64::try_from(position).map_err(|_| {
++        network_existing_actor_property_error(
++            "invalid-position",
++            format!("network bit position {position} does not fit u64"),
++        )
++    })
++}
++
+ fn network_lookup_plan_error(category: &str, detail: impl Into<String>) -> MimirError {
+     MimirError::message(format!(
+         "replay network lookup plan error: {category}: {}",
