@@ -1,0 +1,157 @@
+name: R3.17J Contract Admission
+
+on:
+  push:
+    branches:
+      - agent/r317j-contract-admission
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  contract:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      BASE_MAIN: 77028734ba33818c6ee7cac65f5f9e75aebca0e0
+      PROD_SHA: 9bfa837c69c4751f70ca63a17c65f0f89877ff32
+      PROD_BLOB: 7288238cfb5338653552435be6af41f0dd7a4e85
+      EVIDENCE_RUN: "31812804986"
+      ARTIFACT_ID: "9223916983"
+      ARTIFACT_NAME: r317i-k3-wire-evidence
+      ARTIFACT_DIGEST: sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
+      GROUPS_SHA: 04e93bdbc964f89d0c3ec79cd11f714f8f2fb74d2dadc7c2bb6e2098cd93a22b
+      ALLOWLIST_SHA: 9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+
+    steps:
+      - name: Checkout disposable contract branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen main and production identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch failed" }
+          $originMain = (git rev-parse origin/main).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "rev-parse origin/main failed" }
+          if ($originMain -ne $env:BASE_MAIN) { throw "fresh main moved: $originMain" }
+          $blob = (git rev-parse "$($env:PROD_SHA):crates/mimir-replay/src/lib.rs").Trim()
+          if ($LASTEXITCODE -ne 0) { throw "production blob lookup failed" }
+          if ($blob -ne $env:PROD_BLOB) { throw "production blob mismatch: $blob" }
+          Write-Host "frozen main / production blob PASS"
+
+      - name: Verify and download immutable R3.17I artifact
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $meta = gh api "repos/${{ github.repository }}/actions/artifacts/$($env:ARTIFACT_ID)" | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw "artifact metadata fetch failed" }
+          if ($meta.digest -ne $env:ARTIFACT_DIGEST) { throw "artifact digest mismatch: $($meta.digest)" }
+          $dest = Join-Path $env:RUNNER_TEMP "r317i"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          gh run download $env:EVIDENCE_RUN -R "${{ github.repository }}" -n $env:ARTIFACT_NAME -D $dest
+          if ($LASTEXITCODE -ne 0) { throw "artifact download failed" }
+          $groups = Join-Path $dest "r3_17i_k3_groups.jsonl"
+          $sha = (Get-FileHash -Algorithm SHA256 $groups).Hash.ToLowerInvariant()
+          if ($sha -ne $env:GROUPS_SHA) { throw "groups SHA mismatch: $sha" }
+          Write-Host "artifact / groups PASS: $groups"
+
+      - name: Generate exact R3.17J contract
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $groups = Join-Path $env:RUNNER_TEMP "r317i\r3_17i_k3_groups.jsonl"
+          python tools/_tmp_r317j_contract.py --groups $groups
+          if ($LASTEXITCODE -ne 0) { throw "contract generator failed" }
+          $allow = "docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json"
+          $sha = (Get-FileHash -Algorithm SHA256 $allow).Hash.ToLowerInvariant()
+          if ($sha -ne $env:ALLOWLIST_SHA) { throw "allowlist SHA mismatch: $sha" }
+
+      - name: Verify exact seven-file contract scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "MIMIR_CONTINUE_HERE.md",
+            "MIMIR_KNOWLEDGE_GRAPH.md",
+            "docs/continuity/MIMIR_CONTINUITY_STATE.json",
+            "docs/continuity/MIMIR_CURRENT_STATE.md",
+            "docs/continuity/MIMIR_R3_17J_DECISION.md",
+            "docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json",
+            "docs/continuity/MIMIR_R3_17K_EXECUTION_SPEC.md"
+          )
+          git add -- $files
+          if ($LASTEXITCODE -ne 0) { throw "git add failed" }
+          $actual = @(git diff --cached --name-only)
+          if ($LASTEXITCODE -ne 0) { throw "cached name diff failed" }
+          $expected = @($files | Sort-Object)
+          $actualSorted = @($actual | Sort-Object)
+          if (($expected -join "`n") -ne ($actualSorted -join "`n")) {
+            Write-Host "Expected:"; $expected
+            Write-Host "Actual:"; $actualSorted
+            throw "contract scope mismatch"
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed" }
+          if (git diff --cached --name-only | Select-String -Pattern '(^|/)(Cargo\.toml|Cargo\.lock)$|^crates/|^test_corpus/|^external_fixtures/') {
+            throw "production/Cargo/corpus mutation detected"
+          }
+          Write-Host "exact seven-file docs/contract scope PASS"
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed" }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          rustup show
+          if ($LASTEXITCODE -ne 0) { throw "rustup show failed" }
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { throw "rustup component failed" }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed" }
+
+      - name: Publish clean R3.17J contract candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "MIMIR_CONTINUE_HERE.md",
+            "MIMIR_KNOWLEDGE_GRAPH.md",
+            "docs/continuity/MIMIR_CONTINUITY_STATE.json",
+            "docs/continuity/MIMIR_CURRENT_STATE.md",
+            "docs/continuity/MIMIR_R3_17J_DECISION.md",
+            "docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json",
+            "docs/continuity/MIMIR_R3_17K_EXECUTION_SPEC.md"
+          )
+          $patch = Join-Path $env:RUNNER_TEMP "r317j.patch"
+          git diff --cached --binary | Out-File -Encoding utf8 $patch
+          if ($LASTEXITCODE -ne 0) { throw "patch export failed" }
+          $candidate = Join-Path $env:RUNNER_TEMP "r317j-clean"
+          git worktree add --detach $candidate $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { throw "worktree add failed" }
+          git -C $candidate apply --index $patch
+          if ($LASTEXITCODE -ne 0) { throw "clean patch apply failed" }
+          $cleanFiles = @(git -C $candidate diff --cached --name-only)
+          if (($files | Sort-Object) -join "`n" -ne ($cleanFiles | Sort-Object) -join "`n") { throw "clean candidate scope mismatch" }
+          git -C $candidate diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate diff check failed" }
+          git -C $candidate config user.name "github-actions[bot]"
+          git -C $candidate config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C $candidate commit -m "Admit R3.17J K3 contract and open R3.17K"
+          if ($LASTEXITCODE -ne 0) { throw "clean commit failed" }
+          $candidateSha = (git -C $candidate rev-parse HEAD).Trim()
+          $parent = (git -C $candidate rev-parse HEAD^).Trim()
+          if ($parent -ne $env:BASE_MAIN) { throw "clean candidate parent mismatch: $parent" }
+          git -C $candidate push origin "HEAD:refs/heads/candidate/r3-17j-contract-clean"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed" }
+          Write-Host "CANDIDATE_SHA=$candidateSha"
