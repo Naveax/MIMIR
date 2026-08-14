@@ -16,6 +16,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Apply disposable R3.16B production patch
+        shell: pwsh
+        run: |
+          git apply --check tools/_tmp_r316b_property_header.patch
+          git apply tools/_tmp_r316b_property_header.patch
+          git diff --check -- crates/mimir-replay/src/lib.rs
+
       - name: Toolchain
         shell: pwsh
         run: |
@@ -25,3 +32,12 @@ jobs:
       - name: Repository verification
         shell: pwsh
         run: pwsh -NoProfile -File scripts/verify_repo.ps1
+
+      - name: Upload disposable patched source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r316b-patched-source
+          path: crates/mimir-replay/src/lib.rs
+          if-no-files-found: error
+          retention-days: 1
