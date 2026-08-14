@@ -1,0 +1,59 @@
+name: R3.17H Native K2 Differential Audit v2
+
+on:
+  push:
+    branches:
+      - evidence/r317h-k2-differential-v2
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout audit branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Execute corrected read-only R3.17H audit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/_tmp_r317h_run.sh
+
+      - name: Upload privacy-safe R3.17H audit evidence
+        id: audit_upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r317h-native-k2-differential-v2
+          path: |
+            r3_17h_source_scope.txt
+            r3_17h_replay_identity.tsv
+            r3_17h_driver_sha256.txt
+            r3_17h_match_rows.jsonl
+            r3_17h_summary.json
+            r3_17h_aggregate.txt
+            r3_17h_receipt_sha256.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Emit immutable R3.17H receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.audit_upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.audit_upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          printf 'R3_17H_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_17H_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_17H_ARTIFACT_ID=%s\n' "$ARTIFACT_ID"
+          printf 'R3_17H_ARTIFACT_DIGEST=%s\n' "$ARTIFACT_DIGEST"
+          cat r3_17h_aggregate.txt
+          cat r3_17h_receipt_sha256.txt
+          echo 'R3_17H_RECEIPT=PASS'
