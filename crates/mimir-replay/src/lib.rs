@@ -1519,7 +1519,434 @@ impl PartialEq for ReplayNetworkPrimitiveScalarValueV1 {
 impl Eq for ReplayNetworkPrimitiveScalarValueV1 {}
 
 /// Exact result of decoding one admitted primitive scalar payload.
+/// Caller-resolved context for one evidence-admitted K2 payload decode.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkK2DecodeContextV1 {
+    pub net_version: i32,
+    pub is_rl_223: bool,
+}
+
+/// Wire encoding identity retained for an admitted length-prefixed network string.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ReplayNetworkTextEncodingV1 {
+    Empty,
+    Windows1252,
+    Utf16Le,
+}
+
+/// One decoded network text value plus the signed length that selected its wire branch.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkTextV1 {
+    pub value: String,
+    pub declared_length: i32,
+    pub encoding: ReplayNetworkTextEncodingV1,
+}
+
+/// Evidence-admitted remote identity variants for one direct K2 value.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ReplayNetworkUniqueIdRemoteV1 {
+    Steam {
+        online_id: u64,
+    },
+    PlayStation {
+        name: String,
+        unknown: Vec<u8>,
+        online_id: u64,
+    },
+    PsyNet {
+        online_id: u64,
+    },
+    Epic {
+        account_id: ReplayNetworkTextV1,
+    },
+}
+
+/// One evidence-admitted network unique id.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkUniqueIdV1 {
+    pub system_id: u8,
+    pub remote_id: ReplayNetworkUniqueIdRemoteV1,
+    pub local_id: u8,
+}
+
+/// Semantic value returned by the direct one-value K2 decoder.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ReplayNetworkK2ValueV1 {
+    ActiveActor { active: bool, actor: i32 },
+    String(ReplayNetworkTextV1),
+    QWordStringQWord(u64),
+    QWordStringText(ReplayNetworkTextV1),
+    UniqueId(ReplayNetworkUniqueIdV1),
+    PartyLeader(ReplayNetworkUniqueIdV1),
+}
+
+/// Exactly one already-resolved evidence-admitted K2 payload decode.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkK2DecodeV1 {
+    pub attribute_tag: ReplayNetworkAttributeTagV1,
+    pub payload_start_bit: u64,
+    pub payload_end_bit: u64,
+    pub payload_width: u64,
+    pub value: ReplayNetworkK2ValueV1,
+}
+
+fn network_k2_reset_cursor(cursor: &mut NetworkBitCursor<'_>, start: usize) {
+    cursor.bit_position = start;
+    debug_assert_eq!(cursor.position_bits(), start);
+}
+
+fn replay_network_k2_error(category: &str, detail: impl Into<String>) -> MimirError {
+    MimirError::message(format!(
+        "replay network k2 error: {category}: {}",
+        detail.into()
+    ))
+}
+
+fn network_k2_read_u8(cursor: &mut NetworkBitCursor<'_>) -> Result<u8> {
+    cursor.read_bits_le(8).map(|value| value as u8)
+}
+
+fn network_k2_read_u64(cursor: &mut NetworkBitCursor<'_>) -> Result<u64> {
+    cursor.read_bits_le(64)
+}
+
+fn network_k2_read_bytes(cursor: &mut NetworkBitCursor<'_>, count: usize) -> Result<Vec<u8>> {
+    let required_bits = count.checked_mul(8).ok_or_else(|| {
+        replay_network_k2_error("invalid-text-length", "byte length overflows bit width")
+    })?;
+    if cursor.remaining_bits() < required_bits {
+        return Err(replay_network_k2_error(
+            "insufficient-bits",
+            format!(
+                "need {required_bits} content bits at position {}, but only {} remain",
+                cursor.position_bits(),
+                cursor.remaining_bits()
+            ),
+        ));
+    }
+
+    let mut output = Vec::new();
+    output.try_reserve_exact(count).map_err(|_| {
+        replay_network_k2_error(
+            "invalid-text-length",
+            format!("unable to reserve {count} decoded bytes"),
+        )
+    })?;
+    for _ in 0..count {
+        output.push(network_k2_read_u8(cursor)?);
+    }
+    Ok(output)
+}
+
+fn decode_network_windows1252(bytes: &[u8]) -> String {
+    let mut output = String::with_capacity(bytes.len());
+    for byte in bytes {
+        let character = match *byte {
+            0x80 => '\u{20ac}',
+            0x81 => '\u{0081}',
+            0x82 => '\u{201a}',
+            0x83 => '\u{0192}',
+            0x84 => '\u{201e}',
+            0x85 => '\u{2026}',
+            0x86 => '\u{2020}',
+            0x87 => '\u{2021}',
+            0x88 => '\u{02c6}',
+            0x89 => '\u{2030}',
+            0x8a => '\u{0160}',
+            0x8b => '\u{2039}',
+            0x8c => '\u{0152}',
+            0x8d => '\u{008d}',
+            0x8e => '\u{017d}',
+            0x8f => '\u{008f}',
+            0x90 => '\u{0090}',
+            0x91 => '\u{2018}',
+            0x92 => '\u{2019}',
+            0x93 => '\u{201c}',
+            0x94 => '\u{201d}',
+            0x95 => '\u{2022}',
+            0x96 => '\u{2013}',
+            0x97 => '\u{2014}',
+            0x98 => '\u{02dc}',
+            0x99 => '\u{2122}',
+            0x9a => '\u{0161}',
+            0x9b => '\u{203a}',
+            0x9c => '\u{0153}',
+            0x9d => '\u{009d}',
+            0x9e => '\u{017e}',
+            0x9f => '\u{0178}',
+            value => char::from_u32(u32::from(value)).expect("u8 is always a Unicode scalar"),
+        };
+        output.push(character);
+    }
+    output
+}
+
+fn decode_network_text_v1(cursor: &mut NetworkBitCursor<'_>) -> Result<ReplayNetworkTextV1> {
+    let declared_length = cursor.read_bits_le(32)? as u32 as i32;
+    if declared_length == 0 {
+        return Ok(ReplayNetworkTextV1 {
+            value: String::new(),
+            declared_length,
+            encoding: ReplayNetworkTextEncodingV1::Empty,
+        });
+    }
+
+    if declared_length > 0 {
+        let byte_count = usize::try_from(declared_length).map_err(|_| {
+            replay_network_k2_error(
+                "invalid-text-length",
+                format!("positive text length {declared_length} does not fit usize"),
+            )
+        })?;
+        let bytes = network_k2_read_bytes(cursor, byte_count)?;
+        let content = &bytes[..byte_count - 1];
+        return Ok(ReplayNetworkTextV1 {
+            value: decode_network_windows1252(content),
+            declared_length,
+            encoding: ReplayNetworkTextEncodingV1::Windows1252,
+        });
+    }
+
+    if declared_length == i32::MIN {
+        return Err(replay_network_k2_error(
+            "invalid-text-length",
+            "i32::MIN cannot be negated for UTF-16 byte length",
+        ));
+    }
+
+    let code_unit_count = usize::try_from(-declared_length).map_err(|_| {
+        replay_network_k2_error(
+            "invalid-text-length",
+            format!("UTF-16 code-unit length {declared_length} does not fit usize"),
+        )
+    })?;
+    let byte_count = code_unit_count.checked_mul(2).ok_or_else(|| {
+        replay_network_k2_error(
+            "invalid-text-length",
+            format!("UTF-16 byte length overflows for {declared_length}"),
+        )
+    })?;
+    let bytes = network_k2_read_bytes(cursor, byte_count)?;
+    let content = &bytes[..byte_count - 2];
+    let mut units = Vec::new();
+    units.try_reserve_exact(content.len() / 2).map_err(|_| {
+        replay_network_k2_error(
+            "invalid-text-length",
+            format!("unable to reserve {} UTF-16 code units", content.len() / 2),
+        )
+    })?;
+    for chunk in content.chunks_exact(2) {
+        units.push(u16::from_le_bytes([chunk[0], chunk[1]]));
+    }
+
+    Ok(ReplayNetworkTextV1 {
+        value: String::from_utf16_lossy(&units),
+        declared_length,
+        encoding: ReplayNetworkTextEncodingV1::Utf16Le,
+    })
+}
+
+fn decode_network_unique_id_v1(
+    cursor: &mut NetworkBitCursor<'_>,
+    context: ReplayNetworkK2DecodeContextV1,
+) -> Result<ReplayNetworkUniqueIdV1> {
+    if context.net_version != 10 {
+        return Err(replay_network_k2_error(
+            "unadmitted-context",
+            format!(
+                "UniqueId requires net_version 10, got {}",
+                context.net_version
+            ),
+        ));
+    }
+
+    let system_id = network_k2_read_u8(cursor)?;
+    let remote_id = match system_id {
+        1 => ReplayNetworkUniqueIdRemoteV1::Steam {
+            online_id: network_k2_read_u64(cursor)?,
+        },
+        2 => {
+            if !context.is_rl_223 {
+                return Err(replay_network_k2_error(
+                    "unadmitted-context",
+                    "PlayStation UniqueId was observed only in RL223 context",
+                ));
+            }
+            let name_bytes = network_k2_read_bytes(cursor, 16)?;
+            let name_end = name_bytes
+                .iter()
+                .position(|byte| *byte == 0)
+                .unwrap_or(name_bytes.len());
+            let name = decode_network_windows1252(&name_bytes[..name_end]);
+            let unknown = network_k2_read_bytes(cursor, 16)?;
+            let online_id = network_k2_read_u64(cursor)?;
+            ReplayNetworkUniqueIdRemoteV1::PlayStation {
+                name,
+                unknown,
+                online_id,
+            }
+        }
+        7 => {
+            if !context.is_rl_223 {
+                return Err(replay_network_k2_error(
+                    "unadmitted-context",
+                    "PsyNet UniqueId was observed only in RL223 context",
+                ));
+            }
+            ReplayNetworkUniqueIdRemoteV1::PsyNet {
+                online_id: network_k2_read_u64(cursor)?,
+            }
+        }
+        11 => {
+            let account_id = decode_network_text_v1(cursor)?;
+            if account_id.encoding != ReplayNetworkTextEncodingV1::Windows1252
+                || account_id.declared_length != 33
+            {
+                return Err(replay_network_k2_error(
+                    "unadmitted-k2-shape",
+                    format!(
+                        "Epic UniqueId requires Windows-1252 declared length 33, got {:?} / {}",
+                        account_id.encoding, account_id.declared_length
+                    ),
+                ));
+            }
+            ReplayNetworkUniqueIdRemoteV1::Epic { account_id }
+        }
+        value => {
+            return Err(replay_network_k2_error(
+                "unadmitted-k2-shape",
+                format!("UniqueId system id {value} is not admitted by R3.17F"),
+            ));
+        }
+    };
+    let local_id = network_k2_read_u8(cursor)?;
+    Ok(ReplayNetworkUniqueIdV1 {
+        system_id,
+        remote_id,
+        local_id,
+    })
+}
+
+/// Decode exactly one already-resolved R3.17F-admitted K2 payload.
 ///
+/// This API is intentionally stateless: it receives the exact payload start and returns
+/// the first bit after one K2 value. It does not continue a property loop or mutate actor state.
+pub fn decode_replay_network_k2_v1(
+    network_bytes: &[u8],
+    payload_start_bit: u64,
+    attribute_tag: ReplayNetworkAttributeTagV1,
+    context: ReplayNetworkK2DecodeContextV1,
+) -> Result<ReplayNetworkK2DecodeV1> {
+    let total_bits = network_bytes.len().checked_mul(8).ok_or_else(|| {
+        replay_network_k2_error("invalid-start", "network bit length overflows usize")
+    })?;
+    let total_bits_u64 = u64::try_from(total_bits).map_err(|_| {
+        replay_network_k2_error("invalid-start", "network bit length does not fit u64")
+    })?;
+    if payload_start_bit > total_bits_u64 {
+        return Err(replay_network_k2_error(
+            "invalid-start",
+            format!(
+                "payload start {payload_start_bit} exceeds network length {total_bits_u64} bits"
+            ),
+        ));
+    }
+    let start = usize::try_from(payload_start_bit).map_err(|_| {
+        replay_network_k2_error(
+            "invalid-start",
+            format!("payload start {payload_start_bit} does not fit usize"),
+        )
+    })?;
+
+    let mut cursor = NetworkBitCursor::new(network_bytes);
+    network_k2_reset_cursor(&mut cursor, start);
+    let decoded = (|| -> Result<ReplayNetworkK2ValueV1> {
+        match attribute_tag {
+            ReplayNetworkAttributeTagV1::ActiveActor => {
+                let active = cursor.read_bit()?;
+                let actor = cursor.read_bits_le(32)? as u32 as i32;
+                Ok(ReplayNetworkK2ValueV1::ActiveActor { active, actor })
+            }
+            ReplayNetworkAttributeTagV1::String => {
+                decode_network_text_v1(&mut cursor).map(ReplayNetworkK2ValueV1::String)
+            }
+            ReplayNetworkAttributeTagV1::QWordString => {
+                if context.is_rl_223 {
+                    let value = decode_network_text_v1(&mut cursor)?;
+                    if value.encoding != ReplayNetworkTextEncodingV1::Windows1252
+                        || value.declared_length <= 0
+                    {
+                        return Err(replay_network_k2_error(
+                            "unadmitted-k2-shape",
+                            format!(
+                                "RL223 QWordString requires positive Windows-1252 text, got {:?} / {}",
+                                value.encoding, value.declared_length
+                            ),
+                        ));
+                    }
+                    Ok(ReplayNetworkK2ValueV1::QWordStringText(value))
+                } else {
+                    network_k2_read_u64(&mut cursor).map(ReplayNetworkK2ValueV1::QWordStringQWord)
+                }
+            }
+            ReplayNetworkAttributeTagV1::UniqueId => {
+                decode_network_unique_id_v1(&mut cursor, context)
+                    .map(ReplayNetworkK2ValueV1::UniqueId)
+            }
+            ReplayNetworkAttributeTagV1::PartyLeader => {
+                if context.net_version != 10 || !context.is_rl_223 {
+                    return Err(replay_network_k2_error(
+                        "unadmitted-context",
+                        format!(
+                            "PartyLeader requires net_version 10 and RL223 context, got {} / {}",
+                            context.net_version, context.is_rl_223
+                        ),
+                    ));
+                }
+                let unique = decode_network_unique_id_v1(&mut cursor, context)?;
+                if !matches!(unique.remote_id, ReplayNetworkUniqueIdRemoteV1::Epic { .. }) {
+                    return Err(replay_network_k2_error(
+                        "unadmitted-k2-shape",
+                        "PartyLeader admits only Some(Epic declared=33)",
+                    ));
+                }
+                Ok(ReplayNetworkK2ValueV1::PartyLeader(unique))
+            }
+            _ => Err(replay_network_k2_error(
+                "unsupported-k2-tag",
+                format!("attribute tag {attribute_tag:?} is not an admitted K2 tag"),
+            )),
+        }
+    })();
+
+    let value = match decoded {
+        Ok(value) => value,
+        Err(error) => {
+            network_k2_reset_cursor(&mut cursor, start);
+            return Err(error);
+        }
+    };
+    let payload_end_bit = u64::try_from(cursor.position_bits()).map_err(|_| {
+        network_k2_reset_cursor(&mut cursor, start);
+        replay_network_k2_error("invalid-start", "decoded end bit does not fit u64")
+    })?;
+    let payload_width = payload_end_bit
+        .checked_sub(payload_start_bit)
+        .ok_or_else(|| {
+            network_k2_reset_cursor(&mut cursor, start);
+            replay_network_k2_error("invalid-start", "decoded end bit precedes payload start")
+        })?;
+
+    Ok(ReplayNetworkK2DecodeV1 {
+        attribute_tag,
+        payload_start_bit,
+        payload_end_bit,
+        payload_width,
+        value,
+    })
+}
+
 /// This result is deliberately one-value only. `stop_bit` is exactly the first bit
 /// after the scalar and does not imply permission to read another property, actor,
 /// frame, or compound/spatial attribute.
