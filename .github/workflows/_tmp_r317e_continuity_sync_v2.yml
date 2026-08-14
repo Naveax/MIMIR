@@ -1,0 +1,83 @@
+name: R3.17E Continuity Admission v2
+
+on:
+  push:
+    branches:
+      - agent/r317e-continuity-sync
+
+permissions:
+  contents: write
+
+jobs:
+  admission:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout disposable branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build continuity working tree
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python tools/_tmp_r317e_continuity_sync.py
+          if ($LASTEXITCODE -ne 0) { throw 'sync failed' }
+          python tools/_tmp_r317e_strip_ws.py
+          if ($LASTEXITCODE -ne 0) { throw 'whitespace normalization failed' }
+
+      - name: Gate exact scope and knowledge
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = 'cfe4882f99dbce5e8148e476c177a0586b1e7986'
+          $prodBlob = '54e1bfb918ec1bd42a61cfa0131ca27412082ac5'
+          $expected = @('MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md','docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md','docs/continuity/MIMIR_R3_17E_DECISION.md','docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md') | Sort-Object
+          if ((git rev-parse 'HEAD:crates/mimir-replay/src/lib.rs') -ne $prodBlob) { throw 'production blob drift' }
+          git diff --exit-code "$base..HEAD" -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'protected branch drift' }
+          git add -N -- docs/continuity/MIMIR_R3_17E_DECISION.md docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md
+          if ($LASTEXITCODE -ne 0) { throw 'intent-to-add failed' }
+          $actual = @(git diff --name-only) | Sort-Object
+          if (($actual -join "`n") -ne ($expected -join "`n")) { $actual | ForEach-Object { Write-Host $_ }; throw 'scope mismatch' }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'diff check failed' }
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'knowledge verification failed' }
+          Write-Host 'R3_17E_CONTINUITY_GATE=PASS'
+
+      - name: Publish clean candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = 'cfe4882f99dbce5e8148e476c177a0586b1e7986'
+          $candidate = 'candidate/r3-17e-admission-clean'
+          $files = @('MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md','docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md','docs/continuity/MIMIR_R3_17E_DECISION.md','docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md')
+          $stage = Join-Path $env:RUNNER_TEMP 'r317e-clean'
+          if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+          New-Item -ItemType Directory -Path $stage | Out-Null
+          foreach ($f in $files) { $d = Join-Path $stage $f; $p = Split-Path -Parent $d; if ($p) { New-Item -ItemType Directory -Force -Path $p | Out-Null }; Copy-Item $f $d }
+          git fetch origin main --quiet
+          if ($LASTEXITCODE -ne 0) { throw 'fetch main failed' }
+          if ((git rev-parse origin/main) -ne $base) { throw 'main drifted' }
+          git checkout --detach $base
+          if ($LASTEXITCODE -ne 0) { throw 'checkout base failed' }
+          git clean -fdx
+          git checkout -B $candidate
+          if ($LASTEXITCODE -ne 0) { throw 'candidate checkout failed' }
+          foreach ($f in $files) { $s = Join-Path $stage $f; $p = Split-Path -Parent $f; if ($p) { New-Item -ItemType Directory -Force -Path $p | Out-Null }; Copy-Item $s $f }
+          git add -- $files
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw 'candidate diff check failed' }
+          git diff --cached --exit-code -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'candidate protected diff' }
+          $global:LASTEXITCODE = 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Admit R3.17E and open R3.17F'
+          if ($LASTEXITCODE -ne 0) { throw 'commit failed' }
+          $sha = git rev-parse HEAD
+          git push origin "HEAD:refs/heads/$candidate" --force
+          if ($LASTEXITCODE -ne 0) { throw 'push failed' }
+          Write-Host "R3_17E_ADMISSION_CLEAN_SHA=$sha"
