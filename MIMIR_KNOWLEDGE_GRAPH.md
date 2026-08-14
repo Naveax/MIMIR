@@ -21,7 +21,8 @@ R3.17C production decision              |
 R3.17D differential decision            |
 R3.17E K2 evidence decision             |
 R3.17F K2 contract decision             |
-R3.17G active implementation spec       |
+R3.17G K2 production decision           |
+R3.17H active differential spec         |
         |                               |
         +---------------+---------------+
                         |
@@ -51,13 +52,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 9. `docs/continuity/MIMIR_R3_17F_EXECUTION_SPEC.md`
 10. `docs/continuity/MIMIR_R3_17F_DECISION.md`
 11. `docs/continuity/MIMIR_R3_17G_EXECUTION_SPEC.md`
-12. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-13. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-14. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-15. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-16. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-17. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-18. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+12. `docs/continuity/MIMIR_R3_17G_DECISION.md`
+13. `docs/continuity/MIMIR_R3_17H_EXECUTION_SPEC.md`
+14. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+15. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+16. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+17. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+18. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+19. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+20. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -75,54 +78,36 @@ R3.13 static network lookup plan
       artifact 9219554878 / sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
       47/47 / 110539 K2 occurrences / 0 structural failures
  -> R3.17F evidence-supported K2 contract admission: OUTCOME A / CLOSED
- -> R3.17G direct native K2 decoder implementation: ACTIVE
+ -> R3.17G direct native K2 decoder implementation: PRODUCTION / CLOSED
+      production 9bfa837c69c4751f70ca63a17c65f0f89877ff32
+      implementation 31805820332 / 94784362093 SUCCESS
+      candidate CI 31806206582 / 94785622371 SUCCESS
+      published CI 31806554445 / 94786777798 SUCCESS
+ -> R3.17H native K2 differential audit: ACTIVE
 ```
 
 ## Current capability lock
 
-Production remains exactly at R3.17C: one already-resolved K1 primitive scalar payload may be decoded natively. R3.17E admitted K2 evidence, not native K2 production capability.
+Production can natively decode exactly one already-resolved K1 scalar or one R3.17F-admitted K2 payload. K2 success stops exactly at its payload end bit and does not authorize another property, actor, frame or lifecycle mutation.
 
-R3.17F admitted atomic contracts only for evidence-supported K2 shapes. R3.17G may implement exactly one already-resolved K2 payload under those contracts; native K2 capability is not claimed until production publication succeeds. PartyLeader `None`, non-Epic PartyLeader and other unseen K2 variants remain closed.
+R3.17H is read-only. It may regenerate raw witness values ephemerally for comparison, but no clear player/account payload may enter durable evidence. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
 Property-loop continuation, next actor/frame iteration, lifecycle mutation, K3 spatial/physics and K4 gameplay-structured families remain closed.
 
-## R3.17E closure identity
+## R3.17G production closure
 
 ```text
-evidence head              19db534a3668f84f1c5ce36ef1252c52841d890f
-authority run/job          31801482588 / 94770260529 SUCCESS
-normal CI                  31801482499 / 94770260054 SUCCESS
-artifact                   9219554878
-artifact digest            sha256:210a9138e7027672b27c2e557741625abba2af4836286ea2e4aa722fa613a0cc
-aggregate SHA256           335e4d96143160b4927ca11ef7666f9a18fa00bdd71ae8c866059c00342c4751
-summary SHA256             9472f4faf9c701302198b7907a8389c244af716ffe81a7d1951346c5b5a9566e
-oracle JSONL SHA256        196f4e4d2a588137ad12372cb2f0af79d7fca422c0bc2c5dea95506fa72cac4d
-witness JSONL SHA256       7db56e75d6754767d95a11af269ea2c31978a35e83be808bb6c9100eca71cb9b
-receipt manifest SHA256    400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc
-47/47 oracle decode        PASS
-K2 occurrences             110539
-shape/unclassified         0
-bit monotonicity failures  0
-raw-payload shape failures 0
-privacy-safe output        PASS
-production/Cargo/corpus    0/0/0 mutations
-outcome                    A
-```
-
-## R3.17F contract closure
-
-```text
-outcome                    A / contract complete
-production Rust            unchanged at c3d4c73ca34febb9f0383c59132a8bc8a363b06b
-contract base              b4b4449a99dabbb97120d5393c3d5b1462b6f81e
-ActiveActor                33-bit exact reference contract
-String                     Empty / Windows1252 / UTF16 atomic contract
-QWordString                legacy QWord64 / RL223 positive Windows1252
-UniqueId                   Steam / PlayStation / PsyNet / Epic(declared=33), net10
-PartyLeader                Some(Epic declared=33) only, net10 + RL223 true
-atomic failure             0-bit consumption from payload start
-privacy-safe G vectors     synthetic only
-next pass                  R3.17G production implementation
+production SHA              9bfa837c69c4751f70ca63a17c65f0f89877ff32
+source blob                 7288238cfb5338653552435be6af41f0dd7a4e85
+focused test blob           92033a72a8a737605ac3bf91e10d130082277e04
+implementation run/job      31805820332 / 94784362093 SUCCESS
+clean candidate CI          31806206582 / 94785622371 SUCCESS
+published main CI           31806554445 / 94786777798 SUCCESS
+focused tests               8/8 PASS
+mimir-replay tests          189 PASS
+workspace clippy            PASS
+scope                       lib.rs + r3_17g test only
+Cargo/corpus/support        unchanged
 ```
 
 ## Authority rule

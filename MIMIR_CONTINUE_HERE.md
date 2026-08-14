@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  c3d4c73ca34febb9f0383c59132a8bc8a363b06b
+  9bfa837c69c4751f70ca63a17c65f0f89877ff32
 
 LAST_PRODUCTION_MILESTONE:
-  R3.17C — native primitive scalar attribute decoder implementation
+  R3.17G — direct native evidence-admitted K2 decoder implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.17E — K2 object/reference/text wire evidence / Outcome A / 47/47 / 110539 occurrences
@@ -58,10 +58,10 @@ LAST_COMPLETED_CONTRACT_PASS:
   R3.17F — evidence-supported K2 object/reference/text contract / Outcome A
 
 CURRENT_PASS:
-  R3.17G — direct native K2 decoder implementation for contract-admitted variants only
+  R3.17H — native K2 differential audit against immutable R3.17E evidence-supported witnesses
 
 CURRENT_PASS_TYPE:
-  production implementation / one already-resolved K2 payload only
+  read-only differential audit / NO production capability widening
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -74,9 +74,9 @@ PINNED_BOXCARS_ORACLE:
   exact SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
 
 CURRENT_PRODUCTION_HARD_STOP:
-  one already-resolved K1 primitive scalar payload may be decoded natively
-  stop exactly at payload_end_bit / stop_bit after that one scalar
-  NO native K2 decoder, second property, next actor, next frame, K3 or K4 family is admitted
+  one already-resolved K1 primitive scalar OR one R3.17F-admitted K2 payload may be decoded natively
+  stop exactly at payload_end_bit / stop_bit after that one value
+  NO second property, next actor, next frame, unobserved K2, K3 or K4 family is admitted
 
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
@@ -106,20 +106,34 @@ R3_17F_CONTRACT_CLOSURE:
   PartyLeader: only Some(Epic, Windows1252 declared=33), net10 + RL223 true
   unseen shapes/context combinations remain unadmitted
 
-R3_17G_OPEN_BOUNDARY:
-  implement direct native one-value K2 decoder only for R3.17F-admitted shapes
-  reuse NetworkBitCursor and atomic rollback semantics
-  synthetic privacy-safe focused vectors only
-  expected source scope: crates/mimir-replay/src/lib.rs + r3_17g focused test
+R3_17G_PRODUCTION_CLOSURE:
+  production SHA: 9bfa837c69c4751f70ca63a17c65f0f89877ff32
+  source blob: 7288238cfb5338653552435be6af41f0dd7a4e85
+  focused test blob: 92033a72a8a737605ac3bf91e10d130082277e04
+  implementation validation: 31805820332 / 94784362093 SUCCESS
+  clean-candidate CI: 31806206582 / 94785622371 SUCCESS
+  published-main CI: 31806554445 / 94786777798 SUCCESS
+  exact production scope: crates/mimir-replay/src/lib.rs + r3_17g focused test only
+  focused tests: 8/8 PASS; mimir-replay total: 189 PASS; workspace clippy: PASS
+  native one-value K2: ActiveActor / String / QWordString / admitted UniqueId / admitted PartyLeader
+  Cargo/fixture/corpus/support-lane changes: none
 
-R3_17G_HARD_STOP:
+R3_17H_OPEN_BOUNDARY:
+  read-only differential audit only; production Rust mutation forbidden
+  anchor to immutable R3.17E evidence identities and pinned Boxcars SHA
+  select the exact 469 privacy-safe R3.17E witness occurrences
+  regenerate raw values only ephemerally; persist no clear player/account payloads
+  compare native vs pinned oracle shape, exact width/end, context gate and semantic equality in-memory
+
+R3_17H_HARD_STOP:
+  no production implementation changes in the audit pass
   no second property / property-loop continuation
   no unobserved K2 variants
   no K3/K4, lifecycle, raw-state, event, skill, runtime or export widening
   no Cargo, fixture, corpus or support-lane change
 
-NEXT PASS IF R3.17G PUBLISHES CLEANLY:
-  R3.17H — native K2 differential audit against immutable R3.17E evidence-supported witnesses
+NEXT PASS IF R3.17H OUTCOME A:
+  decide the next evidence family only after the differential closure is admitted
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
