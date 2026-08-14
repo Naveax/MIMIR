@@ -1,0 +1,140 @@
+name: R3.17D Primitive Scalar Differential
+
+on:
+  push:
+    branches:
+      - evidence/r317d-primitive-scalar-differential
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout evidence branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen production and zero protected mutation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = '4c307b5907a3e888b224ff925213109e0436841a'
+          $sourceBlob = '54e1bfb918ec1bd42a61cfa0131ca27412082ac5'
+          $focusedTestBlob = '0293831df88723d6cf1e7fd13870bec6108d383a'
+          if ((git rev-parse 'HEAD:crates/mimir-replay/src/lib.rs') -ne $sourceBlob) {
+            throw 'R3.17D frozen production source blob mismatch'
+          }
+          if ((git rev-parse 'HEAD:crates/mimir-replay/tests/r3_17c_scalar_attribute_decoder.rs') -ne $focusedTestBlob) {
+            throw 'R3.17D frozen R3.17C focused-test blob mismatch'
+          }
+          git diff --exit-code "$base..HEAD" -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_17c_scalar_attribute_decoder.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17D protected production/Cargo/corpus mutation detected' }
+          Write-Host 'R3_17D_FROZEN_PRODUCTION=PASS'
+
+      - name: Extract immutable R3.17A receipt authority
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p target
+          gh api --allow-escape-sequences repos/Naveax/MIMIR/actions/jobs/94740870175/logs > target/r317a_job.log
+          python tools/_tmp_r317d_extract.py target/r317a_job.log
+          test "$(wc -l < target/r317d_replay_identity.tsv | tr -d ' ')" -eq 47
+          test "$(wc -l < target/r317d_scalar_witnesses.jsonl | tr -d ' ')" -eq 96
+          test "$(wc -l < target/r317d_scalar_witnesses.tsv | tr -d ' ')" -eq 96
+          echo 'R3_17D_IMMUTABLE_AUTHORITY=PASS'
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { throw 'rust component setup failed' }
+
+      - name: Run exact 96-witness native differential
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:MIMIR_R317D_WITNESS_TSV = (Resolve-Path 'target/r317d_scalar_witnesses.tsv').Path
+          $env:MIMIR_R317D_COMPARISON_TSV = Join-Path $PWD 'target/r317d_comparison.tsv'
+          cargo test -p mimir-replay --test _tmp_r317d_scalar_differential -- --ignored --nocapture
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17D native differential failed' }
+          $rows = @(Get-Content -LiteralPath 'target/r317d_comparison.tsv')
+          if ($rows.Count -ne 96) { throw "expected 96 comparison rows, got $($rows.Count)" }
+          Write-Host 'R3_17D_COMPARISON_ROWS=96'
+          Write-Host 'R3_17D_NATIVE_DIFFERENTIAL=PASS'
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17D full repository verification failed' }
+          Write-Host 'R3_17D_REPO_VERIFY=PASS'
+
+      - name: Final no-mutation gate and hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='4c307b5907a3e888b224ff925213109e0436841a'
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = '54e1bfb918ec1bd42a61cfa0131ca27412082ac5'
+          git diff --exit-code "$BASE"..HEAD -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_17c_scalar_attribute_decoder.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          test "$(wc -l < target/r317d_comparison.tsv | tr -d ' ')" -eq 96
+          sha256sum \
+            target/r317d_replay_identity.tsv \
+            target/r317d_scalar_witnesses.jsonl \
+            target/r317d_scalar_witnesses.tsv \
+            target/r317d_comparison.tsv > target/r317d_receipt_sha256.txt
+          printf '%s\n' \
+            'R3_17D_WITNESS_ROWS=96' \
+            'R3_17D_NATIVE_DECODE_SUCCESS=96' \
+            'R3_17D_EXACT_MATCH=96/96' \
+            'R3_17D_MISMATCH_COUNT=0' \
+            'R3_17D_NATIVE_ERROR_COUNT=0' \
+            'R3_17D_IDENTITY_ERROR_COUNT=0' \
+            'R3_17D_UNSUPPORTED_TAG_COUNT=0' \
+            'R3_17D_PRODUCTION_MUTATION_COUNT=0' \
+            'R3_17D_CARGO_MUTATION_COUNT=0' \
+            'R3_17D_CORPUS_MUTATION_COUNT=0' \
+            'R3_17D_OUTCOME=A' \
+            'R3_17D_EVIDENCE=PASS' > target/r317d_aggregate.txt
+          cat target/r317d_aggregate.txt
+          echo 'R3_17D_FINAL_GATE=PASS'
+
+      - name: Emit immutable bounded R3.17D receipt stream
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'R3_17D_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_17D_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_17D_FILE_BEGIN\tr317d_aggregate.txt\n'
+          cat target/r317d_aggregate.txt
+          printf 'R3_17D_FILE_END\tr317d_aggregate.txt\n'
+          printf 'R3_17D_FILE_BEGIN\tr317d_receipt_sha256.txt\n'
+          cat target/r317d_receipt_sha256.txt
+          printf 'R3_17D_FILE_END\tr317d_receipt_sha256.txt\n'
+          printf 'R3_17D_FILE_BEGIN\tr317d_comparison.tsv\n'
+          cat target/r317d_comparison.tsv
+          printf 'R3_17D_FILE_END\tr317d_comparison.tsv\n'
+          printf 'R3_17D_RECEIPT_STREAM=PASS\n'
+
+      - name: Upload R3.17D evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r317d-primitive-scalar-differential
+          path: |
+            target/r317d_replay_identity.tsv
+            target/r317d_scalar_witnesses.jsonl
+            target/r317d_scalar_witnesses.tsv
+            target/r317d_comparison.tsv
+            target/r317d_aggregate.txt
+            target/r317d_receipt_sha256.txt
+          if-no-files-found: error
+          retention-days: 7
