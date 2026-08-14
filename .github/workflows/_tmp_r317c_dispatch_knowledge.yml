@@ -1,0 +1,24 @@
+name: R3.17C Knowledge Dispatch
+
+on:
+  push:
+    branches:
+      - agent/r317c-knowledge-dispatch
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: windows-latest
+    steps:
+      - name: Dispatch Knowledge Archive on exact R3.17C candidate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh workflow run knowledge-archive.yml --repo Naveax/MIMIR --ref candidate/r3-17c-scalar-decoder-clean
+          if ($LASTEXITCODE -ne 0) { throw 'knowledge workflow dispatch failed' }
+          Write-Host 'R3_17C_KNOWLEDGE_DISPATCH=PASS ref=candidate/r3-17c-scalar-decoder-clean'
