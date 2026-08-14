@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   rust:
@@ -38,7 +39,7 @@ jobs:
 
           cargo fmt --all
           if ($LASTEXITCODE -ne 0) { throw "R3.16B formatting failed" }
-          git diff --check -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/_tmp_r316b_property_header.rs
+          git diff --check -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/_tmp_r316b_property_header.rs crates/mimir-replay/tests/_tmp_r316b_differential.rs
           if ($LASTEXITCODE -ne 0) { throw "R3.16B patched diff check failed" }
           git diff --quiet -- crates/mimir-replay/src/lib.rs
           if ($LASTEXITCODE -eq 0) { throw "R3.16B semantic patch produced no production diff" }
@@ -55,11 +56,84 @@ jobs:
         shell: pwsh
         run: pwsh -NoProfile -File scripts/verify_repo.ps1
 
-      - name: Upload disposable patched source
+      - name: Extract immutable R3.16A oracle receipt
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force target | Out-Null
+          gh api repos/Naveax/MIMIR/actions/jobs/94609885915/logs | Out-File -Encoding utf8 target/r316a_job.log
+          if ($LASTEXITCODE -ne 0) { throw "failed to fetch immutable R3.16A job log" }
+          @'
+          import json
+          import re
+          from pathlib import Path
+
+          log = Path("target/r316a_job.log").read_text(encoding="utf-8-sig").splitlines()
+          begin = "R3_16A_FILE_BEGIN\tr3_16a_first_property_oracle.jsonl"
+          end = "R3_16A_FILE_END\tr3_16a_first_property_oracle.jsonl"
+          inside = False
+          rows = []
+          for raw in log:
+              if begin in raw:
+                  if inside:
+                      raise SystemExit("duplicate R3.16A oracle begin marker")
+                  inside = True
+                  continue
+              if end in raw:
+                  if not inside:
+                      raise SystemExit("R3.16A oracle end before begin")
+                  inside = False
+                  break
+              if not inside:
+                  continue
+              match = re.search(r"Z (\{.*\})\s*$", raw)
+              if not match:
+                  continue
+              item = json.loads(match.group(1))
+              rows.append([
+                  item["relative_path"],
+                  str(item["actor_context_object_id"]),
+                  str(item["property_present_start_bit"]),
+                  str(item["property_present_end_bit"]),
+                  str(item["stream_id_start_bit"]),
+                  str(item["stream_id_end_bit"]),
+                  str(item["stream_id_value"]),
+                  str(item["stream_id_bound"]),
+                  str(item["prop_id_bits"]),
+                  str(item["resolved_property_object_id"]),
+                  item["resolved_property_object_name"],
+                  item["resolved_attribute_tag"],
+                  str(item["payload_start_bit"]),
+              ])
+
+          if inside:
+              raise SystemExit("unterminated R3.16A oracle block")
+          if len(rows) != 47:
+              raise SystemExit(f"expected 47 immutable oracle rows, got {len(rows)}")
+          Path("target/r316b_oracle.tsv").write_text(
+              "".join("\t".join(row) + "\n" for row in rows),
+              encoding="utf-8",
+              newline="\n",
+          )
+          print("R3_16B_ORACLE_RECEIPT_ROWS=47")
+          print("R3_16B_ORACLE_RECEIPT=PASS")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "R3.16B oracle receipt extraction failed" }
+
+      - name: R3.16B 47-row native differential
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay --test _tmp_r316b_differential -- --ignored --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "R3.16B 47-row differential failed" }
+
+      - name: Upload disposable R3.16B evidence candidate
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: r316b-patched-source
-          path: crates/mimir-replay/src/lib.rs
-          if-no-files-found: error
+          name: r316b-evidence-candidate
+          path: |
+            crates/mimir-replay/src/lib.rs
+            target/r316b_oracle.tsv
+          if-no-files-found: warn
           retention-days: 1
