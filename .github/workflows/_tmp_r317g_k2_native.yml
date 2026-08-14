@@ -1,0 +1,118 @@
+name: R3.17G Native K2 Implementation
+
+on:
+  push:
+    branches:
+      - agent/r317g-k2-native
+
+permissions:
+  contents: write
+
+jobs:
+  implementation:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout disposable implementation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Apply R3.17G implementation
+        shell: pwsh
+        run: |
+          python tools/_tmp_r317g_patch.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify exact two-file production scope
+        shell: pwsh
+        run: |
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_17g_k2_attribute_decoder.rs'
+          ) | Sort-Object
+          $actual = @(git status --short | ForEach-Object { $_.Substring(3) }) | Sort-Object
+          Write-Host 'Changed working-tree paths:'
+          $actual | ForEach-Object { Write-Host $_ }
+          $diff = Compare-Object -ReferenceObject $expected -DifferenceObject $actual
+          if ($diff) {
+            $diff | Format-Table | Out-String | Write-Host
+            throw 'R3.17G working-tree scope mismatch'
+          }
+          $cargo = @(git status --short -- Cargo.toml Cargo.lock)
+          if ($cargo.Count -ne 0) { throw 'Cargo mutation is forbidden in R3.17G' }
+
+      - name: Focused K2 decoder tests
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay --test r3_17g_k2_attribute_decoder
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: MIMIR replay crate tests
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Workspace clippy
+        shell: pwsh
+        run: |
+          cargo clippy --workspace --all-targets -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean R3.17G candidate
+        shell: bash
+        env:
+          BASE_SHA: 4638aeabca8e971805d2e294fea0f24543e9e5a8
+        run: |
+          set -euo pipefail
+          TEST_FILE='crates/mimir-replay/tests/r3_17g_k2_attribute_decoder.rs'
+          LIB_FILE='crates/mimir-replay/src/lib.rs'
+          PATCH="$RUNNER_TEMP/r317g.patch"
+
+          git add -N "$TEST_FILE"
+          git diff --binary -- "$LIB_FILE" "$TEST_FILE" > "$PATCH"
+          test -s "$PATCH"
+
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+
+          git reset --hard HEAD
+          git clean -fd
+          git switch -C candidate/r3-17g-k2-clean "$BASE_SHA"
+          git apply "$PATCH"
+          cargo fmt --all
+
+          mapfile -t changed < <(git status --short | sed 's/^...//' | sort)
+          expected=(
+            'crates/mimir-replay/src/lib.rs'
+            'crates/mimir-replay/tests/r3_17g_k2_attribute_decoder.rs'
+          )
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            printf 'Unexpected clean candidate scope:\n%s\n' "${changed[*]}"
+            exit 1
+          fi
+
+          git add "$LIB_FILE" "$TEST_FILE"
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Implement direct native R3.17G K2 decoder'
+          git push origin HEAD:refs/heads/candidate/r3-17g-k2-clean
