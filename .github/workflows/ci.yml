@@ -62,7 +62,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Force target | Out-Null
-          gh api repos/Naveax/MIMIR/actions/jobs/94609885915/logs | Out-File -Encoding utf8 target/r316a_job.log
+          gh api --allow-escape-sequences repos/Naveax/MIMIR/actions/jobs/94609885915/logs | Out-File -Encoding utf8 target/r316a_job.log
           if ($LASTEXITCODE -ne 0) { throw "failed to fetch immutable R3.16A job log" }
           @'
           import json
