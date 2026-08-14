@@ -133,25 +133,40 @@ jobs:
             "docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json",
             "docs/continuity/MIMIR_R3_17K_EXECUTION_SPEC.md"
           )
-          $patch = Join-Path $env:RUNNER_TEMP "r317j.patch"
-          git diff --cached --binary | Out-File -Encoding utf8 $patch
-          if ($LASTEXITCODE -ne 0) { throw "patch export failed" }
+          $sourceRoot = (Get-Location).Path
           $candidate = Join-Path $env:RUNNER_TEMP "r317j-clean"
           git worktree add --detach $candidate $env:BASE_MAIN
           if ($LASTEXITCODE -ne 0) { throw "worktree add failed" }
-          git -C $candidate apply --index $patch
-          if ($LASTEXITCODE -ne 0) { throw "clean patch apply failed" }
+          foreach ($file in $files) {
+            $src = Join-Path $sourceRoot $file
+            $dst = Join-Path $candidate $file
+            $parent = Split-Path -Parent $dst
+            New-Item -ItemType Directory -Force -Path $parent | Out-Null
+            Copy-Item -LiteralPath $src -Destination $dst -Force
+          }
+          git -C $candidate add -- $files
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate git add failed" }
           $cleanFiles = @(git -C $candidate diff --cached --name-only)
-          if (($files | Sort-Object) -join "`n" -ne ($cleanFiles | Sort-Object) -join "`n") { throw "clean candidate scope mismatch" }
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate name diff failed" }
+          $expected = @($files | Sort-Object)
+          $actual = @($cleanFiles | Sort-Object)
+          if (($expected -join "`n") -ne ($actual -join "`n")) {
+            Write-Host "Expected:"; $expected
+            Write-Host "Actual:"; $actual
+            throw "clean candidate scope mismatch"
+          }
           git -C $candidate diff --cached --check
           if ($LASTEXITCODE -ne 0) { throw "clean candidate diff check failed" }
+          $allow = Join-Path $candidate "docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json"
+          $allowSha = (Get-FileHash -Algorithm SHA256 $allow).Hash.ToLowerInvariant()
+          if ($allowSha -ne $env:ALLOWLIST_SHA) { throw "clean allowlist SHA mismatch: $allowSha" }
           git -C $candidate config user.name "github-actions[bot]"
           git -C $candidate config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C $candidate commit -m "Admit R3.17J K3 contract and open R3.17K"
           if ($LASTEXITCODE -ne 0) { throw "clean commit failed" }
           $candidateSha = (git -C $candidate rev-parse HEAD).Trim()
-          $parent = (git -C $candidate rev-parse HEAD^).Trim()
-          if ($parent -ne $env:BASE_MAIN) { throw "clean candidate parent mismatch: $parent" }
+          $parentSha = (git -C $candidate rev-parse HEAD^).Trim()
+          if ($parentSha -ne $env:BASE_MAIN) { throw "clean candidate parent mismatch: $parentSha" }
           git -C $candidate push origin "HEAD:refs/heads/candidate/r3-17j-contract-clean"
           if ($LASTEXITCODE -ne 0) { throw "candidate push failed" }
           Write-Host "CANDIDATE_SHA=$candidateSha"
