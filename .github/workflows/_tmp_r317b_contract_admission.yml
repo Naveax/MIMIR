@@ -1,0 +1,146 @@
+name: R3.17B Contract Admission
+
+on:
+  push:
+    branches:
+      - agent/r317b-contract-admission
+
+permissions:
+  contents: write
+
+jobs:
+  admission:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout disposable contract branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply R3.17B contract sync
+        shell: pwsh
+        run: |
+          python tools/_tmp_r317b_contract_sync.py
+          if ($LASTEXITCODE -ne 0) { throw "R3.17B contract sync failed" }
+
+      - name: Verify exact six-file continuity scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = '2e27638812111f73d06ef9e52955f10a26cfebd4'
+          $prodBlob = '625ab2322e35f5f835871d42b9efeb04f5c299ab'
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_17B_DECISION.md',
+            'docs/continuity/MIMIR_R3_17C_EXECUTION_SPEC.md'
+          ) | Sort-Object
+
+          if ((git rev-parse 'HEAD:crates/mimir-replay/src/lib.rs') -ne $prodBlob) {
+            throw 'production source blob changed before admission'
+          }
+          git diff --exit-code "$base..HEAD" -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'protected production/Cargo/corpus diff exists' }
+
+          git add -N -- docs/continuity/MIMIR_R3_17B_DECISION.md docs/continuity/MIMIR_R3_17C_EXECUTION_SPEC.md
+          if ($LASTEXITCODE -ne 0) { throw 'intent-to-add failed' }
+          $actual = @(git diff --name-only) | Sort-Object
+          if (($actual -join "`n") -ne ($expected -join "`n")) {
+            Write-Host 'EXPECTED:'
+            $expected | ForEach-Object { Write-Host $_ }
+            Write-Host 'ACTUAL:'
+            $actual | ForEach-Object { Write-Host $_ }
+            throw 'R3.17B continuity scope mismatch'
+          }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'git diff --check failed' }
+          Write-Host 'R3_17B_SCOPE=PASS files=6'
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'knowledge archive verification failed' }
+          Write-Host 'R3_17B_KNOWLEDGE=PASS'
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          rustup show
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { throw 'rust component setup failed' }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'full repository verification failed' }
+          Write-Host 'R3_17B_REPO_VERIFY=PASS'
+
+      - name: Publish clean R3.17B contract candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = '2e27638812111f73d06ef9e52955f10a26cfebd4'
+          $candidate = 'candidate/r3-17b-contract-clean'
+          $files = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_17B_DECISION.md',
+            'docs/continuity/MIMIR_R3_17C_EXECUTION_SPEC.md'
+          )
+          $stage = Join-Path $env:RUNNER_TEMP 'r317b-clean-stage'
+          if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+          New-Item -ItemType Directory -Path $stage | Out-Null
+          foreach ($file in $files) {
+            $dst = Join-Path $stage $file
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dst) | Out-Null
+            Copy-Item -LiteralPath $file -Destination $dst
+          }
+
+          git fetch origin main --quiet
+          if ($LASTEXITCODE -ne 0) { throw 'fetch main failed' }
+          $remoteMain = git rev-parse origin/main
+          if ($remoteMain -ne $base) { throw "main drifted: $remoteMain != $base" }
+
+          git ls-remote --exit-code --heads origin "refs/heads/$candidate" *> $null
+          if ($LASTEXITCODE -eq 0) { throw "candidate branch already exists: $candidate" }
+          $global:LASTEXITCODE = 0
+
+          git checkout --detach $base
+          if ($LASTEXITCODE -ne 0) { throw 'checkout base failed' }
+          git clean -fdx
+          if ($LASTEXITCODE -ne 0) { throw 'clean failed' }
+          git checkout -b $candidate
+          if ($LASTEXITCODE -ne 0) { throw 'candidate branch create failed' }
+
+          foreach ($file in $files) {
+            $src = Join-Path $stage $file
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $file) | Out-Null
+            Copy-Item -LiteralPath $src -Destination $file
+          }
+          git add -- $files
+          if ($LASTEXITCODE -ne 0) { throw 'git add failed' }
+
+          $expected = $files | Sort-Object
+          $actual = @(git diff --cached --name-only) | Sort-Object
+          if (($actual -join "`n") -ne ($expected -join "`n")) {
+            throw 'clean candidate staged scope mismatch'
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw 'clean candidate diff check failed' }
+          git diff --cached --exit-code -- crates/mimir-replay/src/lib.rs Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'clean candidate protected diff exists' }
+          $global:LASTEXITCODE = 0
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Admit R3.17B contract and open R3.17C'
+          if ($LASTEXITCODE -ne 0) { throw 'commit failed' }
+          $cleanSha = git rev-parse HEAD
+          git push origin "HEAD:refs/heads/$candidate"
+          if ($LASTEXITCODE -ne 0) { throw 'push clean candidate failed' }
+          Write-Host "R3_17B_CLEAN_SHA=$cleanSha"
+          Write-Host 'R3_17B_CLEAN_CANDIDATE=PASS'
