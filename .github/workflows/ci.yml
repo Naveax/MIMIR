@@ -5,7 +5,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 jobs:
@@ -126,6 +126,11 @@ jobs:
         run: |
           cargo test --locked -p mimir-replay --test _tmp_r316b_differential -- --ignored --nocapture
           if ($LASTEXITCODE -ne 0) { throw "R3.16B 47-row differential failed" }
+
+      - name: Publish clean R3.16B candidate
+        if: github.event_name == 'push' && github.ref == 'refs/heads/agent/r3-16b-first-property-header-implementation'
+        shell: pwsh
+        run: pwsh -NoProfile -File tools/_tmp_r316b_publish_clean.ps1
 
       - name: Upload disposable R3.16B evidence candidate
         if: always()
