@@ -1,0 +1,192 @@
+name: R3.17K Continuity Closure
+
+on:
+  push:
+    branches:
+      - agent/r317k-continuity-sync
+
+permissions:
+  contents: write
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 50
+    env:
+      BASE_MAIN: 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+      PROD_TREE: eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
+      LIB_BLOB: d811879bb647de5e5bb56930244b9fddaa4ec583
+      GROUP_BLOB: 2e7cc89699c2754a4ac66eb091d6422700715a23
+      TEST_BLOB: bbad0b405f4f27af309c3b71f2f3ba0a4da60c7b
+      ALLOWLIST_SHA: 9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+
+    steps:
+      - name: Checkout disposable continuity branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen published production
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch failed" }
+          $main = (git rev-parse origin/main).Trim()
+          if ($main -ne $env:BASE_MAIN) { throw "fresh main moved: $main" }
+          $tree = (git rev-parse "$($env:BASE_MAIN)^{tree}").Trim()
+          if ($tree -ne $env:PROD_TREE) { throw "production tree mismatch: $tree" }
+          $lib = (git rev-parse "$($env:BASE_MAIN):crates/mimir-replay/src/lib.rs").Trim()
+          $groups = (git rev-parse "$($env:BASE_MAIN):crates/mimir-replay/src/k3_admitted_groups.rs").Trim()
+          $test = (git rev-parse "$($env:BASE_MAIN):crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs").Trim()
+          if ($lib -ne $env:LIB_BLOB) { throw "lib blob mismatch: $lib" }
+          if ($groups -ne $env:GROUP_BLOB) { throw "groups blob mismatch: $groups" }
+          if ($test -ne $env:TEST_BLOB) { throw "focused test blob mismatch: $test" }
+          $allow = (Get-FileHash -Algorithm SHA256 docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json).Hash.ToLowerInvariant()
+          if ($allow -ne $env:ALLOWLIST_SHA) { throw "allowlist SHA mismatch: $allow" }
+          Write-Host "published R3.17K production identity PASS"
+
+      - name: Generate exact continuity closure
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python tools/_tmp_r317k_continuity.py
+          if ($LASTEXITCODE -ne 0) { throw "continuity generator failed" }
+
+      - name: Normalize state reading order
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          @'
+          import json
+          from pathlib import Path
+          p = Path('docs/continuity/MIMIR_CONTINUITY_STATE.json')
+          d = json.loads(p.read_text(encoding='utf-8'))
+          files = d['next_files_to_read']
+          kdec = 'docs/continuity/MIMIR_R3_17K_DECISION.md'
+          lspec = 'docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md'
+          files = [x for x in files if x not in {kdec, lspec}]
+          try:
+              i = files.index('docs/continuity/MIMIR_R3_17K_EXECUTION_SPEC.md') + 1
+          except ValueError:
+              raise SystemExit('K execution spec missing from next_files_to_read')
+          files[i:i] = [kdec, lspec]
+          d['next_files_to_read'] = files
+          p.write_text(json.dumps(d, indent=2, ensure_ascii=False) + '\n', encoding='utf-8', newline='\n')
+          print('state reading order normalized')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "state reading-order normalization failed" }
+
+      - name: Verify exact six-file docs scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "MIMIR_CONTINUE_HERE.md",
+            "MIMIR_KNOWLEDGE_GRAPH.md",
+            "docs/continuity/MIMIR_CONTINUITY_STATE.json",
+            "docs/continuity/MIMIR_CURRENT_STATE.md",
+            "docs/continuity/MIMIR_R3_17K_DECISION.md",
+            "docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md"
+          )
+          git add -- $files
+          if ($LASTEXITCODE -ne 0) { throw "git add failed" }
+          $actual = @(git diff --cached --name-only | Sort-Object)
+          $expected = @($files | Sort-Object)
+          if (($actual -join "`n") -ne ($expected -join "`n")) {
+            Write-Host "Expected:"; $expected
+            Write-Host "Actual:"; $actual
+            throw "continuity scope mismatch"
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed" }
+          if (git diff --cached --name-only | Select-String -Pattern '(^|/)(Cargo\.toml|Cargo\.lock)$|^crates/|^external_fixtures/|^test_corpus/') {
+            throw "production/Cargo/fixture/corpus mutation detected"
+          }
+          Write-Host "exact six-file docs-only scope PASS"
+
+      - name: Verify continuity semantic anchors
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          @'
+          import json
+          from pathlib import Path
+          prod = '7390e3b145372252caaa8fa1fe3e0cd13b83336c'
+          state = json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          assert state['last_production_code_sha'] == prod
+          assert state['last_production_milestone'] == 'R3.17K'
+          assert state['current_pass'] == 'R3.17L'
+          assert state['r3_17k']['production_sha'] == prod
+          assert state['r3_17k']['canonical_groups_total'] == 1950
+          assert 'native K3/K4 attribute payload decode' not in state['closed_now']
+          assert 'native K4 attribute payload decode' in state['closed_now']
+          cont = Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          graph = Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          current = Path('docs/continuity/MIMIR_CURRENT_STATE.md').read_text(encoding='utf-8')
+          decision = Path('docs/continuity/MIMIR_R3_17K_DECISION.md').read_text(encoding='utf-8')
+          spec = Path('docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md').read_text(encoding='utf-8')
+          for text in [cont, graph, current, decision]:
+              assert prod in text
+          assert 'R3.17L' in cont and 'R3.17L' in graph and 'R3.17L' in current and 'R3.17L' in spec
+          assert '1950/1950' in decision
+          assert 'production Rust' in spec or 'Production mutation' in spec
+          print('continuity semantic anchors PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "continuity semantic anchors failed" }
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed" }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { throw "rust components failed" }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed" }
+
+      - name: Publish clean exact continuity candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "final main fetch failed" }
+          $fresh = (git rev-parse origin/main).Trim()
+          if ($fresh -ne $env:BASE_MAIN) { throw "main moved before continuity candidate: $fresh" }
+          $files = @(
+            "MIMIR_CONTINUE_HERE.md",
+            "MIMIR_KNOWLEDGE_GRAPH.md",
+            "docs/continuity/MIMIR_CONTINUITY_STATE.json",
+            "docs/continuity/MIMIR_CURRENT_STATE.md",
+            "docs/continuity/MIMIR_R3_17K_DECISION.md",
+            "docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md"
+          )
+          $candidate = Join-Path $env:RUNNER_TEMP "r317k-continuity-clean"
+          git worktree add --detach $candidate $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { throw "worktree add failed" }
+          foreach ($file in $files) {
+            $dest = Join-Path $candidate $file
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dest) | Out-Null
+            Copy-Item -LiteralPath $file -Destination $dest -Force
+          }
+          git -C $candidate add -- $files
+          if ($LASTEXITCODE -ne 0) { throw "candidate add failed" }
+          $actual = @(git -C $candidate diff --cached --name-only | Sort-Object)
+          $expected = @($files | Sort-Object)
+          if (($actual -join "`n") -ne ($expected -join "`n")) { throw "clean continuity scope mismatch" }
+          git -C $candidate diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "clean continuity diff check failed" }
+          git -C $candidate config user.name "github-actions[bot]"
+          git -C $candidate config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C $candidate commit -m "Close R3.17K and open R3.17L K3 audit"
+          if ($LASTEXITCODE -ne 0) { throw "clean continuity commit failed" }
+          $sha = (git -C $candidate rev-parse HEAD).Trim()
+          $parent = (git -C $candidate rev-parse HEAD^).Trim()
+          if ($parent -ne $env:BASE_MAIN) { throw "candidate parent mismatch: $parent" }
+          git -C $candidate push origin "HEAD:refs/heads/candidate/r3-17k-continuity-clean"
+          if ($LASTEXITCODE -ne 0) { throw "continuity candidate push failed" }
+          Write-Host "CANDIDATE_SHA=$sha"
