@@ -47,6 +47,8 @@ $patched = $source.Substring(0, $first) + $addition + $source.Substring($first)
 Set-Content -NoNewline -Encoding utf8 $sourcePath $patched
 
 $permanentTest = Join-Path $repoRoot "crates/mimir-replay/tests/r3_16b_property_header.rs"
+$permanentTestDir = Split-Path -Parent $permanentTest
+New-Item -ItemType Directory -Force $permanentTestDir | Out-Null
 Copy-Item -LiteralPath $testCopy -Destination $permanentTest -Force
 
 cargo fmt --all
