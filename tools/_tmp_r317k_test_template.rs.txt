@@ -1,0 +1,554 @@
+use mimir_replay::{
+    decode_replay_network_k3_v1, ReplayNetworkAttributeTagV1,
+    ReplayNetworkK3DecodeContextV1, ReplayNetworkK3ValueV1, ReplayNetworkVector3V1,
+};
+
+@@LOCATION_CODES@@
+
+@@RIGID_BODY_CODES@@
+
+@@PICKUP_NEW_CODES@@
+
+@@REPLICATED_BOOST_CODES@@
+
+#[derive(Default)]
+struct BitWriter {
+    bits: Vec<bool>,
+}
+
+impl BitWriter {
+    fn push_bits(&mut self, value: u64, width: usize) {
+        for bit in 0..width {
+            self.bits.push(((value >> bit) & 1) != 0);
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.bits.len()
+    }
+
+    fn into_bytes(self) -> Vec<u8> {
+        let mut bytes = vec![0u8; (self.bits.len() + 7) / 8];
+        for (index, bit) in self.bits.into_iter().enumerate() {
+            if bit {
+                bytes[index / 8] |= 1 << (index % 8);
+            }
+        }
+        bytes
+    }
+}
+
+fn context(rl223: bool) -> ReplayNetworkK3DecodeContextV1 {
+    ReplayNetworkK3DecodeContextV1 {
+        version_major: 868,
+        version_minor: 32,
+        net_version: 10,
+        is_rl_223: rl223,
+    }
+}
+
+fn begin_unaligned() -> BitWriter {
+    let mut writer = BitWriter::default();
+    writer.push_bits(0b101, 3);
+    writer
+}
+
+fn write_vector(writer: &mut BitWriter, size: u8) {
+    match size {
+        0..=5 => {
+            writer.push_bits(u64::from(size), 4);
+            writer.push_bits(0, 1);
+        }
+        6..=15 => writer.push_bits(u64::from(size), 4),
+        16..=21 => {
+            writer.push_bits(u64::from(size - 16), 4);
+            writer.push_bits(1, 1);
+        }
+        _ => panic!("synthetic vector size outside current finite domain: {size}"),
+    }
+    let width = usize::from(size + 2);
+    let bias = 1u64 << (size + 1);
+    writer.push_bits(bias, width);
+    writer.push_bits(bias, width);
+    writer.push_bits(bias, width);
+}
+
+fn write_valid_quat56(writer: &mut BitWriter) {
+    writer.push_bits(0, 2);
+    writer.push_bits(131_072, 18);
+    writer.push_bits(131_072, 18);
+    writer.push_bits(131_072, 18);
+}
+
+fn write_invalid_quat56(writer: &mut BitWriter) {
+    writer.push_bits(0, 2);
+    writer.push_bits(262_143, 18);
+    writer.push_bits(262_143, 18);
+    writer.push_bits(262_143, 18);
+}
+
+fn rigid_fields(code: u32) -> (bool, bool, u8, u8, u8) {
+    (
+        ((code >> 16) & 1) != 0,
+        ((code >> 15) & 1) != 0,
+        ((code >> 10) & 0x1f) as u8,
+        ((code >> 5) & 0x1f) as u8,
+        (code & 0x1f) as u8,
+    )
+}
+
+fn write_rigid_payload(writer: &mut BitWriter, code: u32) {
+    let (_, sleeping, location, linear, angular) = rigid_fields(code);
+    writer.push_bits(sleeping as u64, 1);
+    write_vector(writer, location);
+    write_valid_quat56(writer);
+    if !sleeping {
+        write_vector(writer, linear);
+        write_vector(writer, angular);
+    }
+}
+
+fn assert_zero_vector(value: &ReplayNetworkVector3V1, expected_size: u8) {
+    assert_eq!(value.selected_size_bits, expected_size);
+    assert_eq!(value.component_width, expected_size + 2);
+    let bias = 1u32 << (expected_size + 1);
+    assert_eq!((value.raw_x, value.raw_y, value.raw_z), (bias, bias, bias));
+    assert_eq!(value.x.to_bits(), 0.0_f32.to_bits());
+    assert_eq!(value.y.to_bits(), 0.0_f32.to_bits());
+    assert_eq!(value.z.to_bits(), 0.0_f32.to_bits());
+}
+
+fn assert_error_category<T: std::fmt::Debug>(result: mimir_core::Result<T>, category: &str) {
+    let error = result.expect_err("decode should fail closed");
+    let message = error.to_string();
+    assert!(
+        message.contains(category),
+        "expected error category {category:?}, got {message:?}"
+    );
+}
+
+#[test]
+fn every_r3_17j_admitted_group_has_a_synthetic_positive() {
+    let mut positive_count = 0usize;
+
+    for &code in LOCATION_CODES {
+        let rl223 = ((code >> 5) & 1) != 0;
+        let size = (code & 0x1f) as u8;
+        let mut writer = begin_unaligned();
+        write_vector(&mut writer, size);
+        let expected_end = writer.len();
+        writer.push_bits(0b1_1010, 5);
+        let decoded = decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::Location,
+            context(rl223),
+        )
+        .expect("admitted Location must decode");
+        assert_eq!(decoded.payload_end_bit, expected_end as u64);
+        assert_eq!(decoded.payload_width, (expected_end - 3) as u64);
+        match decoded.value {
+            ReplayNetworkK3ValueV1::Location(value) => assert_zero_vector(&value, size),
+            other => panic!("unexpected Location variant: {other:?}"),
+        }
+        positive_count += 1;
+    }
+
+    for &code in RIGID_BODY_CODES {
+        let (rl223, sleeping, location, linear, angular) = rigid_fields(code);
+        let mut writer = begin_unaligned();
+        write_rigid_payload(&mut writer, code);
+        let expected_end = writer.len();
+        writer.push_bits(0b10101, 5);
+        let decoded = decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::RigidBody,
+            context(rl223),
+        )
+        .expect("admitted RigidBody must decode");
+        assert_eq!(decoded.payload_end_bit, expected_end as u64);
+        match decoded.value {
+            ReplayNetworkK3ValueV1::RigidBody(value) => {
+                assert_eq!(value.sleeping, sleeping);
+                assert_zero_vector(&value.location, location);
+                assert_eq!(value.rotation.largest, 0);
+                assert_eq!(
+                    (value.rotation.raw_a, value.rotation.raw_b, value.rotation.raw_c),
+                    (131_072, 131_072, 131_072)
+                );
+                let norm = value.rotation.x * value.rotation.x
+                    + value.rotation.y * value.rotation.y
+                    + value.rotation.z * value.rotation.z
+                    + value.rotation.w * value.rotation.w;
+                assert!((norm - 1.0).abs() < 0.0001, "quaternion norm {norm}");
+                if sleeping {
+                    assert!(value.linear_velocity.is_none());
+                    assert!(value.angular_velocity.is_none());
+                    assert_eq!((linear, angular), (31, 31));
+                } else {
+                    assert_zero_vector(value.linear_velocity.as_ref().unwrap(), linear);
+                    assert_zero_vector(value.angular_velocity.as_ref().unwrap(), angular);
+                }
+            }
+            other => panic!("unexpected RigidBody variant: {other:?}"),
+        }
+        positive_count += 1;
+    }
+
+    for &code in PICKUP_NEW_CODES {
+        let rl223 = ((code >> 1) & 1) != 0;
+        let some = (code & 1) != 0;
+        let mut writer = begin_unaligned();
+        writer.push_bits(some as u64, 1);
+        if some {
+            writer.push_bits((-123_i32) as u32 as u64, 32);
+        }
+        writer.push_bits(0xA5, 8);
+        let expected_end = writer.len();
+        writer.push_bits(0b10101, 5);
+        let decoded = decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::PickupNew,
+            context(rl223),
+        )
+        .expect("admitted PickupNew must decode");
+        assert_eq!(decoded.payload_end_bit, expected_end as u64);
+        match decoded.value {
+            ReplayNetworkK3ValueV1::PickupNew(value) => {
+                assert_eq!(value.instigator, some.then_some(-123));
+                assert_eq!(value.picked_up, 0xA5);
+            }
+            other => panic!("unexpected PickupNew variant: {other:?}"),
+        }
+        positive_count += 1;
+    }
+
+    for &code in REPLICATED_BOOST_CODES {
+        let rl223 = code != 0;
+        let mut writer = begin_unaligned();
+        for value in [1u64, 2, 3, 4] {
+            writer.push_bits(value, 8);
+        }
+        let expected_end = writer.len();
+        writer.push_bits(0b10101, 5);
+        let decoded = decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::ReplicatedBoost,
+            context(rl223),
+        )
+        .expect("admitted ReplicatedBoost must decode");
+        assert_eq!(decoded.payload_end_bit, expected_end as u64);
+        assert_eq!(decoded.payload_width, 32);
+        match decoded.value {
+            ReplayNetworkK3ValueV1::ReplicatedBoost(value) => assert_eq!(
+                (value.grant_count, value.boost_amount, value.unused1, value.unused2),
+                (1, 2, 3, 4)
+            ),
+            other => panic!("unexpected ReplicatedBoost variant: {other:?}"),
+        }
+        positive_count += 1;
+    }
+
+    assert_eq!(positive_count, 1_950);
+}
+
+#[test]
+fn structural_acceptance_is_exactly_the_r3_17j_allowlist() {
+    for rl223 in [false, true] {
+        for size in 0u8..=21 {
+            let code = ((rl223 as u32) << 5) | u32::from(size);
+            let mut writer = begin_unaligned();
+            write_vector(&mut writer, size);
+            let result = decode_replay_network_k3_v1(
+                &writer.into_bytes(),
+                3,
+                ReplayNetworkAttributeTagV1::Location,
+                context(rl223),
+            );
+            assert_eq!(
+                result.is_ok(),
+                size < 20 && LOCATION_CODES.binary_search(&code).is_ok(),
+                "Location code {code}"
+            );
+        }
+    }
+
+    for rl223 in [false, true] {
+        for sleeping in [false, true] {
+            for location in 0u8..=21 {
+                if sleeping {
+                    let code = ((rl223 as u32) << 16)
+                        | (1 << 15)
+                        | (u32::from(location) << 10)
+                        | (31 << 5)
+                        | 31;
+                    let mut writer = begin_unaligned();
+                    writer.push_bits(1, 1);
+                    write_vector(&mut writer, location);
+                    write_valid_quat56(&mut writer);
+                    let result = decode_replay_network_k3_v1(
+                        &writer.into_bytes(),
+                        3,
+                        ReplayNetworkAttributeTagV1::RigidBody,
+                        context(rl223),
+                    );
+                    assert_eq!(
+                        result.is_ok(),
+                        location < 20 && RIGID_BODY_CODES.binary_search(&code).is_ok(),
+                        "sleeping RigidBody code {code}"
+                    );
+                    continue;
+                }
+
+                for linear in 0u8..=21 {
+                    for angular in 0u8..=21 {
+                        let code = ((rl223 as u32) << 16)
+                            | (u32::from(location) << 10)
+                            | (u32::from(linear) << 5)
+                            | u32::from(angular);
+                        let mut writer = begin_unaligned();
+                        writer.push_bits(0, 1);
+                        write_vector(&mut writer, location);
+                        write_valid_quat56(&mut writer);
+                        write_vector(&mut writer, linear);
+                        write_vector(&mut writer, angular);
+                        let result = decode_replay_network_k3_v1(
+                            &writer.into_bytes(),
+                            3,
+                            ReplayNetworkAttributeTagV1::RigidBody,
+                            context(rl223),
+                        );
+                        let field_sizes_admitted = location < 20 && linear < 20 && angular < 20;
+                        assert_eq!(
+                            result.is_ok(),
+                            field_sizes_admitted && RIGID_BODY_CODES.binary_search(&code).is_ok(),
+                            "awake RigidBody code {code}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    for rl223 in [false, true] {
+        for some in [false, true] {
+            let code = ((rl223 as u32) << 1) | (some as u32);
+            let mut writer = begin_unaligned();
+            writer.push_bits(some as u64, 1);
+            if some {
+                writer.push_bits(7, 32);
+            }
+            writer.push_bits(9, 8);
+            let result = decode_replay_network_k3_v1(
+                &writer.into_bytes(),
+                3,
+                ReplayNetworkAttributeTagV1::PickupNew,
+                context(rl223),
+            );
+            assert_eq!(
+                result.is_ok(),
+                PICKUP_NEW_CODES.binary_search(&code).is_ok(),
+                "PickupNew code {code}"
+            );
+        }
+    }
+
+    for rl223 in [false, true] {
+        let code = rl223 as u32;
+        let mut writer = begin_unaligned();
+        for value in [1u64, 2, 3, 4] {
+            writer.push_bits(value, 8);
+        }
+        let result = decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::ReplicatedBoost,
+            context(rl223),
+        );
+        assert_eq!(
+            result.is_ok(),
+            REPLICATED_BOOST_CODES.binary_search(&code).is_ok(),
+            "ReplicatedBoost code {code}"
+        );
+    }
+}
+
+#[test]
+fn context_start_tag_and_truncation_fail_closed() {
+    let valid_location_code = LOCATION_CODES[0];
+    let rl223 = ((valid_location_code >> 5) & 1) != 0;
+    let size = (valid_location_code & 0x1f) as u8;
+    let mut writer = begin_unaligned();
+    write_vector(&mut writer, size);
+    let bytes = writer.into_bytes();
+
+    for bad in [
+        ReplayNetworkK3DecodeContextV1 { version_major: 867, ..context(rl223) },
+        ReplayNetworkK3DecodeContextV1 { version_minor: 31, ..context(rl223) },
+        ReplayNetworkK3DecodeContextV1 { net_version: 9, ..context(rl223) },
+    ] {
+        assert_error_category(
+            decode_replay_network_k3_v1(
+                &bytes,
+                3,
+                ReplayNetworkAttributeTagV1::Location,
+                bad,
+            ),
+            "unadmitted-context",
+        );
+    }
+
+    assert_error_category(
+        decode_replay_network_k3_v1(
+            &bytes,
+            (bytes.len() as u64) * 8 + 1,
+            ReplayNetworkAttributeTagV1::Location,
+            context(rl223),
+        ),
+        "invalid-start",
+    );
+
+    assert_error_category(
+        decode_replay_network_k3_v1(
+            &bytes,
+            3,
+            ReplayNetworkAttributeTagV1::Int,
+            context(rl223),
+        ),
+        "unsupported-k3-tag",
+    );
+
+    let mut truncated = begin_unaligned();
+    truncated.push_bits(u64::from(size.min(5)), 4);
+    if size <= 5 {
+        truncated.push_bits(0, 1);
+    }
+    assert_error_category(
+        decode_replay_network_k3_v1(
+            &truncated.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::Location,
+            context(rl223),
+        ),
+        "insufficient-bits",
+    );
+}
+
+#[test]
+fn quaternion56_invalid_and_quat48_paths_fail_closed() {
+    let &code = RIGID_BODY_CODES
+        .iter()
+        .find(|&&value| ((value >> 15) & 1) != 0)
+        .expect("need an admitted sleeping RigidBody");
+    let (rl223, _, location, _, _) = rigid_fields(code);
+
+    let mut writer = begin_unaligned();
+    writer.push_bits(1, 1);
+    write_vector(&mut writer, location);
+    write_invalid_quat56(&mut writer);
+    assert_error_category(
+        decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::RigidBody,
+            context(rl223),
+        ),
+        "invalid-k3-value",
+    );
+
+    let mut writer = begin_unaligned();
+    writer.push_bits(1, 1);
+    write_vector(&mut writer, location);
+    writer.push_bits(0, 48);
+    assert_error_category(
+        decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::RigidBody,
+            context(rl223),
+        ),
+        "insufficient-bits",
+    );
+}
+
+#[test]
+fn sleeping_rigid_body_never_consumes_velocity_shaped_trailing_bits() {
+    let &code = RIGID_BODY_CODES
+        .iter()
+        .find(|&&value| ((value >> 15) & 1) != 0)
+        .expect("need an admitted sleeping RigidBody");
+    let (rl223, _, _, _, _) = rigid_fields(code);
+    let mut writer = begin_unaligned();
+    write_rigid_payload(&mut writer, code);
+    let expected_end = writer.len();
+    write_vector(&mut writer, 7);
+    write_vector(&mut writer, 8);
+    let decoded = decode_replay_network_k3_v1(
+        &writer.into_bytes(),
+        3,
+        ReplayNetworkAttributeTagV1::RigidBody,
+        context(rl223),
+    )
+    .expect("sleeping RigidBody must decode");
+    assert_eq!(decoded.payload_end_bit, expected_end as u64);
+    match decoded.value {
+        ReplayNetworkK3ValueV1::RigidBody(value) => {
+            assert!(value.sleeping);
+            assert!(value.linear_velocity.is_none());
+            assert!(value.angular_velocity.is_none());
+        }
+        other => panic!("unexpected variant: {other:?}"),
+    }
+}
+
+#[test]
+fn boost_false_context_and_pickup_truncation_are_rejected() {
+    let mut writer = begin_unaligned();
+    for value in [1u64, 2, 3, 4] {
+        writer.push_bits(value, 8);
+    }
+    assert_error_category(
+        decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::ReplicatedBoost,
+            context(false),
+        ),
+        "unadmitted-k3-shape",
+    );
+
+    let mut writer = begin_unaligned();
+    writer.push_bits(1, 1);
+    writer.push_bits(7, 31);
+    assert_error_category(
+        decode_replay_network_k3_v1(
+            &writer.into_bytes(),
+            3,
+            ReplayNetworkAttributeTagV1::PickupNew,
+            context(true),
+        ),
+        "insufficient-bits",
+    );
+}
+
+#[test]
+fn exact_one_value_end_leaves_trailing_bits_unconsumed() {
+    let mut writer = begin_unaligned();
+    for value in [11u64, 22, 33, 44] {
+        writer.push_bits(value, 8);
+    }
+    let expected_end = writer.len();
+    writer.push_bits(0x1fff, 13);
+    let decoded = decode_replay_network_k3_v1(
+        &writer.into_bytes(),
+        3,
+        ReplayNetworkAttributeTagV1::ReplicatedBoost,
+        context(true),
+    )
+    .expect("ReplicatedBoost must decode");
+    assert_eq!(decoded.payload_end_bit, expected_end as u64);
+    assert_eq!(decoded.payload_width, 32);
+}
