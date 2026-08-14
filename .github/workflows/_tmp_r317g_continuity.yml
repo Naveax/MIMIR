@@ -1,0 +1,117 @@
+name: R3.17G Continuity Promotion
+
+on:
+  push:
+    branches:
+      - agent/r317g-continuity-sync
+
+permissions:
+  contents: write
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout disposable continuity branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply R3.17G continuity sync
+        shell: pwsh
+        run: |
+          python tools/_tmp_r317g_continuity_patch.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify exact six-file continuity scope
+        shell: pwsh
+        run: |
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_17G_DECISION.md',
+            'docs/continuity/MIMIR_R3_17H_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $actual = @(git status --short | ForEach-Object { $_.Substring(3) }) | Sort-Object
+          $diff = Compare-Object -ReferenceObject $expected -DifferenceObject $actual
+          if ($diff) {
+            $actual | ForEach-Object { Write-Host $_ }
+            throw 'R3.17G continuity working-tree scope mismatch'
+          }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify production freeze
+        shell: pwsh
+        run: |
+          $source = (git rev-parse '9bfa837c69c4751f70ca63a17c65f0f89877ff32:crates/mimir-replay/src/lib.rs').Trim()
+          if ($source -ne '7288238cfb5338653552435be6af41f0dd7a4e85') {
+            throw "Unexpected production source blob: $source"
+          }
+          $test = (git rev-parse '9bfa837c69c4751f70ca63a17c65f0f89877ff32:crates/mimir-replay/tests/r3_17g_k2_attribute_decoder.rs').Trim()
+          if ($test -ne '92033a72a8a737605ac3bf91e10d130082277e04') {
+            throw "Unexpected focused test blob: $test"
+          }
+          $productionDrift = @(git status --short -- crates Cargo.toml Cargo.lock external_fixtures corpus largest_100)
+          if ($productionDrift.Count -ne 0) {
+            $productionDrift | ForEach-Object { Write-Host $_ }
+            throw 'Production/Cargo/corpus drift in continuity pass'
+          }
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean R3.17G continuity candidate
+        shell: bash
+        env:
+          BASE_SHA: 9bfa837c69c4751f70ca63a17c65f0f89877ff32
+        run: |
+          set -euo pipefail
+          files=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_R3_17G_DECISION.md'
+            'docs/continuity/MIMIR_R3_17H_EXECUTION_SPEC.md'
+          )
+          PATCH="$RUNNER_TEMP/r317g-continuity.patch"
+
+          git add -N docs/continuity/MIMIR_R3_17G_DECISION.md docs/continuity/MIMIR_R3_17H_EXECUTION_SPEC.md
+          git diff --binary -- "${files[@]}" > "$PATCH"
+          test -s "$PATCH"
+
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+
+          git reset --hard HEAD
+          git clean -fd
+          git switch -C candidate/r3-17g-continuity-clean "$BASE_SHA"
+          git apply "$PATCH"
+
+          mapfile -t changed < <(git status --short | sed 's/^...//' | sort)
+          mapfile -t expected < <(printf '%s\n' "${files[@]}" | sort)
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            printf 'Unexpected clean continuity scope:\n%s\n' "${changed[*]}"
+            exit 1
+          fi
+
+          git add "${files[@]}"
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Close R3.17G and open R3.17H audit'
+          git push origin HEAD:refs/heads/candidate/r3-17g-continuity-clean
