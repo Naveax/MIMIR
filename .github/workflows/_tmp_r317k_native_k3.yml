@@ -1,0 +1,166 @@
+name: R3.17K Native K3 Admission
+
+on:
+  push:
+    branches:
+      - agent/r317k-native-k3
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      BASE_MAIN: b0c0a4665e72da012d6447ca647db526a3da0020
+      PROD_SHA: 9bfa837c69c4751f70ca63a17c65f0f89877ff32
+      PROD_BLOB: 7288238cfb5338653552435be6af41f0dd7a4e85
+      ALLOWLIST_SHA: 9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+
+    steps:
+      - name: Checkout disposable implementation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen main production and contract identity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch failed" }
+          $main = (git rev-parse origin/main).Trim()
+          if ($main -ne $env:BASE_MAIN) { throw "fresh main moved: $main" }
+          $blob = (git rev-parse "$($env:PROD_SHA):crates/mimir-replay/src/lib.rs").Trim()
+          if ($blob -ne $env:PROD_BLOB) { throw "production source blob mismatch: $blob" }
+          $allow = (Get-FileHash -Algorithm SHA256 docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json).Hash.ToLowerInvariant()
+          if ($allow -ne $env:ALLOWLIST_SHA) { throw "allowlist SHA mismatch: $allow" }
+          Write-Host "frozen main / production / contract PASS"
+
+      - name: Generate exact K3 production files
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python tools/_tmp_r317k_generate.py
+          if ($LASTEXITCODE -ne 0) { throw "generator failed" }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed" }
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt check failed" }
+
+      - name: Verify generated allowlist against canonical JSON independently
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          @'
+          import json, re
+          from pathlib import Path
+          j = json.loads(Path('docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json').read_text())['allowed']
+          text = Path('crates/mimir-replay/src/k3_admitted_groups.rs').read_text()
+          mapping = {
+              'LOCATION_CODES': j['location_codes'],
+              'RIGID_BODY_CODES': j['rigid_body_codes'],
+              'PICKUP_NEW_CODES': j['pickup_new_codes'],
+              'REPLICATED_BOOST_CODES': j['replicated_boost_codes'],
+          }
+          for name, expected in mapping.items():
+              m = re.search(rf'const {name}: &\[u32\] = &\[(.*?)\];', text, re.S)
+              assert m, name
+              actual = [int(x) for x in re.findall(r'\d+', m.group(1))]
+              assert actual == expected, (name, len(actual), len(expected))
+          assert sum(len(v) for v in mapping.values()) == 1950
+          print('generated allowlist exact equality PASS: 1950/1950')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "independent allowlist verification failed" }
+
+      - name: Verify exact production scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "crates/mimir-replay/src/lib.rs",
+            "crates/mimir-replay/src/k3_admitted_groups.rs",
+            "crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs"
+          )
+          git add -- $files
+          if ($LASTEXITCODE -ne 0) { throw "git add failed" }
+          $actual = @(git diff --cached --name-only | Sort-Object)
+          $expected = @($files | Sort-Object)
+          if (($actual -join "`n") -ne ($expected -join "`n")) {
+            Write-Host "Expected:"; $expected
+            Write-Host "Actual:"; $actual
+            throw "production scope mismatch"
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed" }
+          $forbidden = @(git diff --name-only $env:BASE_MAIN -- Cargo.toml Cargo.lock external_fixtures test_corpus)
+          if ($forbidden.Count -ne 0) { Write-Host $forbidden; throw "Cargo/fixture/corpus mutation" }
+          Write-Host "exact three-file production scope PASS"
+
+      - name: Focused 1950-group and exhaustive structural tests
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay --test r3_17k_k3_attribute_decoder
+          if ($LASTEXITCODE -ne 0) { throw "focused K3 test failed" }
+
+      - name: Full mimir-replay tests
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay
+          if ($LASTEXITCODE -ne 0) { throw "mimir-replay tests failed" }
+
+      - name: Workspace clippy
+        shell: pwsh
+        run: |
+          rustup component add clippy
+          if ($LASTEXITCODE -ne 0) { throw "clippy component failed" }
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          if ($LASTEXITCODE -ne 0) { throw "workspace clippy failed" }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { throw "rust components failed" }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed" }
+
+      - name: Publish clean exact R3.17K candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "final main fetch failed" }
+          $fresh = (git rev-parse origin/main).Trim()
+          if ($fresh -ne $env:BASE_MAIN) { throw "main moved before clean candidate: $fresh" }
+          $files = @(
+            "crates/mimir-replay/src/lib.rs",
+            "crates/mimir-replay/src/k3_admitted_groups.rs",
+            "crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs"
+          )
+          $candidate = Join-Path $env:RUNNER_TEMP "r317k-clean"
+          git worktree add --detach $candidate $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { throw "worktree add failed" }
+          foreach ($file in $files) {
+            $dest = Join-Path $candidate $file
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dest) | Out-Null
+            Copy-Item -LiteralPath $file -Destination $dest -Force
+          }
+          git -C $candidate add -- $files
+          if ($LASTEXITCODE -ne 0) { throw "candidate add failed" }
+          $actual = @(git -C $candidate diff --cached --name-only | Sort-Object)
+          $expected = @($files | Sort-Object)
+          if (($actual -join "`n") -ne ($expected -join "`n")) { throw "clean candidate scope mismatch" }
+          git -C $candidate diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate diff check failed" }
+          git -C $candidate config user.name "github-actions[bot]"
+          git -C $candidate config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C $candidate commit -m "Implement R3.17K direct native K3 decoder"
+          if ($LASTEXITCODE -ne 0) { throw "clean candidate commit failed" }
+          $sha = (git -C $candidate rev-parse HEAD).Trim()
+          $parent = (git -C $candidate rev-parse HEAD^).Trim()
+          if ($parent -ne $env:BASE_MAIN) { throw "candidate parent mismatch: $parent" }
+          git -C $candidate push origin "HEAD:refs/heads/candidate/r3-17k-native-k3-clean"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed" }
+          Write-Host "CANDIDATE_SHA=$sha"
