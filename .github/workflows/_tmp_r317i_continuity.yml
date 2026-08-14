@@ -1,0 +1,96 @@
+name: R3.17I Continuity Promotion
+
+on:
+  push:
+    branches:
+      - agent/r317i-continuity-sync
+
+permissions:
+  contents: write
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout disposable continuity branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Apply R3.17I continuity sync from frozen main
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='4df00aa76a99b85a122210c4f929523f72fe9ef4'
+          cp tools/_tmp_r317i_continuity.py "$RUNNER_TEMP/r317i_continuity.py"
+          git checkout --detach "$BASE"
+          python "$RUNNER_TEMP/r317i_continuity.py"
+
+      - name: Verify exact six-file continuity scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='4df00aa76a99b85a122210c4f929523f72fe9ef4'
+          cat > "$RUNNER_TEMP/expected.txt" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_R3_17I_DECISION.md
+          docs/continuity/MIMIR_R3_17J_EXECUTION_SPEC.md
+          EOF
+          {
+            git diff --name-only "$BASE"
+            git ls-files --others --exclude-standard
+          } | sort -u > "$RUNNER_TEMP/actual.txt"
+          sort "$RUNNER_TEMP/expected.txt" > "$RUNNER_TEMP/expected-sorted.txt"
+          diff -u "$RUNNER_TEMP/expected-sorted.txt" "$RUNNER_TEMP/actual.txt"
+          git diff --check
+          echo 'R3_17I_CONTINUITY_SCOPE=PASS'
+
+      - name: Verify production freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='4df00aa76a99b85a122210c4f929523f72fe9ef4'
+          PROD_BLOB='7288238cfb5338653552435be6af41f0dd7a4e85'
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$PROD_BLOB"
+          git diff --exit-code "$BASE" -- \
+            crates/mimir-replay/src/lib.rs \
+            crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock \
+            external_fixtures test_corpus
+          echo 'R3_17I_CONTINUITY_PRODUCTION_FREEZE=PASS'
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: |
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean R3.17I continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='4df00aa76a99b85a122210c4f929523f72fe9ef4'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b candidate/r3-17i-continuity-clean
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_R3_17I_DECISION.md \
+            docs/continuity/MIMIR_R3_17J_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.17I and open R3.17J K3 contract'
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          git diff --exit-code "$BASE"..HEAD -- crates/mimir-replay/src/lib.rs Cargo.toml Cargo.lock external_fixtures test_corpus
+          git push origin HEAD:refs/heads/candidate/r3-17i-continuity-clean
+          echo "R3_17I_CONTINUITY_CANDIDATE=$(git rev-parse HEAD)"
