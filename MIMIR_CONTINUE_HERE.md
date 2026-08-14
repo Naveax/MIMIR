@@ -52,16 +52,16 @@ LAST_PRODUCTION_MILESTONE:
   R3.17G — direct native evidence-admitted K2 decoder implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.17E — K2 object/reference/text wire evidence / Outcome A / 47/47 / 110539 occurrences
+  R3.17H — native K2 differential audit / Outcome A / 469 of 469 exact / 7 of 7 negatives
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17F — evidence-supported K2 object/reference/text contract / Outcome A
 
 CURRENT_PASS:
-  R3.17H — native K2 differential audit against immutable R3.17E evidence-supported witnesses
+  R3.17I — K3 spatial/physics wire-format evidence
 
 CURRENT_PASS_TYPE:
-  read-only differential audit / NO production capability widening
+  read-only evidence / pinned-oracle instrumentation / NO production Rust change
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -118,22 +118,39 @@ R3_17G_PRODUCTION_CLOSURE:
   native one-value K2: ActiveActor / String / QWordString / admitted UniqueId / admitted PartyLeader
   Cargo/fixture/corpus/support-lane changes: none
 
-R3_17H_OPEN_BOUNDARY:
-  read-only differential audit only; production Rust mutation forbidden
-  anchor to immutable R3.17E evidence identities and pinned Boxcars SHA
-  select the exact 469 privacy-safe R3.17E witness occurrences
-  regenerate raw values only ephemerally; persist no clear player/account payloads
-  compare native vs pinned oracle shape, exact width/end, context gate and semantic equality in-memory
+R3_17H_AUDIT_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 9bfa837c69c4751f70ca63a17c65f0f89877ff32
+  authority head: 9b8e8fe82ab5bdc663eecc3f5d3cd1e3b8ee38ac
+  authority run/job: 31809282874 / 94795704797 SUCCESS
+  exact-head normal CI: 31809282903 / 94795705073 SUCCESS
+  artifact: 9222624242
+  artifact digest: sha256:d6c773d593c3c50957507a19056e85aef8b769fdc03fd88c6d693b1258c0af28
+  immutable witnesses selected: 469/469
+  native decode success: 469/469
+  tag/semantic variant exact: 469/469
+  payload width exact: 469/469
+  payload end exact: 469/469
+  context gate exact: 469/469
+  semantic value exact in-memory: 469/469
+  negative controls: 7/7 PASS; privacy scan: PASS
+  production/Cargo/corpus mutation: 0/0/0
 
-R3_17H_HARD_STOP:
-  no production implementation changes in the audit pass
+R3_17I_OPEN_BOUNDARY:
+  evidence-only K3 spatial/physics family: Location / RigidBody / ReplicatedBoost / PickupNew
+  use the same exact 47 supported replay identities and pinned Boxcars SHA
+  characterize exact payload start/end/width, version/context gates, field boundaries and observed shapes
+  select privacy-safe witnesses for every observed shape/context family
+  a missing/unobserved tag or ambiguous shape is Outcome B, not permission to infer a contract from oracle source
+
+R3_17I_HARD_STOP:
+  no production Rust implementation in the evidence pass
+  no K3 contract admission by analogy; only observed shapes may become future candidates
   no second property / property-loop continuation
-  no unobserved K2 variants
-  no K3/K4, lifecycle, raw-state, event, skill, runtime or export widening
+  no K4, lifecycle, raw-state, event, skill, runtime or export widening
   no Cargo, fixture, corpus or support-lane change
 
-NEXT PASS IF R3.17H OUTCOME A:
-  decide the next evidence family only after the differential closure is admitted
+NEXT PASS IF R3.17I OUTCOME A:
+  R3.17J — contract admission for evidence-supported K3 shapes only
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
