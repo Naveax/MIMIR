@@ -132,7 +132,7 @@ jobs:
           grep -Fx 'R3_17A_EVIDENCE=PASS' r3_17a_aggregate.txt
           echo 'R3_17A_ANALYSIS=PASS'
 
-      - name: Final no-mutation gate and bounded receipt
+      - name: Final no-mutation gate and evidence hashes
         shell: bash
         run: |
           set -euo pipefail
@@ -140,12 +140,25 @@ jobs:
           PROD_BLOB='625ab2322e35f5f835871d42b9efeb04f5c299ab'
           test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$PROD_BLOB"
           git diff --exit-code "$BASE_SHA"..HEAD -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          test "$(wc -l < r3_17a_replay_identity.tsv | tr -d ' ')" -eq 47
+          test "$(wc -l < r3_17a_scalar_witnesses.jsonl | tr -d ' ')" -eq 96
+          sha256sum \
+            r3_17a_source_scope.txt \
+            r3_17a_replay_identity.tsv \
+            r3_17a_boxcars_instrumentation.patch \
+            r3_17a_boxcars_instrumentation_sha256.txt \
+            r3_17a_driver_sha256.txt \
+            r3_17a_boxcars_log_sha256.txt \
+            r3_17a_scalar_oracle.jsonl \
+            r3_17a_scalar_witnesses.jsonl \
+            r3_17a_summary.json \
+            r3_17a_aggregate.txt > r3_17a_receipt_sha256.txt
           printf 'R3_17A_PRODUCTION_MUTATION=0\nR3_17A_CARGO_MUTATION=0\nR3_17A_CORPUS_MUTATION=0\n'
           cat r3_17a_aggregate.txt
           echo 'R3_17A_RECEIPT=PASS'
 
       - name: Upload R3.17A evidence
-        if: always()
+        id: evidence_upload
         uses: actions/upload-artifact@v4
         with:
           name: r317a-primitive-scalar-evidence
@@ -160,5 +173,40 @@ jobs:
             r3_17a_scalar_witnesses.jsonl
             r3_17a_summary.json
             r3_17a_aggregate.txt
-          if-no-files-found: warn
+            r3_17a_receipt_sha256.txt
+          if-no-files-found: error
           retention-days: 1
+
+      - name: Emit immutable bounded R3.17A receipt stream
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.evidence_upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence_upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          printf 'R3_17A_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_17A_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_17A_ARTIFACT_ID=%s\n' "$ARTIFACT_ID"
+          printf 'R3_17A_ARTIFACT_DIGEST=%s\n' "$ARTIFACT_DIGEST"
+          printf 'R3_17A_REPLAY_IDENTITY_ROWS=47\n'
+          printf 'R3_17A_WITNESS_ROWS=96\n'
+          emit_file() {
+            printf 'R3_17A_FILE_BEGIN\t%s\n' "$1"
+            cat "$1"
+            printf 'R3_17A_FILE_END\t%s\n' "$1"
+          }
+          for file in \
+            r3_17a_source_scope.txt \
+            r3_17a_replay_identity.tsv \
+            r3_17a_boxcars_instrumentation_sha256.txt \
+            r3_17a_driver_sha256.txt \
+            r3_17a_boxcars_log_sha256.txt \
+            r3_17a_scalar_witnesses.jsonl \
+            r3_17a_summary.json \
+            r3_17a_aggregate.txt \
+            r3_17a_receipt_sha256.txt; do
+            emit_file "$file"
+          done
+          printf 'R3_17A_RECEIPT_STREAM=PASS\n'
