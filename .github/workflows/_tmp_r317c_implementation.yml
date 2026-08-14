@@ -1,0 +1,156 @@
+name: R3.17C Primitive Scalar Implementation
+
+on:
+  push:
+    branches:
+      - agent/r3-17c-primitive-scalar-implementation
+
+permissions:
+  contents: write
+
+jobs:
+  implementation:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout disposable implementation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen implementation base
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = '85430b9eedb3bf16d66abcd895d68fbc7217818e'
+          $prodBlob = '625ab2322e35f5f835871d42b9efeb04f5c299ab'
+          if ((git rev-parse 'HEAD:crates/mimir-replay/src/lib.rs') -ne $prodBlob) {
+            throw 'R3.17C frozen production blob mismatch'
+          }
+          git diff --exit-code "$base..HEAD" -- crates/mimir-replay/src/lib.rs crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C protected base drift' }
+          Write-Host 'R3_17C_BASE=PASS'
+
+      - name: Apply bounded production addition
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python tools/_tmp_r317c_apply.py
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C production applicator failed' }
+          Copy-Item -LiteralPath tools/_tmp_r317c_scalar_attribute_decoder.rs -Destination crates/mimir-replay/tests/r3_17c_scalar_attribute_decoder.rs
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw 'cargo fmt failed' }
+          Write-Host 'R3_17C_APPLY=PASS'
+
+      - name: Verify exact two-file production scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_17c_scalar_attribute_decoder.rs'
+          ) | Sort-Object
+          git add -N -- crates/mimir-replay/tests/r3_17c_scalar_attribute_decoder.rs
+          if ($LASTEXITCODE -ne 0) { throw 'intent-to-add focused test failed' }
+          $actual = @(git diff --name-only) | Sort-Object
+          if (($actual -join "`n") -ne ($expected -join "`n")) {
+            Write-Host 'EXPECTED:'
+            $expected | ForEach-Object { Write-Host $_ }
+            Write-Host 'ACTUAL:'
+            $actual | ForEach-Object { Write-Host $_ }
+            throw 'R3.17C production scope mismatch'
+          }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C diff check failed' }
+          git diff --exit-code -- crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C Cargo/corpus mutation detected' }
+          Write-Host 'R3_17C_SCOPE=PASS files=2'
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { throw 'rust component setup failed' }
+
+      - name: Focused scalar decoder tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo test -p mimir-replay --test r3_17c_scalar_attribute_decoder
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C focused tests failed' }
+          Write-Host 'R3_17C_FOCUSED=PASS tests=11'
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C full repository verification failed' }
+          Write-Host 'R3_17C_REPO_VERIFY=PASS'
+
+      - name: Publish clean R3.17C candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = '85430b9eedb3bf16d66abcd895d68fbc7217818e'
+          $candidate = 'candidate/r3-17c-scalar-decoder-clean'
+          $files = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_17c_scalar_attribute_decoder.rs'
+          )
+          $stage = Join-Path $env:RUNNER_TEMP 'r317c-clean-stage'
+          if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
+          New-Item -ItemType Directory -Path $stage | Out-Null
+          foreach ($file in $files) {
+            $dst = Join-Path $stage $file
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dst) | Out-Null
+            Copy-Item -LiteralPath $file -Destination $dst
+          }
+
+          git fetch origin main --quiet
+          if ($LASTEXITCODE -ne 0) { throw 'fetch main failed' }
+          $remoteMain = git rev-parse origin/main
+          if ($remoteMain -ne $base) { throw "main drifted: $remoteMain != $base" }
+
+          git ls-remote --exit-code --heads origin "refs/heads/$candidate" *> $null
+          if ($LASTEXITCODE -eq 0) { throw "candidate branch already exists: $candidate" }
+          $global:LASTEXITCODE = 0
+
+          git checkout --detach $base
+          if ($LASTEXITCODE -ne 0) { throw 'checkout base failed' }
+          git clean -fdx
+          if ($LASTEXITCODE -ne 0) { throw 'clean failed' }
+          git checkout -b $candidate
+          if ($LASTEXITCODE -ne 0) { throw 'candidate branch create failed' }
+
+          foreach ($file in $files) {
+            $src = Join-Path $stage $file
+            $parent = Split-Path -Parent $file
+            if ($parent) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
+            Copy-Item -LiteralPath $src -Destination $file
+          }
+          git add -- $files
+          if ($LASTEXITCODE -ne 0) { throw 'git add failed' }
+
+          $expected = $files | Sort-Object
+          $actual = @(git diff --cached --name-only) | Sort-Object
+          if (($actual -join "`n") -ne ($expected -join "`n")) {
+            throw 'R3.17C clean candidate staged scope mismatch'
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C clean diff check failed' }
+          git diff --cached --exit-code -- crates/mimir-replay/Cargo.toml Cargo.toml Cargo.lock external_fixtures test_corpus
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17C clean Cargo/corpus mutation detected' }
+          $global:LASTEXITCODE = 0
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Implement R3.17C primitive scalar decoder'
+          if ($LASTEXITCODE -ne 0) { throw 'commit failed' }
+          $cleanSha = git rev-parse HEAD
+          git push origin "HEAD:refs/heads/$candidate"
+          if ($LASTEXITCODE -ne 0) { throw 'push clean candidate failed' }
+          Write-Host "R3_17C_CLEAN_SHA=$cleanSha"
+          Write-Host 'R3_17C_CLEAN_CANDIDATE=PASS'
