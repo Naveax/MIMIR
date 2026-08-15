@@ -67,7 +67,22 @@ jobs:
           import re
           from pathlib import Path
 
-          contract = [json.loads(x) for x in Path('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl').read_text(encoding='utf-8').splitlines() if x.strip()]
+          fields = (
+              'attribute_tag',
+              'version_major',
+              'version_minor',
+              'net_version',
+              'is_rl_223',
+              'payload_width',
+              'shape',
+          )
+          raw_contract = [
+              json.loads(x)
+              for x in Path('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl')
+                  .read_text(encoding='utf-8').splitlines()
+              if x.strip()
+          ]
+          contract = [{key: row[key] for key in fields} for row in raw_contract]
           source = Path('crates/mimir-replay/src/k4_admitted_groups.rs').read_text(encoding='utf-8')
           pattern = re.compile(r'^\s*g!\((\w+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(true|false),\s*(\d+)u64,\s*(".*")\),\s*$', re.M)
           actual = []
@@ -81,6 +96,7 @@ jobs:
                   'payload_width': int(width),
                   'shape': json.loads(shape_json),
               })
+          assert len(raw_contract) == 161, len(raw_contract)
           assert len(contract) == 161, len(contract)
           assert len(actual) == 161, len(actual)
           assert actual == contract
