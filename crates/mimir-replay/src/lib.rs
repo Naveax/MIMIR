@@ -5,6 +5,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 mod k3_admitted_groups;
+mod k4_admitted_groups;
+mod k4_native;
+pub use k4_admitted_groups::{R3_17N_K4_ADMITTED_GROUPS_V1, ReplayNetworkK4AdmittedGroupV1};
+pub use k4_native::*;
 
 /// Private LSB-first cursor for Rocket League replay network payload bits.
 ///
