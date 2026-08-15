@@ -1,0 +1,197 @@
+name: R3.17N K4 Contract Admission
+
+on:
+  push:
+    branches:
+      - agent/r317n-contract-admission
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  contract:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      BASE_MAIN: 86665c73acaaa20cb2c2b927b2283a28c66ecc10
+      PROD_SHA: 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+      PROD_TREE: eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
+      LIB_BLOB: 28d213f831c8968e6756a6ccea2cd7aa6cdbdfba
+      K3_GROUP_BLOB: da545a7144fefabab7f5be4f07fde71311065293
+      K3_TEST_BLOB: 4d1434cc0e59a6e5c72a8404c102a87d71b8b223
+      M_HEAD: a50f09857f36ac52cec30b4bf3efbde9e15bb564
+      M_ARTIFACT: '9246249473'
+      M_ARTIFACT_DIGEST: 50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
+      M_GROUPS_SHA: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+
+    steps:
+      - name: Checkout disposable contract branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify fresh main and frozen production/evidence authority
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          git fetch origin main evidence/r317m-k4-wire-evidence
+          if($LASTEXITCODE -ne 0){ throw 'fetch failed' }
+          if((git rev-parse origin/main).Trim() -ne $env:BASE_MAIN){ throw 'fresh main moved' }
+          if((git rev-parse "$($env:PROD_SHA)^{tree}").Trim() -ne $env:PROD_TREE){ throw 'production tree drift' }
+          if((git rev-parse "$($env:PROD_SHA):crates/mimir-replay/src/lib.rs").Trim() -ne $env:LIB_BLOB){ throw 'lib blob drift' }
+          if((git rev-parse "$($env:PROD_SHA):crates/mimir-replay/src/k3_admitted_groups.rs").Trim() -ne $env:K3_GROUP_BLOB){ throw 'K3 group blob drift' }
+          if((git rev-parse "$($env:PROD_SHA):crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs").Trim() -ne $env:K3_TEST_BLOB){ throw 'K3 test blob drift' }
+          if((git rev-parse origin/evidence/r317m-k4-wire-evidence).Trim() -ne $env:M_HEAD){ throw 'R3.17M authority head drift' }
+          git diff --exit-code $env:PROD_SHA..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus
+          if($LASTEXITCODE -ne 0){ throw 'forbidden production/Cargo/corpus drift' }
+          Write-Host 'R3.17N_FROZEN_AUTHORITY=PASS'
+
+      - name: Download and verify immutable R3.17M evidence artifact
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Path .tmp/r317n -Force | Out-Null
+          $headers=@{
+            Authorization="Bearer $env:GH_TOKEN"
+            Accept='application/vnd.github+json'
+            'X-GitHub-Api-Version'='2022-11-28'
+          }
+          $uri="https://api.github.com/repos/Naveax/MIMIR/actions/artifacts/$($env:M_ARTIFACT)/zip"
+          Invoke-WebRequest -Headers $headers -Uri $uri -OutFile .tmp/r317n/evidence.zip -MaximumRedirection 10
+          $zipSha=(Get-FileHash .tmp/r317n/evidence.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          Write-Host "R3_17N_ARTIFACT_ZIP_SHA256=$zipSha"
+          if($zipSha -ne $env:M_ARTIFACT_DIGEST){ throw 'artifact digest mismatch' }
+          Expand-Archive .tmp/r317n/evidence.zip -DestinationPath .tmp/r317n/evidence -Force
+          $groups='.tmp/r317n/evidence/r3_17m_k4_groups.jsonl'
+          if(-not (Test-Path $groups)){ throw 'groups file missing from artifact' }
+          $groupsSha=(Get-FileHash $groups -Algorithm SHA256).Hash.ToLowerInvariant()
+          if($groupsSha -ne $env:M_GROUPS_SHA){ throw 'evidence groups SHA mismatch' }
+          if((Get-Content $groups).Count -ne 161){ throw 'evidence group row count mismatch' }
+          Write-Host 'R3_17N_EVIDENCE_ARTIFACT=PASS'
+
+      - name: Materialize exact admitted groups and contract
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/_tmp_r317n_contract.py .tmp/r317n/evidence/r3_17m_k4_groups.jsonl
+          if($LASTEXITCODE -ne 0){ throw 'contract generation failed' }
+          if((Get-FileHash docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl -Algorithm SHA256).Hash.ToLowerInvariant() -ne $env:M_GROUPS_SHA){ throw 'admitted group hash drift' }
+          Write-Host 'R3_17N_CONTRACT_MATERIALIZATION=PASS'
+
+      - name: Verify exact contract semantics and zero widening
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          @'
+          import hashlib, json
+          from collections import Counter
+          from pathlib import Path
+          evidence=Path('.tmp/r317n/evidence/r3_17m_k4_groups.jsonl').read_bytes()
+          admitted=Path('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl').read_bytes()
+          assert evidence==admitted
+          assert hashlib.sha256(admitted).hexdigest()=='80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b'
+          rows=[json.loads(x) for x in admitted.decode().splitlines() if x.strip()]
+          assert len(rows)==161
+          keys=[(r['attribute_tag'],r['shape'],r['version_major'],r['version_minor'],r['net_version'],r['is_rl_223'],r['payload_width']) for r in rows]
+          assert len(set(keys))==161
+          expected={'CamSettings':2,'ClubColors':1,'DemolishExtended':5,'DemolishFx':19,'ExtendedExplosion':2,'LoadoutsOnline':79,'PlayerHistoryKey':1,'Reservation':46,'StatEvent':2,'TeamLoadout':2,'TeamPaint':2}
+          assert dict(sorted(Counter(r['attribute_tag'] for r in rows).items()))==expected
+          text=Path('docs/continuity/MIMIR_R3_17N_CONTRACT.md').read_text(encoding='utf-8')
+          required=[
+            'LSB-first','unaligned start','fails atomically','Extra trailing bits','cross-product',
+            'Reservation unobserved identifier/name/text-length combination',
+            'DemolishFx unobserved attacker/victim vector-pair combination',
+            'DemolishExtended unobserved attacker/victim vector-pair combination',
+            'LoadoutsOnline unobserved outer/group/product combination',
+            'unknown product-attribute object branch','unobserved TeamLoadout version branch',
+            'invalid-start','insufficient-bits','unadmitted-context','unadmitted-k4-shape','unsupported-k4-tag'
+          ]
+          for marker in required: assert marker in text, marker
+          receipt=json.loads(Path('r3_17n_contract_receipt.json').read_text())
+          assert receipt['admitted_rows']==161
+          assert receipt['byte_identical'] is True
+          assert receipt['cross_product_widening']==0
+          assert receipt['positive_vector_plan']=='PASS'
+          assert receipt['negative_vector_plan']=='PASS'
+          print('R3_17N_EVIDENCE_EQUALITY=161/161 PASS')
+          print('R3_17N_CROSS_PRODUCT_WIDENING=0 PASS')
+          print('R3_17N_CONTRACT_SEMANTICS=PASS')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){ throw 'contract semantic verification failed' }
+
+      - name: Enforce exact two-file production-free scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $files=@('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl','docs/continuity/MIMIR_R3_17N_CONTRACT.md')
+          foreach($f in $files){ git add -- $f; if($LASTEXITCODE -ne 0){ throw "add failed: $f" } }
+          $actual=@(git diff --cached --name-only | Sort-Object)
+          $expected=@($files | Sort-Object)
+          if(($actual -join "`n") -ne ($expected -join "`n")){ Write-Host $actual; throw 'contract scope mismatch' }
+          git diff --cached --check
+          if($LASTEXITCODE -ne 0){ throw 'diff check failed' }
+          if($actual | Select-String -Pattern '(^|/)(Cargo\.toml|Cargo\.lock)$|^crates/|^external_fixtures/|^test_corpus/'){ throw 'forbidden mutation' }
+          Write-Host 'R3_17N_EXACT_SCOPE=PASS'
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if($LASTEXITCODE -ne 0){ throw 'knowledge archive failed' }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup component add rustfmt clippy
+          if($LASTEXITCODE -ne 0){ throw 'rust component setup failed' }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if($LASTEXITCODE -ne 0){ throw 'repository verification failed' }
+
+      - name: Publish clean R3.17N contract candidate via Git plumbing
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          git fetch origin main
+          if($LASTEXITCODE -ne 0){ throw 'final fetch failed' }
+          if((git rev-parse origin/main).Trim() -ne $env:BASE_MAIN){ throw 'main moved before contract publication' }
+          $files=@('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl','docs/continuity/MIMIR_R3_17N_CONTRACT.md')
+          $env:GIT_INDEX_FILE=Join-Path $env:RUNNER_TEMP 'r317n-contract.index'
+          if(Test-Path $env:GIT_INDEX_FILE){ Remove-Item $env:GIT_INDEX_FILE -Force }
+          git read-tree $env:BASE_MAIN
+          if($LASTEXITCODE -ne 0){ throw 'read-tree failed' }
+          foreach($f in $files){
+            $blob=(git hash-object -w -- $f).Trim()
+            if($LASTEXITCODE -ne 0 -or -not $blob){ throw "hash-object failed: $f" }
+            git update-index --add --cacheinfo "100644,$blob,$f"
+            if($LASTEXITCODE -ne 0){ throw "update-index failed: $f" }
+          }
+          $tree=(git write-tree).Trim()
+          if($LASTEXITCODE -ne 0 -or -not $tree){ throw 'write-tree failed' }
+          $baseTree=(git rev-parse "$($env:BASE_MAIN)^{tree}").Trim()
+          $actual=@(git diff-tree --no-commit-id --name-only -r $baseTree $tree | Sort-Object)
+          $expected=@($files | Sort-Object)
+          if(($actual -join "`n") -ne ($expected -join "`n")){ Write-Host $actual; throw 'candidate tree scope mismatch' }
+          git diff-tree --check $baseTree $tree
+          if($LASTEXITCODE -ne 0){ throw 'candidate tree diff check failed' }
+          $env:GIT_AUTHOR_NAME='github-actions[bot]'
+          $env:GIT_AUTHOR_EMAIL='41898282+github-actions[bot]@users.noreply.github.com'
+          $env:GIT_COMMITTER_NAME=$env:GIT_AUTHOR_NAME
+          $env:GIT_COMMITTER_EMAIL=$env:GIT_AUTHOR_EMAIL
+          $sha=('Admit exact R3.17N K4 contract groups' | git commit-tree $tree -p $env:BASE_MAIN).Trim()
+          if($LASTEXITCODE -ne 0 -or -not $sha){ throw 'commit-tree failed' }
+          if((git rev-parse "$sha^").Trim() -ne $env:BASE_MAIN){ throw 'candidate parent mismatch' }
+          $commitFiles=@(git diff-tree --no-commit-id --name-only -r $env:BASE_MAIN $sha | Sort-Object)
+          if(($commitFiles -join "`n") -ne ($expected -join "`n")){ throw 'candidate commit scope mismatch' }
+          git push origin "$($sha):refs/heads/candidate/r3-17n-contract-clean"
+          if($LASTEXITCODE -ne 0){ throw 'candidate push failed' }
+          Write-Host "R3_17N_AUTHORITY_HEAD=$(git rev-parse HEAD)"
+          Write-Host "R3_17N_AUTHORITY_RUN=$env:GITHUB_RUN_ID"
+          Write-Host "CANDIDATE_SHA=$sha"
+          Write-Host "CANDIDATE_TREE=$tree"
+          Get-Content r3_17n_contract_receipt.json
+          Write-Host 'R3_17N_CONTRACT_CANDIDATE=PASS'
