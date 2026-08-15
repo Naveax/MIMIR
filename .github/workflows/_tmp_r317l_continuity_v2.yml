@@ -1,9 +1,9 @@
-name: R3.17L Continuity Closure V2
+name: R3.17L Continuity Closure V3
 
 on:
   push:
     branches:
-      - agent/r317l-continuity-sync-v2
+      - agent/r317l-continuity-sync-v3
 
 permissions:
   contents: write
@@ -90,7 +90,8 @@ jobs:
           texts=[Path(x).read_text(encoding='utf-8') for x in files]
           assert all('R3.17M' in t for t in [texts[0],texts[1],texts[2],texts[4]])
           assert auth in texts[0] and auth in texts[1] and auth in texts[3]
-          assert '1950/1950' in texts[0] and '1950/1950' in texts[3]
+          assert '1950/1950' in texts[0]
+          assert ('1950/1950' in texts[3]) or ('1,950/1,950' in texts[3])
           for tag in ['CamSettings','TeamPaint','TeamLoadout','ClubColors','Reservation','StatEvent','PlayerHistoryKey','DemolishFx','DemolishExtended','ExtendedExplosion','LoadoutsOnline']:
               assert tag in texts[4], tag
           assert 'R3.18' in texts[3] and 'R3.18' in texts[4]
@@ -120,7 +121,7 @@ jobs:
           if($LASTEXITCODE -ne 0){ throw 'final fetch failed' }
           if((git rev-parse origin/main).Trim() -ne $env:BASE_MAIN){ throw 'main moved before candidate publication' }
           $files=@('MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md','docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md','docs/continuity/MIMIR_R3_17L_DECISION.md','docs/continuity/MIMIR_R3_17M_EXECUTION_SPEC.md')
-          $env:GIT_INDEX_FILE=Join-Path $env:RUNNER_TEMP 'r317l-continuity-v2.index'
+          $env:GIT_INDEX_FILE=Join-Path $env:RUNNER_TEMP 'r317l-continuity-v3.index'
           if(Test-Path $env:GIT_INDEX_FILE){ Remove-Item $env:GIT_INDEX_FILE -Force }
           git read-tree $env:BASE_MAIN
           if($LASTEXITCODE -ne 0){ throw 'read-tree failed' }
