@@ -1,0 +1,21 @@
+name: R3.17N Continuity Closure V2
+
+on:
+  push:
+    branches:
+      - agent/r317n-continuity-sync-v2
+
+permissions:
+  contents: write
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Run corrected continuity closure
+        shell: bash
+        run: bash tools/_tmp_r317n_continuity_driver.sh
