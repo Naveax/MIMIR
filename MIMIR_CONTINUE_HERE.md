@@ -55,16 +55,16 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.17L — native K3 differential audit / Outcome A / 1950 of 1950 real-replay exact groups / 0 mismatch
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.17J — evidence-supported K3 spatial/physics contract / Outcome A / 1950 exact groups
+  R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
   R3.17M — K4 gameplay-structured wire-format evidence / Outcome A / 39463 occurrences / 161 exact groups
 
 CURRENT_PASS:
-  R3.17N — K4 evidence-supported contract admission
+  R3.17O — direct native exact-contract K4 decoder implementation
 
 CURRENT_PASS_TYPE:
-  contract-only / exact evidence-group admission; production Rust forbidden
+  production implementation / exact 161-group contract only
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -80,7 +80,8 @@ CURRENT_PRODUCTION_HARD_STOP:
   one already-resolved K1 primitive scalar OR one R3.17F-admitted K2 payload OR one R3.17J-admitted K3 payload may be decoded natively
   K3 is limited to exact Location / RigidBody / ReplicatedBoost / PickupNew structural-context allowlist membership
   stop exactly at payload_end_bit / stop_bit after that one value
-  NO second property, next actor, next frame, lifecycle mutation, unobserved K2/K3 shape or K4 family is admitted
+  R3.17N admits the exact K4 contract but production K4 decode is not yet implemented
+  NO second property, next actor, next frame, lifecycle mutation, unobserved K2/K3/K4 shape or family is admitted
 
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
@@ -212,22 +213,36 @@ R3_17M_EVIDENCE_CLOSURE:
   groups SHA256: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
   privacy: PASS; production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_17N_OPEN_BOUNDARY:
-  contract-only; production Rust changes are forbidden
-  freeze exactly the 161 R3.17M structural/context groups into a canonical admitted-group artifact
-  prove 161/161 evidence equality and zero cross-product widening
-  Reservation 35 shapes, DemolishFx 12, DemolishExtended 5 and LoadoutsOnline 73 remain exact-group coupled
-  source-only or zero-occurrence branches remain rejected
+R3_17N_CONTRACT_CLOSURE:
+  Outcome A / contract-only / production Rust unchanged at 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+  contract authority branch head: 086ec251aea4eea9881cfc224bfac2d09596269f
+  contract authority run/job: 31883205829 / 95008550716 SUCCESS
+  clean contract main: c8ebb872e510574bb69ab28c719f415ece8b7665 / tree 61e36d40e6af3853a887e840b22f759dda26ed75
+  exact clean-candidate CI: 31883438754 / 95009080782 SUCCESS
+  published-main Knowledge Archive: 31883625387 / 95009532717 SUCCESS
+  published-main normal CI: 31883625362 / 95009532734 SUCCESS
+  admitted groups: 161/161 byte-identical to R3.17M evidence
+  admitted-group SHA256: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+  cross-product widening: 0
+  positive/negative vector plans: PASS/PASS
+  atomic failure + exact one-value end semantics: PASS/PASS
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_17N_HARD_STOP:
-  no production Rust, Cargo, fixture, corpus or support-lane mutation
-  no native K4 implementation
+R3_17O_OPEN_BOUNDARY:
+  production implementation; exact R3.17N 161-group K4 contract only
+  direct native one-value K4 decoder; arbitrary unaligned start; checked arithmetic; atomic failure
+  all 161 admitted rows require positive coverage and independent allowlist equality
+  Reservation / DemolishFx / DemolishExtended / LoadoutsOnline combinations remain exact-group coupled
+  Cargo/fixture/corpus/support lane stay unchanged
+
+R3_17O_HARD_STOP:
   no second property / property-loop continuation
   no next actor / next frame / lifecycle mutation
   no raw-state, event, replay-slice, skill, runtime or export widening
+  no real-replay differential audit inside implementation pass
 
-NEXT PASS AFTER R3.17N:
-  only if Outcome A, open a separate direct native K4 decoder implementation pass; R3.18 remains closed
+NEXT PASS AFTER R3.17O:
+  only if Outcome A, open separate R3.17P native K4 real-replay differential audit; R3.18 remains closed
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

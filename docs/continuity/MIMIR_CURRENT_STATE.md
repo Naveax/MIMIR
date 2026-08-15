@@ -10,7 +10,8 @@
 **Completed K3 production:** `R3.17K — Outcome A / 1950 of 1950 exact groups + exhaustive structural acceptance`
 **Completed K3 differential:** `R3.17L — Outcome A / 1950 of 1950 real-replay exact groups / 0 mismatch`
 **Completed K4 evidence:** `R3.17M — Outcome A / 39463 occurrences / 161 exact structural-context groups / all 11 tags observed`
-**Current exact pass:** `R3.17N — K4 evidence-supported contract admission`
+**Completed K4 contract:** `R3.17N — Outcome A / 161/161 byte-identical groups / zero cross-product widening`
+**Current exact pass:** `R3.17O — direct native exact-contract K4 decoder implementation`
 
 ## 1. Truthful production boundary
 
@@ -105,16 +106,40 @@ outcome                       A
 
 All 11 target tags were observed. The largest structural families are `LoadoutsOnline` with 73 observed shapes and `Reservation` with 35; they remain exact-group evidence and must not be broadened through Cartesian products.
 
-## 5. R3.17N exact next pass
-
-R3.17N is contract-only. Freeze the exact 161 R3.17M structural/context groups into a canonical admitted-group artifact, prove 161/161 equality with the evidence artifact, define atomic failure and exact one-value end semantics, and keep all unobserved branches explicit rejects. Production Rust remains unchanged.
-
-Only after R3.17N Outcome A may a separate native K4 implementation pass open. R3.18 property-loop work remains closed.
-
-## 6. Still closed
+## 5. R3.17N K4 contract closure
 
 ```text
-K4 contract not yet admitted / native payload decode
+contract authority head       086ec251aea4eea9881cfc224bfac2d09596269f
+authority run/job             31883205829 / 95008550716 SUCCESS
+clean contract main           c8ebb872e510574bb69ab28c719f415ece8b7665
+clean contract tree           61e36d40e6af3853a887e840b22f759dda26ed75
+exact candidate CI            31883438754 / 95009080782 SUCCESS
+published Knowledge Archive   31883625387 / 95009532717 SUCCESS
+published normal CI           31883625362 / 95009532734 SUCCESS
+admitted groups               161/161 byte-identical
+group SHA256                  80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+group blob                    b5fa6aaa729772ab3d113703952effe2346c9866
+contract blob                 76deabf8241b419ca224645106d2a19b041e20f8
+cross-product widening        0
+atomic failure                PASS
+exact one-value end           PASS
+production/Cargo/fixture/
+corpus/support mutation       0/0/0/0/0
+outcome                       A
+```
+
+R3.17N admits the K4 contract only; production still cannot decode K4. Exact tuple membership remains mandatory, especially for Reservation and nested LoadoutsOnline shapes.
+
+## 6. R3.17O exact next pass
+
+Implement the direct native K4 one-value decoder for exactly the 161 R3.17N groups. Require 161/161 positive coverage, independent allowlist equality, zero cross-product widening, negative/malformed coverage, atomic failure, exact end-bit semantics, full repository validation and a clean `crates/mimir-replay`-only production diff. Cargo, fixtures, corpus and support lane remain unchanged.
+
+R3.17O must not perform its own real-replay differential audit. That is a separate R3.17P pass after implementation Outcome A. R3.18 remains closed.
+
+## 7. Still closed
+
+```text
+native K4 payload decode (until R3.17O closes)
 second property / property-loop continuation
 next actor / next frame iteration
 actor lifecycle mutation

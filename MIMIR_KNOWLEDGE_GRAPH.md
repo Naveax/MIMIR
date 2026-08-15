@@ -28,7 +28,8 @@ R3.17J K3 contract decision               |
 R3.17K K3 production decision             |
 R3.17L K3 differential decision             |
 R3.17M K4 evidence decision                  |
-R3.17N active K4 contract spec                |
+R3.17N K4 contract decision                  |
+R3.17O active K4 production spec              |
         |                               |
         +---------------+---------------+
                         |
@@ -73,13 +74,17 @@ scripts/verify_mimir_knowledge_archive.ps1
 24. `docs/continuity/MIMIR_R3_17M_EXECUTION_SPEC.md`
 25. `docs/continuity/MIMIR_R3_17M_DECISION.md`
 26. `docs/continuity/MIMIR_R3_17N_EXECUTION_SPEC.md`
-27. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-28. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-29. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-30. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-31. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-32. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-33. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+27. `docs/continuity/MIMIR_R3_17N_CONTRACT.md`
+28. `docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl`
+29. `docs/continuity/MIMIR_R3_17N_DECISION.md`
+30. `docs/continuity/MIMIR_R3_17O_EXECUTION_SPEC.md`
+31. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+32. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+33. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+34. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+35. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+36. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+37. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -136,7 +141,13 @@ R3.13 static network lookup plan
       exact-head CI 31881779862 / 95005282149 SUCCESS
       artifact 9246249473 / sha256:50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
       47/47 oracle / 39463 occurrences / 161 exact groups / 617 witnesses / 0 structural failures
- -> R3.17N K4 evidence-supported contract admission: ACTIVE / CONTRACT-ONLY
+ -> R3.17N K4 evidence-supported contract admission: OUTCOME A / CLOSED
+      authority 086ec251aea4eea9881cfc224bfac2d09596269f / 31883205829 / 95008550716 SUCCESS
+      clean contract c8ebb872e510574bb69ab28c719f415ece8b7665 / tree 61e36d40e6af3853a887e840b22f759dda26ed75
+      candidate CI 31883438754 / 95009080782 SUCCESS
+      published archive/CI 31883625387 / 31883625362 SUCCESS
+      161/161 exact groups / SHA256 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b / cross-product widening 0
+ -> R3.17O direct native exact-contract K4 decoder implementation: ACTIVE / PRODUCTION
 ```
 
 ## Current capability lock
@@ -145,7 +156,7 @@ Production at `7390e3b145372252caaa8fa1fe3e0cd13b83336c` can natively decode exa
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract; R3.17L then matched all 1,950 exact groups against regenerated real-replay witnesses with zero mismatch. R3.17M subsequently observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups with zero structural failures. R3.17N is now contract-only and may admit only those exact groups; native K4 implementation, property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract; R3.17L matched all 1,950 exact groups against regenerated real-replay witnesses with zero mismatch. R3.17M observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups. R3.17N then admitted exactly those 161 groups byte-for-byte with zero cross-product widening. R3.17O is now the separate native K4 implementation pass; property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
 
 ## R3.17G production closure
 
@@ -315,4 +326,26 @@ prod/Cargo/fixture/corpus/
 support mutations           0/0/0/0/0
 outcome                     A
 next                        R3.17N K4 contract admission
+```
+
+
+## R3.17N K4 contract closure
+
+```text
+authority head              086ec251aea4eea9881cfc224bfac2d09596269f
+authority run/job           31883205829 / 95008550716 SUCCESS
+clean contract main         c8ebb872e510574bb69ab28c719f415ece8b7665
+clean contract tree         61e36d40e6af3853a887e840b22f759dda26ed75
+candidate CI                31883438754 / 95009080782 SUCCESS
+published Knowledge Archive 31883625387 / 95009532717 SUCCESS
+published main CI           31883625362 / 95009532734 SUCCESS
+admitted groups             161/161 exact
+group SHA256                80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+cross-product widening      0
+atomic failure              PASS
+exact one-value end         PASS
+prod/Cargo/fixture/corpus/
+support mutations           0/0/0/0/0
+outcome                     A
+next                        R3.17O native K4 implementation
 ```
