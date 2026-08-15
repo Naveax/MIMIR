@@ -25,7 +25,8 @@ R3.17G K2 production decision           |
 R3.17H K2 differential decision         |
 R3.17I K3 evidence decision               |
 R3.17J K3 contract decision               |
-R3.17K active K3 implementation spec      |
+R3.17K K3 production decision             |
+R3.17L active K3 differential audit spec  |
         |                               |
         +---------------+---------------+
                         |
@@ -64,13 +65,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 18. `docs/continuity/MIMIR_R3_17J_DECISION.md`
 19. `docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json`
 20. `docs/continuity/MIMIR_R3_17K_EXECUTION_SPEC.md`
-21. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-22. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-23. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-24. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-25. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-26. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-27. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+21. `docs/continuity/MIMIR_R3_17K_DECISION.md`
+22. `docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md`
+23. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+24. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+25. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+26. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+27. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+28. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+29. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -109,16 +112,22 @@ R3.13 static network lookup plan
       exact groups 1950 / cross-product widening 0
       allowlist sha256:9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
       quat48 + vector20/21 + Boost RL223=false remain rejected
- -> R3.17K direct native K3 decoder implementation: ACTIVE
+ -> R3.17K direct native K3 decoder implementation: PRODUCTION / CLOSED
+      production 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+      authority 31836699291 / 94884467585 SUCCESS
+      candidate CI 31837081536 / 94885655480 SUCCESS
+      published CI 31837383875 / 94886588065 SUCCESS
+      1950/1950 exact allowlist groups + exhaustive structural acceptance PASS
+ -> R3.17L native K3 real-replay differential audit: ACTIVE / READ-ONLY
 ```
 
 ## Current capability lock
 
-Production can natively decode exactly one already-resolved K1 scalar or one R3.17F-admitted K2 payload. K2 success stops exactly at its payload end bit and does not authorize another property, actor, frame or lifecycle mutation.
+Production at `7390e3b145372252caaa8fa1fe3e0cd13b83336c` can natively decode exactly one already-resolved K1 scalar, one R3.17F-admitted K2 payload, or one R3.17J-admitted K3 payload. Every success stops exactly at its one-value end bit and does not authorize another property, actor, frame or lifecycle mutation.
 
-R3.17H closed Outcome A without widening production: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
+R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew` without widening production. R3.17J then froze exactly 1,950 structural/context groups with zero cross-product widening. R3.17K is the active production implementation pass; native K3 decode remains closed until that clean implementation is published and validated. Property-loop continuation, next actor/frame iteration, lifecycle mutation and K4 gameplay-structured families remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract and passed the 1,950-positive plus exhaustive structural acceptance gate. R3.17L is now the mandatory read-only real-replay differential audit. Property-loop continuation, next actor/frame iteration, lifecycle mutation and K4 gameplay-structured families remain closed.
 
 ## R3.17G production closure
 
@@ -197,6 +206,32 @@ Boost RL223=false           rejected
 cross-product widening      0
 production/Cargo/corpus     0/0/0 mutations
 next                        R3.17K direct native K3 implementation
+```
+
+
+## R3.17K K3 production closure
+
+```text
+production SHA              7390e3b145372252caaa8fa1fe3e0cd13b83336c
+production tree             eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
+parent                      b0c0a4665e72da012d6447ca647db526a3da0020
+authority run/job           31836699291 / 94884467585 SUCCESS
+first lint-only run         31836440825 / 94883657836 NOT AUTHORITY
+exact-candidate CI          31837081536 / 94885655480 SUCCESS
+published-main CI           31837383875 / 94886588065 SUCCESS
+lib.rs blob                 28d213f831c8968e6756a6ccea2cd7aa6cdbdfba
+k3 groups blob              da545a7144fefabab7f5be4f07fde71311065293
+focused test blob           4d1434cc0e59a6e5c72a8404c102a87d71b8b223
+canonical allowlist         1950/1950 exact
+allowlist SHA256            9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+focused/exhaustive tests    PASS
+full mimir-replay           PASS
+workspace clippy            PASS
+full repository verifier    PASS
+scope                       lib.rs + k3_admitted_groups.rs + r3_17k test only
+Cargo/fixture/corpus        unchanged
+outcome                     A / production
+next                        R3.17L read-only K3 differential audit
 ```
 
 ## Authority rule
