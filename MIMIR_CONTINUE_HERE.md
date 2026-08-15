@@ -57,11 +57,14 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17J — evidence-supported K3 spatial/physics contract / Outcome A / 1950 exact groups
 
+LAST_COMPLETED_EVIDENCE_PASS:
+  R3.17M — K4 gameplay-structured wire-format evidence / Outcome A / 39463 occurrences / 161 exact groups
+
 CURRENT_PASS:
-  R3.17M — K4 gameplay-structured wire-format evidence
+  R3.17N — K4 evidence-supported contract admission
 
 CURRENT_PASS_TYPE:
-  read-only evidence / pinned-oracle wire-shape characterization; production Rust forbidden
+  contract-only / exact evidence-group admission; production Rust forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -196,23 +199,35 @@ R3_17L_AUDIT_CLOSURE:
   max quaternion reconstructed-largest abs diff: 5.960464477539063e-08 under frozen 1e-5 rule
   production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_17M_OPEN_BOUNDARY:
-  read-only K4 gameplay-structured evidence; production Rust changes are forbidden
-  same frozen 47-replay lane and pinned Boxcars SHA only
-  target tags: CamSettings / TeamPaint / TeamLoadout / ClubColors / Reservation / StatEvent / PlayerHistoryKey / DemolishFx / DemolishExtended / ExtendedExplosion / LoadoutsOnline
-  characterize exact field order, optional/version branches, subfield bit boundaries, payload widths and context families
-  deterministic shape IDs and privacy-safe witnesses for every observed shape/context family
-  zero-occurrence tags/branches remain unadmitted; Boxcars source alone is not contract evidence
+R3_17M_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+  authority head: a50f09857f36ac52cec30b4bf3efbde9e15bb564
+  authority run/job: 31881779861 / 95005282281 SUCCESS
+  exact-head normal CI: 31881779862 / 95005282149 SUCCESS
+  artifact: 9246249473
+  artifact digest: sha256:50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
+  47/47 replay identity + Boxcars oracle decode; deterministic double scan exact
+  K4 occurrences: 39463; exact structural/context groups: 161; witnesses: 617
+  all 11 target tags observed; zero/unclassified/bit/raw failures: 0/0/0/0
+  groups SHA256: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+  privacy: PASS; production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_17M_HARD_STOP:
+R3_17N_OPEN_BOUNDARY:
+  contract-only; production Rust changes are forbidden
+  freeze exactly the 161 R3.17M structural/context groups into a canonical admitted-group artifact
+  prove 161/161 evidence equality and zero cross-product widening
+  Reservation 35 shapes, DemolishFx 12, DemolishExtended 5 and LoadoutsOnline 73 remain exact-group coupled
+  source-only or zero-occurrence branches remain rejected
+
+R3_17N_HARD_STOP:
   no production Rust, Cargo, fixture, corpus or support-lane mutation
-  no K4 contract or implementation
+  no native K4 implementation
   no second property / property-loop continuation
   no next actor / next frame / lifecycle mutation
   no raw-state, event, replay-slice, skill, runtime or export widening
 
-NEXT PASS AFTER R3.17M:
-  only if Outcome A, open a separate evidence-supported K4 contract admission pass; R3.18 remains closed
+NEXT PASS AFTER R3.17N:
+  only if Outcome A, open a separate direct native K4 decoder implementation pass; R3.18 remains closed
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

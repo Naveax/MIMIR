@@ -27,7 +27,8 @@ R3.17I K3 evidence decision               |
 R3.17J K3 contract decision               |
 R3.17K K3 production decision             |
 R3.17L K3 differential decision             |
-R3.17M active K4 evidence spec               |
+R3.17M K4 evidence decision                  |
+R3.17N active K4 contract spec                |
         |                               |
         +---------------+---------------+
                         |
@@ -70,13 +71,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 22. `docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md`
 23. `docs/continuity/MIMIR_R3_17L_DECISION.md`
 24. `docs/continuity/MIMIR_R3_17M_EXECUTION_SPEC.md`
-25. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-26. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-27. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-28. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-29. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-30. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-31. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+25. `docs/continuity/MIMIR_R3_17M_DECISION.md`
+26. `docs/continuity/MIMIR_R3_17N_EXECUTION_SPEC.md`
+27. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+28. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+29. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+30. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+31. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+32. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+33. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -127,7 +130,13 @@ R3.13 static network lookup plan
       exact-head CI 31871353749 / 94980384205 SUCCESS
       artifact 9243555556 / sha256:514580727df642ebde04d69824402db46ed48ff66755d4b17c0db6e69ac5eb3d
       47/47 oracle + 1950/1950 real-group native semantic exact / 0 mismatch
- -> R3.17M K4 gameplay-structured wire-format evidence: ACTIVE / READ-ONLY
+ -> R3.17M K4 gameplay-structured wire-format evidence: OUTCOME A / CLOSED
+      authority a50f09857f36ac52cec30b4bf3efbde9e15bb564
+      run/job 31881779861 / 95005282281 SUCCESS
+      exact-head CI 31881779862 / 95005282149 SUCCESS
+      artifact 9246249473 / sha256:50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
+      47/47 oracle / 39463 occurrences / 161 exact groups / 617 witnesses / 0 structural failures
+ -> R3.17N K4 evidence-supported contract admission: ACTIVE / CONTRACT-ONLY
 ```
 
 ## Current capability lock
@@ -136,7 +145,7 @@ Production at `7390e3b145372252caaa8fa1fe3e0cd13b83336c` can natively decode exa
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract; R3.17L then matched all 1,950 exact groups against regenerated real-replay witnesses with zero mismatch. R3.17M is now the read-only K4 gameplay-structured wire-format evidence pass. K4 contract/implementation, property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract; R3.17L then matched all 1,950 exact groups against regenerated real-replay witnesses with zero mismatch. R3.17M subsequently observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups with zero structural failures. R3.17N is now contract-only and may admit only those exact groups; native K4 implementation, property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
 
 ## R3.17G production closure
 
@@ -282,4 +291,28 @@ production/Cargo/fixture/
 corpus/support mutations    0/0/0/0/0
 outcome                     A
 next                        R3.17M K4 gameplay-structured wire evidence
+```
+
+
+## R3.17M K4 evidence closure
+
+```text
+authority head              a50f09857f36ac52cec30b4bf3efbde9e15bb564
+authority run/job           31881779861 / 95005282281 SUCCESS
+exact-head normal CI        31881779862 / 95005282149 SUCCESS
+artifact                    9246249473
+artifact digest             sha256:50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
+replays / oracle            47/47
+K4 occurrences              39463
+exact groups                161
+privacy-safe witnesses      617
+all 11 target tags          observed
+zero/unclassified/bit/raw   0/0/0/0
+raw rerun determinism       exact / ace53c1413c39da7afefa6ab73324e129bc8c1e660ceea2273e283ade0c73cb4
+groups SHA256               80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+privacy                     PASS
+prod/Cargo/fixture/corpus/
+support mutations           0/0/0/0/0
+outcome                     A
+next                        R3.17N K4 contract admission
 ```

@@ -9,7 +9,8 @@
 **Completed K3 contract:** `R3.17J — Outcome A / 1950 exact groups / zero cross-product widening`
 **Completed K3 production:** `R3.17K — Outcome A / 1950 of 1950 exact groups + exhaustive structural acceptance`
 **Completed K3 differential:** `R3.17L — Outcome A / 1950 of 1950 real-replay exact groups / 0 mismatch`
-**Current exact pass:** `R3.17M — K4 gameplay-structured wire-format evidence`
+**Completed K4 evidence:** `R3.17M — Outcome A / 39463 occurrences / 161 exact structural-context groups / all 11 tags observed`
+**Current exact pass:** `R3.17N — K4 evidence-supported contract admission`
 
 ## 1. Truthful production boundary
 
@@ -80,16 +81,40 @@ outcome                       A
 
 The frozen quaternion tolerance was `1e-5` only for the reconstructed largest component; the observed maximum was far below it. All vector components and non-largest quaternion components were compared by exact f32 bit identity.
 
-## 4. R3.17M exact next pass
-
-R3.17M is read-only K4 evidence over the same frozen 47-replay lane. Instrument pinned Boxcars for `CamSettings`, `TeamPaint`, `TeamLoadout`, `ClubColors`, `Reservation`, `StatEvent`, `PlayerHistoryKey`, `DemolishFx`, `DemolishExtended`, `ExtendedExplosion`, and `LoadoutsOnline`; classify every observed wire shape/context and persist deterministic privacy-safe witnesses. A zero-occurrence tag remains unadmitted.
-
-Production K4 decoding remains closed. If R3.17M closes Outcome A, K4 contract admission is a separate pass before any native implementation. R3.18 property-loop work remains closed until the R3.17 attribute-family dependency is explicitly satisfied.
-
-## 5. Still closed
+## 4. R3.17M K4 evidence closure
 
 ```text
-K4 contract / native payload decode
+authority head                a50f09857f36ac52cec30b4bf3efbde9e15bb564
+authority run/job             31881779861 / 95005282281 SUCCESS
+exact-head normal CI          31881779862 / 95005282149 SUCCESS
+artifact                      9246249473
+artifact digest               sha256:50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
+replay identity               47/47
+Boxcars oracle decode         47/47
+K4 occurrences                39463
+exact structural groups       161
+privacy-safe witnesses        617
+zero target tags              0
+unclassified/bit/raw failures 0/0/0
+deterministic rerun           exact
+privacy                       PASS
+production/Cargo/fixture/
+corpus/support mutation       0/0/0/0/0
+outcome                       A
+```
+
+All 11 target tags were observed. The largest structural families are `LoadoutsOnline` with 73 observed shapes and `Reservation` with 35; they remain exact-group evidence and must not be broadened through Cartesian products.
+
+## 5. R3.17N exact next pass
+
+R3.17N is contract-only. Freeze the exact 161 R3.17M structural/context groups into a canonical admitted-group artifact, prove 161/161 equality with the evidence artifact, define atomic failure and exact one-value end semantics, and keep all unobserved branches explicit rejects. Production Rust remains unchanged.
+
+Only after R3.17N Outcome A may a separate native K4 implementation pass open. R3.18 property-loop work remains closed.
+
+## 6. Still closed
+
+```text
+K4 contract not yet admitted / native payload decode
 second property / property-loop continuation
 next actor / next frame iteration
 actor lifecycle mutation
