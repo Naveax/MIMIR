@@ -1,0 +1,172 @@
+name: R3.17L Native K3 Differential Audit V2
+
+on:
+  push:
+    branches:
+      - evidence/r317l-k3-differential-v2
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: windows-latest
+    timeout-minutes: 75
+    env:
+      BASE_MAIN: 6b73a7e8f8639f8078dff0e656fc0fb9ea0bbc18
+      PROD_SHA: 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+      PROD_TREE: eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
+      LIB_BLOB: 28d213f831c8968e6756a6ccea2cd7aa6cdbdfba
+      GROUP_BLOB: da545a7144fefabab7f5be4f07fde71311065293
+      TEST_BLOB: 4d1434cc0e59a6e5c72a8404c102a87d71b8b223
+      J_ALLOW_SHA: 9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+      I_HEAD: 8962ddc6bd77b5469fa7ebc93c95334e5725a8ab
+      I_RUN: '31812804986'
+      I_ARTIFACT: '9223916983'
+      I_ARTIFACT_DIGEST: sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
+      I_GROUPS_SHA: 04e93bdbc964f89d0c3ec79cd11f714f8f2fb74d2dadc7c2bb6e2098cd93a22b
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      PATHS_SHA: 2ecbeea804f193796a539baee1e968719f03c0cd706efff0c22a61e6ef943dae
+      IDENTITY_SHA: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+      V1_WORKFLOW_BLOB: 002fa84b21c590753ca2b6ab61179aea5e232bdd
+
+    steps:
+      - name: Checkout disposable V2 audit branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Execute frozen V1 audit blocks with Cargo workspace-only repair
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          @'
+          import os, re, subprocess, sys, hashlib
+          from pathlib import Path
+
+          wf = Path('.github/workflows/_tmp_r317l_k3_differential.yml')
+          raw = wf.read_text(encoding='utf-8')
+          blob = subprocess.check_output(['git','hash-object',str(wf)], text=True).strip()
+          expected = os.environ['V1_WORKFLOW_BLOB']
+          if blob != expected:
+              raise SystemExit(f'V1 workflow blob mismatch: {blob} != {expected}')
+
+          targets = [
+              'Freeze production contract evidence and mutation scope',
+              'Recover immutable R3.17I selectors and instrumentation',
+              'Build exact-semantic pinned Boxcars oracle',
+              'Regenerate exact 47-replay K3 witness lane',
+              'Select one real witness per exact group and freeze packed codes',
+              'Build external native K3 probe without repository mutation',
+              'Compare native against regenerated oracle',
+              'Rerun exhaustive K3 fail-closed control suite',
+              'Privacy mutation and receipt gates',
+          ]
+
+          lines = raw.splitlines()
+          blocks = {}
+          i = 0
+          while i < len(lines):
+              m = re.match(r'^      - name: (.+)$', lines[i])
+              if not m:
+                  i += 1
+                  continue
+              name = m.group(1)
+              j = i + 1
+              while j < len(lines) and not re.match(r'^      - name: ', lines[j]):
+                  if lines[j] == '        run: |':
+                      k = j + 1
+                      body = []
+                      while k < len(lines) and not re.match(r'^      - name: ', lines[k]):
+                          line = lines[k]
+                          if line.startswith('          '):
+                              body.append(line[10:])
+                          elif line == '':
+                              body.append('')
+                          else:
+                              break
+                          k += 1
+                      blocks[name] = '\n'.join(body) + '\n'
+                      break
+                  j += 1
+              i = max(j, i + 1)
+
+          missing = [x for x in targets if x not in blocks]
+          if missing:
+              raise SystemExit(f'missing frozen V1 run blocks: {missing}')
+
+          repair_name = 'Build external native K3 probe without repository mutation'
+          before = 'serde_json = "1"\nEOF\n'
+          after = 'serde_json = "1"\n[workspace]\nEOF\n'
+          if blocks[repair_name].count(before) != 1:
+              raise SystemExit('Cargo workspace repair anchor is not exact')
+          blocks[repair_name] = blocks[repair_name].replace(before, after, 1)
+
+          receipt = [
+              'R3_17L_V2_DRIVER_V1_BLOB=' + blob,
+              'R3_17L_V2_REPAIR=external_probe_empty_workspace_table_only',
+              'R3_17L_V2_SEMANTIC_OR_TOLERANCE_CHANGE=0',
+              'R3_17L_V2_EXECUTED_BLOCKS=' + str(len(targets)),
+          ]
+          Path('r3_17l_v2_driver_receipt.txt').write_text('\n'.join(receipt) + '\n', encoding='utf-8', newline='\n')
+
+          env = os.environ.copy()
+          for ordinal, name in enumerate(targets, 1):
+              script = blocks[name]
+              script_path = Path(os.environ.get('RUNNER_TEMP', '.')) / f'r317l-v2-{ordinal:02d}.sh'
+              script_path.write_text(script, encoding='utf-8', newline='\n')
+              print(f'R3_17L_V2_BLOCK_START={ordinal}/{len(targets)} name={name}', flush=True)
+              proc = subprocess.run(['bash', str(script_path)], cwd=Path.cwd(), env=env)
+              if proc.returncode != 0:
+                  raise SystemExit(f'R3.17L V2 block failed: {name} exit={proc.returncode}')
+              print(f'R3_17L_V2_BLOCK_PASS={ordinal}/{len(targets)} name={name}', flush=True)
+
+          print('R3_17L_V2_DRIVER=PASS', flush=True)
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'R3.17L V2 driver failed' }
+
+      - name: Upload R3.17L V2 evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r317l-native-k3-differential-v2
+          path: |
+            r3_17l_source_scope.txt
+            r3_17l_numeric_rule.txt
+            r3_17l_numeric_rule_sha256.txt
+            r3_17l_replay_identity.tsv
+            r3_17l_boxcars_instrumentation.patch
+            r3_17l_boxcars_instrumentation_sha256.txt
+            r3_17l_boxcars_log_sha256.txt
+            r3_17l_witness_manifest.jsonl
+            r3_17l_match_rows.jsonl
+            r3_17l_summary.json
+            r3_17l_negative_controls.txt
+            r3_17l_receipt_sha256.txt
+            r3_17l_aggregate.txt
+            r3_17l_v2_driver_receipt.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Emit immutable R3.17L V2 receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          printf 'R3_17L_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_17L_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_17L_ARTIFACT_ID=%s\n' "$ARTIFACT_ID"
+          printf 'R3_17L_ARTIFACT_DIGEST=%s\n' "$ARTIFACT_DIGEST"
+          cat r3_17l_summary.json
+          cat r3_17l_aggregate.txt
+          cat r3_17l_v2_driver_receipt.txt
+          cat r3_17l_receipt_sha256.txt
+          sha256sum r3_17l_v2_driver_receipt.txt
+          printf 'R3_17L_RECEIPT_STREAM=PASS\n'
