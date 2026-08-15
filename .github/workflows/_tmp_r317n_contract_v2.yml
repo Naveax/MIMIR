@@ -1,0 +1,183 @@
+name: R3.17N K4 Contract Admission V2
+
+on:
+  push:
+    branches:
+      - agent/r317n-contract-admission-v2
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  contract:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      BASE_MAIN: 86665c73acaaa20cb2c2b927b2283a28c66ecc10
+      PROD_SHA: 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+      PROD_TREE: eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
+      LIB_BLOB: 28d213f831c8968e6756a6ccea2cd7aa6cdbdfba
+      K3_GROUP_BLOB: da545a7144fefabab7f5be4f07fde71311065293
+      K3_TEST_BLOB: 4d1434cc0e59a6e5c72a8404c102a87d71b8b223
+      M_HEAD: a50f09857f36ac52cec30b4bf3efbde9e15bb564
+      M_ARTIFACT: '9246249473'
+      M_ARTIFACT_DIGEST: 50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
+      M_GROUPS_SHA: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+
+    steps:
+      - name: Checkout disposable contract branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify fresh main and frozen authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r317m-k4-wire-evidence
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${PROD_SHA}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${PROD_SHA}:crates/mimir-replay/src/k3_admitted_groups.rs")" = "$K3_GROUP_BLOB"
+          test "$(git rev-parse "${PROD_SHA}:crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs")" = "$K3_TEST_BLOB"
+          test "$(git rev-parse origin/evidence/r317m-k4-wire-evidence)" = "$M_HEAD"
+          git diff --exit-code "${PROD_SHA}..HEAD" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus
+          echo 'R3_17N_FROZEN_AUTHORITY=PASS'
+
+      - name: Download and verify immutable R3.17M artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, os, urllib.request, zipfile
+          from pathlib import Path
+          artifact=os.environ['M_ARTIFACT']
+          expected_zip=os.environ['M_ARTIFACT_DIGEST']
+          expected_groups=os.environ['M_GROUPS_SHA']
+          root=Path('.tmp/r317n')
+          root.mkdir(parents=True, exist_ok=True)
+          req=urllib.request.Request(
+              f'https://api.github.com/repos/Naveax/MIMIR/actions/artifacts/{artifact}/zip',
+              headers={
+                  'Authorization': f"Bearer {os.environ['GH_TOKEN']}",
+                  'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                  'User-Agent': 'MIMIR-R3.17N-contract',
+              },
+          )
+          with urllib.request.urlopen(req, timeout=60) as resp:
+              data=resp.read()
+          got=hashlib.sha256(data).hexdigest()
+          print('R3_17N_ARTIFACT_ZIP_SHA256='+got)
+          if got!=expected_zip: raise SystemExit('artifact digest mismatch')
+          zpath=root/'evidence.zip'; zpath.write_bytes(data)
+          with zipfile.ZipFile(zpath) as zf: zf.extractall(root/'evidence')
+          groups=root/'evidence'/'r3_17m_k4_groups.jsonl'
+          if not groups.is_file(): raise SystemExit('groups missing')
+          gsha=hashlib.sha256(groups.read_bytes()).hexdigest()
+          if gsha!=expected_groups: raise SystemExit('groups SHA mismatch')
+          if len(groups.read_text(encoding='utf-8').splitlines())!=161: raise SystemExit('group row count mismatch')
+          print('R3_17N_EVIDENCE_ARTIFACT=PASS')
+          PY
+
+      - name: Materialize exact admitted groups and contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_r317n_contract.py .tmp/r317n/evidence/r3_17m_k4_groups.jsonl
+          test "$(sha256sum docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl | awk '{print $1}')" = "$M_GROUPS_SHA"
+          echo 'R3_17N_CONTRACT_MATERIALIZATION=PASS'
+
+      - name: Verify exact equality, semantics, and zero widening
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from collections import Counter
+          from pathlib import Path
+          e=Path('.tmp/r317n/evidence/r3_17m_k4_groups.jsonl').read_bytes()
+          a=Path('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl').read_bytes()
+          assert e==a
+          assert hashlib.sha256(a).hexdigest()=='80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b'
+          rows=[json.loads(x) for x in a.decode().splitlines() if x.strip()]
+          keys=[(r['attribute_tag'],r['shape'],r['version_major'],r['version_minor'],r['net_version'],r['is_rl_223'],r['payload_width']) for r in rows]
+          assert len(rows)==161 and len(set(keys))==161
+          expected={'CamSettings':2,'ClubColors':1,'DemolishExtended':5,'DemolishFx':19,'ExtendedExplosion':2,'LoadoutsOnline':79,'PlayerHistoryKey':1,'Reservation':46,'StatEvent':2,'TeamLoadout':2,'TeamPaint':2}
+          assert dict(sorted(Counter(r['attribute_tag'] for r in rows).items()))==expected
+          text=Path('docs/continuity/MIMIR_R3_17N_CONTRACT.md').read_text(encoding='utf-8')
+          markers=['LSB-first','unaligned start','fails atomically','Extra trailing bits','cross-product','Reservation unobserved identifier/name/text-length combination','DemolishFx unobserved attacker/victim vector-pair combination','DemolishExtended unobserved attacker/victim vector-pair combination','LoadoutsOnline unobserved outer/group/product combination','unknown product-attribute object branch','unobserved TeamLoadout version branch','invalid-start','insufficient-bits','unadmitted-context','unadmitted-k4-shape','unsupported-k4-tag']
+          for m in markers: assert m in text, m
+          r=json.loads(Path('r3_17n_contract_receipt.json').read_text())
+          assert r['admitted_rows']==161 and r['byte_identical'] is True and r['cross_product_widening']==0
+          assert r['positive_vector_plan']=='PASS' and r['negative_vector_plan']=='PASS'
+          print('R3_17N_EVIDENCE_EQUALITY=161/161 PASS')
+          print('R3_17N_CROSS_PRODUCT_WIDENING=0 PASS')
+          print('R3_17N_CONTRACT_SEMANTICS=PASS')
+          PY
+
+      - name: Enforce exact two-file production-free scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl docs/continuity/MIMIR_R3_17N_CONTRACT.md
+          mapfile -t actual < <(git diff --cached --name-only | sort)
+          expected=('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl' 'docs/continuity/MIMIR_R3_17N_CONTRACT.md')
+          test "${#actual[@]}" -eq 2
+          test "${actual[0]}" = "${expected[0]}"
+          test "${actual[1]}" = "${expected[1]}"
+          git diff --cached --check
+          echo 'R3_17N_EXACT_SCOPE=PASS'
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if($LASTEXITCODE -ne 0){ throw 'knowledge archive failed' }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup component add rustfmt clippy
+          if($LASTEXITCODE -ne 0){ throw 'rust component setup failed' }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if($LASTEXITCODE -ne 0){ throw 'repository verification failed' }
+
+      - name: Publish clean R3.17N contract candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          export GIT_INDEX_FILE="$RUNNER_TEMP/r317n-contract-v2.index"
+          rm -f "$GIT_INDEX_FILE"
+          git read-tree "$BASE_MAIN"
+          for f in docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl docs/continuity/MIMIR_R3_17N_CONTRACT.md; do
+            blob="$(git hash-object -w -- "$f")"
+            git update-index --add --cacheinfo "100644,$blob,$f"
+          done
+          tree="$(git write-tree)"
+          base_tree="$(git rev-parse "${BASE_MAIN}^{tree}")"
+          mapfile -t actual < <(git diff-tree --no-commit-id --name-only -r "$base_tree" "$tree" | sort)
+          test "${#actual[@]}" -eq 2
+          test "${actual[0]}" = 'docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl'
+          test "${actual[1]}" = 'docs/continuity/MIMIR_R3_17N_CONTRACT.md'
+          git diff-tree --check "$base_tree" "$tree"
+          export GIT_AUTHOR_NAME='github-actions[bot]'
+          export GIT_AUTHOR_EMAIL='41898282+github-actions[bot]@users.noreply.github.com'
+          export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+          export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+          sha="$(printf '%s\n' 'Admit exact R3.17N K4 contract groups' | git commit-tree "$tree" -p "$BASE_MAIN")"
+          test "$(git rev-parse "${sha}^")" = "$BASE_MAIN"
+          git push origin "${sha}:refs/heads/candidate/r3-17n-contract-clean-v2"
+          echo "R3_17N_AUTHORITY_HEAD=$(git rev-parse HEAD)"
+          echo "R3_17N_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "CANDIDATE_SHA=$sha"
+          echo "CANDIDATE_TREE=$tree"
+          cat r3_17n_contract_receipt.json
+          echo 'R3_17N_CONTRACT_CANDIDATE=PASS'
