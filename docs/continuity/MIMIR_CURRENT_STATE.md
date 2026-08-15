@@ -1,6 +1,6 @@
 # MIMIR — Current Canonical State
 
-**Continuity date:** 2026-08-14
+**Continuity date:** 2026-08-15
 **Repository:** `Naveax/MIMIR`
 **Canonical production SHA:** `7390e3b145372252caaa8fa1fe3e0cd13b83336c`
 **Production milestone:** `R3.17K — direct native exact-contract K3 decoder implementation`
@@ -8,7 +8,8 @@
 **Completed K3 evidence:** `R3.17I — Outcome A / 47 of 47 / 1699169 occurrences / 1950 exact groups`
 **Completed K3 contract:** `R3.17J — Outcome A / 1950 exact groups / zero cross-product widening`
 **Completed K3 production:** `R3.17K — Outcome A / 1950 of 1950 exact groups + exhaustive structural acceptance`
-**Current exact pass:** `R3.17L — native K3 real-replay differential audit`
+**Completed K3 differential:** `R3.17L — Outcome A / 1950 of 1950 real-replay exact groups / 0 mismatch`
+**Current exact pass:** `R3.17M — K4 gameplay-structured wire-format evidence`
 
 ## 1. Truthful production boundary
 
@@ -53,16 +54,42 @@ Cargo/fixture/corpus/support  unchanged
 
 The production API is separate from K2 and exposes `ReplayNetworkK3DecodeContextV1`, vector/quaternion/value structures, `ReplayNetworkK3DecodeV1`, and `decode_replay_network_k3_v1`. Exact RigidBody tuple membership remains mandatory; independent field-range unions do not admit a value.
 
-## 3. R3.17L exact next pass
-
-R3.17L is read-only. Regenerate real K3 witnesses ephemerally from the frozen 47-replay R3.17I lane using pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b`, cover at least one real occurrence for every one of the 1,950 admitted exact groups, then compare native tag/variant, context, exact bit start/end/width, structural codec metadata and semantic values against the oracle.
-
-A mismatch is not fixed inside R3.17L. It produces Outcome C and sends the project back to corrective evidence/contract/implementation work. Durable audit output remains privacy-safe; raw real payload bytes stay ephemeral.
-
-## 4. Still closed
+## 3. R3.17L differential closure
 
 ```text
-K4 payload decode
+authority head                0febcde7b312b6724e86ba156c700b41cf0562b7
+authority run/job             31871353806 / 94980384463 SUCCESS
+exact-head normal CI          31871353749 / 94980384205 SUCCESS
+artifact                      9243555556
+artifact digest               sha256:514580727df642ebde04d69824402db46ed48ff66755d4b17c0db6e69ac5eb3d
+replay identity               47/47
+Boxcars oracle decode         47/47
+regenerated K3 occurrences    1699169
+real group coverage           1950/1950
+native decode                 1950/1950
+variant/context/range/code    1950/1950 exact
+semantic value                1950/1950 exact
+mismatch                      0
+max quaternion abs diff       5.960464477539063e-08
+negative controls             PASS / 7 tests
+privacy                       PASS
+production/Cargo/fixture/
+corpus/support mutation       0/0/0/0/0
+outcome                       A
+```
+
+The frozen quaternion tolerance was `1e-5` only for the reconstructed largest component; the observed maximum was far below it. All vector components and non-largest quaternion components were compared by exact f32 bit identity.
+
+## 4. R3.17M exact next pass
+
+R3.17M is read-only K4 evidence over the same frozen 47-replay lane. Instrument pinned Boxcars for `CamSettings`, `TeamPaint`, `TeamLoadout`, `ClubColors`, `Reservation`, `StatEvent`, `PlayerHistoryKey`, `DemolishFx`, `DemolishExtended`, `ExtendedExplosion`, and `LoadoutsOnline`; classify every observed wire shape/context and persist deterministic privacy-safe witnesses. A zero-occurrence tag remains unadmitted.
+
+Production K4 decoding remains closed. If R3.17M closes Outcome A, K4 contract admission is a separate pass before any native implementation. R3.18 property-loop work remains closed until the R3.17 attribute-family dependency is explicitly satisfied.
+
+## 5. Still closed
+
+```text
+K4 contract / native payload decode
 second property / property-loop continuation
 next actor / next frame iteration
 actor lifecycle mutation

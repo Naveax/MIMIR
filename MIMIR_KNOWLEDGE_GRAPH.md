@@ -26,7 +26,8 @@ R3.17H K2 differential decision         |
 R3.17I K3 evidence decision               |
 R3.17J K3 contract decision               |
 R3.17K K3 production decision             |
-R3.17L active K3 differential audit spec  |
+R3.17L K3 differential decision             |
+R3.17M active K4 evidence spec               |
         |                               |
         +---------------+---------------+
                         |
@@ -67,13 +68,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 20. `docs/continuity/MIMIR_R3_17K_EXECUTION_SPEC.md`
 21. `docs/continuity/MIMIR_R3_17K_DECISION.md`
 22. `docs/continuity/MIMIR_R3_17L_EXECUTION_SPEC.md`
-23. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-24. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-25. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-26. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-27. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-28. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-29. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+23. `docs/continuity/MIMIR_R3_17L_DECISION.md`
+24. `docs/continuity/MIMIR_R3_17M_EXECUTION_SPEC.md`
+25. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+26. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+27. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+28. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+29. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+30. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+31. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -118,7 +121,13 @@ R3.13 static network lookup plan
       candidate CI 31837081536 / 94885655480 SUCCESS
       published CI 31837383875 / 94886588065 SUCCESS
       1950/1950 exact allowlist groups + exhaustive structural acceptance PASS
- -> R3.17L native K3 real-replay differential audit: ACTIVE / READ-ONLY
+ -> R3.17L native K3 real-replay differential audit: OUTCOME A / CLOSED
+      authority 0febcde7b312b6724e86ba156c700b41cf0562b7
+      run/job 31871353806 / 94980384463 SUCCESS
+      exact-head CI 31871353749 / 94980384205 SUCCESS
+      artifact 9243555556 / sha256:514580727df642ebde04d69824402db46ed48ff66755d4b17c0db6e69ac5eb3d
+      47/47 oracle + 1950/1950 real-group native semantic exact / 0 mismatch
+ -> R3.17M K4 gameplay-structured wire-format evidence: ACTIVE / READ-ONLY
 ```
 
 ## Current capability lock
@@ -127,7 +136,7 @@ Production at `7390e3b145372252caaa8fa1fe3e0cd13b83336c` can natively decode exa
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract and passed the 1,950-positive plus exhaustive structural acceptance gate. R3.17L is now the mandatory read-only real-replay differential audit. Property-loop continuation, next actor/frame iteration, lifecycle mutation and K4 gameplay-structured families remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract; R3.17L then matched all 1,950 exact groups against regenerated real-replay witnesses with zero mismatch. R3.17M is now the read-only K4 gameplay-structured wire-format evidence pass. K4 contract/implementation, property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
 
 ## R3.17G production closure
 
@@ -251,3 +260,26 @@ current code/tests
 ## Verification
 
 Run `scripts/verify_mimir_knowledge_archive.ps1`.
+
+
+## R3.17L K3 differential closure
+
+```text
+authority head              0febcde7b312b6724e86ba156c700b41cf0562b7
+authority run/job           31871353806 / 94980384463 SUCCESS
+exact-head normal CI        31871353749 / 94980384205 SUCCESS
+artifact                    9243555556
+artifact digest             sha256:514580727df642ebde04d69824402db46ed48ff66755d4b17c0db6e69ac5eb3d
+replays                     47/47
+regenerated occurrences     1699169
+real group coverage         1950/1950
+native / semantic match     1950/1950 exact
+mismatch                    0
+max quaternion abs diff     5.960464477539063e-08
+negative controls           PASS
+privacy                     PASS
+production/Cargo/fixture/
+corpus/support mutations    0/0/0/0/0
+outcome                     A
+next                        R3.17M K4 gameplay-structured wire evidence
+```

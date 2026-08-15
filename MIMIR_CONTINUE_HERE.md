@@ -52,16 +52,16 @@ LAST_PRODUCTION_MILESTONE:
   R3.17K — direct native exact-contract K3 decoder implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.17H — native K2 differential audit / Outcome A / 469 of 469 exact / 7 of 7 negatives
+  R3.17L — native K3 differential audit / Outcome A / 1950 of 1950 real-replay exact groups / 0 mismatch
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17J — evidence-supported K3 spatial/physics contract / Outcome A / 1950 exact groups
 
 CURRENT_PASS:
-  R3.17L — native K3 differential audit against regenerated real-replay witnesses
+  R3.17M — K4 gameplay-structured wire-format evidence
 
 CURRENT_PASS_TYPE:
-  read-only differential audit / real-replay native-vs-pinned-oracle verification; production Rust forbidden
+  read-only evidence / pinned-oracle wire-shape characterization; production Rust forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -183,23 +183,36 @@ R3_17K_PRODUCTION_CLOSURE:
   Cargo/fixture/corpus/support-lane changes: none
   property-loop / actor / frame / lifecycle widening: none
 
-R3_17L_OPEN_BOUNDARY:
-  read-only differential audit; production Rust changes are forbidden
-  freeze R3.17K production SHA/tree/blobs, R3.17J allowlist, R3.17I artifact/groups and pinned Boxcars SHA
-  regenerate real witness payloads ephemerally from the frozen 47-replay lane
-  deterministically cover at least one real occurrence for every one of the 1950 admitted exact groups
-  compare tag/value variant, exact start/end/width, structural codec metadata, context and semantic value against the pinned oracle
-  retain only privacy-safe structural identities/hashes in durable evidence; raw witness payload bytes remain ephemeral
-  any mismatch or contract contradiction stops the pass; do not repair production inside the audit
+R3_17L_AUDIT_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+  authority head: 0febcde7b312b6724e86ba156c700b41cf0562b7
+  authority run/job: 31871353806 / 94980384463 SUCCESS
+  exact-head normal CI: 31871353749 / 94980384205 SUCCESS
+  artifact: 9243555556
+  artifact digest: sha256:514580727df642ebde04d69824402db46ed48ff66755d4b17c0db6e69ac5eb3d
+  47/47 replay identity + Boxcars oracle decode
+  1950/1950 exact group reconstruction + real witness coverage + native decode + semantic match
+  mismatch count: 0; negative controls: PASS; privacy: PASS
+  max quaternion reconstructed-largest abs diff: 5.960464477539063e-08 under frozen 1e-5 rule
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_17L_HARD_STOP:
+R3_17M_OPEN_BOUNDARY:
+  read-only K4 gameplay-structured evidence; production Rust changes are forbidden
+  same frozen 47-replay lane and pinned Boxcars SHA only
+  target tags: CamSettings / TeamPaint / TeamLoadout / ClubColors / Reservation / StatEvent / PlayerHistoryKey / DemolishFx / DemolishExtended / ExtendedExplosion / LoadoutsOnline
+  characterize exact field order, optional/version branches, subfield bit boundaries, payload widths and context families
+  deterministic shape IDs and privacy-safe witnesses for every observed shape/context family
+  zero-occurrence tags/branches remain unadmitted; Boxcars source alone is not contract evidence
+
+R3_17M_HARD_STOP:
   no production Rust, Cargo, fixture, corpus or support-lane mutation
+  no K4 contract or implementation
   no second property / property-loop continuation
   no next actor / next frame / lifecycle mutation
-  no K4, raw-state, event, replay-slice, skill, runtime or export widening
+  no raw-state, event, replay-slice, skill, runtime or export widening
 
-NEXT PASS AFTER R3.17L:
-  choose only from the execution roadmap after R3.17L Outcome A; do not assume R3.18 before the audit is closed
+NEXT PASS AFTER R3.17M:
+  only if Outcome A, open a separate evidence-supported K4 contract admission pass; R3.18 remains closed
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
