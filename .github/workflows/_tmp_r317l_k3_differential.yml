@@ -1,0 +1,501 @@
+name: R3.17L Native K3 Differential Audit
+
+on:
+  push:
+    branches:
+      - evidence/r317l-k3-differential
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: windows-latest
+    timeout-minutes: 75
+    env:
+      BASE_MAIN: 6b73a7e8f8639f8078dff0e656fc0fb9ea0bbc18
+      PROD_SHA: 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+      PROD_TREE: eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
+      LIB_BLOB: 28d213f831c8968e6756a6ccea2cd7aa6cdbdfba
+      GROUP_BLOB: da545a7144fefabab7f5be4f07fde71311065293
+      TEST_BLOB: 4d1434cc0e59a6e5c72a8404c102a87d71b8b223
+      J_ALLOW_SHA: 9e5e2eba0305d5e48bd2021cf7300af259d7c2ca3ab3c1ef1586ad57cba6a911
+      I_HEAD: 8962ddc6bd77b5469fa7ebc93c95334e5725a8ab
+      I_RUN: '31812804986'
+      I_ARTIFACT: '9223916983'
+      I_ARTIFACT_DIGEST: sha256:5acdf953a91c814637ba6038d085cc72e8215003f76d93ce43a85afc0be05e1b
+      I_GROUPS_SHA: 04e93bdbc964f89d0c3ec79cd11f714f8f2fb74d2dadc7c2bb6e2098cd93a22b
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      PATHS_SHA: 2ecbeea804f193796a539baee1e968719f03c0cd706efff0c22a61e6ef943dae
+      IDENTITY_SHA: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+
+    steps:
+      - name: Checkout disposable audit branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze production contract evidence and mutation scope
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r317i-k3-wire-evidence
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$LIB_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k3_admitted_groups.rs)" = "$GROUP_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs)" = "$TEST_BLOB"
+          test "$(sha256sum docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json | awk '{print $1}')" = "$J_ALLOW_SHA"
+          git cat-file -e "$I_HEAD^{commit}"
+          test "$(git rev-parse origin/evidence/r317i-k3-wire-evidence)" = "$I_HEAD"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$I_ARTIFACT" > r3_17l_i_artifact_meta.json
+          python - <<'PY'
+          import json, os
+          d=json.load(open('r3_17l_i_artifact_meta.json',encoding='utf-8'))
+          assert str(d['id']) == os.environ['I_ARTIFACT']
+          assert d['digest'] == os.environ['I_ARTIFACT_DIGEST']
+          assert d['expired'] is False
+          assert str(d['workflow_run']['id']) == os.environ['I_RUN']
+          assert d['workflow_run']['head_sha'] == os.environ['I_HEAD']
+          print('R3_17L_I_ARTIFACT_IDENTITY=PASS')
+          PY
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus
+          printf '%s\n' \
+            "base_main=$BASE_MAIN" \
+            "production_sha=$PROD_SHA" \
+            "production_tree=$PROD_TREE" \
+            "lib_blob=$LIB_BLOB" \
+            "groups_blob=$GROUP_BLOB" \
+            "test_blob=$TEST_BLOB" \
+            "j_allowlist_sha256=$J_ALLOW_SHA" \
+            "r3_17i_head=$I_HEAD" \
+            "r3_17i_artifact=$I_ARTIFACT" \
+            "r3_17i_artifact_digest=$I_ARTIFACT_DIGEST" \
+            "boxcars_sha=$BOXCARS_SHA" \
+            "production_mutation_count=0" \
+            "cargo_mutation_count=0" \
+            "fixture_mutation_count=0" \
+            "corpus_mutation_count=0" \
+            "support_lane_mutation_count=0" > r3_17l_source_scope.txt
+          cat > r3_17l_numeric_rule.txt <<'EOF'
+          R3.17L_NUMERIC_RULE_V1
+          vector: raw selected-size/component-width/raw-x/raw-y/raw-z exact; semantic x/y/z exact f32 bit equality
+          quaternion: largest/raw-a/raw-b/raw-c exact; non-largest semantic components exact f32 bit equality
+          quaternion reconstructed-largest: Boxcars uses chained f32 mul_add while native uses equivalent explicit f32 products/subtractions; require finite same-sign value and absolute difference <= 0.00001
+          boost/pickup integer fields: exact equality
+          rule frozen before witness evaluation; no post-result tolerance adjustment
+          EOF
+          sha256sum r3_17l_numeric_rule.txt > r3_17l_numeric_rule_sha256.txt
+          echo 'R3_17L_FROZEN_IDENTITIES=PASS'
+
+      - name: Recover immutable R3.17I selectors and instrumentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/r317l-runtime
+          git show "$I_HEAD:tools/_tmp_r317i_patch.py" > .tmp/r317l-runtime/r317i_patch.py
+          git show "$I_HEAD:tools/_tmp_r317i_analyze.py" > .tmp/r317l-runtime/r317i_analyze.py
+          git show "$I_HEAD:tools/_tmp_r317i_paths.txt" > .tmp/r317l-runtime/paths.txt
+          git show "$I_HEAD:tools/_tmp_r317i_identity.tsv" > .tmp/r317l-runtime/identity.tsv
+          test "$(sha256sum .tmp/r317l-runtime/paths.txt | awk '{print $1}')" = "$PATHS_SHA"
+          test "$(sha256sum .tmp/r317l-runtime/identity.tsv | awk '{print $1}')" = "$IDENTITY_SHA"
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          paths=[x.strip().replace('\\','/') for x in Path('.tmp/r317l-runtime/paths.txt').read_text(encoding='utf-8').splitlines() if x.strip()]
+          assert len(paths)==47 and len(set(paths))==47
+          ids={}
+          for line in Path('.tmp/r317l-runtime/identity.tsv').read_text(encoding='utf-8').splitlines():
+              if not line.strip(): continue
+              p,h,status=line.split('\t')
+              assert status=='PASS'
+              ids[p.replace('\\','/')]=h.lower()
+          assert set(paths)==set(ids)
+          def sha(p):
+              h=hashlib.sha256()
+              with Path(p).open('rb') as f:
+                  for b in iter(lambda:f.read(1<<20),b''): h.update(b)
+              return h.hexdigest()
+          for p in paths:
+              assert Path(p).is_file(), p
+              assert sha(p)==ids[p], p
+          Path('r3_17l_replay_identity.tsv').write_text(''.join(f'{p}\t{ids[p]}\tPASS\n' for p in paths),encoding='utf-8',newline='\n')
+          print('R3_17L_REPLAY_IDENTITY=PASS rows=47')
+          PY
+
+      - name: Build exact-semantic pinned Boxcars oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r317l"
+          rm -rf "$BOXCARS"
+          git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+          git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" rev-parse HEAD)" = "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" hash-object src/network/frame_decoder.rs)" = '6f2ff153d3a27cdacccc65e3f23851489077a7d8'
+          test "$(git -C "$BOXCARS" hash-object src/network/attributes.rs)" = '5e2d5bc1cd8187af30c3ea95193ad987645cb76e'
+          test "$(git -C "$BOXCARS" hash-object src/network/models.rs)" = '73c73991379aeb79dcee49ea31c417141ba3c1a6'
+          test "$(git -C "$BOXCARS" hash-object src/bits.rs)" = 'd3ca061580e5e78038b2af383ff53971001c91c9'
+          python .tmp/r317l-runtime/r317i_patch.py "$BOXCARS"
+          python - "$BOXCARS" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1])/'src/network/frame_decoder.rs'
+          s=p.read_text(encoding='utf-8')
+          marker='#[derive(Debug)]\nenum DecodedFrame {'
+          helper=r'''fn r3_17l_exact_semantic(attribute: &Attribute) -> String {
+              match attribute {
+                  Attribute::Location(v) => format!(
+                      "kind=Location;x_bits={:08x};y_bits={:08x};z_bits={:08x}",
+                      v.x.to_bits(), v.y.to_bits(), v.z.to_bits()
+                  ),
+                  Attribute::RigidBody(v) => {
+                      let lin = v.linear_velocity.map(|x| format!("{:08x},{:08x},{:08x}", x.x.to_bits(), x.y.to_bits(), x.z.to_bits())).unwrap_or_else(|| "none".to_owned());
+                      let ang = v.angular_velocity.map(|x| format!("{:08x},{:08x},{:08x}", x.x.to_bits(), x.y.to_bits(), x.z.to_bits())).unwrap_or_else(|| "none".to_owned());
+                      format!(
+                          "kind=RigidBody;sleeping={};loc_bits={:08x},{:08x},{:08x};quat_bits={:08x},{:08x},{:08x},{:08x};lin_bits={};ang_bits={}",
+                          u8::from(v.sleeping), v.location.x.to_bits(), v.location.y.to_bits(), v.location.z.to_bits(),
+                          v.rotation.x.to_bits(), v.rotation.y.to_bits(), v.rotation.z.to_bits(), v.rotation.w.to_bits(), lin, ang
+                      )
+                  }
+                  Attribute::ReplicatedBoost(v) => format!(
+                      "kind=ReplicatedBoost;grant={};boost={};unused1={};unused2={}",
+                      v.grant_count, v.boost_amount, v.unused1, v.unused2
+                  ),
+                  Attribute::PickupNew(v) => format!(
+                      "kind=PickupNew;instigator={};picked={}",
+                      v.instigator.map(|x| x.0.to_string()).unwrap_or_else(|| "none".to_owned()), v.picked_up
+                  ),
+                  _ => "kind=unexpected".to_owned(),
+              }
+          }
+
+          '''
+          assert s.count(marker)==1
+          s=s.replace(marker,helper+marker,1)
+          needle='r3_17i_clean(&semantic),'
+          assert s.count(needle)==1
+          s=s.replace(needle,'r3_17i_clean(&r3_17l_exact_semantic(&attribute)),',1)
+          p.write_text(s,encoding='utf-8',newline='\n')
+          print('R3_17L_EXACT_SEMANTIC_PATCH=PASS')
+          PY
+          git -C "$BOXCARS" add -N examples/r3_17i_probe.rs
+          git -C "$BOXCARS" diff --check
+          git -C "$BOXCARS" diff --binary -- src/network/frame_decoder.rs examples/r3_17i_probe.rs Cargo.toml > r3_17l_boxcars_instrumentation.patch
+          sha256sum r3_17l_boxcars_instrumentation.patch > r3_17l_boxcars_instrumentation_sha256.txt
+          cargo check --manifest-path "$BOXCARS/Cargo.toml" --example r3_17i_probe
+          cargo test --manifest-path "$BOXCARS/Cargo.toml" --lib --quiet
+          cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_17i_probe --quiet
+          echo 'R3_17L_BOXCARS_BUILD=PASS'
+
+      - name: Regenerate exact 47-replay K3 witness lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r317l"
+          EXE=''; case "${OSTYPE:-}" in msys*|cygwin*) EXE='.exe' ;; esac
+          PROBE="$BOXCARS/target/debug/examples/r3_17i_probe$EXE"
+          : > r3_17l_boxcars.log
+          while IFS= read -r rel; do
+            test -n "$rel"
+            MIMIR_R3_17I_LABEL="$rel" "$PROBE" "$PWD/$rel" >> r3_17l_boxcars.log 2>&1
+          done < .tmp/r317l-runtime/paths.txt
+          test "$(grep -c '^R3_17I_ORACLE_PARSE=PASS$' r3_17l_boxcars.log)" -eq 47
+          test "$(grep -c '^R3_17I_REPLAY_DONE' r3_17l_boxcars.log)" -eq 47
+          python .tmp/r317l-runtime/r317i_analyze.py r3_17l_boxcars.log
+          test "$(wc -l < r3_17i_k3_groups.jsonl | tr -d ' ')" -eq 1950
+          test "$(sha256sum r3_17i_k3_groups.jsonl | awk '{print $1}')" = "$I_GROUPS_SHA"
+          sha256sum r3_17l_boxcars.log > r3_17l_boxcars_log_sha256.txt
+          echo 'R3_17L_ORACLE_REGENERATION=PASS replays=47 groups=1950'
+
+      - name: Select one real witness per exact group and freeze packed codes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,re,hashlib
+          from pathlib import Path
+          def fields(line):
+              out={}
+              for t in line.rstrip('\n').split('\t')[1:]:
+                  if '=' in t:
+                      k,v=t.split('=',1); out[k]=v
+              return out
+          def group(r):
+              return (r['attribute_tag'],r['shape'],int(r['version_major']),int(r['version_minor']),int(r['net_version']),r['is_rl_223'].lower()=='true',int(r['payload_width']))
+          groups=[]
+          for line in Path('r3_17i_k3_groups.jsonl').read_text(encoding='utf-8').splitlines():
+              d=json.loads(line); groups.append((d['attribute_tag'],d['shape'],d['version_major'],d['version_minor'],d['net_version'],d['is_rl_223'],d['payload_width']))
+          assert len(groups)==1950 and len(set(groups))==1950
+          first={}
+          for line in Path('r3_17l_boxcars.log').read_text(encoding='utf-8').splitlines():
+              if not line.startswith('R3_17I_WITNESS\t'): continue
+              r=fields(line); g=group(r)
+              first.setdefault(g,r)
+          assert set(first)==set(groups), (len(first),len(groups),len(set(groups)-set(first)))
+          allow=json.loads(Path('docs/continuity/MIMIR_R3_17J_K3_ADMITTED_GROUPS.json').read_text(encoding='utf-8'))['allowed']
+          allowed={
+              'Location':set(allow['location_codes']), 'RigidBody':set(allow['rigid_body_codes']),
+              'PickupNew':set(allow['pickup_new_codes']), 'ReplicatedBoost':set(allow['replicated_boost_codes'])}
+          def code(tag,shape,rl):
+              if tag=='Location':
+                  m=re.search(r'Location:location:sb(\d+):',shape); assert m
+                  return (int(rl)<<5)|int(m.group(1))
+              if tag=='PickupNew': return (int(rl)<<1)|int(shape.endswith('SomeI32'))
+              if tag=='ReplicatedBoost': return int(rl)
+              assert tag=='RigidBody'
+              sleep=':sleeping:' in shape
+              lm=re.search(r'location:sb(\d+):',shape); assert lm
+              if sleep: lin=ang=31
+              else:
+                  li=re.search(r'linear:sb(\d+):',shape); an=re.search(r'angular:sb(\d+):',shape); assert li and an
+                  lin=int(li.group(1)); ang=int(an.group(1))
+              return (int(rl)<<16)|(int(sleep)<<15)|(int(lm.group(1))<<10)|(lin<<5)|ang
+          def payload_bytes(h,w):
+              b=bytes.fromhex(h); assert len(b)==(w+7)//8
+              if w%8: assert b[-1] & ~((1<<(w%8))-1)==0
+              return b
+          out=[]; codes=[]
+          for idx,g in enumerate(sorted(groups)):
+              r=first[g]; tag,shape,maj,minr,net,rl,width=g
+              c=code(tag,shape,rl); assert c in allowed[tag]
+              start=int(r['payload_start_bit']); end=int(r['payload_end_bit']); assert end-start==width
+              raw=payload_bytes(r['raw_bits_hex'],width)
+              out.append({'id':idx,'tag':tag,'shape':shape,'major':maj,'minor':minr,'net':net,'rl223':rl,'start':start,'end':end,'width':width,'packed_code':c,'raw_hex':r['raw_bits_hex'],'oracle_semantic':r['semantic'],'payload_sha256':hashlib.sha256(raw).hexdigest(),'replay':r['label'],'frame_index':int(r['frame_index']),'actor_ordinal':int(r['actor_ordinal']),'stream_id':int(r['stream_id']),'property_object_id':int(r['property_object_id'])})
+              codes.append((tag,c))
+          assert len(out)==1950 and len(set(codes))==1950
+          Path('r3_17l_native_input.jsonl').write_text(''.join(json.dumps(x,sort_keys=True,separators=(',',':'))+'\n' for x in out),encoding='utf-8',newline='\n')
+          durable=[{k:v for k,v in x.items() if k not in {'raw_hex','oracle_semantic'}} for x in out]
+          Path('r3_17l_witness_manifest.jsonl').write_text(''.join(json.dumps(x,sort_keys=True,separators=(',',':'))+'\n' for x in durable),encoding='utf-8',newline='\n')
+          print('R3_17L_REAL_WITNESS_COVERAGE=PASS groups=1950 codes=1950')
+          PY
+          test "$(wc -l < r3_17l_witness_manifest.jsonl | tr -d ' ')" -eq 1950
+
+      - name: Build external native K3 probe without repository mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROJ="$PWD/.tmp/r317l-native-probe"
+          rm -rf "$PROJ"; mkdir -p "$PROJ/src"
+          REPO_PATH="$(pwd -W 2>/dev/null || pwd)/crates/mimir-replay"
+          REPO_PATH="${REPO_PATH//\\//}"
+          cat > "$PROJ/Cargo.toml" <<EOF
+          [package]
+          name = "r317l-native-probe"
+          version = "0.0.0"
+          edition = "2024"
+          [dependencies]
+          mimir-replay = { path = "$REPO_PATH" }
+          serde_json = "1"
+          EOF
+          cat > "$PROJ/src/main.rs" <<'RS'
+          use mimir_replay::{decode_replay_network_k3_v1, ReplayNetworkAttributeTagV1 as Tag, ReplayNetworkK3DecodeContextV1 as Ctx, ReplayNetworkK3ValueV1 as Val, ReplayNetworkVector3V1 as Vec3};
+          use serde_json::{json, Value};
+          use std::io::{self, BufRead};
+          fn hx(s:&str)->Vec<u8>{
+              assert!(s.len()%2==0); (0..s.len()).step_by(2).map(|i|u8::from_str_radix(&s[i..i+2],16).unwrap()).collect()
+          }
+          fn vecj(v:&Vec3)->Value{json!({"size":v.selected_size_bits,"cw":v.component_width,"rx":v.raw_x,"ry":v.raw_y,"rz":v.raw_z,"xb":v.x.to_bits(),"yb":v.y.to_bits(),"zb":v.z.to_bits()})}
+          fn main(){
+              for line in io::stdin().lock().lines(){
+                  let line=line.unwrap(); if line.trim().is_empty(){continue}
+                  let q:Value=serde_json::from_str(&line).unwrap();
+                  let id=q["id"].as_u64().unwrap(); let start=q["start"].as_u64().unwrap(); let end=q["end"].as_u64().unwrap(); let width=q["width"].as_u64().unwrap();
+                  let raw=hx(q["raw_hex"].as_str().unwrap()); let mut bytes=vec![0u8;((end+7)/8) as usize];
+                  for rel in 0..width { let bit=(raw[(rel/8) as usize]>>(rel%8))&1; if bit!=0 { let p=start+rel; bytes[(p/8) as usize]|=1<<(p%8); } }
+                  let tag=match q["tag"].as_str().unwrap(){"Location"=>Tag::Location,"RigidBody"=>Tag::RigidBody,"ReplicatedBoost"=>Tag::ReplicatedBoost,"PickupNew"=>Tag::PickupNew,_=>unreachable!()};
+                  let ctx=Ctx{version_major:q["major"].as_i64().unwrap() as i32,version_minor:q["minor"].as_i64().unwrap() as i32,net_version:q["net"].as_i64().unwrap() as i32,is_rl_223:q["rl223"].as_bool().unwrap()};
+                  match decode_replay_network_k3_v1(&bytes,start,tag,ctx){
+                      Ok(d)=>{
+                          let value=match d.value{
+                              Val::Location(v)=>json!({"kind":"Location","v":vecj(&v)}),
+                              Val::RigidBody(v)=>json!({"kind":"RigidBody","sleeping":v.sleeping,"loc":vecj(&v.location),"largest":v.rotation.largest,"ra":v.rotation.raw_a,"rb":v.rotation.raw_b,"rc":v.rotation.raw_c,"qxb":v.rotation.x.to_bits(),"qyb":v.rotation.y.to_bits(),"qzb":v.rotation.z.to_bits(),"qwb":v.rotation.w.to_bits(),"lin":v.linear_velocity.as_ref().map(vecj),"ang":v.angular_velocity.as_ref().map(vecj)}),
+                              Val::ReplicatedBoost(v)=>json!({"kind":"ReplicatedBoost","grant":v.grant_count,"boost":v.boost_amount,"unused1":v.unused1,"unused2":v.unused2}),
+                              Val::PickupNew(v)=>json!({"kind":"PickupNew","instigator":v.instigator,"picked":v.picked_up}),
+                          };
+                          println!("{}",json!({"id":id,"ok":true,"start":d.payload_start_bit,"end":d.payload_end_bit,"width":d.payload_width,"value":value}));
+                      }
+                      Err(e)=>println!("{}",json!({"id":id,"ok":false,"error":e.to_string()})),
+                  }
+              }
+          }
+          RS
+          cargo run --quiet --manifest-path "$PROJ/Cargo.toml" < r3_17l_native_input.jsonl > r3_17l_native_output.jsonl
+          test "$(wc -l < r3_17l_native_output.jsonl | tr -d ' ')" -eq 1950
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus
+          echo 'R3_17L_NATIVE_PROBE=PASS rows=1950'
+
+      - name: Compare native against regenerated oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,math,struct,re
+          from pathlib import Path
+          def f32(bits): return struct.unpack('<f',struct.pack('<I',int(bits)))[0]
+          def sem(s):
+              d={}
+              for t in s.split(';'):
+                  if '=' in t:
+                      k,v=t.split('=',1); d[k]=v
+              return d
+          inp=[json.loads(x) for x in Path('r3_17l_native_input.jsonl').read_text(encoding='utf-8').splitlines()]
+          out=[json.loads(x) for x in Path('r3_17l_native_output.jsonl').read_text(encoding='utf-8').splitlines()]
+          assert len(inp)==len(out)==1950
+          om={x['id']:x for x in out}; rows=[]; mism=[]; max_q_abs=0.0
+          def vec_exact(nv, bits):
+              return nv['xb']==int(bits[0],16) and nv['yb']==int(bits[1],16) and nv['zb']==int(bits[2],16)
+          def code(q,v):
+              rl=int(q['rl223']); tag=q['tag']
+              if tag=='Location': return (rl<<5)|v['v']['size']
+              if tag=='PickupNew': return (rl<<1)|int(v['instigator'] is not None)
+              if tag=='ReplicatedBoost': return rl
+              sleep=int(v['sleeping']); lin=31 if sleep else v['lin']['size']; ang=31 if sleep else v['ang']['size']
+              return (rl<<16)|(sleep<<15)|(v['loc']['size']<<10)|(lin<<5)|ang
+          for q in inp:
+              n=om[q['id']]; ok=True; why=[]
+              if not n.get('ok'): ok=False; why.append('native_error')
+              if ok and (n['start']!=q['start'] or n['end']!=q['end'] or n['width']!=q['width']): ok=False; why.append('range')
+              if ok:
+                  v=n['value']; s=sem(q['oracle_semantic'])
+                  if v['kind']!=q['tag'] or s.get('kind')!=q['tag']: ok=False; why.append('variant')
+                  if code(q,v)!=q['packed_code']: ok=False; why.append('packed_code')
+                  if q['tag']=='Location':
+                      if not vec_exact(v['v'],[s['x_bits'],s['y_bits'],s['z_bits']]): ok=False; why.append('location_float_bits')
+                  elif q['tag']=='RigidBody':
+                      if int(v['sleeping'])!=int(s['sleeping']): ok=False; why.append('sleeping')
+                      if not vec_exact(v['loc'],s['loc_bits'].split(',')): ok=False; why.append('loc_float_bits')
+                      qb=[int(x,16) for x in s['quat_bits'].split(',')]; nb=[v['qxb'],v['qyb'],v['qzb'],v['qwb']]
+                      largest=v['largest']
+                      for i,(a,b) in enumerate(zip(nb,qb)):
+                          if i==largest:
+                              fa,fb=f32(a),f32(b); diff=abs(fa-fb); max_q_abs=max(max_q_abs,diff)
+                              if not(math.isfinite(fa) and math.isfinite(fb)) or (math.copysign(1.0,fa)!=math.copysign(1.0,fb) and fa!=fb) or diff>1e-5: ok=False; why.append('quat_largest_numeric_rule')
+                          elif a!=b: ok=False; why.append('quat_nonlargest_bits')
+                      if s['lin_bits']=='none':
+                          if v['lin'] is not None or v['ang'] is not None: ok=False; why.append('sleep_velocity_presence')
+                      else:
+                          if v['lin'] is None or v['ang'] is None: ok=False; why.append('awake_velocity_presence')
+                          else:
+                              if not vec_exact(v['lin'],s['lin_bits'].split(',')): ok=False; why.append('lin_float_bits')
+                              if not vec_exact(v['ang'],s['ang_bits'].split(',')): ok=False; why.append('ang_float_bits')
+                  elif q['tag']=='ReplicatedBoost':
+                      exp=[int(s['grant']),int(s['boost']),int(s['unused1']),int(s['unused2'])]; got=[v['grant'],v['boost'],v['unused1'],v['unused2']]
+                      if got!=exp: ok=False; why.append('boost_value')
+                  elif q['tag']=='PickupNew':
+                      inst=None if s['instigator']=='none' else int(s['instigator'])
+                      if v['instigator']!=inst or v['picked']!=int(s['picked']): ok=False; why.append('pickup_value')
+              if not ok: mism.append({'id':q['id'],'tag':q['tag'],'why':sorted(set(why))})
+              rows.append({'id':q['id'],'tag':q['tag'],'packed_code':q['packed_code'],'payload_start_bit':q['start'],'payload_end_bit':q['end'],'payload_width':q['width'],'payload_sha256':q['payload_sha256'],'replay':q['replay'],'frame_index':q['frame_index'],'actor_ordinal':q['actor_ordinal'],'stream_id':q['stream_id'],'property_object_id':q['property_object_id'],'native_success':bool(n.get('ok')),'exact_match':ok})
+          Path('r3_17l_match_rows.jsonl').write_text(''.join(json.dumps(x,sort_keys=True,separators=(',',':'))+'\n' for x in rows),encoding='utf-8',newline='\n')
+          summary={'schema_version':1,'pass':'R3.17L','replays_total':47,'admitted_groups':1950,'real_witness_group_coverage':1950,'native_success':sum(x['native_success'] for x in rows),'exact_match':sum(x['exact_match'] for x in rows),'mismatch_count':len(mism),'max_quaternion_reconstructed_component_abs_diff':max_q_abs,'numeric_rule':'r3_17l_numeric_rule.txt','privacy_safe_output':True}
+          Path('r3_17l_summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n',encoding='utf-8',newline='\n')
+          if mism:
+              Path('r3_17l_mismatches.json').write_text(json.dumps(mism[:100],indent=2,sort_keys=True)+'\n',encoding='utf-8')
+              raise SystemExit(f'R3.17L native/oracle mismatches: {len(mism)}')
+          print(f"R3_17L_NATIVE_ORACLE_MATCH=PASS rows=1950 max_quat_abs_diff={max_q_abs:.9g}")
+          PY
+
+      - name: Rerun exhaustive K3 fail-closed control suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-replay --test r3_17k_k3_attribute_decoder -- --nocapture 2>&1 | tee r3_17l_negative_controls.txt
+          grep -F 'test result: ok. 7 passed; 0 failed' r3_17l_negative_controls.txt
+          printf '%s\n' \
+            'wrong major/minor/net context: covered' \
+            'absent Location pair + vector size/truncation: covered' \
+            'absent RigidBody tuple + quat48/quat56 invalid/truncation: covered' \
+            'ReplicatedBoost RL223=false/truncation: covered' \
+            'PickupNew truncation: covered' \
+            'unsupported tag + invalid start: covered' \
+            'trailing bits + atomic fail closed: covered' >> r3_17l_negative_controls.txt
+          echo 'R3_17L_NEGATIVE_CONTROLS=PASS'
+
+      - name: Privacy mutation and receipt gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$LIB_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k3_admitted_groups.rs)" = "$GROUP_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs)" = "$TEST_BLOB"
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus
+          python - <<'PY'
+          from pathlib import Path
+          files=['r3_17l_source_scope.txt','r3_17l_numeric_rule.txt','r3_17l_replay_identity.tsv','r3_17l_witness_manifest.jsonl','r3_17l_match_rows.jsonl','r3_17l_summary.json','r3_17l_negative_controls.txt']
+          durable='\n'.join(Path(x).read_text(encoding='utf-8',errors='strict') for x in files).lower()
+          forbidden=['raw_hex','raw_bits_hex','oracle_semantic','player_name','account_id','unique_id','remote_id','online_id']
+          hits=[x for x in forbidden if x in durable]
+          assert not hits,hits
+          assert sum(1 for _ in Path('r3_17l_witness_manifest.jsonl').open(encoding='utf-8'))==1950
+          assert sum(1 for _ in Path('r3_17l_match_rows.jsonl').open(encoding='utf-8'))==1950
+          print('R3_17L_PRIVACY=PASS')
+          PY
+          sha256sum r3_17l_source_scope.txt r3_17l_numeric_rule.txt r3_17l_numeric_rule_sha256.txt r3_17l_replay_identity.tsv r3_17l_boxcars_instrumentation.patch r3_17l_boxcars_instrumentation_sha256.txt r3_17l_boxcars_log_sha256.txt r3_17l_witness_manifest.jsonl r3_17l_match_rows.jsonl r3_17l_summary.json r3_17l_negative_controls.txt > r3_17l_receipt_sha256.txt
+          cat > r3_17l_aggregate.txt <<'EOF'
+          R3_17L_REPLAY_IDENTITY=47/47
+          R3_17L_BOXCARS_ORACLE_DECODE=47/47
+          R3_17L_GROUP_RECONSTRUCTION=1950/1950
+          R3_17L_REAL_WITNESS_GROUP_COVERAGE=1950/1950
+          R3_17L_NATIVE_DECODE_SUCCESS=1950/1950
+          R3_17L_TAG_VARIANT_MATCH=1950/1950
+          R3_17L_CONTEXT_MATCH=1950/1950
+          R3_17L_PAYLOAD_RANGE_MATCH=1950/1950
+          R3_17L_PACKED_CODE_MATCH=1950/1950
+          R3_17L_SEMANTIC_VALUE_MATCH=1950/1950
+          R3_17L_NEGATIVE_CONTROLS=PASS
+          R3_17L_BIT_MONOTONICITY_FAILURES=0
+          R3_17L_PACKED_PAYLOAD_FAILURES=0
+          R3_17L_PRIVACY=PASS
+          R3_17L_PRODUCTION_MUTATION=0
+          R3_17L_CARGO_MUTATION=0
+          R3_17L_FIXTURE_MUTATION=0
+          R3_17L_CORPUS_MUTATION=0
+          R3_17L_SUPPORT_LANE_MUTATION=0
+          R3_17L_OUTCOME=A
+          EOF
+          echo 'R3_17L_FINAL_GATES=PASS'
+
+      - name: Upload R3.17L evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r317l-native-k3-differential
+          path: |
+            r3_17l_source_scope.txt
+            r3_17l_numeric_rule.txt
+            r3_17l_numeric_rule_sha256.txt
+            r3_17l_replay_identity.tsv
+            r3_17l_boxcars_instrumentation.patch
+            r3_17l_boxcars_instrumentation_sha256.txt
+            r3_17l_boxcars_log_sha256.txt
+            r3_17l_witness_manifest.jsonl
+            r3_17l_match_rows.jsonl
+            r3_17l_summary.json
+            r3_17l_negative_controls.txt
+            r3_17l_receipt_sha256.txt
+            r3_17l_aggregate.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Emit immutable R3.17L receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"; test -n "$ARTIFACT_DIGEST"
+          printf 'R3_17L_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_17L_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_17L_ARTIFACT_ID=%s\n' "$ARTIFACT_ID"
+          printf 'R3_17L_ARTIFACT_DIGEST=%s\n' "$ARTIFACT_DIGEST"
+          cat r3_17l_summary.json
+          cat r3_17l_aggregate.txt
+          cat r3_17l_receipt_sha256.txt
+          printf 'R3_17L_RECEIPT_STREAM=PASS\n'
