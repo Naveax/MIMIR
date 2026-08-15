@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  7390e3b145372252caaa8fa1fe3e0cd13b83336c
+  492cc8218be7abc6db8f75acaea33d009ab2f175
 
 LAST_PRODUCTION_MILESTONE:
-  R3.17K — direct native exact-contract K3 decoder implementation
+  R3.17O — direct native exact-contract K4 decoder implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.17L — native K3 differential audit / Outcome A / 1950 of 1950 real-replay exact groups / 0 mismatch
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.17M — K4 gameplay-structured wire-format evidence / Outcome A / 39463 occurrences / 161 exact groups
 
 CURRENT_PASS:
-  R3.17O — direct native exact-contract K4 decoder implementation
+  R3.17P — native K4 real-replay differential audit
 
 CURRENT_PASS_TYPE:
-  production implementation / exact 161-group contract only
+  read-only real-replay differential audit / exact 161-group certification
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -77,10 +77,10 @@ PINNED_BOXCARS_ORACLE:
   exact SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
 
 CURRENT_PRODUCTION_HARD_STOP:
-  one already-resolved K1 primitive scalar OR one R3.17F-admitted K2 payload OR one R3.17J-admitted K3 payload may be decoded natively
-  K3 is limited to exact Location / RigidBody / ReplicatedBoost / PickupNew structural-context allowlist membership
+  one already-resolved K1 primitive scalar OR one R3.17F-admitted K2 payload OR one R3.17J-admitted K3 payload OR one R3.17N-admitted K4 payload may be decoded natively
+  K3 remains limited to its exact R3.17J structural/context allowlist; K4 remains limited to the exact 161 R3.17N tuples
   stop exactly at payload_end_bit / stop_bit after that one value
-  R3.17N admits the exact K4 contract but production K4 decode is not yet implemented
+  R3.17O production is implemented and published; R3.17P must certify it against regenerated real-replay witnesses before any later parser widening
   NO second property, next actor, next frame, lifecycle mutation, unobserved K2/K3/K4 shape or family is admitted
 
 R3_17E_EVIDENCE_CLOSURE:
@@ -228,21 +228,42 @@ R3_17N_CONTRACT_CLOSURE:
   atomic failure + exact one-value end semantics: PASS/PASS
   production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_17O_OPEN_BOUNDARY:
-  production implementation; exact R3.17N 161-group K4 contract only
-  direct native one-value K4 decoder; arbitrary unaligned start; checked arithmetic; atomic failure
-  all 161 admitted rows require positive coverage and independent allowlist equality
-  Reservation / DemolishFx / DemolishExtended / LoadoutsOnline combinations remain exact-group coupled
-  Cargo/fixture/corpus/support lane stay unchanged
+R3_17O_PRODUCTION_CLOSURE:
+  Outcome A / production / exact R3.17N 161-group contract only
+  pre-O canonical main: 3392c28ba8ec7d72766303646c0ceb57ed1e5a19
+  production SHA: 492cc8218be7abc6db8f75acaea33d009ab2f175
+  production tree: a66c47d7fb58da508188e64d42141987a0021a07
+  parent: 3392c28ba8ec7d72766303646c0ceb57ed1e5a19
+  authority head: 900d7eb122f10126558f13ea2c185cdb8c69fe1b
+  authority run/job: 31885987240 / 95015252318 SUCCESS
+  exact-candidate CI: 31886194387 / 95015736899 SUCCESS
+  published-main CI: 31886353485 / 95016105618 SUCCESS
+  lib.rs blob: 0161ba7fdcb6e395a2c972061ff6f56d07b8b5e8
+  k4 allowlist module blob: 103503e25bc5af48381df021ab58133694fcece6
+  k4 native module blob: a9c41f3bb11343165183ac9c815ab8fdf085936c
+  focused test blob: 70437244bb49224281ee3a2e745e7b8a4b7a093a
+  production allowlist equality: 161/161 exact / SHA256 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b / cross-product widening 0
+  focused positives: all 161 exact groups PASS; focused malformed/context/cross-product negatives PASS
+  full mimir-replay suite: PASS; workspace check/test/clippy: PASS; full repository verifier: PASS
+  exact production scope: lib.rs + k4_admitted_groups.rs + k4_native.rs + r3_17o focused integration test
+  Cargo/fixture/corpus/support-lane changes: none
+  property-loop / actor / frame / lifecycle widening: none
 
-R3_17O_HARD_STOP:
+R3_17P_OPEN_BOUNDARY:
+  read-only native K4 real-replay differential audit; production mutation forbidden
+  reuse the exact frozen 47-replay R3.17M lane and pinned Boxcars oracle
+  regenerate at least one real witness for every one of the 161 R3.17N exact groups
+  compare native/oracle tag, context, start/end/width, exact shape and semantic value
+  private account/player/title text may be compared in memory only; durable evidence must remain privacy-safe
+
+R3_17P_HARD_STOP:
+  no production Rust, Cargo, fixture, corpus or support-lane mutation
   no second property / property-loop continuation
   no next actor / next frame / lifecycle mutation
   no raw-state, event, replay-slice, skill, runtime or export widening
-  no real-replay differential audit inside implementation pass
 
-NEXT PASS AFTER R3.17O:
-  only if Outcome A, open separate R3.17P native K4 real-replay differential audit; R3.18 remains closed
+NEXT PASS AFTER R3.17P:
+  only after Outcome A, re-read the execution roadmap and select the first dependency-valid unfinished pass; R3.18 is not pre-admitted
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

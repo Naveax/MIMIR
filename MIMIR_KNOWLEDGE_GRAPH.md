@@ -29,7 +29,8 @@ R3.17K K3 production decision             |
 R3.17L K3 differential decision             |
 R3.17M K4 evidence decision                  |
 R3.17N K4 contract decision                  |
-R3.17O active K4 production spec              |
+R3.17O K4 production decision                   |
+R3.17P active K4 differential spec                |
         |                               |
         +---------------+---------------+
                         |
@@ -78,13 +79,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 28. `docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl`
 29. `docs/continuity/MIMIR_R3_17N_DECISION.md`
 30. `docs/continuity/MIMIR_R3_17O_EXECUTION_SPEC.md`
-31. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-32. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-33. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-34. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-35. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-36. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-37. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+31. `docs/continuity/MIMIR_R3_17O_DECISION.md`
+32. `docs/continuity/MIMIR_R3_17P_EXECUTION_SPEC.md`
+33. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+34. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+35. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+36. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+37. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+38. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+39. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -147,16 +150,22 @@ R3.13 static network lookup plan
       candidate CI 31883438754 / 95009080782 SUCCESS
       published archive/CI 31883625387 / 31883625362 SUCCESS
       161/161 exact groups / SHA256 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b / cross-product widening 0
- -> R3.17O direct native exact-contract K4 decoder implementation: ACTIVE / PRODUCTION
+ -> R3.17O direct native exact-contract K4 decoder implementation: PRODUCTION / CLOSED
+      production 492cc8218be7abc6db8f75acaea33d009ab2f175
+      authority 900d7eb122f10126558f13ea2c185cdb8c69fe1b / 31885987240 / 95015252318 SUCCESS
+      candidate CI 31886194387 / 95015736899 SUCCESS
+      published CI 31886353485 / 95016105618 SUCCESS
+      161/161 exact allowlist equality / cross-product widening 0 / focused+workspace+full verifier PASS
+ -> R3.17P native K4 real-replay differential audit: ACTIVE / READ-ONLY
 ```
 
 ## Current capability lock
 
-Production at `7390e3b145372252caaa8fa1fe3e0cd13b83336c` can natively decode exactly one already-resolved K1 scalar, one R3.17F-admitted K2 payload, or one R3.17J-admitted K3 payload. Every success stops exactly at its one-value end bit and does not authorize another property, actor, frame or lifecycle mutation.
+Production at `492cc8218be7abc6db8f75acaea33d009ab2f175` can natively decode exactly one already-resolved K1 scalar, one R3.17F-admitted K2 payload, one R3.17J-admitted K3 payload, or one exact R3.17N-admitted K4 payload. Every success stops exactly at its one-value end bit and does not authorize another property, actor, frame or lifecycle mutation. R3.17P is the separate real-replay certification pass for the K4 implementation.
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups with zero cross-product widening; R3.17K implemented exactly that contract; R3.17L matched all 1,950 exact groups against regenerated real-replay witnesses with zero mismatch. R3.17M observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups. R3.17N then admitted exactly those 161 groups byte-for-byte with zero cross-product widening. R3.17O is now the separate native K4 implementation pass; property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups; R3.17K implemented them; R3.17L matched all 1,950 against real replay witnesses. R3.17M then observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups; R3.17N admitted those 161 groups byte-for-byte; R3.17O implemented exactly that contract with zero cross-product widening. R3.17P is now the separate native K4 real-replay differential audit. Property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
 
 ## R3.17G production closure
 
@@ -349,3 +358,24 @@ support mutations           0/0/0/0/0
 outcome                     A
 next                        R3.17O native K4 implementation
 ```
+## R3.17O K4 production closure
+
+```text
+production SHA              492cc8218be7abc6db8f75acaea33d009ab2f175
+production tree             a66c47d7fb58da508188e64d42141987a0021a07
+production parent           3392c28ba8ec7d72766303646c0ceb57ed1e5a19
+authority head              900d7eb122f10126558f13ea2c185cdb8c69fe1b
+authority run/job           31885987240 / 95015252318 SUCCESS
+exact candidate CI          31886194387 / 95015736899 SUCCESS
+published main CI           31886353485 / 95016105618 SUCCESS
+lib.rs blob                 0161ba7fdcb6e395a2c972061ff6f56d07b8b5e8
+k4 groups blob              103503e25bc5af48381df021ab58133694fcece6
+k4 native blob              a9c41f3bb11343165183ac9c815ab8fdf085936c
+focused test blob           70437244bb49224281ee3a2e745e7b8a4b7a093a
+contract equality           161/161 exact
+cross-product widening      0
+Cargo/fixture/corpus/support unchanged
+outcome                     A / PRODUCTION
+```
+
+R3.17P must certify all 161 exact groups against regenerated real-replay witnesses before later parser widening is considered.
