@@ -1,0 +1,256 @@
+name: R3.17M K4 Wire Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r317m-k4-wire-evidence
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout evidence branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen authority and replay identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAIN_SHA='b1a4ad1a04623e3c8b002a7ea60817120b5fb551'
+          PROD_SHA='7390e3b145372252caaa8fa1fe3e0cd13b83336c'
+          PROD_TREE='eebe4e21de77a43b5d9d43a34a0bfb08e06bab02'
+          LIB_BLOB='28d213f831c8968e6756a6ccea2cd7aa6cdbdfba'
+          GROUP_BLOB='da545a7144fefabab7f5be4f07fde71311065293'
+          TEST_BLOB='4d1434cc0e59a6e5c72a8404c102a87d71b8b223'
+          PATHS_SHA='2ecbeea804f193796a539baee1e968719f03c0cd706efff0c22a61e6ef943dae'
+          IDENTITY_SHA='b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf'
+
+          git fetch origin main evidence/r317i-k3-wire-evidence
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$LIB_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k3_admitted_groups.rs)" = "$GROUP_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs)" = "$TEST_BLOB"
+          git diff --exit-code "$PROD_SHA"..HEAD -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures test_corpus
+
+          ACTUAL_PATHS_SHA="$(sha256sum tools/_tmp_r317m_paths.txt | awk '{print $1}')"
+          ACTUAL_IDENTITY_SHA="$(sha256sum tools/_tmp_r317m_identity.tsv | awk '{print $1}')"
+          echo "R3_17M_PATHS_SHA=$ACTUAL_PATHS_SHA"
+          echo "R3_17M_IDENTITY_SHA=$ACTUAL_IDENTITY_SHA"
+          test "$ACTUAL_PATHS_SHA" = "$PATHS_SHA"
+          test "$ACTUAL_IDENTITY_SHA" = "$IDENTITY_SHA"
+
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          paths=[x.strip().replace('\\','/') for x in Path('tools/_tmp_r317m_paths.txt').read_text(encoding='utf-8').splitlines() if x.strip()]
+          if len(paths)!=47 or len(set(paths))!=47:
+              raise SystemExit(f'expected 47 unique replay paths, got {len(paths)}')
+          ids={}
+          for line in Path('tools/_tmp_r317m_identity.tsv').read_text(encoding='utf-8').splitlines():
+              if not line.strip(): continue
+              f=line.split('\t')
+              if len(f)!=3 or f[2]!='PASS': raise SystemExit(f'bad identity row: {line!r}')
+              ids[f[0].replace('\\','/')]=f[1].lower()
+          if set(paths)!=set(ids): raise SystemExit('selector/identity set mismatch')
+          def sha256(path):
+              h=hashlib.sha256()
+              with Path(path).open('rb') as fh:
+                  for chunk in iter(lambda: fh.read(1<<20), b''): h.update(chunk)
+              return h.hexdigest()
+          for rel in paths:
+              if not Path(rel).is_file(): raise SystemExit(f'missing replay: {rel}')
+              actual=sha256(rel)
+              if actual!=ids[rel]: raise SystemExit(f'SHA mismatch: {rel}: {actual} != {ids[rel]}')
+          Path('r3_17m_replay_identity.tsv').write_text(''.join(f'{r}\t{ids[r]}\tPASS\n' for r in paths), encoding='utf-8', newline='\n')
+          print('R3_17M_SELECTOR_IDENTITY=PASS rows=47')
+          PY
+
+          printf 'main_sha=%s\nproduction_sha=%s\nproduction_tree=%s\nlib_blob=%s\ngroups_blob=%s\ntest_blob=%s\nproduction_mutation_count=0\ncargo_mutation_count=0\nfixture_mutation_count=0\ncorpus_mutation_count=0\nsupport_lane_mutation_count=0\n' "$MAIN_SHA" "$PROD_SHA" "$PROD_TREE" "$LIB_BLOB" "$GROUP_BLOB" "$TEST_BLOB" > r3_17m_source_scope.txt
+          git diff --name-only "$MAIN_SHA"..HEAD | sort >> r3_17m_source_scope.txt
+          echo 'R3_17M_FROZEN_AUTHORITY=PASS'
+
+      - name: Build pinned Boxcars K4 oracle instrumentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS_SHA='c70e77df7af81b436cb545d070bb90c82f562d0b'
+          FRAME_BLOB='6f2ff153d3a27cdacccc65e3f23851489077a7d8'
+          ATTR_BLOB='5e2d5bc1cd8187af30c3ea95193ad987645cb76e'
+          MODELS_BLOB='73c73991379aeb79dcee49ea31c417141ba3c1a6'
+          BITS_BLOB='d3ca061580e5e78038b2af383ff53971001c91c9'
+          BASE_PATCH_BLOB='ea651d3e33bda509280e45da2d2a1b257bdbf88d'
+          BOXCARS="$PWD/.tmp/boxcars-r317m"
+          rm -rf "$BOXCARS"
+          mkdir -p .tmp
+          git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+          git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" rev-parse HEAD)" = "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" hash-object src/network/frame_decoder.rs)" = "$FRAME_BLOB"
+          test "$(git -C "$BOXCARS" hash-object src/network/attributes.rs)" = "$ATTR_BLOB"
+          test "$(git -C "$BOXCARS" hash-object src/network/models.rs)" = "$MODELS_BLOB"
+          test "$(git -C "$BOXCARS" hash-object src/bits.rs)" = "$BITS_BLOB"
+
+          git show origin/evidence/r317i-k3-wire-evidence:tools/_tmp_r317i_patch.py > .tmp/r317i_base_patch.py
+          test "$(git hash-object .tmp/r317i_base_patch.py)" = "$BASE_PATCH_BLOB"
+          python tools/_tmp_r317m_transform.py "$BOXCARS" "$PWD/.tmp/r317i_base_patch.py"
+          git -C "$BOXCARS" add -N examples/r3_17m_probe.rs
+          git -C "$BOXCARS" diff --check
+          git -C "$BOXCARS" diff --binary -- src/network/frame_decoder.rs examples/r3_17m_probe.rs Cargo.toml > r3_17m_boxcars_instrumentation.patch
+          sha256sum r3_17m_boxcars_instrumentation.patch > r3_17m_boxcars_instrumentation_sha256.txt
+          {
+            printf 'pinned_boxcars_sha=%s\n' "$BOXCARS_SHA"
+            printf 'r317i_base_patch_blob=%s\n' "$BASE_PATCH_BLOB"
+            sha256sum tools/_tmp_r317m_transform.py tools/_tmp_r317m_analyze.py tools/_tmp_r317m_paths.txt tools/_tmp_r317m_identity.tsv
+          } > r3_17m_driver_manifest.txt
+
+          cargo check --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe
+          cargo test --manifest-path "$BOXCARS/Cargo.toml" --lib --quiet
+          cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe --quiet
+          echo 'R3_17M_BOXCARS_BUILD=PASS'
+
+      - name: Scan exact 47 replay lane first pass
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r317m"
+          EXE=''
+          case "${OSTYPE:-}" in msys*|cygwin*) EXE='.exe' ;; esac
+          PROBE="$BOXCARS/target/debug/examples/r3_17m_probe$EXE"
+          test -x "$PROBE"
+          : > r3_17m_boxcars.log
+          while IFS= read -r rel; do
+            test -n "$rel"
+            MIMIR_R3_17M_LABEL="$rel" "$PROBE" "$PWD/$rel" >> r3_17m_boxcars.log 2>&1
+          done < tools/_tmp_r317m_paths.txt
+          test "$(grep -c '^R3_17M_ORACLE_PARSE=PASS$' r3_17m_boxcars.log)" -eq 47
+          test "$(grep -c '^R3_17M_REPLAY_DONE' r3_17m_boxcars.log)" -eq 47
+          sha256sum r3_17m_boxcars.log > r3_17m_boxcars_log_sha256.txt
+          python tools/_tmp_r317m_analyze.py r3_17m_boxcars.log
+          grep -Eq '^R3_17M_OUTCOME=(A|B)$' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_EVIDENCE=PASS' r3_17m_aggregate.txt
+          mkdir -p .tmp/r317m-first
+          cp r3_17m_k4_groups.jsonl r3_17m_k4_witnesses.jsonl r3_17m_summary.json r3_17m_aggregate.txt .tmp/r317m-first/
+          sha256sum r3_17m_k4_groups.jsonl r3_17m_k4_witnesses.jsonl r3_17m_summary.json r3_17m_aggregate.txt > .tmp/r317m-first.sha256
+          echo 'R3_17M_FIRST_SCAN=PASS'
+
+      - name: Deterministic second scan and analysis
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r317m"
+          EXE=''
+          case "${OSTYPE:-}" in msys*|cygwin*) EXE='.exe' ;; esac
+          PROBE="$BOXCARS/target/debug/examples/r3_17m_probe$EXE"
+          : > r3_17m_boxcars_rerun.log
+          while IFS= read -r rel; do
+            MIMIR_R3_17M_LABEL="$rel" "$PROBE" "$PWD/$rel" >> r3_17m_boxcars_rerun.log 2>&1
+          done < tools/_tmp_r317m_paths.txt
+          test "$(grep -c '^R3_17M_ORACLE_PARSE=PASS$' r3_17m_boxcars_rerun.log)" -eq 47
+          test "$(grep -c '^R3_17M_REPLAY_DONE' r3_17m_boxcars_rerun.log)" -eq 47
+          sha256sum r3_17m_boxcars_rerun.log > r3_17m_boxcars_rerun_log_sha256.txt
+          python tools/_tmp_r317m_analyze.py r3_17m_boxcars_rerun.log
+          sha256sum r3_17m_k4_groups.jsonl r3_17m_k4_witnesses.jsonl r3_17m_summary.json r3_17m_aggregate.txt > .tmp/r317m-second.sha256
+          diff -u .tmp/r317m-first.sha256 .tmp/r317m-second.sha256
+          cmp -s r3_17m_boxcars.log r3_17m_boxcars_rerun.log
+          printf 'first_scan_log_sha256=%s\nrerun_scan_log_sha256=%s\nanalysis_outputs_identical=true\nraw_oracle_logs_identical=true\n' "$(awk '{print $1}' r3_17m_boxcars_log_sha256.txt)" "$(awk '{print $1}' r3_17m_boxcars_rerun_log_sha256.txt)" > r3_17m_determinism.txt
+          echo 'R3_17M_DETERMINISM=PASS'
+
+      - name: Final evidence gates and receipt hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAIN_SHA='b1a4ad1a04623e3c8b002a7ea60817120b5fb551'
+          LIB_BLOB='28d213f831c8968e6756a6ccea2cd7aa6cdbdfba'
+          GROUP_BLOB='da545a7144fefabab7f5be4f07fde71311065293'
+          TEST_BLOB='4d1434cc0e59a6e5c72a8404c102a87d71b8b223'
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$LIB_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k3_admitted_groups.rs)" = "$GROUP_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs)" = "$TEST_BLOB"
+          git diff --exit-code "$MAIN_SHA"..HEAD -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures test_corpus
+          test "$(wc -l < r3_17m_replay_identity.tsv | tr -d ' ')" -eq 47
+          grep -Fx 'R3_17M_PRIVACY_SAFE_OUTPUT=PASS' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_PRODUCTION_MUTATION=0' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_CARGO_MUTATION=0' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_FIXTURE_MUTATION=0' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_CORPUS_MUTATION=0' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_SUPPORT_LANE_MUTATION=0' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_UNCLASSIFIED_COUNT=0' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_BIT_MONOTONICITY_FAILURE_COUNT=0' r3_17m_aggregate.txt
+          grep -Fx 'R3_17M_RAW_PAYLOAD_SHAPE_FAILURE_COUNT=0' r3_17m_aggregate.txt
+          python - <<'PY'
+          from pathlib import Path
+          groups=sum(1 for _ in Path('r3_17m_k4_groups.jsonl').open(encoding='utf-8'))
+          witnesses=sum(1 for _ in Path('r3_17m_k4_witnesses.jsonl').open(encoding='utf-8'))
+          if groups < 0 or groups > 100000: raise SystemExit(f'unexpected group bound: {groups}')
+          if witnesses < groups or witnesses > groups*4: raise SystemExit(f'witness/group mismatch: {witnesses}/{groups}')
+          print(f'R3_17M_GROUP_BOUND=PASS rows={groups}')
+          print(f'R3_17M_WITNESS_BOUND=PASS rows={witnesses}')
+          PY
+          sha256sum \
+            r3_17m_source_scope.txt \
+            r3_17m_replay_identity.tsv \
+            r3_17m_boxcars_instrumentation.patch \
+            r3_17m_boxcars_instrumentation_sha256.txt \
+            r3_17m_driver_manifest.txt \
+            r3_17m_boxcars_log_sha256.txt \
+            r3_17m_boxcars_rerun_log_sha256.txt \
+            r3_17m_determinism.txt \
+            r3_17m_k4_groups.jsonl \
+            r3_17m_k4_witnesses.jsonl \
+            r3_17m_summary.json \
+            r3_17m_aggregate.txt > r3_17m_receipt_sha256.txt
+          cat r3_17m_aggregate.txt
+          echo 'R3_17M_RECEIPT=PASS'
+
+      - name: Upload R3.17M evidence
+        id: evidence_upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r317m-k4-wire-evidence
+          path: |
+            r3_17m_source_scope.txt
+            r3_17m_replay_identity.tsv
+            r3_17m_boxcars_instrumentation.patch
+            r3_17m_boxcars_instrumentation_sha256.txt
+            r3_17m_driver_manifest.txt
+            r3_17m_boxcars_log_sha256.txt
+            r3_17m_boxcars_rerun_log_sha256.txt
+            r3_17m_determinism.txt
+            r3_17m_k4_groups.jsonl
+            r3_17m_k4_witnesses.jsonl
+            r3_17m_summary.json
+            r3_17m_aggregate.txt
+            r3_17m_receipt_sha256.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Emit immutable bounded R3.17M receipt stream
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.evidence_upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence_upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          printf 'R3_17M_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_17M_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_17M_ARTIFACT_ID=%s\n' "$ARTIFACT_ID"
+          printf 'R3_17M_ARTIFACT_DIGEST=%s\n' "$ARTIFACT_DIGEST"
+          printf 'R3_17M_REPLAY_IDENTITY_ROWS=47\n'
+          printf 'R3_17M_GROUP_ROWS=%s\n' "$(wc -l < r3_17m_k4_groups.jsonl | tr -d ' ')"
+          printf 'R3_17M_WITNESS_ROWS=%s\n' "$(wc -l < r3_17m_k4_witnesses.jsonl | tr -d ' ')"
+          for file in r3_17m_source_scope.txt r3_17m_boxcars_instrumentation_sha256.txt r3_17m_driver_manifest.txt r3_17m_boxcars_log_sha256.txt r3_17m_boxcars_rerun_log_sha256.txt r3_17m_determinism.txt r3_17m_summary.json r3_17m_aggregate.txt r3_17m_receipt_sha256.txt; do
+            printf 'R3_17M_FILE_BEGIN\t%s\n' "$file"
+            cat "$file"
+            printf 'R3_17M_FILE_END\t%s\n' "$file"
+          done
+          printf 'R3_17M_RECEIPT_STREAM=PASS\n'
