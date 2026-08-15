@@ -1,0 +1,166 @@
+name: R3.17O Continuity Closure
+
+on:
+  push:
+    branches:
+      - agent/r317o-continuity-sync
+
+permissions:
+  contents: write
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      BASE_MAIN: 492cc8218be7abc6db8f75acaea33d009ab2f175
+      PRE_O_MAIN: 3392c28ba8ec7d72766303646c0ceb57ed1e5a19
+      PROD_TREE: a66c47d7fb58da508188e64d42141987a0021a07
+      LIB_BLOB: 0161ba7fdcb6e395a2c972061ff6f56d07b8b5e8
+      K4_GROUP_BLOB: 103503e25bc5af48381df021ab58133694fcece6
+      K4_NATIVE_BLOB: a9c41f3bb11343165183ac9c815ab8fdf085936c
+      TEST_BLOB: 70437244bb49224281ee3a2e745e7b8a4b7a093a
+      AUTH_HEAD: 900d7eb122f10126558f13ea2c185cdb8c69fe1b
+      GROUP_SHA: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+      GROUP_BLOB: b5fa6aaa729772ab3d113703952effe2346c9866
+      CONTRACT_BLOB: 76deabf8241b419ca224645106d2a19b041e20f8
+      M_HEAD: a50f09857f36ac52cec30b4bf3efbde9e15bb564
+
+    steps:
+      - name: Checkout disposable continuity branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify frozen production and contract authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main agent/r317o-native-k4 evidence/r317m-k4-wire-evidence
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "${BASE_MAIN}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${BASE_MAIN}^1")" = "$PRE_O_MAIN"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/k4_admitted_groups.rs")" = "$K4_GROUP_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/k4_native.rs")" = "$K4_NATIVE_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs")" = "$TEST_BLOB"
+          git cat-file -e "${AUTH_HEAD}^{commit}"
+          git cat-file -e "${M_HEAD}^{commit}"
+          test "$(git rev-parse "c8ebb872e510574bb69ab28c719f415ece8b7665:docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl")" = "$GROUP_BLOB"
+          test "$(git rev-parse "c8ebb872e510574bb69ab28c719f415ece8b7665:docs/continuity/MIMIR_R3_17N_CONTRACT.md")" = "$CONTRACT_BLOB"
+          test "$(git show "c8ebb872e510574bb69ab28c719f415ece8b7665:docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl" | sha256sum | awk '{print $1}')" = "$GROUP_SHA"
+          echo 'R3_17O_CONTINUITY_FROZEN_AUTHORITY=PASS'
+
+      - name: Generate closure from exact production main
+        shell: pwsh
+        run: |
+          $tmp = Join-Path $env:RUNNER_TEMP 'r317o_continuity.py'
+          Copy-Item tools/_tmp_r317o_continuity.py $tmp -Force
+          git reset --hard $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python $tmp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem MIMIR_CONTINUE_HERE.md,MIMIR_KNOWLEDGE_GRAPH.md,docs/continuity/MIMIR_CONTINUITY_STATE.json,docs/continuity/MIMIR_CURRENT_STATE.md,docs/continuity/MIMIR_R3_17O_DECISION.md,docs/continuity/MIMIR_R3_17P_EXECUTION_SPEC.md | ForEach-Object {
+            $content = Get-Content $_.FullName -Raw
+            $content = [regex]::Replace($content, '[ \t]+(?=\r?$)', '', 'Multiline')
+            [IO.File]::WriteAllText($_.FullName, $content.Replace("`r`n","`n"), [Text.UTF8Encoding]::new($false))
+          }
+          Write-Host 'R3_17O_CONTINUITY_GENERATION=PASS'
+
+      - name: Enforce exact six-file continuity scope
+        shell: pwsh
+        run: |
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_17O_DECISION.md',
+            'docs/continuity/MIMIR_R3_17P_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $actual = @(
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          ) | Where-Object { $_ } | Sort-Object -Unique
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) {
+            Write-Host 'Expected:'; $expected
+            Write-Host 'Actual:'; $actual
+            $delta | Format-Table
+            exit 1
+          }
+          Write-Host 'R3_17O_CONTINUITY_SCOPE=PASS files=6 production=0 Cargo=0 fixture=0 corpus=0 support=0'
+
+      - name: Verify semantic anchors
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+
+          main = Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          graph = Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          current = Path('docs/continuity/MIMIR_CURRENT_STATE.md').read_text(encoding='utf-8')
+          decision = Path('docs/continuity/MIMIR_R3_17O_DECISION.md').read_text(encoding='utf-8')
+          spec = Path('docs/continuity/MIMIR_R3_17P_EXECUTION_SPEC.md').read_text(encoding='utf-8')
+          state = json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+
+          prod = '492cc8218be7abc6db8f75acaea33d009ab2f175'
+          assert state['last_production_code_sha'] == prod
+          assert state['last_production_milestone'] == 'R3.17O'
+          assert state['current_pass'] == 'R3.17P'
+          assert state['r3_17o']['production_sha'] == prod
+          assert state['r3_17o']['allowlist_equality'] == '161/161 exact'
+          assert state['r3_17o']['cross_product_widening'] == 0
+          assert 'CURRENT_PASS:\n  R3.17P' in main
+          assert 'R3_17O_PRODUCTION_CLOSURE:' in main
+          assert 'R3_17P_OPEN_BOUNDARY:' in main
+          assert 'R3.17O K4 production decision' in graph
+          assert 'R3.17P active K4 differential spec' in graph
+          assert '**Outcome:** **A — ADMITTED / PRODUCTION**' in decision
+          assert '161/161' in decision and 'cross-product widening' in decision
+          assert '**Production mutation:** forbidden' in spec
+          assert 'real witness group coverage                        161/161 minimum' in spec
+          assert 'R3.18 is not automatically admitted' in spec
+          assert prod in current
+          print('R3_17O_CONTINUITY_SEMANTICS=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean R3.17O continuity candidate via Git plumbing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_R3_17O_DECISION.md \
+            docs/continuity/MIMIR_R3_17P_EXECUTION_SPEC.md
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Close R3.17O and open R3.17P K4 differential' | git commit-tree "$tree" -p "$BASE_MAIN")"
+          echo "R3_17O_CONTINUITY_CANDIDATE=$commit"
+          echo "R3_17O_CONTINUITY_TREE=$tree"
+          echo "R3_17O_CONTINUITY_PARENT=$BASE_MAIN"
+          git diff-tree --no-commit-id --name-status -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-17o-continuity-clean"
+          echo 'R3_17O_CONTINUITY_PUBLICATION=PASS'
