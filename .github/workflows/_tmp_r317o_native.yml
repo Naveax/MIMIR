@@ -1,0 +1,171 @@
+name: R3.17O Native K4 Implementation
+
+on:
+  push:
+    branches:
+      - agent/r317o-native-k4
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: windows-latest
+    timeout-minutes: 80
+    env:
+      BASE_MAIN: 3392c28ba8ec7d72766303646c0ceb57ed1e5a19
+      PROD_SHA: 7390e3b145372252caaa8fa1fe3e0cd13b83336c
+      PROD_TREE: eebe4e21de77a43b5d9d43a34a0bfb08e06bab02
+      PROD_LIB_BLOB: 28d213f831c8968e6756a6ccea2cd7aa6cdbdfba
+      K3_GROUP_BLOB: da545a7144fefabab7f5be4f07fde71311065293
+      K3_TEST_BLOB: 4d1434cc0e59a6e5c72a8404c102a87d71b8b223
+      CONTRACT_SHA: c8ebb872e510574bb69ab28c719f415ece8b7665
+      CONTRACT_TREE: 61e36d40e6af3853a887e840b22f759dda26ed75
+      GROUP_BLOB: b5fa6aaa729772ab3d113703952effe2346c9866
+      CONTRACT_BLOB: 76deabf8241b419ca224645106d2a19b041e20f8
+      GROUP_SHA256: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+
+    steps:
+      - name: Checkout disposable implementation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          rustup component add rustfmt clippy
+
+      - name: Verify frozen authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${PROD_SHA}:crates/mimir-replay/src/lib.rs")" = "$PROD_LIB_BLOB"
+          test "$(git rev-parse "${PROD_SHA}:crates/mimir-replay/src/k3_admitted_groups.rs")" = "$K3_GROUP_BLOB"
+          test "$(git rev-parse "${PROD_SHA}:crates/mimir-replay/tests/r3_17k_k3_attribute_decoder.rs")" = "$K3_TEST_BLOB"
+          test "$(git rev-parse "${CONTRACT_SHA}^{tree}")" = "$CONTRACT_TREE"
+          test "$(git rev-parse "${CONTRACT_SHA}:docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl")" = "$GROUP_BLOB"
+          test "$(git rev-parse "${CONTRACT_SHA}:docs/continuity/MIMIR_R3_17N_CONTRACT.md")" = "$CONTRACT_BLOB"
+          test "$(sha256sum docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl | awk '{print $1}')" = "$GROUP_SHA256"
+          echo 'R3_17O_FROZEN_AUTHORITY=PASS'
+
+      - name: Generate exact K4 implementation and focused tests
+        shell: pwsh
+        run: |
+          python tools/_tmp_r317o_generate.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Independently prove generated allowlist equals contract
+        shell: pwsh
+        run: |
+          @'
+          import json
+          import re
+          from pathlib import Path
+
+          contract = [json.loads(x) for x in Path('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl').read_text(encoding='utf-8').splitlines() if x.strip()]
+          source = Path('crates/mimir-replay/src/k4_admitted_groups.rs').read_text(encoding='utf-8')
+          pattern = re.compile(r'^\s*g!\((\w+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(true|false),\s*(\d+)u64,\s*(".*")\),\s*$', re.M)
+          actual = []
+          for tag, major, minor, net, rl223, width, shape_json in pattern.findall(source):
+              actual.append({
+                  'attribute_tag': tag,
+                  'version_major': int(major),
+                  'version_minor': int(minor),
+                  'net_version': int(net),
+                  'is_rl_223': rl223 == 'true',
+                  'payload_width': int(width),
+                  'shape': json.loads(shape_json),
+              })
+          assert len(contract) == 161, len(contract)
+          assert len(actual) == 161, len(actual)
+          assert actual == contract
+          assert len({tuple(sorted(x.items())) for x in actual}) == 161
+          print('R3_17O_ALLOWLIST_EQUALITY=PASS rows=161 missing=0 extra=0 widening=0')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Format and enforce exact production scope
+        shell: pwsh
+        run: |
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            'crates/mimir-replay/src/k4_admitted_groups.rs',
+            'crates/mimir-replay/src/k4_native.rs',
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs'
+          ) | Sort-Object
+          $actual = @(
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          ) | Where-Object { $_ } | Sort-Object -Unique
+          if (@(Compare-Object $expected $actual).Count -ne 0) {
+            Write-Host 'Expected:'; $expected
+            Write-Host 'Actual:'; $actual
+            exit 1
+          }
+          Write-Host 'R3_17O_EXACT_SCOPE=PASS files=4 Cargo=0 fixture=0 corpus=0 support=0'
+
+      - name: Focused R3.17O tests
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay --test r3_17o_k4_attribute_decoder
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Mimir replay suite
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Workspace check test clippy
+        shell: pwsh
+        run: |
+          cargo check --locked --workspace --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked --workspace --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean production candidate via Git plumbing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git read-tree "${BASE_MAIN}^{tree}"
+          for path in \
+            crates/mimir-replay/src/lib.rs \
+            crates/mimir-replay/src/k4_admitted_groups.rs \
+            crates/mimir-replay/src/k4_native.rs \
+            crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs
+          do
+            blob="$(git hash-object -w "$path")"
+            git update-index --add --cacheinfo "100644,$blob,$path"
+          done
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Implement exact R3.17N native K4 decoder' | git commit-tree "$tree" -p "$BASE_MAIN")"
+          echo "R3_17O_CLEAN_CANDIDATE=$commit"
+          echo "R3_17O_CLEAN_TREE=$tree"
+          echo "R3_17O_CLEAN_PARENT=$BASE_MAIN"
+          git diff-tree --no-commit-id --name-status -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-17o-native-k4-clean"
+          echo 'R3_17O_CLEAN_PUBLICATION=PASS'
