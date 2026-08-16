@@ -1,0 +1,61 @@
+name: R3.18I Second Property Payload Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318i-second-property-payload-v1
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run R3.18I evidence orchestration
+        shell: bash
+        run: bash tools/_tmp_r318i_run.sh
+
+      - name: Upload immutable R3.18I evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318i-second-property-payload-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            r3_18i_source_scope.txt
+            r3_18i_replay_identity.tsv
+            r3_18i_frozen_witnesses.json
+            r3_18i_boxcars_instrumentation_sha256.txt
+            r3_18i_oracle_summary.json
+            r3_18i_comparison.json
+            r3_18i_negative_controls.txt
+            r3_18i_aggregate.txt
+            r3_18i_artifact_sha256.txt
+
+      - name: Emit immutable receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .workflow_run.id)" = "$GITHUB_RUN_ID"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .digest)" = "$ARTIFACT_DIGEST"
+          echo "R3_18I_EVIDENCE_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18I_EVIDENCE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18I_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18I_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          echo 'R3_18I_IMMUTABLE_RECEIPT=PASS'
