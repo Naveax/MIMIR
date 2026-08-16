@@ -2401,6 +2401,104 @@ pub struct ReplayNetworkPrimitiveScalarDecodeV1 {
     pub stop_bit: u64,
 }
 
+/// One complete existing-actor first property composed from the already-published
+/// property-header boundary and primitive K1 scalar decoder.
+///
+/// This type is deliberately one-property only. `stop_bit` is exactly the first bit after the
+/// primitive scalar payload. It does not authorize or consume the next `property_present` bit.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorSinglePrimitivePropertyV1 {
+    pub header: ReplayNetworkExistingActorFirstPropertyHeaderV1,
+    pub scalar: ReplayNetworkPrimitiveScalarDecodeV1,
+    pub stop_bit: u64,
+}
+
+/// Decode exactly one existing-actor property when its resolved tag is an admitted K1 scalar.
+///
+/// The existing R3.16B header decoder remains the sole authority for `property_present`, bounded
+/// stream decoding, inherited lookup resolution, and `payload_start_bit`. The existing R3.17C
+/// primitive scalar decoder remains the sole authority for Boolean/Byte/Enum/Float/Int/Int64 wire
+/// decoding. This composition stops at the scalar end and never reads the next property bit.
+pub fn decode_replay_network_existing_actor_single_primitive_property_v1(
+    network_bytes: &[u8],
+    property_start_bit: u64,
+    actor_object_index: u32,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+) -> Result<ReplayNetworkExistingActorSinglePrimitivePropertyV1> {
+    let header = decode_replay_network_existing_actor_first_property_header_v1(
+        network_bytes,
+        property_start_bit,
+        actor_object_index,
+        lookup_plan,
+    )?;
+
+    if !header.property_present {
+        return Err(network_existing_actor_single_property_error(
+            "property-absent",
+            "the selected first property is absent; no payload may be composed",
+        ));
+    }
+
+    let attribute_tag = header.resolved_attribute_tag.ok_or_else(|| {
+        network_existing_actor_single_property_error(
+            "missing-tag",
+            "resolved property header did not contain an attribute tag",
+        )
+    })?;
+    let payload_start_bit = header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_single_property_error(
+            "missing-payload-start",
+            "resolved property header did not contain a payload start bit",
+        )
+    })?;
+
+    if header.stop_bit != payload_start_bit {
+        return Err(network_existing_actor_single_property_error(
+            "header-stop-mismatch",
+            format!(
+                "property header stop bit {} differs from payload start bit {payload_start_bit}",
+                header.stop_bit
+            ),
+        ));
+    }
+
+    match attribute_tag {
+        ReplayNetworkAttributeTagV1::Boolean
+        | ReplayNetworkAttributeTagV1::Byte
+        | ReplayNetworkAttributeTagV1::Enum
+        | ReplayNetworkAttributeTagV1::Float
+        | ReplayNetworkAttributeTagV1::Int
+        | ReplayNetworkAttributeTagV1::Int64 => {}
+        _ => {
+            return Err(network_existing_actor_single_property_error(
+                "unsupported-tag",
+                format!(
+                    "attribute tag {attribute_tag:?} is outside the R3.18B primitive K1 composition"
+                ),
+            ));
+        }
+    }
+
+    let scalar =
+        decode_replay_network_primitive_scalar_v1(network_bytes, payload_start_bit, attribute_tag)?;
+    if scalar.payload_start_bit != payload_start_bit || scalar.stop_bit != scalar.payload_end_bit {
+        return Err(network_existing_actor_single_property_error(
+            "scalar-boundary-mismatch",
+            format!(
+                "scalar boundary start/end/stop = {}/{}/{} but expected start {payload_start_bit}",
+                scalar.payload_start_bit, scalar.payload_end_bit, scalar.stop_bit
+            ),
+        ));
+    }
+
+    let stop_bit = scalar.stop_bit;
+    Ok(ReplayNetworkExistingActorSinglePrimitivePropertyV1 {
+        header,
+        scalar,
+        stop_bit,
+    })
+}
+
 /// Decode exactly one R3.17B-admitted primitive scalar payload.
 ///
 /// The caller supplies an already resolved attribute tag and the exact
@@ -2518,6 +2616,16 @@ pub fn decode_replay_network_primitive_scalar_v1(
 fn network_primitive_scalar_error(category: &str, detail: impl Into<String>) -> MimirError {
     MimirError::message(format!(
         "replay primitive scalar attribute error: {category}: {}",
+        detail.into()
+    ))
+}
+
+fn network_existing_actor_single_property_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay existing actor single primitive property error: {category}: {}",
         detail.into()
     ))
 }
