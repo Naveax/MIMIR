@@ -1,0 +1,116 @@
+name: R3.18H Continuity Published Main Validator
+
+on:
+  push:
+    branches:
+      - validation/r318h-continuity-published-main-v1
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      PUBLISHED: 3e1fc68eea41378bac07992b5ccfc05485edd4c6
+      PUBLISHED_TREE: 0d21e6da9022e2db4a8450722a9d39d1234b3adc
+      PARENT: 63f5de4e49abaf76fe6441a255a1a6770388a63c
+      PROD: 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+      H_EVIDENCE: 1db03fddabf84bfa189f983fa4a3b9110d105442
+    steps:
+      - name: Checkout validator lane
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze published main and exact continuity delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$PUBLISHED"
+          test "$(git rev-parse "$PUBLISHED^{tree}")" = "$PUBLISHED_TREE"
+          test "$(git rev-parse "$PUBLISHED^")" = "$PARENT"
+          expected=$(cat <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_R3_18H_DECISION.md
+          docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+          EOF
+          )
+          actual=$(git diff --name-only "$PARENT" "$PUBLISHED" | sort)
+          test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
+          test "$(git diff --name-only "$PARENT" "$PUBLISHED" | wc -l)" -eq 6
+          if git diff --name-only "$PARENT" "$PUBLISHED" -- crates Cargo.toml Cargo.lock external_fixtures fixtures corpus test_corpus support tools scripts .github | grep -q .; then
+            echo 'forbidden published production/support mutation' >&2
+            exit 1
+          fi
+
+      - name: Validate published canonical semantics in UTF-8
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach "$PUBLISHED"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          def text(p): return Path(p).read_text(encoding='utf-8')
+          state=json.loads(text('docs/continuity/MIMIR_CONTINUITY_STATE.json'))
+          assert state['current_pass']=='R3.18I'
+          assert state['last_completed_read_only_audit']=='R3.18H'
+          assert state['last_completed_evidence_pass']=='R3.18H'
+          assert state['last_production_code_sha']=='2b608aafae97b10ecbc884f99e4bd4a73abf7a5c'
+          h=state['r3_18h']
+          assert h['outcome']=='A — admitted / read-only evidence'
+          assert h['authority_head_sha']=='1db03fddabf84bfa189f983fa4a3b9110d105442'
+          assert h['authority_run']==31960174729 and h['authority_job']==95196833572
+          assert h['exact_head_normal_ci_run']==31960174713 and h['exact_head_normal_ci_job']==95196833409
+          assert h['artifact_id']==9267045757
+          assert h['artifact_digest']=='sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645'
+          assert h['frozen_rows']==94 and h['terminator_rows']==47 and h['continuation_rows']==47
+          assert h['continuation_int']==46 and h['continuation_string']==1
+          assert h['header_truncation_rows']==32 and h['terminator_no_lookup_rows']==47
+          assert h['native_oracle_mismatch']==0
+          assert h['second_payload_bits_consumed']==0 and h['third_property_bits_consumed']==0
+          assert h['production_cargo_fixture_corpus_support_mutation']=='0/0/0/0/0'
+          i=state['r3_18i']
+          assert i['status']=='active'
+          assert i['observed_second_tags']=={'Int':46,'String':1}
+          assert i['third_property_access'] is False
+          assert i['production_mutation_allowed'] is False
+          hand=text('MIMIR_CONTINUE_HERE.md')
+          for marker in ['# 9.7 Exact-SHA validation','# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS','# 13. CURRENT PASS CHECKLIST — R3.14A','# CURRENT PASS CHECKLIST — R3.18I','R3_18H_EVIDENCE_CLOSURE:']:
+              assert marker in hand, marker
+          kg=text('MIMIR_KNOWLEDGE_GRAPH.md')
+          assert 'R3.18H production second-header differential decision' in kg
+          assert 'R3.18I active second-property payload evidence spec' in kg
+          assert '**Outcome:** **A — ADMITTED / READ-ONLY EVIDENCE**' in text('docs/continuity/MIMIR_R3_18H_DECISION.md')
+          spec=text('docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md')
+          assert '**Production mutation:** forbidden' in spec
+          assert '**Third property / repeated loop:** forbidden' in spec
+          print('R3_18H_PUBLISHED_CONTINUITY_SEMANTICS=PASS')
+          PY
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+      - name: Full repository verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+
+      - name: Emit published-main receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$PUBLISHED"
+          echo "R3_18H_CONTINUITY_PUBLISHED_MAIN=$PUBLISHED"
+          echo "R3_18H_CONTINUITY_PUBLISHED_TREE=$PUBLISHED_TREE"
+          echo "R3_18H_PRODUCTION_AUTHORITY=$PROD"
+          echo "R3_18H_EVIDENCE_AUTHORITY=$H_EVIDENCE"
+          echo 'R3_18H_CONTINUITY_PUBLISHED_MAIN_VALIDATION=PASS'
