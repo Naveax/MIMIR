@@ -1,0 +1,89 @@
+name: R3.18J Bounded Second Payload Implementation
+
+on:
+  push:
+    branches:
+      - implementation/r318j-v1
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      EXPECTED_MAIN: 9fc863114b22b72ec56a606075f7a8e87fa6fd5c
+      EXPECTED_LIB_BLOB: 5e2b9e5be9c6692e499abc97a89655c603728cef
+    steps:
+      - name: Checkout implementation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt,clippy
+          rustup override set 1.85.0
+          rustc --version
+          if ($LASTEXITCODE -ne 0) { throw "rustc failed: $LASTEXITCODE" }
+
+      - name: Freeze authority and reconstruct exact main
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ((git rev-parse HEAD^) -ne $env:EXPECTED_MAIN) { throw 'implementation trigger parent mismatch' }
+          git fetch origin main
+          if ((git rev-parse origin/main) -ne $env:EXPECTED_MAIN) { throw 'fresh main drift' }
+          $blob = git rev-parse "$env:EXPECTED_MAIN`:crates/mimir-replay/src/lib.rs"
+          if ($blob -ne $env:EXPECTED_LIB_BLOB) { throw "production lib blob drift: $blob" }
+          Copy-Item tools/_tmp_r318j_patch.py "$env:RUNNER_TEMP/r318j_patch.py"
+          git checkout --detach $env:EXPECTED_MAIN
+          python "$env:RUNNER_TEMP/r318j_patch.py"
+          if ($LASTEXITCODE -ne 0) { throw "patch failed: $LASTEXITCODE" }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed: $LASTEXITCODE" }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed: $LASTEXITCODE" }
+          $changed = @(git status --short | ForEach-Object { $_.Substring(3) } | Sort-Object)
+          $expected = @('crates/mimir-replay/src/lib.rs','crates/mimir-replay/tests/r3_18j_second_property_payload.rs') | Sort-Object
+          if (($changed -join "`n") -ne ($expected -join "`n")) { throw "unexpected clean scope: $($changed -join ', ')" }
+
+      - name: Focused and crate validation
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay --test r3_18j_second_property_payload -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "focused test failed: $LASTEXITCODE" }
+          cargo test -p mimir-replay -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "mimir-replay tests failed: $LASTEXITCODE" }
+          cargo check --workspace --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { throw "workspace check failed: $LASTEXITCODE" }
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          if ($LASTEXITCODE -ne 0) { throw "clippy failed: $LASTEXITCODE" }
+
+      - name: Repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "verify_repo failed: $LASTEXITCODE" }
+
+      - name: Commit clean source-only candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18j_second_property_payload.rs
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "cached diff check failed: $LASTEXITCODE" }
+          git commit -m 'Implement bounded R3.18J second-property payload'
+          if ($LASTEXITCODE -ne 0) { throw "commit failed: $LASTEXITCODE" }
+          $candidate = git rev-parse HEAD
+          if ((git rev-parse HEAD^) -ne $env:EXPECTED_MAIN) { throw 'candidate is not direct child of expected main' }
+          git fetch origin main
+          if ((git rev-parse origin/main) -ne $env:EXPECTED_MAIN) { throw 'main drift before candidate publication' }
+          git push origin "$candidate`:refs/heads/candidate/r318j-v1"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed: $LASTEXITCODE" }
+          Write-Host "R3_18J_CANDIDATE_SHA=$candidate"
+          Write-Host 'R3_18J_IMPLEMENTATION=PASS'
