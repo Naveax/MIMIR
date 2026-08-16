@@ -1,0 +1,190 @@
+name: R3.18D Next Property Control Bit Implementation
+
+on:
+  push:
+    branches:
+      - agent/r318d-next-property-control
+
+permissions:
+  contents: write
+
+jobs:
+  implementation:
+    runs-on: windows-latest
+    timeout-minutes: 85
+    env:
+      BASE_MAIN: e9f3c4d34ebd84fc9c51431ad4489c4d407b1535
+      BASE_TREE: 1a5ab30177417ebbe04049c8d386df02cf2695ce
+      PROD_SHA: de7a2ba40663bb619ca7bd8654846ce87670d023
+      PROD_TREE: d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+      LIB_BLOB: 478ae5b70514fcff79117b834733849517c48500
+      R318B_TEST_BLOB: 927e9a2c834115d1c918fa96fb6d0690bd03965e
+      R318D_SPEC_BLOB: 1914513bbc112824b3232cf135d7a3b3d8e81c1e
+      R318C_AUTH: a4b71ad43e5cf55c44c9518b24622ce29214acd2
+      R318C_RUN: '31944102614'
+      R318C_CI_RUN: '31944102575'
+      R318C_ARTIFACT: '9262820284'
+
+    steps:
+      - name: Checkout disposable implementation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze fresh main and R3.18D authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r318c-loop-control
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/tests/r3_18b_single_k1_property.rs")" = "$R318B_TEST_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:docs/continuity/MIMIR_R3_18D_EXECUTION_SPEC.md")" = "$R318D_SPEC_BLOB"
+          test "$(git rev-parse origin/evidence/r318c-loop-control)" = "$R318C_AUTH"
+          test -z "$(git diff --name-only "$PROD_SHA" "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github)"
+          grep -Fq 'CURRENT_PASS:' MIMIR_CONTINUE_HERE.md
+          grep -Fq 'R3.18D — minimal native existing-actor next-property control bit' MIMIR_CONTINUE_HERE.md
+          grep -Fq '**Outcome:** **A — ADMITTED / EVIDENCE COMPLETE**' docs/continuity/MIMIR_R3_18C_DECISION.md
+          grep -Fq '**Second property decode:** forbidden' docs/continuity/MIMIR_R3_18D_EXECUTION_SPEC.md
+          grep -Fq '**Repeated property loop:** forbidden' docs/continuity/MIMIR_R3_18D_EXECUTION_SPEC.md
+          echo 'R3_18D_FROZEN_AUTHORITY=PASS'
+
+      - name: Apply minimal production patch from exact main
+        shell: pwsh
+        run: |
+          $patcher = Join-Path $env:RUNNER_TEMP 'r318d_patch.py'
+          Copy-Item tools/_tmp_r318d_patch.py $patcher -Force
+          $patchText = Get-Content $patcher -Raw
+          $old = '    let control_width = usize::from(next_property_present.is_some());'
+          $new = '    let control_width = if next_property_present.is_some() { 1 } else { 0 };'
+          if (-not $patchText.Contains($old)) { throw 'R3.18D patcher bool-width anchor missing' }
+          [IO.File]::WriteAllText($patcher, $patchText.Replace($old, $new), [Text.UTF8Encoding]::new($false))
+          git reset --hard $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python $patcher
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18D_PATCH_APPLIED=PASS'
+
+      - name: Enforce exact two-file production scope
+        shell: pwsh
+        run: |
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18d_next_property_control.rs'
+          ) | Sort-Object
+          $actual = @(
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          ) | Where-Object { $_ } | Sort-Object -Unique
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) {
+            Write-Host 'Expected:'; $expected
+            Write-Host 'Actual:'; $actual
+            $delta | Format-Table
+            exit 1
+          }
+          $forbidden = @(git diff --name-only -- Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          Write-Host 'R3_18D_PRODUCTION_SCOPE=PASS files=2 Cargo=0 fixture=0 corpus=0 support=0 workflow=0 continuity=0'
+
+      - name: Verify one-bit-only source boundary independently
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          fn_name='pub fn decode_replay_network_existing_actor_after_first_primitive_property_control_v1('
+          assert s.count(fn_name)==1
+          start=s.index(fn_name)
+          end=s.index('/// Decode exactly one R3.17B-admitted primitive scalar payload.', start)
+          block=s[start:end]
+          assert 'first_property: &ReplayNetworkExistingActorSinglePrimitivePropertyV1' in block
+          assert block.count('NetworkBitCursor::new(network_bytes)')==1
+          assert block.count('cursor.read_bit()?')==1
+          assert 'read_bits_le' not in block
+          assert 'read_bounded_u32' not in block
+          assert 'decode_replay_network_existing_actor_first_property_header_v1' not in block
+          assert 'decode_replay_network_existing_actor_single_primitive_property_v1' not in block
+          assert 'decode_replay_network_primitive_scalar_v1' not in block
+          assert 'decode_replay_network_k2' not in block
+          assert 'decode_replay_network_k3' not in block
+          assert 'decode_replay_network_k4' not in block
+          assert '\n    while ' not in block
+          assert '\n    for ' not in block
+          assert 'property_present_end_bit = property_present_start_bit.checked_add(1)' in block
+          assert 'first_property.stop_bit != first_property.scalar.payload_end_bit' in block
+          assert 'first_property.scalar.stop_bit != first_property.scalar.payload_end_bit' in block
+          test=Path('crates/mimir-replay/tests/r3_18d_next_property_control.rs').read_text(encoding='utf-8')
+          for anchor in [
+              'r3_18c_float_terminator_shape_reads_exactly_false_and_stops_one_bit_later',
+              'r3_18c_int_62_continuation_shape_reads_exactly_true_and_stops_one_bit_later',
+              'aligned_and_unaligned_first_property_ends_preserve_exact_control_coordinates',
+              'bits_after_control_stop_do_not_affect_result',
+              'missing_next_property_bit_rejects_atomically',
+              'malformed_first_property_boundary_is_rejected_before_control_read',
+              'control_result_is_exactly_repeatable',
+          ]:
+              assert anchor in test, anchor
+          print('R3_18D_SOURCE_BOUNDARY=PASS one_bit=1 second_property=0 loop=0')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Focused R3.18D tests
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay --test r3_18d_next_property_control
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18D_FOCUSED_TESTS=PASS'
+
+      - name: Full mimir-replay suite
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18D_MIMIR_REPLAY=PASS'
+
+      - name: Workspace check test clippy
+        shell: pwsh
+        run: |
+          cargo check --locked --workspace --all-targets
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked --workspace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18D_WORKSPACE=PASS'
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18D_FULL_VERIFIER=PASS'
+
+      - name: Publish clean R3.18D production candidate via Git plumbing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            crates/mimir-replay/src/lib.rs \
+            crates/mimir-replay/tests/r3_18d_next_property_control.rs
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Implement R3.18D next-property control bit' | git commit-tree "$tree" -p "$BASE_MAIN")"
+          echo "R3_18D_CANDIDATE=$commit"
+          echo "R3_18D_TREE=$tree"
+          echo "R3_18D_PARENT=$BASE_MAIN"
+          echo "R3_18D_LIB_BLOB=$(git rev-parse "${commit}:crates/mimir-replay/src/lib.rs")"
+          echo "R3_18D_TEST_BLOB=$(git rev-parse "${commit}:crates/mimir-replay/tests/r3_18d_next_property_control.rs")"
+          git diff-tree --no-commit-id --name-status -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-18d-control-bit-clean"
+          echo 'R3_18D_CANDIDATE_PUBLICATION=PASS'
