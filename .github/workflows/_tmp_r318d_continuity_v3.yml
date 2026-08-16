@@ -1,0 +1,175 @@
+name: R3.18D Continuity Closure V3
+
+on:
+  push:
+    branches:
+      - agent/r318d-continuity-sync
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  continuity-v3:
+    runs-on: windows-latest
+    timeout-minutes: 85
+    env:
+      BASE_MAIN: 4adadd185783954c7fb6ad67db14b77b377cdde5
+      BASE_TREE: 67b1969eaff49d2913b88b3921f27b1bd7fe8193
+      PREVIOUS_MAIN: e9f3c4d34ebd84fc9c51431ad4489c4d407b1535
+      LIB_BLOB: 42bc3fd3e8ea6bd1d15df82e4c6d8809b8443662
+      TEST_BLOB: 2f5b188cc5b3ce8200c9961d964f1dc66b3ab49b
+      IMPLEMENTATION_RUN: '31945358707'
+      EXACT_RUN: '31947511554'
+      MAIN_CI_RUN: '31947695046'
+      PUBLISHED_RUN: '31947722626'
+
+    steps:
+      - name: Checkout disposable continuity branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact authority
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main candidate/r3-18d-control-bit-clean
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse origin/candidate/r3-18d-control-bit-clean)" = "$BASE_MAIN"
+          test "$(git rev-parse "${BASE_MAIN}^")" = "$PREVIOUS_MAIN"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/tests/r3_18d_next_property_control.rs")" = "$TEST_BLOB"
+          for id in "$IMPLEMENTATION_RUN" "$EXACT_RUN" "$MAIN_CI_RUN" "$PUBLISHED_RUN"; do
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq .conclusion)" = success
+          done
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$MAIN_CI_RUN" --jq .head_sha)" = "$BASE_MAIN"
+          echo 'R3_18D_CONTINUITY_V3_AUTHORITY=PASS'
+
+      - name: Generate corrected closure from exact main
+        shell: pwsh
+        run: |
+          $generator = Join-Path $env:RUNNER_TEMP 'r318d_continuity_v3.py'
+          Copy-Item tools/_tmp_r318d_continuity.py $generator -Force
+          @'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1])
+          s=p.read_text(encoding='utf-8')
+          old="r'(?ms)^R3_18D_OPEN_BOUNDARY:\\n.*?^NEXT PASS AFTER R3\\.18D:\\n  .+$'"
+          new="r'(?ms)^R3_18D_OPEN_BOUNDARY:\\n.*?^NEXT PASS AFTER R3\\.18D:\\n  [^\\n]+$'"
+          assert s.count(old)==1, s.count(old)
+          p.write_text(s.replace(old,new,1),encoding='utf-8',newline='\n')
+          '@ | python - $generator
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git reset --hard $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python $generator
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $files = @(
+            'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18D_DECISION.md','docs/continuity/MIMIR_R3_18E_EXECUTION_SPEC.md'
+          )
+          foreach ($f in $files) {
+            $content = Get-Content $f -Raw
+            $content = [regex]::Replace($content, '[ \t]+(?=\r?$)', '', 'Multiline')
+            $path = if (Test-Path $f) { (Resolve-Path $f).Path } else { Join-Path $PWD $f }
+            [IO.File]::WriteAllText($path, $content.Replace("`r`n","`n"), [Text.UTF8Encoding]::new($false))
+          }
+          Write-Host 'R3_18D_CONTINUITY_V3_GENERATION=PASS'
+
+      - name: Enforce six-file scope and handbook integrity
+        shell: pwsh
+        run: |
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18D_DECISION.md','docs/continuity/MIMIR_R3_18E_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $actual = @(git diff --name-only; git ls-files --others --exclude-standard) | Where-Object { $_ } | Sort-Object -Unique
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) { $delta | Format-Table; exit 1 }
+          $forbidden = @(git diff --name-only -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          $numstat = @(git diff --numstat $env:BASE_MAIN -- MIMIR_CONTINUE_HERE.md)
+          if ($numstat.Count -ne 1) { $numstat; exit 1 }
+          $parts = $numstat[0] -split "`t"; $adds=[int]$parts[0]; $dels=[int]$parts[1]
+          if ($adds -gt 200 -or $dels -gt 150) { throw "Handbook diff unexpectedly large: +$adds -$dels" }
+          $baseLines=@(git show "$env:BASE_MAIN`:MIMIR_CONTINUE_HERE.md"); $newLines=@(Get-Content MIMIR_CONTINUE_HERE.md)
+          if ([math]::Abs($newLines.Count-$baseLines.Count) -gt 200) { throw "Handbook line-count drift: base=$($baseLines.Count) new=$($newLines.Count)" }
+          $handbook=Get-Content MIMIR_CONTINUE_HERE.md -Raw
+          foreach ($anchor in @('# 9.7 Exact-SHA validation','# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS','# 13. CURRENT PASS CHECKLIST — R3.14A')) {
+            if (-not $handbook.Contains($anchor)) { throw "Preserved handbook anchor missing: $anchor" }
+          }
+          Write-Host "R3_18D_CONTINUITY_V3_SCOPE=PASS files=6 handbook=+$adds/-$dels production=0"
+
+      - name: Verify canonical semantics
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+          prod='4adadd185783954c7fb6ad67db14b77b377cdde5'
+          state=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          main=Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          graph=Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          current=Path('docs/continuity/MIMIR_CURRENT_STATE.md').read_text(encoding='utf-8')
+          decision=Path('docs/continuity/MIMIR_R3_18D_DECISION.md').read_text(encoding='utf-8')
+          spec=Path('docs/continuity/MIMIR_R3_18E_EXECUTION_SPEC.md').read_text(encoding='utf-8')
+          assert state['last_production_code_sha']==prod
+          assert state['last_production_milestone']=='R3.18D'
+          assert state['current_pass']=='R3.18E'
+          assert state['r3_18d']['production_sha']==prod
+          assert state['r3_18d']['control_bits_read']==1
+          assert state['r3_18d']['second_stream_bits_consumed']==0
+          assert state['r3_18d']['second_header_bits_consumed']==0
+          assert state['r3_18d']['second_payload_bits_consumed']==0
+          for anchor in ['CURRENT_PASS:\n  R3.18E','R3_18D_PRODUCTION_CLOSURE:','R3_18E_OPEN_BOUNDARY:','# 9.7 Exact-SHA validation','# 13. CURRENT PASS CHECKLIST — R3.14A']:
+              assert anchor in main, anchor
+          assert 'R3.18D next-property control-bit production decision' in graph
+          assert 'R3.18E active control-bit differential audit spec' in graph
+          assert '**Outcome:** **A — ADMITTED / PRODUCTION COMPLETE**' in decision
+          assert '**Status:** ACTIVE' in spec
+          assert '**Production mutation:** forbidden' in spec
+          assert '**Second property decode:** forbidden' in spec
+          assert '**Repeated property loop:** forbidden' in spec
+          assert 'R3.18E' in current and prod in current
+          print('R3_18D_CONTINUITY_V3_SEMANTICS=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish corrected clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_R3_18D_DECISION.md docs/continuity/MIMIR_R3_18E_EXECUTION_SPEC.md
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Close R3.18D production and open R3.18E control differential audit' | git commit-tree "$tree" -p "$BASE_MAIN")"
+          echo "R3_18D_CONTINUITY_V3_CANDIDATE=$commit"
+          echo "R3_18D_CONTINUITY_V3_TREE=$tree"
+          echo "R3_18D_CONTINUITY_V3_PARENT=$BASE_MAIN"
+          git diff-tree --no-commit-id --numstat -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-18d-continuity-clean-v3"
+          echo 'R3_18D_CONTINUITY_V3_PUBLICATION=PASS'
