@@ -1,0 +1,142 @@
+name: R3.18H Receipt Correction Exact Validator
+
+on:
+  push:
+    branches:
+      - validation/r318h-receipt-correction-exact-v1
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      BASE: 3e1fc68eea41378bac07992b5ccfc05485edd4c6
+      BASE_TREE: 0d21e6da9022e2db4a8450722a9d39d1234b3adc
+      CANDIDATE: 3257d32fbc617b6dae7bb42d41629639acf6ce95
+      CANDIDATE_TREE: 9afee5526db01c2e1b2939ee605b9744d490a07b
+      CANDIDATE_BRANCH: continuity/r318h-receipt-correction-v1
+      PROD: 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+      LIVE_API_DIGEST: sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
+      OLD_API_DIGEST: sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+    steps:
+      - name: Checkout validator lane
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze candidate authority and exact scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main "$CANDIDATE_BRANCH" --force
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/$CANDIDATE_BRANCH)" = "$CANDIDATE"
+          test "$(git rev-parse "$BASE^{tree}")" = "$BASE_TREE"
+          test "$(git rev-parse "$CANDIDATE^{tree}")" = "$CANDIDATE_TREE"
+          test "$(git rev-parse "$CANDIDATE^")" = "$BASE"
+
+          expected=$(cat <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_R3_18H_DECISION.md
+          docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+          EOF
+          )
+          actual=$(git diff --name-only "$BASE" "$CANDIDATE" | sort)
+          test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
+          test "$(git diff --name-only "$BASE" "$CANDIDATE" | wc -l)" -eq 6
+          test -z "$(git diff --name-only "$BASE" "$CANDIDATE" -- crates Cargo.toml Cargo.lock external_fixtures fixtures corpus support tools scripts .github)"
+          git checkout --detach "$CANDIDATE"
+
+      - name: Validate UTF-8 continuity semantics
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          paths = [
+              'MIMIR_CONTINUE_HERE.md',
+              'MIMIR_KNOWLEDGE_GRAPH.md',
+              'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+              'docs/continuity/MIMIR_CURRENT_STATE.md',
+              'docs/continuity/MIMIR_R3_18H_DECISION.md',
+              'docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md',
+          ]
+          texts = {p: Path(p).read_text(encoding='utf-8') for p in paths}
+          old = 'sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645'
+          new = 'sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79'
+          stale_inner = [
+              '38ff92a2448883802b73ea4e2ee0a65f18b83beb782d8f8c87451e2295f37fb8',
+              '97767f90f5f9d46afcb68f568cf28d021f2081ddbf62bb5f2536d8d7d1bf569e',
+              'de4ca9d70fb7f56aec1c279473c3289b236cfa48e3a17f1faec8942ac3548d10',
+              '4d0273b85c5af2ae2e2b1fd7b88fd5d876c210d1a20f4cdd544601d649c053c9',
+              '4357bc88426ac50da065875f56bc2f806158080767292c6210623091f6fdc31b',
+          ]
+          joined = '\n'.join(texts.values())
+          assert old not in joined
+          for h in stale_inner:
+              assert h not in joined
+          assert new in joined
+          assert '# 9.7 Exact-SHA validation' in texts['MIMIR_CONTINUE_HERE.md']
+          assert '# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS' in texts['MIMIR_CONTINUE_HERE.md']
+          assert '# 13. CURRENT PASS CHECKLIST — R3.14A' in texts['MIMIR_CONTINUE_HERE.md']
+          assert '# CURRENT PASS CHECKLIST — R3.18I' in texts['MIMIR_CONTINUE_HERE.md']
+          assert 'R3_18H_RECEIPT_CORRECTION:' in texts['MIMIR_CONTINUE_HERE.md']
+          assert 'documentary correction' in joined.lower()
+          assert 'FAILED-BEFORE-EVIDENCE' in joined
+          assert '31963757848' in joined and '95205621914' in joined
+          assert '9267045757' in joined and '18658' in joined
+          assert 'a0101720526e633974390dda46786fc471baa7679f387b7e03d97b5bcf7bcb55' in joined
+          assert '2b608aafae97b10ecbc884f99e4bd4a73abf7a5c' in joined
+
+          d = json.loads(texts['docs/continuity/MIMIR_CONTINUITY_STATE.json'])
+          assert d['current_pass'] == 'R3.18I'
+          assert d['last_completed_read_only_audit'] == 'R3.18H'
+          c = d['r3_18h_receipt_correction']
+          assert c['status'].startswith('documentary correction only')
+          assert c['detected_by'].startswith('R3.18I v1 authority freeze')
+          assert c['r3_18i_v1_non_authority_head'] == '9c2bc511fd20a6ef194fa3ecdce3ebb1ebf5bd3a'
+          assert c['r3_18i_v1_run'] == 31963757848
+          assert c['r3_18i_v1_job'] == 95205621914
+          assert c['r3_18i_v1_result'] == 'FAILED-BEFORE-EVIDENCE'
+          assert c['artifact_id'] == 9267045757
+          assert c['artifact_size_bytes'] == 18658
+          assert c['artifact_api_digest'] == new
+          assert c['artifact_expired_at_verification'] is False
+          assert c['downloaded_zip_sha256'] == 'a0101720526e633974390dda46786fc471baa7679f387b7e03d97b5bcf7bcb55'
+          assert c['receipt_manifest_sha256'] == '5a381630b2fc01bdc41babbb1aafe6542ff4bebbf5a99a50618214d546008b2b'
+          assert c['final_job_receipt_matches_live_inner_hashes'] is True
+          assert c['source_scope_sha256'] == 'b85b1324cca458aa68a7433484831371097492388657401776329801d8b31ab1'
+          assert c['replay_identity_sha256'] == 'b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf'
+          assert c['frozen_witnesses_sha256'] == '99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7'
+          assert c['oracle_regeneration_sha256'] == '9c8ace30317132246911e5406cc425af862b61de8a59fe270c3f91a1fbbc7690'
+          assert c['comparison_sha256'] == '88767c2b2087cec0313d10df0d4354c13928f1f8596c4d7e2041f5d4eeefac3'
+          assert c['negative_controls_sha256'] == '272854040775158cd948dd313dcec5da7cdf6a238050e03b7fc20b8434f8962e'
+          assert c['aggregate_sha256'] == '6ff5e750569b4343518cb9c3fd0d8119f610d515b15434732097176482c8bbbc'
+          assert c['production_authority_unchanged'] == '2b608aafae97b10ecbc884f99e4bd4a73abf7a5c'
+          print('R3_18H_RECEIPT_CORRECTION_SEMANTICS=PASS')
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+      - name: Full repository verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+
+      - name: Emit exact candidate receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE"
+          test "$(git rev-parse HEAD^{tree})" = "$CANDIDATE_TREE"
+          echo "R3_18H_RECEIPT_CORRECTION_BASE=$BASE"
+          echo "R3_18H_RECEIPT_CORRECTION_CANDIDATE=$CANDIDATE"
+          echo "R3_18H_RECEIPT_CORRECTION_TREE=$CANDIDATE_TREE"
+          echo 'R3_18H_RECEIPT_CORRECTION_EXACT_VALIDATOR=PASS'
