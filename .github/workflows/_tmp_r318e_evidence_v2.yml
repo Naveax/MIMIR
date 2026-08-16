@@ -1,0 +1,62 @@
+name: R3.18E Production Control Differential Evidence V2
+
+on:
+  push:
+    branches:
+      - evidence/r318e-control-differential
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run exact R3.18E 94-row evidence chain
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/_tmp_r318e_run.sh
+
+      - name: Upload privacy-safe R3.18E evidence
+        id: evidence_upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: r318e-control-differential-evidence-v2
+          path: |
+            r3_18e_source_scope.txt
+            r3_18e_replay_identity.tsv
+            r3_18e_boxcars_instrumentation_sha256.txt
+            r3_18e_selected_witnesses.json
+            r3_18e_selection_summary.json
+            r3_18e_comparison.json
+            r3_18e_aggregate.txt
+            r3_18e_receipt_sha256.txt
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Emit immutable R3.18E receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.evidence_upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence_upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          echo "R3_18E_AUTHORITY_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18E_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18E_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18E_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          cat r3_18e_selection_summary.json
+          cat r3_18e_comparison.json
+          cat r3_18e_aggregate.txt
+          cat r3_18e_receipt_sha256.txt
+          echo 'R3_18E_IMMUTABLE_RECEIPT=PASS'
