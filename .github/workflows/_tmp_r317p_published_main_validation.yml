@@ -1,0 +1,50 @@
+name: R3.17P Published Main Validation
+
+on:
+  push:
+    branches:
+      - validation/r317p-published-main
+
+permissions:
+  contents: read
+
+jobs:
+  published-main:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    env:
+      MAIN_SHA: c5878cf755302fe52e9e67741486306cd30db059
+      MAIN_TREE: d3e7797e7f30cecb008425c05fdc242f77cff458
+      PARENT_SHA: 19e3f558bd343372c7fe863822ab961fb10976ad
+    steps:
+      - name: Checkout validation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Read back and reset to exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse "${MAIN_SHA}^{tree}")" = "$MAIN_TREE"
+          test "$(git rev-parse "${MAIN_SHA}^1")" = "$PARENT_SHA"
+          git reset --hard "$MAIN_SHA"
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          echo 'R3_17P_PUBLISHED_MAIN_READBACK=PASS'
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          echo 'R3_17P_PUBLISHED_MAIN_VALIDATION=PASS'
