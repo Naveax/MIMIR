@@ -1,0 +1,150 @@
+name: R3.18G Exact Live Candidate V2
+
+on:
+  push:
+    branches: [validation/r318g-second-header-exact-live-v2]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 110
+    env:
+      BASE: 289c9cec0b709a27665370871dc7480b5df93270
+      BASE_TREE: 98100763fa27a60a149de7c958ff9ecf1049cc13
+      CANDIDATE: 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+      CANDIDATE_TREE: b130caf211ce72577870c70d6c0d87cd006e1b29
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze and reset to exact live candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main candidate/r3-18g-second-header-clean
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse origin/candidate/r3-18g-second-header-clean)" = "$CANDIDATE"
+          test "$(git rev-parse origin/candidate/r3-18g-second-header-clean^{tree})" = "$CANDIDATE_TREE"
+          git reset --hard "$CANDIDATE"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE"
+          test "$(git rev-parse HEAD^{tree})" = "$CANDIDATE_TREE"
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          test "$(git rev-list --count "$BASE..$CANDIDATE")" = "1"
+          test "$(git rev-list --count "$CANDIDATE..$BASE")" = "0"
+          echo "R3_18G_LIVE_CANDIDATE=$CANDIDATE"
+          echo "R3_18G_LIVE_TREE=$CANDIDATE_TREE"
+          echo "R3_18G_LIVE_LIB_BLOB=$(git rev-parse "$CANDIDATE:crates/mimir-replay/src/lib.rs")"
+          echo "R3_18G_LIVE_TEST_BLOB=$(git rev-parse "$CANDIDATE:crates/mimir-replay/tests/r3_18g_second_property_header.rs")"
+          echo 'R3_18G_EXACT_LIVE_IDENTITY=PASS'
+
+      - name: Enforce exact two-file production scope
+        shell: pwsh
+        run: |
+          $expected=@('crates/mimir-replay/src/lib.rs','crates/mimir-replay/tests/r3_18g_second_property_header.rs')|Sort-Object
+          $actual=@(git diff --name-only $env:BASE $env:CANDIDATE)|Where-Object{$_}|Sort-Object
+          $delta=@(Compare-Object $expected $actual)
+          if($delta.Count -ne 0){$delta|Format-Table;exit 1}
+          $forbidden=@(git diff --name-only $env:BASE $env:CANDIDATE -- Cargo.toml Cargo.lock external_fixtures test_corpus docs tools scripts .github)
+          if($forbidden.Count -ne 0){$forbidden;exit 1}
+          git diff --check $env:BASE $env:CANDIDATE
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          Write-Host 'R3_18G_EXACT_LIVE_SCOPE=PASS files=2 cargo=0 fixture=0 corpus=0 docs=0 support=0'
+
+      - name: Independent bounded source audit
+        shell: pwsh
+        run: |
+          @'
+          import re
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          begin='// R3.18G BEGIN bounded second-property header composition'
+          end='// R3.18G END bounded second-property header composition'
+          assert s.count(begin)==1 and s.count(end)==1
+          block=s.split(begin,1)[1].split(end,1)[0]
+          own='decode_replay_network_existing_actor_after_first_primitive_second_property_header_v1'
+          raw_calls=re.findall(r'\b(decode_replay_network_[A-Za-z0-9_]+)\s*\(',block)
+          assert raw_calls.count(own)==1, raw_calls
+          calls=[x for x in raw_calls if x != own]
+          assert calls==[
+              'decode_replay_network_existing_actor_after_first_primitive_property_control_v1',
+              'decode_replay_network_existing_actor_first_property_header_v1',
+          ], calls
+          assert block.index('if !control.next_property_present') < block.index('decode_replay_network_existing_actor_first_property_header_v1(')
+          assert 'second_header: None' in block and 'second_header: Some(header)' in block
+          assert 'ReplayNetworkAttributeTagV1::Int | ReplayNetworkAttributeTagV1::String' in block
+          assert 'header.property_present_start_bit != control.property_present_start_bit' in block
+          assert 'header.property_present_end_bit != control.property_present_end_bit' in block
+          assert 'header.actor_object_index != first_property.header.actor_object_index' in block
+          assert 'header.stop_bit != payload_start_bit' in block
+          assert 'header.stop_bit < control.stop_bit' in block
+          for forbidden in [
+              'decode_replay_network_primitive_scalar_v1',
+              'decode_replay_network_text',
+              'decode_replay_network_k2',
+              'decode_replay_network_k3',
+              'decode_replay_network_k4',
+          ]:
+              assert forbidden not in block, forbidden
+          code='\n'.join(line.split('//',1)[0] for line in block.splitlines())
+          assert re.search(r'\bwhile\b',code) is None
+          assert re.search(r'\bfor\b',code) is None
+          test=Path('crates/mimir-replay/tests/r3_18g_second_property_header.rs').read_text(encoding='utf-8')
+          for name in [
+              'false_terminator_returns_none_and_performs_no_lookup_after_control',
+              'continuation_int_resolves_one_second_header_and_stops_at_payload_start',
+              'continuation_string_is_header_only_and_needs_no_string_payload',
+              'aligned_and_unaligned_second_header_starts_preserve_exact_coordinates',
+              'r3_18f_shaped_actor98_boundary_reuses_exact_lookup_shape',
+              'bits_at_and_after_second_payload_start_do_not_affect_header_result',
+              'missing_control_bit_rejects_atomically',
+              'truncation_inside_second_stream_header_rejects_atomically',
+              'unresolved_second_stream_rejects_without_payload_composition',
+              'tag_outside_exact_int_string_set_rejects_before_second_payload',
+              'result_is_exactly_repeatable',
+          ]:
+              assert f'fn {name}(' in test, name
+          print('R3_18G_EXACT_LIVE_SOURCE_AUDIT=PASS reused_calls=2 payload_decoders=0 loops=0')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Focused R3.18G tests
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay --test r3_18g_second_property_header
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full mimir-replay suite
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace check
+        shell: pwsh
+        run: |
+          cargo check --workspace
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace test
+        shell: pwsh
+        run: |
+          cargo test --workspace
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace clippy
+        shell: pwsh
+        run: |
+          cargo clippy --workspace --all-targets -- -D warnings
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
