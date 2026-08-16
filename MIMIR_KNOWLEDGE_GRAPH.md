@@ -37,7 +37,8 @@ R3.18C property-loop boundary evidence decision                   |
 R3.18D next-property control-bit production decision               |
 R3.18E control-bit differential decision                              |
 R3.18F second-property-header evidence decision                        |
-R3.18G active bounded second-property-header production spec              |
+R3.18G bounded second-property-header production decision                    |
+R3.18H active production second-header differential spec                      |
         |                               |
         +---------------+---------------+
                         |
@@ -102,13 +103,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 44. `docs/continuity/MIMIR_R3_18F_EXECUTION_SPEC.md`
 45. `docs/continuity/MIMIR_R3_18F_DECISION.md`
 46. `docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md`
-47. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-48. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-49. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-50. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-51. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-52. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-53. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+47. `docs/continuity/MIMIR_R3_18G_DECISION.md`
+48. `docs/continuity/MIMIR_R3_18H_EXECUTION_SPEC.md`
+49. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+50. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+51. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+52. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+53. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+54. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+55. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -216,8 +219,14 @@ R3.13 static network lookup plan
  -> R3.18F second-property-header real-replay evidence: OUTCOME A / CLOSED
       authority 27a855a9cfb82a0294dd1601e4da01c9fdfad264 / 31951039411 / 95174417526 SUCCESS; exact-head CI 31951039378 / 95174417478 SUCCESS; artifact 9264673141 / sha256:e31e09abf322b6458f9034b06efe5502bb3b7f1011dfb08c9ffd6d1b1cd1b361
       47/47 continuation headers exact + 47/47 terminators exact / 32 real truncation negatives / mismatch 0 / second payload + third property 0 + 0
- -> R3.18G bounded optional second-property-header composition: ACTIVE / PRODUCTION IMPLEMENTATION
-      compose one R3.18D control + at most one existing header primitive; terminator None or continuation stop at payload_start; only exact observed Int/String headers; second payload and third property forbidden
+ -> R3.18G bounded optional second-property-header composition: PRODUCTION / CLOSED
+      production 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c / tree b130caf211ce72577870c70d6c0d87cd006e1b29
+      lib/test blobs 5e2b9e5be9c6692e499abc97a89655c603728cef / d56bf97d250b426e23fec4610cbb9ead6ec8a142
+      implementation 31957142924 / 95189376563 SUCCESS; same-trigger CI 31957142895 / 95189376551 SUCCESS
+      exact live candidate validator 31957646865 / 95190626723 SUCCESS; published validator 31957892048 / 95191254798 SUCCESS
+      exactly two reused decoder calls / zero payload decoder calls / zero property loops / Int+String header contexts only / second payload + third property still closed
+ -> R3.18H production second-header real-replay differential audit: ACTIVE / READ-ONLY EVIDENCE
+      reuse frozen R3.18F 47 terminator + 47 continuation rows against published R3.18G; require 94/94 exact, Int=46/String=1, mismatch 0 and second-payload/third-property bits 0/0
 ```
 
 ## Current capability lock
