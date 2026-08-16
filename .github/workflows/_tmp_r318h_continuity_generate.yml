@@ -33,6 +33,12 @@ jobs:
           git switch -c "$CANDIDATE_BRANCH"
           python3 /tmp/r318h_generate.py
 
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_R3_18H_DECISION.md \
+            docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+
           expected=$(cat <<'EOF'
           MIMIR_CONTINUE_HERE.md
           MIMIR_KNOWLEDGE_GRAPH.md
@@ -42,7 +48,7 @@ jobs:
           docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
           EOF
           )
-          actual=$(git diff --name-only "$MAIN" | sort)
+          actual=$(git diff --cached --name-only "$MAIN" | sort)
           test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
 
           grep -Fq '# 9.7 Exact-SHA validation' MIMIR_CONTINUE_HERE.md
@@ -62,7 +68,7 @@ jobs:
           assert d['r3_18h']['third_property_bits_consumed']==0
           PY
 
-          if git diff --name-only "$MAIN" -- crates Cargo.toml Cargo.lock external_fixtures fixtures corpus support tools scripts .github | grep -q .; then
+          if git diff --cached --name-only "$MAIN" -- crates Cargo.toml Cargo.lock external_fixtures fixtures corpus support tools scripts .github | grep -q .; then
             echo 'forbidden production/support scope mutation' >&2
             exit 1
           fi
@@ -81,11 +87,6 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
-            docs/continuity/MIMIR_CONTINUITY_STATE.json \
-            docs/continuity/MIMIR_CURRENT_STATE.md \
-            docs/continuity/MIMIR_R3_18H_DECISION.md \
-            docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
           git commit -m 'Admit R3.18H evidence and open R3.18I payload audit'
           test "$(git rev-parse HEAD^)" = "$MAIN"
           test "$(git diff --name-only "$MAIN" HEAD | wc -l)" -eq 6
