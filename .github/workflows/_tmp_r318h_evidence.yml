@@ -1,0 +1,62 @@
+name: R3.18H Production Second Header Differential Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318h-production-second-header-differential-v2-run
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 95
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run R3.18H evidence orchestration
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/_tmp_r318h_run.sh
+
+      - name: Upload immutable R3.18H evidence
+        id: artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: r318h-production-second-header-differential-evidence
+          path: |
+            r3_18h_source_scope.txt
+            r3_18h_replay_identity.tsv
+            r3_18h_frozen_witnesses.json
+            r3_18h_oracle_regeneration.txt
+            r3_18h_comparison.json
+            r3_18h_negative_controls.txt
+            r3_18h_aggregate.txt
+            r3_18h_receipt_sha256.txt
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Immutable receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.artifact.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          echo "R3_18H_AUTHORITY_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18H_AUTHORITY_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18H_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18H_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18H_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          cat r3_18h_aggregate.txt
+          cat r3_18h_receipt_sha256.txt
+          echo 'R3_18H_IMMUTABLE_RECEIPT=PASS'
