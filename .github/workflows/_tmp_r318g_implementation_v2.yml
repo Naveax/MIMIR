@@ -1,0 +1,166 @@
+name: R3.18G Second Header Production Implementation V2
+
+on:
+  push:
+    branches: [agent/r318g-second-header-production-v2]
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: windows-latest
+    timeout-minutes: 110
+    env:
+      BASE: 289c9cec0b709a27665370871dc7480b5df93270
+      BASE_TREE: 98100763fa27a60a149de7c958ff9ecf1049cc13
+      PROD: 4adadd185783954c7fb6ad67db14b77b377cdde5
+      PROD_TREE: 67b1969eaff49d2913b88b3921f27b1bd7fe8193
+      PATCH_SOURCE_HEAD: 24efb19c48b46003a87cf4590e0a99bf414a1102
+      LIB_BLOB: 42bc3fd3e8ea6bd1d15df82e4c6d8809b8443662
+      R318B_TEST_BLOB: 927e9a2c834115d1c918fa96fb6d0690bd03965e
+      R318D_TEST_BLOB: 2f5b188cc5b3ce8200c9961d964f1dc66b3ab49b
+      R318G_SPEC_BLOB: f7ed71dd70bdbd31cf9a5596c48dc9caffcb5ab2
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact R3.18G authority and immutable patch source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main candidate/r3-18d-control-bit-clean agent/r318g-second-header-production
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse origin/candidate/r3-18d-control-bit-clean)" = "$PROD"
+          test "$(git rev-parse "$PROD^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse origin/agent/r318g-second-header-production)" = "$PATCH_SOURCE_HEAD"
+          test "$(git rev-parse "$BASE:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$BASE:crates/mimir-replay/tests/r3_18b_single_k1_property.rs")" = "$R318B_TEST_BLOB"
+          test "$(git rev-parse "$BASE:crates/mimir-replay/tests/r3_18d_next_property_control.rs")" = "$R318D_TEST_BLOB"
+          test "$(git rev-parse "$BASE:docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md")" = "$R318G_SPEC_BLOB"
+          test -z "$(git diff --name-only "$PROD" "$BASE" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts)"
+          git show "$PATCH_SOURCE_HEAD:tools/_tmp_r318g_patch.py" > "$RUNNER_TEMP/r318g_patch.py"
+          python -m py_compile "$RUNNER_TEMP/r318g_patch.py"
+          echo 'R3_18G_V2_AUTHORITY=PASS'
+
+      - name: Apply same minimal production patch to exact base
+        shell: pwsh
+        run: |
+          git reset --hard $env:BASE
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          python (Join-Path $env:RUNNER_TEMP 'r318g_patch.py')
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          cargo fmt --all
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          git diff --check
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          Write-Host 'R3_18G_V2_PATCH_AND_FORMAT=PASS'
+
+      - name: Enforce exact clean production scope
+        shell: pwsh
+        run: |
+          $expected=@('crates/mimir-replay/src/lib.rs','crates/mimir-replay/tests/r3_18g_second_property_header.rs')|Sort-Object
+          $actual=@(git diff --name-only;git ls-files --others --exclude-standard)|Where-Object{$_}|Sort-Object -Unique
+          $delta=@(Compare-Object $expected $actual)
+          if($delta.Count -ne 0){$delta|Format-Table;exit 1}
+          if(@(git diff --name-only -- Cargo.toml Cargo.lock external_fixtures test_corpus docs tools scripts .github).Count -ne 0){throw 'forbidden Cargo/fixture/corpus/docs/support diff'}
+          Write-Host 'R3_18G_V2_SCOPE=PASS files=2 cargo=0 fixture=0 corpus=0 support=0'
+
+      - name: Corrected independent source-boundary audit
+        shell: pwsh
+        run: |
+          @'
+          import re
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          begin='// R3.18G BEGIN bounded second-property header composition'
+          end='// R3.18G END bounded second-property header composition'
+          assert s.count(begin)==1 and s.count(end)==1
+          block=s.split(begin,1)[1].split(end,1)[0]
+          own='decode_replay_network_existing_actor_after_first_primitive_second_property_header_v1'
+          raw_calls=re.findall(r'\b(decode_replay_network_[A-Za-z0-9_]+)\s*\(',block)
+          assert raw_calls.count(own)==1, raw_calls
+          calls=[name for name in raw_calls if name != own]
+          expected=[
+            'decode_replay_network_existing_actor_after_first_primitive_property_control_v1',
+            'decode_replay_network_existing_actor_first_property_header_v1',
+          ]
+          assert calls==expected, calls
+          assert block.count('decode_replay_network_existing_actor_after_first_primitive_property_control_v1(')==1
+          assert block.count('decode_replay_network_existing_actor_first_property_header_v1(')==1
+          assert 'ReplayNetworkAttributeTagV1::Int | ReplayNetworkAttributeTagV1::String' in block
+          assert 'second_header: None' in block and 'second_header: Some(header)' in block
+          assert block.index('if !control.next_property_present') < block.index('decode_replay_network_existing_actor_first_property_header_v1(')
+          assert 'while ' not in block and 'for ' not in block
+          for forbidden in [
+            'decode_replay_network_primitive_scalar_v1',
+            'decode_replay_network_text',
+            'decode_replay_network_k2',
+            'decode_replay_network_k3',
+            'decode_replay_network_k4',
+          ]:
+              assert forbidden not in block, forbidden
+          assert 'header.stop_bit != payload_start_bit' in block
+          assert 'control.property_present_start_bit' in block and 'control.property_present_end_bit' in block
+          print('R3_18G_V2_SOURCE_BOUNDARY_AUDIT=PASS reused_calls=2 loops=0 payload_decoders=0')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Focused R3.18G tests
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay --test r3_18g_second_property_header
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full mimir-replay suite
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace check
+        shell: pwsh
+        run: |
+          cargo check --workspace
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace test
+        shell: pwsh
+        run: |
+          cargo test --workspace
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace clippy
+        shell: pwsh
+        run: |
+          cargo clippy --workspace --all-targets -- -D warnings
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Publish clean R3.18G candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18g_second_property_header.rs
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Add bounded R3.18G second-property header composition' | git commit-tree "$tree" -p "$BASE")"
+          echo "R3_18G_CANDIDATE=$commit"
+          echo "R3_18G_TREE=$tree"
+          echo "R3_18G_PARENT=$BASE"
+          echo "R3_18G_LIB_BLOB=$(git rev-parse "$commit:crates/mimir-replay/src/lib.rs")"
+          echo "R3_18G_TEST_BLOB=$(git rev-parse "$commit:crates/mimir-replay/tests/r3_18g_second_property_header.rs")"
+          git diff-tree --no-commit-id --numstat -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-18g-second-header-clean"
+          echo 'R3_18G_V2_CANDIDATE_PUBLICATION=PASS'
