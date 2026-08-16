@@ -1,0 +1,91 @@
+name: R3.18I Admission and Continuity Sync
+
+on:
+  push:
+    branches:
+      - admission/r318i-v1
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  admit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN: 3257d32fbc617b6dae7bb42d41629639acf6ce95
+      EVIDENCE_HEAD: 45090a2c18fb517088bb411782bbaed0d7d68199
+      EVIDENCE_RUN: '31975063743'
+      ARTIFACT_ID: '9270842140'
+      ARTIFACT_DIGEST: sha256:9890ed33780412a8900692a627b212d80428a08229f9f691d914c8def31e06e2
+    steps:
+      - name: Checkout admission trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze authority and evidence receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_MAIN"
+          test "$(gh api repos/$GITHUB_REPOSITORY/branches/main --jq .commit.sha)" = "$EXPECTED_MAIN"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID --jq .workflow_run.head_sha)" = "$EVIDENCE_HEAD"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID --jq .workflow_run.id)" = "$EVIDENCE_RUN"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID --jq .digest)" = "$ARTIFACT_DIGEST"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID --jq .expired)" = "false"
+          cp tools/_tmp_r318i_admit.py /tmp/r318i_admit.py
+
+      - name: Reconstruct clean docs-only admission on exact main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach "$EXPECTED_MAIN"
+          python /tmp/r318i_admit.py
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+          mapfile -t changed < <(git status --short | sed -E 's/^.. //' | sort)
+          printf '%s\n' "${changed[@]}"
+          cat >/tmp/expected <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18I_DECISION.md
+          docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md
+          EOF
+          printf '%s\n' "${changed[@]}" >/tmp/actual
+          diff -u /tmp/expected /tmp/actual
+
+      - name: Repository verification
+        shell: pwsh
+        run: |
+          ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "verify_repo failed: $LASTEXITCODE" }
+
+      - name: Commit and force-free fast-forward publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18I_DECISION.md \
+            docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m 'Admit R3.18I payload evidence'
+          clean_sha="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_MAIN"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN"
+          git push origin "$clean_sha":refs/heads/main
+          echo "R3_18I_ADMISSION_SHA=$clean_sha"
+          echo "R3_18I_ADMISSION=PASS"
