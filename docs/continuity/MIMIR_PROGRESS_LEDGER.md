@@ -494,3 +494,14 @@ Next exact pass: `R3.14E — native first-envelope differential audit`.
 - Following-property bits consumed 0; witness reselection 0; privacy PASS; mutation `0/0/0/0/0`.
 - Next: R3.18L following-property one-bit read-only evidence.
 
+## 2026-08-17 — R3.18L following-property control-bit evidence
+
+- Outcome A / read-only evidence closed; production remains `330ab01890a7c09eff1805e437584fb3be0a1134`.
+- Authority `9205ac1616e686589938f952782a32f03d0d1488`; evidence `31978791346/95242213413` SUCCESS; same-head CI `31978791304/95242213357` SUCCESS.
+- Artifact `9271817700` / `sha256:db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c`.
+- 47/47 published R3.18J reconstructions exact before one-bit observation; control distribution false=0 / true=47; mismatch 0.
+- Truncation, repeatability, post-control poison and prior-stop mismatch controls PASS 47/47.
+- Following stream/header/payload consumption 0/0/0; witness reselection 0; privacy PASS; mutation `0/0/0/0/0`.
+- MIMIR validation used Rust 1.85.0; pinned Boxcars oracle build was isolated to stable rustc 1.90.0 due external transitive dependency MSRV.
+- Next: R3.18M true-only bounded after-second-payload control-bit production composition.
+

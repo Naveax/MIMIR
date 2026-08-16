@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18J — bounded native second-property payload composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18K — published R3.18J second-property payload differential / Outcome A / 94/94 exact / Int=46 String=1 / 0 mismatch / following-property bits 0
+  R3.18L — following-property control-bit evidence / Outcome A / 47/47 exact / false=0 true=47 / 0 mismatch / following stream+header+payload bits 0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18K — published second-property payload differential / Outcome A / 47 terminators + 47 continuations / Int=46 String=1 / 0 mismatch / following property 0
+  R3.18L — after-second-payload property_present evidence / Outcome A / 47 continuation rows / false=0 true=47 / 0 mismatch / no following stream/header/payload
 
 CURRENT_PASS:
-  R3.18L — following-property control-bit evidence after one published second payload
+  R3.18M — bounded native after-second-payload control-bit composition
 
 CURRENT_PASS_TYPE:
-  read-only evidence / on the exact 47 R3.18K continuation rows, inspect exactly the one property_present bit at the published R3.18J stop and compare it to pinned Boxcars; no following stream/header/payload
+  production implementation / from one already-valid R3.18J second-payload result, consume exactly one following property_present bit; admit only the R3.18L-observed true context and stop one bit later
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -89,8 +89,22 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18I CLOSED Outcome A: 94/94 frozen rows exact; 47 terminators + 47 continuations; second payload Int=46/String=1; native/oracle mismatch 0; third-property bits consumed 0; production unchanged
   R3.18J PRODUCTION at 330ab01890a7c09eff1805e437584fb3be0a1134: composes exactly one optional Int|String second payload through exact payload end; String is additionally net10/non-RL223 only
   R3.18K CLOSED Outcome A: published R3.18J API matched the frozen 94-row lane exactly; mismatch 0; following-property bits consumed 0
-  R3.18L ACTIVE read-only evidence may inspect exactly one following property_present control bit after a successful R3.18J second payload
+  R3.18L CLOSED Outcome A: exact 47 continuation rows matched one following property_present bit; false=0 true=47; mismatch 0; following stream/header/payload bits consumed 0
+  R3.18M ACTIVE production implementation may compose exactly this one after-second-payload control bit, true context only; false is evidence-unobserved and must fail closed
   NO following stream/header/payload, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+R3_18L_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 330ab01890a7c09eff1805e437584fb3be0a1134
+  authority head: 9205ac1616e686589938f952782a32f03d0d1488
+  authority run/job: 31978791346 / 95242213413 SUCCESS
+  exact-head normal CI: 31978791304 / 95242213357 SUCCESS
+  artifact: 9271817700 / 20906 bytes
+  artifact digest: sha256:db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c
+  frozen rows: 47/47 exact / R3.18J reconstruction 47/47 / native-oracle mismatch 0
+  following control distribution: false=0 / true=47
+  control truncation / repeatability / post-control poison / prior-stop mismatch negatives: PASS 47/47
+  following stream/header/payload bits consumed: 0/0/0; witness reselection: 0; privacy: PASS
+  MIMIR validation toolchain: rustc 1.85.0; pinned Boxcars oracle build isolated to stable rustc 1.90.0
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 R3_18K_EVIDENCE_CLOSURE:
   Outcome A / read-only / production Rust unchanged at 330ab01890a7c09eff1805e437584fb3be0a1134
   authority head: 926ddd88331ef0372b17b495cb06502010ab39ac
@@ -3145,7 +3159,7 @@ ACTIVE NEXT PASS      = R3.18L — following-property control-bit read-only evid
 
 R3.18K reused the exact immutable R3.18I 94-row lane without witness reselection. The published R3.18J API matched all 47 terminators and all 47 continuations; continuation tags remained `Int=46 / String=1`; semantic/shape/end/stop equality was exact; mismatch count was zero; all 47 real payload truncation controls, all 47 terminator no-lookup controls, String wrong-context, tag-outside-`Int|String`, repeatability and post-payload poison controls passed. No following property bit was consumed and production/Cargo/fixture/corpus/support mutation remained `0/0/0/0/0`.
 
-## CURRENT PASS CHECKLIST — R3.18L
+## HISTORICAL PASS CHECKLIST — R3.18L (CLOSED / OUTCOME A)
 
 - [ ] Re-fetch fresh `main`; require production Rust still exactly R3.18J `330ab01890a7c09eff1805e437584fb3be0a1134` except continuity-only commits.
 - [ ] Freeze R3.18K authority receipt and immutable R3.18I/K replay+witness identities; no witness reselection.
@@ -3159,4 +3173,35 @@ R3.18K reused the exact immutable R3.18I 94-row lane without witness reselection
 - [ ] Run full `mimir-replay`, workspace check/test/clippy, repository verifier and same-head normal CI.
 - [ ] Require production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.
 - [ ] Outcome A may open only a separate bounded production composition for this one after-second-payload control bit. No following header/payload or generic property loop.
+
+---
+
+# R3.18L OUTCOME A ADMITTED / ACTIVE R3.18M — 2026-08-17
+
+```text
+production code SHA = 330ab01890a7c09eff1805e437584fb3be0a1134
+R3.18L evidence head = 9205ac1616e686589938f952782a32f03d0d1488
+R3.18L run/job        = 31978791346 / 95242213413 SUCCESS
+R3.18L same-head CI   = 31978791304 / 95242213357 SUCCESS
+R3.18L artifact       = 9271817700 / sha256:db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c
+R3.18L outcome        = A / 47 OF 47 FOLLOWING CONTROL BITS EXACT / FALSE=0 TRUE=47
+ACTIVE NEXT PASS      = R3.18M — bounded native after-second-payload control-bit composition
+```
+
+R3.18L reused exactly the 47 R3.18K continuation rows and first reconstructed the published R3.18J result through its frozen second-payload end. Pinned Boxcars and an independent one-bit evidence read agreed on the following `property_present` start/value/end for all 47 rows. Every observed bit was `true`; no false row exists in the frozen authority. Therefore R3.18M may admit only the true after-second-payload control context. A false bit in this context is evidence-unobserved and must fail closed rather than being silently generalized.
+
+## CURRENT PASS CHECKLIST — R3.18M
+
+- [ ] Re-fetch fresh `main`; require R3.18J production source/test blobs unchanged except continuity-only commits.
+- [ ] Freeze R3.18L head/run/job/CI/artifact/digest and its 47-row `false=0 / true=47` authority.
+- [ ] Implement one deliberately non-generic API tied to an already-valid R3.18J second-payload result.
+- [ ] Require the supplied prior result's `stop_bit` to be internally consistent with the second payload end before reading anything later.
+- [ ] Read exactly one bit at that stop; require it to be `true`; false must fail closed as `unadmitted-following-control-false` (or equally explicit stable category).
+- [ ] Return exact control start/end and stop one bit later on success.
+- [ ] Perform zero following stream/header/payload lookup or decoding and expose no generic repeatable property cursor.
+- [ ] Add focused tests: true positive, false reject, missing-bit reject, aligned/unaligned starts, prior-stop inconsistency reject, post-control poison invariance, repeatability.
+- [ ] Clean production scope: `crates/mimir-replay/src/lib.rs` + one focused `crates/mimir-replay/tests/r3_18m_*.rs`; no Cargo/fixture/corpus/workflow/support changes.
+- [ ] Run Rust 1.85 focused tests, full `mimir-replay`, workspace check/test/clippy, full repository verifier and exact candidate CI.
+- [ ] Fresh-main ancestry audit and force=false fast-forward publication only after every gate passes.
+- [ ] Published exact-main CI/readback must pass before R3.18M is production-closed.
 

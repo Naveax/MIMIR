@@ -42,7 +42,8 @@ R3.18H production second-header differential decision                         |
 R3.18I second-property payload evidence decision / Outcome A CLOSED            |
 R3.18J bounded second-property payload production decision / CLOSED
 R3.18K published second-payload differential decision / Outcome A CLOSED
-R3.18L active following-property control-bit evidence spec                  |
+R3.18L following-property control-bit evidence decision / Outcome A CLOSED
+R3.18M active bounded after-second-payload control implementation spec       |
         |                               |
         +---------------+---------------+
                         |
@@ -117,13 +118,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 54. `docs/continuity/MIMIR_R3_18K_EXECUTION_SPEC.md`
 55. `docs/continuity/MIMIR_R3_18K_DECISION.md`
 56. `docs/continuity/MIMIR_R3_18L_EXECUTION_SPEC.md`
-57. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-58. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-59. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-60. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-61. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-62. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-63. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+57. `docs/continuity/MIMIR_R3_18L_DECISION.md`
+58. `docs/continuity/MIMIR_R3_18M_EXECUTION_SPEC.md`
+59. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+60. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+61. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+62. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+63. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+64. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+65. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
 - same-head normal CI `31975063703/95233164610` SUCCESS
@@ -260,13 +263,15 @@ R3.13 static network lookup plan
       production 330ab01890a7c09eff1805e437584fb3be0a1134 / one optional Int|String second payload through exact end
  -> R3.18K published R3.18J second-payload differential: OUTCOME A / CLOSED
       authority 926ddd88331ef0372b17b495cb06502010ab39ac / 31977860600/95239932737 SUCCESS / artifact 9271561853 / mismatch 0 / following bits 0
- -> R3.18L following-property control-bit evidence: ACTIVE / READ-ONLY
-      exact 47 continuation rows only; one following property_present bit maximum; zero following stream/header/payload bits
+ -> R3.18L following-property control-bit evidence: OUTCOME A / CLOSED
+      authority 9205ac1616e686589938f952782a32f03d0d1488 / 31978791346/95242213413 SUCCESS / false=0 true=47 / mismatch 0 / following stream+header+payload bits 0
+ -> R3.18M bounded after-second-payload control composition: ACTIVE / PRODUCTION IMPLEMENTATION
+      exact one-bit true context only; false unobserved and fail-closed; no following header/payload or loop
 ```
 
 ## Current capability lock
 
-Production is R3.18J `330ab01890a7c09eff1805e437584fb3be0a1134`. After one valid R3.18B K1 first property, the bounded chain may consume the R3.18D control, resolve the exact R3.18G `Int|String` second header, and decode at most one R3.18I-admitted second payload through its exact end. The String branch remains restricted to `net_version=10` and `is_rl_223=false`. R3.18K closed Outcome A by differentially validating this published API over the frozen 94-row lane with zero mismatch, zero witness reselection and zero following-property-bit consumption. R3.18L may now inspect exactly one `property_present` bit after a successful second payload as read-only evidence. Following stream/header/payload bits, a generalized property loop, next actor/frame iteration and lifecycle mutation remain closed.
+Production remains R3.18J `330ab01890a7c09eff1805e437584fb3be0a1134`. After one valid R3.18B K1 first property, the bounded chain may consume the R3.18D control, resolve the exact R3.18G `Int|String` second header, and decode at most one R3.18I-admitted second payload through its exact end. R3.18K validated that published composition. R3.18L then closed Outcome A on exactly 47 continuation rows: the one following `property_present` bit matched pinned Boxcars on all rows with distribution false=0 / true=47 and zero following stream/header/payload consumption. R3.18M is the first unfinished canonical pass and may productionize only this observed true one-bit context. False remains unadmitted in the after-second-payload context, and following header/payload, generalized looping, next actor/frame iteration and lifecycle mutation remain closed.
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
@@ -593,5 +598,32 @@ prod/Cargo/fixture/corpus/
 support mutations           0/0/0/0/0
 outcome                     A
 next                        R3.18L following-property control-bit evidence
+```
+
+## R3.18L following-property control evidence closure
+
+```text
+authority head              9205ac1616e686589938f952782a32f03d0d1488
+authority run/job           31978791346 / 95242213413 SUCCESS
+exact-head normal CI        31978791304 / 95242213357 SUCCESS
+artifact                    9271817700
+artifact digest             sha256:db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c
+rows                        47/47 exact
+prior R3.18J reconstruction 47/47
+control false / true        0 / 47
+native/oracle mismatch      0
+control truncation          47/47 PASS
+repeatability / poison      47/47 PASS / 47/47 PASS
+prior-stop negative         47/47 PASS
+following stream/header/
+payload bits consumed       0/0/0
+witness reselection         0
+privacy                     PASS
+MIMIR Rust floor            1.85.0
+pinned Boxcars build        isolated stable rustc 1.90.0
+prod/Cargo/fixture/corpus/
+support mutations           0/0/0/0/0
+outcome                     A
+next                        R3.18M true-only one-bit production composition
 ```
 
