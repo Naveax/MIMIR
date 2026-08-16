@@ -1,0 +1,122 @@
+name: R3.18D Published Main Validation
+
+on:
+  push:
+    branches:
+      - validation/r318d-control-published-main
+
+jobs:
+  published-main:
+    runs-on: windows-latest
+    timeout-minutes: 85
+    env:
+      PREVIOUS_MAIN: e9f3c4d34ebd84fc9c51431ad4489c4d407b1535
+      PUBLISHED_MAIN: 4adadd185783954c7fb6ad67db14b77b377cdde5
+      PUBLISHED_TREE: 67b1969eaff49d2913b88b3921f27b1bd7fe8193
+      LIB_BLOB: 42bc3fd3e8ea6bd1d15df82e4c6d8809b8443662
+      TEST_BLOB: 2f5b188cc5b3ce8200c9961d964f1dc66b3ab49b
+
+    steps:
+      - name: Checkout validation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reset to exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PUBLISHED_MAIN"
+          test "$(git rev-parse "${PUBLISHED_MAIN}^{tree}")" = "$PUBLISHED_TREE"
+          test "$(git rev-parse "${PUBLISHED_MAIN}^")" = "$PREVIOUS_MAIN"
+          git reset --hard "$PUBLISHED_MAIN"
+          test "$(git rev-parse HEAD)" = "$PUBLISHED_MAIN"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$LIB_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_18d_next_property_control.rs)" = "$TEST_BLOB"
+          echo 'R3_18D_PUBLISHED_IDENTITY=PASS'
+
+      - name: Enforce published two-file production diff
+        shell: pwsh
+        run: |
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18d_next_property_control.rs'
+          ) | Sort-Object
+          $actual = @(git diff --name-only "$env:PREVIOUS_MAIN" "$env:PUBLISHED_MAIN") | Where-Object { $_ } | Sort-Object -Unique
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) { Write-Host 'Expected:'; $expected; Write-Host 'Actual:'; $actual; $delta | Format-Table; exit 1 }
+          $forbidden = @(git diff --name-only "$env:PREVIOUS_MAIN" "$env:PUBLISHED_MAIN" -- Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          git diff --check "$env:PREVIOUS_MAIN" "$env:PUBLISHED_MAIN"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18D_PUBLISHED_SCOPE=PASS files=2 Cargo=0 fixture=0 corpus=0 support=0 workflow=0 continuity=0'
+
+      - name: Verify published one-bit-only source boundary
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          fn_name='pub fn decode_replay_network_existing_actor_after_first_primitive_property_control_v1('
+          assert s.count(fn_name)==1
+          start=s.index(fn_name)
+          end=s.index('/// Decode exactly one R3.17B-admitted primitive scalar payload.', start)
+          block=s[start:end]
+          assert block.count('NetworkBitCursor::new(network_bytes)')==1
+          assert block.count('cursor.read_bit()?')==1
+          for forbidden in [
+              'read_bits_le', 'read_bounded_u32',
+              'decode_replay_network_existing_actor_first_property_header_v1',
+              'decode_replay_network_existing_actor_single_primitive_property_v1',
+              'decode_replay_network_primitive_scalar_v1',
+              'decode_replay_network_k2', 'decode_replay_network_k3', 'decode_replay_network_k4'
+          ]:
+              assert forbidden not in block, forbidden
+          assert '\n    while ' not in block
+          assert '\n    for ' not in block
+          assert 'property_present_end_bit = property_present_start_bit.checked_add(1)' in block
+          assert 'stop_bit != property_present_end_bit' in block
+          print('R3_18D_PUBLISHED_SOURCE_BOUNDARY=PASS one_bit=1 second_property=0 loop=0')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Focused R3.18D tests
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay --test r3_18d_next_property_control
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full mimir-replay suite
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Workspace check test clippy
+        shell: pwsh
+        run: |
+          cargo check --locked --workspace --all-targets
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked --workspace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PUBLISHED_MAIN"
+          test "$(git rev-parse HEAD)" = "$PUBLISHED_MAIN"
+          test -z "$(git status --porcelain)"
+          echo "R3_18D_PUBLISHED_MAIN=$PUBLISHED_MAIN"
+          echo "R3_18D_PUBLISHED_TREE=$PUBLISHED_TREE"
+          echo 'R3_18D_PUBLISHED_VALIDATION=PASS'
