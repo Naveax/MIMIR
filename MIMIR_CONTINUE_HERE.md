@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18G — minimal native existing-actor bounded second-property header composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18F — second-property-header real-replay evidence / Outcome A / 47 continuation headers exact + 47 terminator negatives / 0 mismatch
+  R3.18H — published R3.18G second-header real-replay differential audit / Outcome A / 94/94 exact / 0 mismatch
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18F — second-property-header real-replay evidence / Outcome A / 47/47 continuation headers / 47/47 terminators / 0 mismatch / second payload + third property 0 + 0
+  R3.18H — published R3.18G second-header differential / Outcome A / 47 terminators + 47 continuations / Int=46 String=1 / 0 mismatch / second payload + third property 0 + 0
 
 CURRENT_PASS:
-  R3.18H — production second-property-header real-replay differential audit
+  R3.18I — second-property payload contract/evidence audit
 
 CURRENT_PASS_TYPE:
-  read-only evidence / differential validation of published R3.18G over the frozen R3.18F 47-replay terminator/continuation lane
+  read-only evidence / characterize exactly one second-property payload on the frozen R3.18F continuation lane; no production composition and no third-property access
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -85,8 +85,28 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18F closed Outcome A: all 47 continuation second headers matched through payload_start, all 47 terminators stopped after one bit, mismatch 0, second payload and third-property consumption 0/0
   R3.18G is production at 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c: after one valid R3.18B first primitive property it reuses R3.18D control plus at most one existing header primitive; terminator returns None before header lookup; continuation stops exactly at second payload_start; exact header contexts Int/String only
   R3.18G exact-live validator 31957646865/95190626723 and published validator 31957892048/95191254798 are SUCCESS; payload decoder calls 0; property loops 0
-  R3.18H is read-only differential validation of that published production API over the frozen 47 terminator + 47 continuation lane; second payload and third-property consumption must remain 0/0
-  NO second-property payload decode, third property, repeated/generalized property loop, K2/K3/K4 wrapper composition, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18H closed Outcome A on the published R3.18G API: 94/94 frozen rows exact, 47 terminators + 47 continuations, Int=46/String=1, 32 real header truncation negatives, mismatch 0, second payload + third-property consumption 0/0
+  R3.18I is read-only evidence only: on the same frozen lane, characterize exactly one second payload after the admitted second header; 46 Int rows and 1 String row must be handled as separate observed tag classes, with 47 terminators remaining no-payload/no-lookup controls
+  NO production second-property payload composition, third property/control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+R3_18H_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+  authority head/tree: 1db03fddabf84bfa189f983fa4a3b9110d105442 / be84d7709d60477bcbb916a11b4496dbddac2ab2
+  authority run/job: 31960174729 / 95196833572 SUCCESS
+  exact-head normal CI: 31960174713 / 95196833409 SUCCESS
+  artifact: 9267045757 / size 12070 bytes
+  artifact digest: sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+  frozen R3.18F replay identity SHA256: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+  frozen R3.18F witness SHA256: 99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7
+  94/94 native rows exact / 47 terminator + 47 continuation
+  continuation tags: Int=46 / String=1
+  terminator None/no-lookup: 47/47; real header truncation rows: 32
+  unresolved-stream negative: PASS; tag-outside-Int/String negative: PASS
+  repeatability: PASS; post-stop poison: PASS
+  second payload / third property bits consumed: 0 / 0
+  mismatch count: 0
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
+  artifact file SHA256: source_scope=38ff92a2448883802b73ea4e2ee0a65f18b83beb782d8f8c87451e2295f37fb8; replay_identity=b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf; frozen_witnesses=99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7; oracle_regeneration=97767f90f5f9d46afcb68f568cf28d021f2081ddbf62bb5f2536d8d7d1bf569e; comparison=de4ca9d70fb7f56aec1c279473c3289b236cfa48e3a17f1faec8942ac3548d10; negatives=4d0273b85c5af2ae2e2b1fd7b88fd5d876c210d1a20f4cdd544601d649c053c9; aggregate=4357bc88426ac50da065875f56bc2f806158080767292c6210623091f6fdc31b
+
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
   authority run/job: 31801482588 / 94770260529 SUCCESS
@@ -3030,19 +3050,38 @@ second payload / third property: CLOSED / CLOSED
 
 The live clean candidate `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c` superseded an earlier non-authority log receipt `fc595082...`; publication and validation used fresh branch truth.
 
-# CURRENT PASS CHECKLIST — R3.18H
+# R3.18H EVIDENCE CLOSURE — 2026-08-16
 
-- [ ] Fresh-read `main`; require `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c` production source/tree/blobs or continuity-only commits after it.
-- [ ] Freeze pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b` and all R3.18F artifact/source/replay/witness hashes.
-- [ ] Reuse exactly 47 terminator + 47 continuation frozen rows; no silent witness reselection.
-- [ ] Differentially invoke the **published R3.18G composition** on all 94 rows.
-- [ ] Terminators: `None`, exact one-bit control stop, no second-header lookup.
-- [ ] Continuations: exact control + stream/object/tag/payload_start; exact aggregate `Int=46 / String=1`.
-- [ ] Require native/oracle mismatch `0`.
-- [ ] Require second-payload / third-property bits consumed `0 / 0`.
-- [ ] Run real truncation plus unresolved-stream, disallowed-tag, poison and repeatability negatives.
-- [ ] Produce privacy-safe immutable evidence artifact and per-file SHA256 receipt.
-- [ ] Run focused/full/workspace/clippy/full verifier on the exact evidence head.
-- [ ] Require same exact evidence head normal CI SUCCESS.
+```text
+Outcome: A — ADMITTED / READ-ONLY EVIDENCE
+authority head/tree: 1db03fddabf84bfa189f983fa4a3b9110d105442 / be84d7709d60477bcbb916a11b4496dbddac2ab2
+custom evidence run/job: 31960174729 / 95196833572 SUCCESS
+same-head normal CI: 31960174713 / 95196833409 SUCCESS
+artifact: 9267045757
+artifact digest: sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+rows: 94/94 exact = 47 terminator + 47 continuation
+continuation tags: Int=46 / String=1
+header truncation rows: 32
+terminator no-lookup rows: 47
+unresolved-stream / disallowed-tag / repeatability / poison: PASS
+second payload / third property bits: 0 / 0
+mismatch: 0
+production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
+```
+
+Production authority remains R3.18G `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c`. R3.18H admitted evidence only.
+
+# CURRENT PASS CHECKLIST — R3.18I
+
+- [ ] Fresh-read `main`; require R3.18G production authority unchanged except continuity-only commits after it.
+- [ ] Freeze R3.18H authority receipt and the exact R3.18F 94-row lane; no witness reselection.
+- [ ] Keep all 47 terminators as no-second-payload/no-lookup negative controls.
+- [ ] For exactly 47 continuations, start only at the already-proven second `payload_start_bit`.
+- [ ] Characterize the 46 `Int` payloads separately from the single `String` payload; do not infer cross-tag equivalence.
+- [ ] Compare pinned Boxcars payload end + semantic value against existing native lower-level decoders where their already-admitted contracts apply.
+- [ ] Record exact payload start/end/width and semantic equality; no third `property_present` bit may be read.
+- [ ] Require deterministic repeatability, truncation-at-payload boundaries, post-stop poison invariance and wrong-context/tag fail-closed controls.
+- [ ] Produce privacy-safe immutable evidence with per-file SHA256 receipt.
+- [ ] Run full regression/workspace/clippy/repository verification and same-head normal CI.
 - [ ] Require production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.
-- [ ] Only after Outcome A update continuity/KG; do not open second payload inside R3.18H.
+- [ ] Outcome A may only open a separate bounded second-property payload production-composition pass; if String remains unresolved, open a narrower String payload evidence/contract pass instead. No third property or loop.

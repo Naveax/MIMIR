@@ -38,7 +38,8 @@ R3.18D next-property control-bit production decision               |
 R3.18E control-bit differential decision                              |
 R3.18F second-property-header evidence decision                        |
 R3.18G bounded second-property-header production decision                    |
-R3.18H active production second-header differential spec                      |
+R3.18H production second-header differential decision                         |
+R3.18I active second-property payload evidence spec                              |
         |                               |
         +---------------+---------------+
                         |
@@ -105,13 +106,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 46. `docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md`
 47. `docs/continuity/MIMIR_R3_18G_DECISION.md`
 48. `docs/continuity/MIMIR_R3_18H_EXECUTION_SPEC.md`
-49. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-50. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-51. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-52. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-53. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-54. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-55. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+49. `docs/continuity/MIMIR_R3_18H_DECISION.md`
+50. `docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md`
+51. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+52. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+53. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+54. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+55. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+56. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+57. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -225,17 +228,21 @@ R3.13 static network lookup plan
       implementation 31957142924 / 95189376563 SUCCESS; same-trigger CI 31957142895 / 95189376551 SUCCESS
       exact live candidate validator 31957646865 / 95190626723 SUCCESS; published validator 31957892048 / 95191254798 SUCCESS
       exactly two reused decoder calls / zero payload decoder calls / zero property loops / Int+String header contexts only / second payload + third property still closed
- -> R3.18H production second-header real-replay differential audit: ACTIVE / READ-ONLY EVIDENCE
-      reuse frozen R3.18F 47 terminator + 47 continuation rows against published R3.18G; require 94/94 exact, Int=46/String=1, mismatch 0 and second-payload/third-property bits 0/0
+ -> R3.18H production second-header real-replay differential audit: OUTCOME A / CLOSED
+      authority 1db03fddabf84bfa189f983fa4a3b9110d105442 / 31960174729 / 95196833572 SUCCESS; exact-head CI 31960174713 / 95196833409 SUCCESS
+      artifact 9267045757 / sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+      94/94 exact = 47 terminator + 47 continuation / Int=46 String=1 / 32 truncation / 47 no-lookup / mismatch 0 / second payload + third property 0+0
+ -> R3.18I second-property payload contract/evidence audit: ACTIVE / READ-ONLY EVIDENCE
+      frozen continuation lane only: characterize exactly 46 Int + 1 String second payload through payload end; 47 terminators remain no-payload controls; no third property/control bit and no loop
 ```
 
 ## Current capability lock
 
-Production at `4adadd185783954c7fb6ad67db14b77b377cdde5` includes R3.18B's one-property K1 wrapper plus R3.18D's structurally tied after-first-property control reader. After one valid R3.18B first K1 property, production may read exactly one next `property_present` bit and stop one bit later. It still cannot decode the second stream ID, second property header/tag, or second payload, and it does not expose a generalized repeated property loop. R3.18E closed Outcome A with 94/94 exact real-replay control rows and zero second-property consumption. R3.18F is read-only evidence for only the second-property header boundary through payload_start; production second-property composition remains closed.
+Production at `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c` includes R3.18B's one-property K1 wrapper, R3.18D's structurally tied next-property control, and R3.18G's bounded optional second-property header composition. After one valid first K1 property, production may return `None` for a false next-property bit or resolve exactly one second header in the observed `Int|String` contexts and stop at that header's `payload_start`. It still cannot decode the second payload, read a third property/control bit, or expose a generalized repeated property loop. R3.18H closed Outcome A with 94/94 exact published-production differential rows and zero second-payload/third-property consumption. R3.18I may inspect exactly one second payload read-only on the frozen continuation lane, but production composition remains closed.
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups; R3.17K implemented them; R3.17L matched all 1,950 against real replay witnesses. R3.17M then observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups; R3.17N admitted those 161 groups byte-for-byte; R3.17O implemented exactly that contract with zero cross-product widening; R3.17P then matched all 161 exact K4 groups against real replay witnesses with zero mismatch. R3.18A proved one complete real existing-actor property boundary; R3.18B published the minimal K1 one-property composition. R3.18C then proved the exact next one-bit loop-control edge for both real terminator and continuation classes with zero second-property consumption. R3.18D publishes only that one control bit; R3.18E validated it with zero mismatch. R3.18F may observe only a second-property header boundary read-only; production second-property composition/payload, repeated loops, K2/K3/K4 wrapper composition, next actor/frame iteration and lifecycle mutation remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups; R3.17K implemented them; R3.17L matched all 1,950 against real replay witnesses. R3.17M then observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups; R3.17N admitted those 161 groups byte-for-byte; R3.17O implemented exactly that contract with zero cross-product widening; R3.17P then matched all 161 exact K4 groups against real replay witnesses with zero mismatch. R3.18A proved one complete real existing-actor property boundary; R3.18B published the minimal K1 one-property composition. R3.18C then proved the exact next one-bit loop-control edge for both real terminator and continuation classes with zero second-property consumption. R3.18D publishes only that one control bit; R3.18E validated it with zero mismatch. R3.18F proved the second header boundary, R3.18G published that bounded header composition, and R3.18H differentially validated it with zero mismatch. R3.18I may characterize exactly one second payload read-only; production second-payload composition, any third property/repeated loop, next actor/frame iteration and lifecycle mutation remain closed.
 
 ## R3.17G production closure
 
