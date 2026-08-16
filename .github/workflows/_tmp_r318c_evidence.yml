@@ -1,0 +1,275 @@
+name: R3.18C Property Loop-Control Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318c-loop-control
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      BASE_MAIN: f8f6467f2ee652892329f08a3e532b1e1f834fb3
+      BASE_TREE: 9943ee5620091142379763422dc22178b2278fbc
+      PROD_SHA: de7a2ba40663bb619ca7bd8654846ce87670d023
+      PROD_TREE: d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+      LIB_BLOB: 478ae5b70514fcff79117b834733849517c48500
+      R318B_TEST_BLOB: 927e9a2c834115d1c918fa96fb6d0690bd03965e
+      R318C_SPEC_BLOB: 4e4328cb48ff281f2661b821d87a71e6708f24a3
+      R318B_EXACT_RUN: '31942696817'
+      R318B_MAIN_CI_RUN: '31942870294'
+      R318B_PUBLISHED_RUN: '31942896666'
+      R318B_CONTINUITY_PUBLISHED_RUN: '31943725374'
+      LANE_COMMIT: 4cd21ea6db14c9becc11c17149af9201071859bc
+      PATHS_SHA: 2ecbeea804f193796a539baee1e968719f03c0cd706efff0c22a61e6ef943dae
+      IDENTITY_SHA: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      BOXCARS_FRAME_BLOB: 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+      BOXCARS_ATTR_BLOB: 5e2d5bc1cd8187af30c3ea95193ad987645cb76e
+
+    steps:
+      - name: Checkout disposable evidence branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze canonical main, production, and replay lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r317a-primitive-scalar-attributes
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/tests/r3_18b_single_k1_property.rs")" = "$R318B_TEST_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:docs/continuity/MIMIR_R3_18C_EXECUTION_SPEC.md")" = "$R318C_SPEC_BLOB"
+          test "$(git rev-parse origin/evidence/r317a-primitive-scalar-attributes)" = "$LANE_COMMIT"
+
+          mapfile -t changed < <(git diff --name-only "$BASE_MAIN" HEAD | sort)
+          expected=(
+            '.github/workflows/_tmp_r318c_evidence.yml'
+            'tools/_tmp_r318c_analyze.py'
+            'tools/_tmp_r318c_native_probe.rs'
+            'tools/_tmp_r318c_patch.py'
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 4
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
+          git diff --exit-code "$BASE_MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts
+
+          mkdir -p .tmp/r318c
+          git show "$LANE_COMMIT:tools/_tmp_r317a_paths.txt" > .tmp/r318c/paths.txt
+          git show "$LANE_COMMIT:tools/_tmp_r317a_identity.tsv" > .tmp/r318c/identity.tsv
+          test "$(sha256sum .tmp/r318c/paths.txt | awk '{print $1}')" = "$PATHS_SHA"
+          test "$(sha256sum .tmp/r318c/identity.tsv | awk '{print $1}')" = "$IDENTITY_SHA"
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          paths=[x.strip().replace('\\','/') for x in Path('.tmp/r318c/paths.txt').read_text(encoding='utf-8').splitlines() if x.strip()]
+          ids={}
+          for line in Path('.tmp/r318c/identity.tsv').read_text(encoding='utf-8').splitlines():
+              if not line.strip(): continue
+              rel,sha,status=line.split('\t')
+              rel=rel.replace('\\','/')
+              if status != 'PASS': raise SystemExit(f'bad identity status for {rel}')
+              ids[rel]=sha.lower()
+          if len(paths)!=47 or len(set(paths))!=47 or set(paths)!=set(ids):
+              raise SystemExit('frozen replay lane is not exactly 47 unique rows')
+          def digest(path):
+              h=hashlib.sha256()
+              with open(path,'rb') as f:
+                  for chunk in iter(lambda:f.read(1<<20),b''): h.update(chunk)
+              return h.hexdigest()
+          for rel in paths:
+              if digest(rel)!=ids[rel]: raise SystemExit(f'replay SHA mismatch: {rel}')
+          Path('r3_18c_replay_identity.tsv').write_text(
+              ''.join(f'{p}\t{ids[p]}\tPASS\n' for p in paths), encoding='utf-8', newline='\n'
+          )
+          print('R3_18C_REPLAY_IDENTITY=PASS rows=47')
+          PY
+          {
+            echo "base_main=$BASE_MAIN"
+            echo "base_tree=$BASE_TREE"
+            echo "production_sha=$PROD_SHA"
+            echo "production_tree=$PROD_TREE"
+            echo "lib_blob=$LIB_BLOB"
+            echo "r318b_test_blob=$R318B_TEST_BLOB"
+            echo "r318c_spec_blob=$R318C_SPEC_BLOB"
+            echo "r318b_exact_run=$R318B_EXACT_RUN"
+            echo "r318b_main_ci_run=$R318B_MAIN_CI_RUN"
+            echo "r318b_published_run=$R318B_PUBLISHED_RUN"
+            echo "r318b_continuity_published_run=$R318B_CONTINUITY_PUBLISHED_RUN"
+            echo "lane_commit=$LANE_COMMIT"
+            echo "replay_identity_sha256=$IDENTITY_SHA"
+            echo 'production_mutation=0'
+            echo 'cargo_mutation=0'
+            echo 'fixture_mutation=0'
+            echo 'corpus_mutation=0'
+            echo 'support_mutation=0'
+          } > r3_18c_source_scope.txt
+          echo 'R3_18C_AUTHORITY_FREEZE=PASS'
+
+      - name: Build pinned Boxcars loop-control oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r318c"
+          rm -rf "$BOXCARS"
+          git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+          git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" rev-parse HEAD)" = "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" rev-parse HEAD:src/network/frame_decoder.rs)" = "$BOXCARS_FRAME_BLOB"
+          test "$(git -C "$BOXCARS" rev-parse HEAD:src/network/attributes.rs)" = "$BOXCARS_ATTR_BLOB"
+
+          python - <<'PY'
+          from pathlib import Path
+          src=Path('tools/_tmp_r318c_patch.py').read_text(encoding='utf-8')
+          old='    stream_id_bound: i32,\n'
+          new='    stream_id_bound: u32,\n'
+          if src.count(old) != 1:
+              raise SystemExit('unexpected R3.18C stream_id_bound patcher shape')
+          Path('.tmp/r318c/boxcars_patch.py').write_text(src.replace(old,new),encoding='utf-8',newline='\n')
+          PY
+          python .tmp/r318c/boxcars_patch.py "$BOXCARS"
+          git -C "$BOXCARS" add -N examples/r3_18c_probe.rs
+          git -C "$BOXCARS" diff --check
+          git -C "$BOXCARS" diff --binary -- src/network/frame_decoder.rs examples/r3_18c_probe.rs Cargo.toml > r3_18c_boxcars_instrumentation.patch
+          sha256sum r3_18c_boxcars_instrumentation.patch > r3_18c_boxcars_instrumentation_sha256.txt
+          cargo check --manifest-path "$BOXCARS/Cargo.toml" --example r3_18c_probe
+          cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_18c_probe --quiet
+          echo 'R3_18C_BOXCARS_BUILD=PASS'
+
+      - name: Scan exact 47 replay lane and select loop-control witnesses
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r318c"
+          PROBE="$BOXCARS/target/debug/examples/r3_18c_probe"
+          test -x "$PROBE"
+          : > .tmp/r318c/oracle.log
+          while IFS= read -r rel; do
+            test -n "$rel"
+            MIMIR_R3_18C_LABEL="$rel" "$PROBE" "$PWD/$rel" >> .tmp/r318c/oracle.log 2>&1
+          done < .tmp/r318c/paths.txt
+          test "$(grep -c '^R3_18C_ORACLE_PARSE=PASS$' .tmp/r318c/oracle.log)" -eq 47
+          python tools/_tmp_r318c_analyze.py select \
+            .tmp/r318c/oracle.log \
+            .tmp/r318c/native_request.tsv \
+            r3_18c_selected_witnesses.json \
+            r3_18c_selection_summary.json
+          test -s .tmp/r318c/native_request.tsv
+          echo 'R3_18C_ORACLE_SCAN=PASS'
+
+      - name: Build and run native one-bit evidence probe twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p crates/mimir-replay/examples
+          cp tools/_tmp_r318c_native_probe.rs crates/mimir-replay/examples/_tmp_r318c_probe.rs
+          cargo fmt --all
+          cargo build --locked -p mimir-replay --example _tmp_r318c_probe
+          target/debug/examples/_tmp_r318c_probe .tmp/r318c/native_request.tsv | tee .tmp/r318c/native1.log
+          target/debug/examples/_tmp_r318c_probe .tmp/r318c/native_request.tsv > .tmp/r318c/native2.log
+          cmp .tmp/r318c/native1.log .tmp/r318c/native2.log
+          grep -q '^R3_18C_NATIVE' .tmp/r318c/native1.log
+          rm crates/mimir-replay/examples/_tmp_r318c_probe.rs
+          git checkout -- crates/mimir-replay/src crates/mimir-replay/tests
+          echo 'R3_18C_NATIVE_REPEATABILITY=PASS'
+
+      - name: R3.18B fail-closed regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-replay --test r3_18b_single_k1_property
+          echo 'R3_18C_R318B_NEGATIVE_REGRESSION=PASS'
+
+      - name: Compare native one-bit evidence with oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/_tmp_r318c_analyze.py compare \
+            r3_18c_selected_witnesses.json \
+            .tmp/r318c/native1.log \
+            r3_18c_selection_summary.json \
+            "$PWD"
+          grep -Fx 'R3_18C_EVIDENCE=PASS' r3_18c_aggregate.txt
+          grep -Fx 'R3_18C_MISMATCH_COUNT=0' r3_18c_aggregate.txt
+          echo 'R3_18C_NATIVE_ORACLE_COMPARE=PASS'
+
+      - name: Privacy, hard-stop, and mutation gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/tests/r3_18b_single_k1_property.rs")" = "$R318B_TEST_BLOB"
+          git diff --exit-code "$BASE_MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts
+          test -z "$(git ls-files --others --exclude-standard -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts)"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          selected=json.loads(Path('r3_18c_selected_witnesses.json').read_text(encoding='utf-8'))
+          forbidden={'window_hex','raw_payload','player_name','account_name','title_text'}
+          for row in selected:
+              bad=forbidden & set(row)
+              if bad: raise SystemExit(f'privacy-forbidden selected keys: {bad}')
+              if len(row['payload_sha256']) != 64 or len(row['loop_bit_sha256']) != 64:
+                  raise SystemExit('missing durable hashes')
+          comparison=json.loads(Path('r3_18c_comparison.json').read_text(encoding='utf-8'))
+          if comparison['native_oracle_mismatch_count'] != 0:
+              raise SystemExit('native/oracle mismatch')
+          if comparison['second_stream_bits_consumed'] != 0 or comparison['second_payload_bits_consumed'] != 0:
+              raise SystemExit('second-property hard stop violated')
+          print('R3_18C_PRIVACY_HARD_STOP=PASS')
+          PY
+          sha256sum \
+            r3_18c_source_scope.txt \
+            r3_18c_replay_identity.tsv \
+            r3_18c_boxcars_instrumentation_sha256.txt \
+            r3_18c_selected_witnesses.json \
+            r3_18c_selection_summary.json \
+            r3_18c_comparison.json \
+            r3_18c_aggregate.txt > r3_18c_receipt_sha256.txt
+          echo 'R3_18C_MUTATION_GATE=PASS production/Cargo/fixture/corpus/support=0/0/0/0/0'
+
+      - name: Upload privacy-safe R3.18C evidence
+        id: evidence_upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: r318c-loop-control-evidence
+          path: |
+            r3_18c_source_scope.txt
+            r3_18c_replay_identity.tsv
+            r3_18c_boxcars_instrumentation_sha256.txt
+            r3_18c_selected_witnesses.json
+            r3_18c_selection_summary.json
+            r3_18c_comparison.json
+            r3_18c_aggregate.txt
+            r3_18c_receipt_sha256.txt
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Emit immutable R3.18C receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.evidence_upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.evidence_upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          echo "R3_18C_AUTHORITY_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18C_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18C_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18C_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          cat r3_18c_selected_witnesses.json
+          cat r3_18c_selection_summary.json
+          cat r3_18c_comparison.json
+          cat r3_18c_aggregate.txt
+          cat r3_18c_receipt_sha256.txt
+          echo 'R3_18C_RECEIPT_STREAM=PASS'
