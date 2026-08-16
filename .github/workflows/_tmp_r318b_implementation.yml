@@ -1,0 +1,168 @@
+name: R3.18B Single K1 Property Implementation
+
+on:
+  push:
+    branches:
+      - agent/r318b-single-k1-property
+
+permissions:
+  contents: write
+
+jobs:
+  implementation:
+    runs-on: windows-latest
+    timeout-minutes: 80
+    env:
+      BASE_MAIN: f12365b43029f19f3ab1dd889e651f9781b0655e
+      PROD_SHA: 492cc8218be7abc6db8f75acaea33d009ab2f175
+      PROD_TREE: a66c47d7fb58da508188e64d42141987a0021a07
+      LIB_BLOB: 0161ba7fdcb6e395a2c972061ff6f56d07b8b5e8
+      K4_GROUP_BLOB: 103503e25bc5af48381df021ab58133694fcece6
+      K4_NATIVE_BLOB: a9c41f3bb11343165183ac9c815ab8fdf085936c
+      K4_TEST_BLOB: 70437244bb49224281ee3a2e745e7b8a4b7a093a
+      R318A_AUTH_HEAD: 12ee215fd843260d5ece14f27aa1171cb862f49e
+      R318A_RUN: '31941400273'
+      R318A_CI_RUN: '31941400276'
+      R318A_ARTIFACT: '9262129856'
+
+    steps:
+      - name: Checkout disposable implementation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze fresh main and R3.18A authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r318a-single-property-boundary
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/k4_admitted_groups.rs")" = "$K4_GROUP_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/k4_native.rs")" = "$K4_NATIVE_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs")" = "$K4_TEST_BLOB"
+          test "$(git rev-parse origin/evidence/r318a-single-property-boundary)" = "$R318A_AUTH_HEAD"
+          grep -Fq 'CURRENT_PASS:' MIMIR_CONTINUE_HERE.md
+          grep -Fq 'R3.18B — minimal native existing-actor single-property K1 composition' MIMIR_CONTINUE_HERE.md
+          grep -Fq '**Outcome:** **A — ADMITTED / EVIDENCE COMPLETE**' docs/continuity/MIMIR_R3_18A_DECISION.md
+          grep -Fq '**Property loop:** forbidden' docs/continuity/MIMIR_R3_18B_EXECUTION_SPEC.md
+          echo 'R3_18B_FROZEN_AUTHORITY=PASS'
+
+      - name: Apply minimal production patch from exact main
+        shell: pwsh
+        run: |
+          $patcher = Join-Path $env:RUNNER_TEMP 'r318b_patch.py'
+          Copy-Item tools/_tmp_r318b_patch.py $patcher -Force
+          git reset --hard $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python $patcher
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_PATCH_APPLIED=PASS'
+
+      - name: Enforce exact two-file production scope
+        shell: pwsh
+        run: |
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18b_single_k1_property.rs'
+          ) | Sort-Object
+          $actual = @(
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          ) | Where-Object { $_ } | Sort-Object -Unique
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) {
+            Write-Host 'Expected:'; $expected
+            Write-Host 'Actual:'; $actual
+            $delta | Format-Table
+            exit 1
+          }
+          $forbidden = @(git diff --name-only -- Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          Write-Host 'R3_18B_PRODUCTION_SCOPE=PASS files=2 Cargo=0 fixture=0 corpus=0 support=0 workflow=0'
+
+      - name: Verify composition source boundary independently
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          name='pub fn decode_replay_network_existing_actor_single_primitive_property_v1('
+          start=s.index(name)
+          end=s.index('/// Decode exactly one R3.17B-admitted primitive scalar payload.', start)
+          block=s[start:end]
+          assert block.count('decode_replay_network_existing_actor_first_property_header_v1(')==1
+          assert block.count('decode_replay_network_primitive_scalar_v1(')==1
+          for tag in ['Boolean','Byte','Enum','Float','Int','Int64']:
+              assert f'ReplayNetworkAttributeTagV1::{tag}' in block
+          for forbidden in ['decode_replay_network_k2', 'decode_replay_network_k3', 'decode_replay_network_k4_v1', 'while ', 'for ']:
+              assert forbidden not in block, forbidden
+          assert 'unsupported-tag' in block
+          assert 'property-absent' in block
+          assert 'header.stop_bit != payload_start_bit' in block
+          assert 'scalar.stop_bit != scalar.payload_end_bit' in block
+          test=Path('crates/mimir-replay/tests/r3_18b_single_k1_property.rs').read_text(encoding='utf-8')
+          for anchor in ['all_six_k1_tags', 'r3_18a_shaped_real_context_int_62', 'trailing_and_next_property_poison_bits', 'non_k1_resolved_tag', 'payload_truncation', 'repeatability']:
+              assert anchor in test
+          print('R3_18B_SOURCE_BOUNDARY=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Focused R3.18B tests
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay --test r3_18b_single_k1_property
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_FOCUSED_TESTS=PASS'
+
+      - name: Full mimir-replay suite
+        shell: pwsh
+        run: |
+          cargo test --locked -p mimir-replay
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_MIMIR_REPLAY=PASS'
+
+      - name: Workspace check test clippy
+        shell: pwsh
+        run: |
+          cargo check --locked --workspace --all-targets
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked --workspace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_WORKSPACE=PASS'
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_FULL_VERIFIER=PASS'
+
+      - name: Publish clean R3.18B production candidate via Git plumbing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            crates/mimir-replay/src/lib.rs \
+            crates/mimir-replay/tests/r3_18b_single_k1_property.rs
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Implement R3.18B single existing-actor K1 property composition' | git commit-tree "$tree" -p "$BASE_MAIN")"
+          echo "R3_18B_CANDIDATE=$commit"
+          echo "R3_18B_TREE=$tree"
+          echo "R3_18B_PARENT=$BASE_MAIN"
+          echo "R3_18B_LIB_BLOB=$(git rev-parse "${commit}:crates/mimir-replay/src/lib.rs")"
+          echo "R3_18B_TEST_BLOB=$(git rev-parse "${commit}:crates/mimir-replay/tests/r3_18b_single_k1_property.rs")"
+          git diff-tree --no-commit-id --name-status -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-18b-single-k1-property-clean"
+          echo 'R3_18B_CANDIDATE_PUBLICATION=PASS'
