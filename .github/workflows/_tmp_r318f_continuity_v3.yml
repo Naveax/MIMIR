@@ -1,0 +1,219 @@
+name: R3.18F Continuity Closure V3
+
+on:
+  push:
+    branches:
+      - agent/r318f-continuity-sync-v3
+
+permissions:
+  contents: write
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 85
+    env:
+      CANONICAL_BASE: 3a10ee59ba42722b59ca6c5b816205f6e5d603ea
+      CANONICAL_TREE: ff8049a18431977e054652a0836217fcc39d84a7
+      PROD: 4adadd185783954c7fb6ad67db14b77b377cdde5
+      PROD_TREE: 67b1969eaff49d2913b88b3921f27b1bd7fe8193
+      LIB_BLOB: 42bc3fd3e8ea6bd1d15df82e4c6d8809b8443662
+      R318B_TEST_BLOB: 927e9a2c834115d1c918fa96fb6d0690bd03965e
+      R318D_TEST_BLOB: 2f5b188cc5b3ce8200c9961d964f1dc66b3ab49b
+      R318F_SPEC_BLOB: e6b92ea5628f107112a088421f318cd45a384e87
+      EVIDENCE_HEAD: 27a855a9cfb82a0294dd1601e4da01c9fdfad264
+      EVIDENCE_TREE: 4058b67da82e9fbfcc078e975b26d186ec68e6f0
+      EVIDENCE_RUN: '31951039411'
+      EVIDENCE_JOB: '95174417526'
+      NORMAL_CI_RUN: '31951039378'
+      NORMAL_CI_JOB: '95174417478'
+      ARTIFACT_ID: '9264673141'
+      ARTIFACT_DIGEST: e31e09abf322b6458f9034b06efe5502bb3b7f1011dfb08c9ffd6d1b1cd1b361
+      V1_GENERATOR_BLOB: 5617a333dfdab62fb5146a384e00f197b5353065
+
+    steps:
+      - name: Checkout disposable V3 branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact Git authority and immutable receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r318f-second-property-header candidate/r3-18d-control-bit-clean agent/r318f-continuity-sync
+          test "$(git rev-parse origin/main)" = "$CANONICAL_BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$CANONICAL_TREE"
+          test "$(git rev-parse origin/evidence/r318f-second-property-header)" = "$EVIDENCE_HEAD"
+          test "$(git rev-parse origin/evidence/r318f-second-property-header^{tree})" = "$EVIDENCE_TREE"
+          test "$(git rev-parse origin/candidate/r3-18d-control-bit-clean)" = "$PROD"
+          test "$(git rev-parse "${PROD}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${CANONICAL_BASE}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${CANONICAL_BASE}:crates/mimir-replay/tests/r3_18b_single_k1_property.rs")" = "$R318B_TEST_BLOB"
+          test "$(git rev-parse "${CANONICAL_BASE}:crates/mimir-replay/tests/r3_18d_next_property_control.rs")" = "$R318D_TEST_BLOB"
+          test "$(git rev-parse "${CANONICAL_BASE}:docs/continuity/MIMIR_R3_18F_EXECUTION_SPEC.md")" = "$R318F_SPEC_BLOB"
+          test "$(git rev-parse origin/agent/r318f-continuity-sync:tools/_tmp_r318f_continuity.py)" = "$V1_GENERATOR_BLOB"
+          test -z "$(git diff --name-only "$PROD" "$CANONICAL_BASE" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts)"
+          printf '%s\n' \
+            "R3_18F_EVIDENCE_RUN=$EVIDENCE_RUN" \
+            "R3_18F_EVIDENCE_JOB=$EVIDENCE_JOB" \
+            "R3_18F_NORMAL_CI_RUN=$NORMAL_CI_RUN" \
+            "R3_18F_NORMAL_CI_JOB=$NORMAL_CI_JOB" \
+            "R3_18F_ARTIFACT=$ARTIFACT_ID" \
+            "R3_18F_ARTIFACT_DIGEST=sha256:$ARTIFACT_DIGEST"
+          echo 'R3_18F_CONTINUITY_V3_AUTHORITY=PASS'
+
+      - name: Patch immutable V1 generator with corrected final receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/r318f_continuity_v1.py"
+          dst="$RUNNER_TEMP/r318f_continuity_v3.py"
+          git show origin/agent/r318f-continuity-sync:tools/_tmp_r318f_continuity.py > "$src"
+          python tools/_tmp_r318f_continuity_v3_patch.py "$src" "$dst"
+          python -m py_compile "$dst"
+          echo 'R3_18F_CONTINUITY_V3_GENERATOR_PATCH=PASS'
+
+      - name: Generate closure from exact canonical main
+        shell: pwsh
+        run: |
+          $generator = Join-Path $env:RUNNER_TEMP 'r318f_continuity_v3.py'
+          git reset --hard $env:CANONICAL_BASE
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python $generator
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $files = @(
+            'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18F_DECISION.md','docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md'
+          )
+          foreach ($f in $files) {
+            $content = Get-Content $f -Raw
+            $content = [regex]::Replace($content, '[ \t]+(?=\r?$)', '', 'Multiline')
+            $path = (Resolve-Path $f).Path
+            [IO.File]::WriteAllText($path, $content.Replace("`r`n","`n"), [Text.UTF8Encoding]::new($false))
+          }
+          Write-Host 'R3_18F_CONTINUITY_V3_GENERATION=PASS'
+
+      - name: Enforce exact six-file scope and handbook integrity
+        shell: pwsh
+        run: |
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18F_DECISION.md','docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $actual = @(git diff --name-only; git ls-files --others --exclude-standard) | Where-Object { $_ } | Sort-Object -Unique
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) { $delta | Format-Table; exit 1 }
+          $forbidden = @(git diff --name-only -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          $numstat = @(git diff --numstat $env:CANONICAL_BASE -- MIMIR_CONTINUE_HERE.md)
+          if ($numstat.Count -ne 1) { $numstat; exit 1 }
+          $parts = $numstat[0] -split "`t"; $adds=[int]$parts[0]; $dels=[int]$parts[1]
+          if ($adds -gt 300 -or $dels -gt 240) { throw "Handbook diff unexpectedly large: +$adds -$dels" }
+          $baseLines=@(git show "$env:CANONICAL_BASE`:MIMIR_CONTINUE_HERE.md"); $newLines=@(Get-Content MIMIR_CONTINUE_HERE.md)
+          if ([math]::Abs($newLines.Count-$baseLines.Count) -gt 300) { throw "Handbook line-count drift: base=$($baseLines.Count) new=$($newLines.Count)" }
+          $handbook=Get-Content MIMIR_CONTINUE_HERE.md -Raw
+          foreach ($anchor in @('# 9.7 Exact-SHA validation','# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS','# 13. CURRENT PASS CHECKLIST — R3.14A','**Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA`')) {
+            if (-not $handbook.Contains($anchor)) { throw "Preserved handbook anchor missing: $anchor" }
+          }
+          Write-Host "R3_18F_CONTINUITY_V3_SCOPE=PASS files=6 handbook=+$adds/-$dels production=0"
+
+      - name: Verify corrected canonical semantics
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+          prod='4adadd185783954c7fb6ad67db14b77b377cdde5'
+          state=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          main=Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          graph=Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          current=Path('docs/continuity/MIMIR_CURRENT_STATE.md').read_text(encoding='utf-8')
+          decision=Path('docs/continuity/MIMIR_R3_18F_DECISION.md').read_text(encoding='utf-8')
+          spec=Path('docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md').read_text(encoding='utf-8')
+          all_text='\n'.join([main,graph,current,decision,spec])
+          assert state['last_production_code_sha']==prod
+          assert state['last_production_milestone']=='R3.18D'
+          assert state['last_completed_read_only_audit']=='R3.18F'
+          assert state['last_completed_evidence_pass']=='R3.18F'
+          assert state['current_pass']=='R3.18G'
+          r=state['r3_18f']
+          assert r['evidence_head_sha']=='27a855a9cfb82a0294dd1601e4da01c9fdfad264'
+          assert r['evidence_tree']=='4058b67da82e9fbfcc078e975b26d186ec68e6f0'
+          assert r['authority_run']==31951039411 and r['authority_job']==95174417526
+          assert r['same_head_normal_ci_run']==31951039378 and r['same_head_normal_ci_job']==95174417478
+          assert r['artifact_id']==9264673141
+          assert r['artifact_sha256']=='e31e09abf322b6458f9034b06efe5502bb3b7f1011dfb08c9ffd6d1b1cd1b361'
+          assert r['continuation_header_native_success']=='47/47'
+          assert r['terminator_one_bit_stop_exact']=='47/47'
+          assert r['header_truncation_rows']==32
+          assert r['native_oracle_mismatch_count']==0
+          assert r['second_payload_bits_consumed']==0
+          assert r['third_property_bits_consumed']==0
+          assert r['continuation_attribute_tag_counts']=={'Int':46,'String':1}
+          assert r['source_scope_sha256']=='492f63c3cfcb27967426816f97858c8f4ad1d9ebb6ce40719f6d829ff3f0ea55'
+          assert r['boxcars_instrumentation_receipt_sha256']=='ba0f63ca5cd09ff48e7f70141f6cc78dacc2307502af6c1e09a9695b2ba52e97'
+          assert r['selected_witnesses_sha256']=='99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7'
+          assert r['selection_summary_sha256']=='bd6c4d25b02533626485e4fdb000034a39e7c2b5f559d8a09a8a4eb5e5ca80d4'
+          assert r['comparison_sha256']=='53f4a9aefbfcc3d02e5a1501d2849455052c01612ddd299e795e89ad2938ddcd'
+          assert r['aggregate_sha256']=='57c90cb3617461aea1a078a7b0f72ae301fd35fc9d7c4f9fe56de6d7633a4a04'
+          for anchor in ['CURRENT_PASS:\n  R3.18G','R3_18F_EVIDENCE_CLOSURE:','R3_18G_OPEN_BOUNDARY:','# 9.7 Exact-SHA validation','# 13. CURRENT PASS CHECKLIST — R3.14A']:
+              assert anchor in main, anchor
+          assert 'R3.18F second-property-header evidence decision' in graph
+          assert 'R3.18G active bounded second-property-header production spec' in graph
+          assert '**Outcome:** **A — ADMITTED / READ-ONLY EVIDENCE COMPLETE**' in decision
+          assert '**Status:** ACTIVE' in spec
+          assert '**Pass type:** production implementation' in spec
+          assert '**Second-property payload decode:** forbidden' in spec
+          assert '**Third property / repeated loop:** forbidden' in spec
+          assert '**Generic chainable property cursor:** forbidden' in spec
+          assert 'Int' in spec and 'String' in spec
+          assert 'require resolved tag in {Int, String}' in spec
+          assert 'String' in spec and 'payload' in spec and 'unconsumed' in spec
+          assert 'R3.18G' in current and prod in current
+          forbidden=[
+              '9266197133','4058b67d72219cbbf0534c6002049202fab487f3',
+              'Byte=12','Enum=1','Float=4','Int=28','Int64=2',
+              '26 real truncation negatives','26 truncation negatives',
+              'only Byte/Enum/Float/Int/Int64','explicit five-tag allowlist',
+              'require resolved tag in {Byte, Enum, Float, Int, Int64}',
+          ]
+          for stale in forbidden:
+              assert stale not in all_text, stale
+          print('R3_18F_CONTINUITY_V3_SEMANTICS=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean V3 continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$CANONICAL_BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_R3_18F_DECISION.md docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Close R3.18F corrected second-header evidence and open R3.18G bounded production composition' | git commit-tree "$tree" -p "$CANONICAL_BASE")"
+          echo "R3_18F_CONTINUITY_V3_CANDIDATE=$commit"
+          echo "R3_18F_CONTINUITY_V3_TREE=$tree"
+          echo "R3_18F_CONTINUITY_V3_PARENT=$CANONICAL_BASE"
+          git diff-tree --no-commit-id --numstat -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-18f-continuity-clean-v3"
+          echo 'R3_18F_CONTINUITY_V3_PUBLICATION=PASS'
