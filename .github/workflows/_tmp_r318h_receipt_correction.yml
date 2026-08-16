@@ -1,0 +1,109 @@
+name: R3.18H Receipt Correction Generator
+
+on:
+  push:
+    branches:
+      - automation/r318h-receipt-correction-v1
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  correct:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      MAIN: 3e1fc68eea41378bac07992b5ccfc05485edd4c6
+      MAIN_TREE: 0d21e6da9022e2db4a8450722a9d39d1234b3adc
+      PROD: 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+      CANDIDATE_BRANCH: continuity/r318h-receipt-correction-v1
+      LIVE_API_DIGEST: sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
+    steps:
+      - name: Checkout correction lane
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze authority and build exact six-file candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          test "$(git rev-parse "$MAIN^{tree}")" = "$MAIN_TREE"
+          cp tools/_tmp_r318h_receipt_correction.py /tmp/r318h_receipt_correction.py
+          git checkout --detach "$MAIN"
+          git switch -c "$CANDIDATE_BRANCH"
+          python3 /tmp/r318h_receipt_correction.py
+
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_R3_18H_DECISION.md \
+            docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+
+          expected=$(cat <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_R3_18H_DECISION.md
+          docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+          EOF
+          )
+          actual=$(git diff --cached --name-only "$MAIN" | sort)
+          test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
+          test "$(git diff --cached --name-only "$MAIN" | wc -l)" -eq 6
+
+          grep -Fq '# 9.7 Exact-SHA validation' MIMIR_CONTINUE_HERE.md
+          grep -Fq '# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS' MIMIR_CONTINUE_HERE.md
+          grep -Fq '# 13. CURRENT PASS CHECKLIST — R3.14A' MIMIR_CONTINUE_HERE.md
+          grep -Fq '# CURRENT PASS CHECKLIST — R3.18I' MIMIR_CONTINUE_HERE.md
+          grep -Fq 'R3_18H_RECEIPT_CORRECTION:' MIMIR_CONTINUE_HERE.md
+          grep -Fq "$LIVE_API_DIGEST" MIMIR_CONTINUE_HERE.md
+          grep -Fq 'R3.18I v1 authority head' docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          assert d['current_pass']=='R3.18I'
+          assert d['last_completed_read_only_audit']=='R3.18H'
+          c=d['r3_18h_receipt_correction']
+          assert c['status'].startswith('documentary correction only')
+          assert c['r3_18i_v1_result']=='FAILED-BEFORE-EVIDENCE'
+          assert c['artifact_id']==9267045757
+          assert c['artifact_size_bytes']==18658
+          assert c['artifact_api_digest']=='sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79'
+          assert c['final_job_receipt_matches_live_inner_hashes'] is True
+          assert c['production_authority_unchanged']=='2b608aafae97b10ecbc884f99e4bd4a73abf7a5c'
+          PY
+
+          if git diff --cached --name-only "$MAIN" -- crates Cargo.toml Cargo.lock external_fixtures fixtures corpus support tools scripts .github | grep -q .; then
+            echo 'forbidden production/support mutation' >&2
+            exit 1
+          fi
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+      - name: Full repository verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+
+      - name: Commit and publish clean correction candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Correct R3.18H live artifact receipt'
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          test "$(git diff --name-only "$MAIN" HEAD | wc -l)" -eq 6
+          test -z "$(git diff --name-only "$MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures fixtures corpus support tools scripts .github)"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18H_RECEIPT_CORRECTION_CANDIDATE=$(git rev-parse HEAD)"
+          echo "R3_18H_RECEIPT_CORRECTION_TREE=$(git rev-parse HEAD^{tree})"
+          echo 'R3_18H_RECEIPT_CORRECTION_GENERATION=PASS'
