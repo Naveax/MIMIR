@@ -1,0 +1,110 @@
+name: R3.18G Published Main Validation
+
+on:
+  push:
+    branches: [validation/r318g-second-header-published-main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 110
+    env:
+      PREVIOUS: 289c9cec0b709a27665370871dc7480b5df93270
+      PUBLISHED: 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+      TREE: b130caf211ce72577870c70d6c0d87cd006e1b29
+      LIB_BLOB: 5e2b9e5be9c6692e499abc97a89655c603728cef
+      TEST_BLOB: d56bf97d250b426e23fec4610cbb9ead6ec8a142
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PUBLISHED"
+          test "$(git rev-parse origin/main^{tree})" = "$TREE"
+          git reset --hard "$PUBLISHED"
+          test "$(git rev-parse HEAD)" = "$PUBLISHED"
+          test "$(git rev-parse HEAD^{tree})" = "$TREE"
+          test "$(git rev-parse HEAD^)" = "$PREVIOUS"
+          test "$(git rev-list --count "$PREVIOUS..$PUBLISHED")" = "1"
+          test "$(git rev-list --count "$PUBLISHED..$PREVIOUS")" = "0"
+          test "$(git rev-parse "$PUBLISHED:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PUBLISHED:crates/mimir-replay/tests/r3_18g_second_property_header.rs")" = "$TEST_BLOB"
+          echo 'R3_18G_PUBLISHED_IDENTITY=PASS'
+
+      - name: Verify exact production scope and boundary
+        shell: pwsh
+        run: |
+          $expected=@('crates/mimir-replay/src/lib.rs','crates/mimir-replay/tests/r3_18g_second_property_header.rs')|Sort-Object
+          $actual=@(git diff --name-only $env:PREVIOUS $env:PUBLISHED)|Where-Object{$_}|Sort-Object
+          if(@(Compare-Object $expected $actual).Count -ne 0){Compare-Object $expected $actual;exit 1}
+          if(@(git diff --name-only $env:PREVIOUS $env:PUBLISHED -- Cargo.toml Cargo.lock external_fixtures test_corpus docs tools scripts .github).Count -ne 0){throw 'forbidden production/support diff'}
+          git diff --check $env:PREVIOUS $env:PUBLISHED
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          @'
+          import re
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          b='// R3.18G BEGIN bounded second-property header composition'; e='// R3.18G END bounded second-property header composition'
+          assert s.count(b)==1 and s.count(e)==1
+          block=s.split(b,1)[1].split(e,1)[0]
+          own='decode_replay_network_existing_actor_after_first_primitive_second_property_header_v1'
+          calls=re.findall(r'\b(decode_replay_network_[A-Za-z0-9_]+)\s*\(',block)
+          assert calls.count(own)==1
+          calls=[x for x in calls if x!=own]
+          assert calls==['decode_replay_network_existing_actor_after_first_primitive_property_control_v1','decode_replay_network_existing_actor_first_property_header_v1'], calls
+          assert block.index('if !control.next_property_present') < block.index('decode_replay_network_existing_actor_first_property_header_v1(')
+          assert 'ReplayNetworkAttributeTagV1::Int | ReplayNetworkAttributeTagV1::String' in block
+          assert 'second_header: None' in block and 'second_header: Some(header)' in block
+          assert 'header.stop_bit != payload_start_bit' in block
+          for x in ['decode_replay_network_primitive_scalar_v1','decode_replay_network_text','decode_replay_network_k2','decode_replay_network_k3','decode_replay_network_k4']:
+              assert x not in block,x
+          code='\n'.join(line.split('//',1)[0] for line in block.splitlines())
+          assert re.search(r'\bwhile\b',code) is None and re.search(r'\bfor\b',code) is None
+          print('R3_18G_PUBLISHED_SOURCE_BOUNDARY=PASS')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Focused tests
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay --test r3_18g_second_property_header
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full mimir-replay
+        shell: pwsh
+        run: |
+          cargo test -p mimir-replay
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace check
+        shell: pwsh
+        run: |
+          cargo check --workspace
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace test
+        shell: pwsh
+        run: |
+          cargo test --workspace
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Workspace clippy
+        shell: pwsh
+        run: |
+          cargo clippy --workspace --all-targets -- -D warnings
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
