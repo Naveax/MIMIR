@@ -1,0 +1,119 @@
+name: R3.18D Continuity Published Main V3
+
+on:
+  push:
+    branches:
+      - validation/r318d-continuity-published-main-v3
+
+jobs:
+  published-main:
+    runs-on: windows-latest
+    timeout-minutes: 85
+    env:
+      PREVIOUS_MAIN: 4adadd185783954c7fb6ad67db14b77b377cdde5
+      PUBLISHED_MAIN: dd7d9550910a0ad08cd5f1a171d782b5dd4e954a
+      PUBLISHED_TREE: 250571af52c627980b0314814cdacb7881733e9c
+
+    steps:
+      - name: Checkout validation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reset to exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PUBLISHED_MAIN"
+          test "$(git rev-parse "${PUBLISHED_MAIN}^{tree}")" = "$PUBLISHED_TREE"
+          test "$(git rev-parse "${PUBLISHED_MAIN}^")" = "$PREVIOUS_MAIN"
+          git reset --hard "$PUBLISHED_MAIN"
+          test "$(git rev-parse HEAD)" = "$PUBLISHED_MAIN"
+          echo 'R3_18D_CONTINUITY_PUBLISHED_IDENTITY=PASS'
+
+      - name: Enforce published six-file diff and handbook integrity
+        shell: pwsh
+        run: |
+          $expected=@(
+            'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18D_DECISION.md','docs/continuity/MIMIR_R3_18E_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $actual=@(git diff --name-only "$env:PREVIOUS_MAIN" "$env:PUBLISHED_MAIN") | Where-Object { $_ } | Sort-Object -Unique
+          $delta=@(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) { $delta | Format-Table; exit 1 }
+          $forbidden=@(git diff --name-only "$env:PREVIOUS_MAIN" "$env:PUBLISHED_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          git diff --check "$env:PREVIOUS_MAIN" "$env:PUBLISHED_MAIN"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $numstat=@(git diff --numstat "$env:PREVIOUS_MAIN" "$env:PUBLISHED_MAIN" -- MIMIR_CONTINUE_HERE.md)
+          if ($numstat.Count -ne 1) { $numstat; exit 1 }
+          $parts=$numstat[0] -split "`t"; $adds=[int]$parts[0]; $dels=[int]$parts[1]
+          if ($adds -ne 47 -or $dels -ne 29) { throw "Unexpected handbook exact diff: +$adds -$dels" }
+          $baseLines=@(git show "$env:PREVIOUS_MAIN`:MIMIR_CONTINUE_HERE.md"); $newLines=@(Get-Content MIMIR_CONTINUE_HERE.md)
+          if ([math]::Abs($newLines.Count-$baseLines.Count) -gt 100) { throw 'Handbook line-count drift' }
+          $handbook=Get-Content MIMIR_CONTINUE_HERE.md -Raw
+          foreach ($anchor in @('# 9.7 Exact-SHA validation','# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS','# 13. CURRENT PASS CHECKLIST — R3.14A')) {
+            if (-not $handbook.Contains($anchor)) { throw "Missing preserved anchor: $anchor" }
+          }
+          Write-Host 'R3_18D_CONTINUITY_PUBLISHED_SCOPE=PASS files=6 handbook=+47/-29'
+
+      - name: Verify published canonical semantics
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+          prod='4adadd185783954c7fb6ad67db14b77b377cdde5'
+          state=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          main=Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          graph=Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          current=Path('docs/continuity/MIMIR_CURRENT_STATE.md').read_text(encoding='utf-8')
+          decision=Path('docs/continuity/MIMIR_R3_18D_DECISION.md').read_text(encoding='utf-8')
+          spec=Path('docs/continuity/MIMIR_R3_18E_EXECUTION_SPEC.md').read_text(encoding='utf-8')
+          assert state['last_production_code_sha']==prod
+          assert state['last_production_milestone']=='R3.18D'
+          assert state['current_pass']=='R3.18E'
+          assert state['r3_18d']['production_sha']==prod
+          assert state['r3_18d']['control_bits_read']==1
+          assert state['r3_18d']['second_stream_bits_consumed']==0
+          assert state['r3_18d']['second_header_bits_consumed']==0
+          assert state['r3_18d']['second_payload_bits_consumed']==0
+          for anchor in ['CURRENT_PASS:\n  R3.18E','R3_18D_PRODUCTION_CLOSURE:','R3_18E_OPEN_BOUNDARY:','# 9.7 Exact-SHA validation','# 13. CURRENT PASS CHECKLIST — R3.14A']:
+              assert anchor in main, anchor
+          assert 'R3.18D next-property control-bit production decision' in graph
+          assert 'R3.18E active control-bit differential audit spec' in graph
+          assert '**Outcome:** **A — ADMITTED / PRODUCTION COMPLETE**' in decision
+          assert '**Status:** ACTIVE' in spec
+          assert '**Production mutation:** forbidden' in spec
+          assert '**Second property decode:** forbidden' in spec
+          assert '**Repeated property loop:** forbidden' in spec
+          assert 'R3.18E' in current and prod in current
+          print('R3_18D_CONTINUITY_PUBLISHED_SEMANTICS=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PUBLISHED_MAIN"
+          test "$(git rev-parse HEAD)" = "$PUBLISHED_MAIN"
+          test -z "$(git status --porcelain)"
+          echo "R3_18D_CONTINUITY_PUBLISHED_MAIN=$PUBLISHED_MAIN"
+          echo "R3_18D_CONTINUITY_PUBLISHED_TREE=$PUBLISHED_TREE"
+          echo 'R3_18D_CONTINUITY_PUBLISHED_VALIDATION=PASS'
