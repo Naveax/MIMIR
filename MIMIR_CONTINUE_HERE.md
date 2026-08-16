@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+  330ab01890a7c09eff1805e437584fb3be0a1134
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18G — minimal native existing-actor bounded second-property header composition
+  R3.18J — bounded native second-property payload composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18I — second-property payload evidence / Outcome A / 94/94 exact / Int=46 String=1 / 0 mismatch / third-property bits 0
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18I — second-property payload evidence / Outcome A / 47 terminators + 47 continuations / Int=46 String=1 / 0 mismatch / third property 0
 
 CURRENT_PASS:
-  R3.18J — bounded native second-property payload composition
+  R3.18K — published second-property payload real-replay differential audit
 
 CURRENT_PASS_TYPE:
-  production implementation / compose exactly one optional Int|String second payload after R3.18G; stop at exact payload end; no third-property access
+  read-only evidence / validate the published R3.18J API on the frozen R3.18I lane; no following property control access
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -87,8 +87,16 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18G exact-live validator 31957646865/95190626723 and published validator 31957892048/95191254798 are SUCCESS; payload decoder calls 0; property loops 0
   R3.18H closed Outcome A on the published R3.18G API: 94/94 frozen rows exact, 47 terminators + 47 continuations, Int=46/String=1, 32 real header truncation negatives, mismatch 0, second payload + third-property consumption 0/0
   R3.18I CLOSED Outcome A: 94/94 frozen rows exact; 47 terminators + 47 continuations; second payload Int=46/String=1; native/oracle mismatch 0; third-property bits consumed 0; production unchanged
-  R3.18J ACTIVE: may compose exactly one optional Int|String second payload through exact payload end using existing native decoders
-  NO third property/control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18J PRODUCTION at 330ab01890a7c09eff1805e437584fb3be0a1134: composes exactly one optional Int|String second payload through exact payload end; String is additionally net10/non-RL223 only
+  R3.18K ACTIVE read-only differential; following property/control bit remains unobserved
+  NO following/third property control/header/payload, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+R3_18J_PRODUCTION_CLOSURE:
+  Outcome A / production 330ab01890a7c09eff1805e437584fb3be0a1134 / tree 5540b6a86e53d243dabbabea223a5afa8657521c
+  lib/test blobs: ee9b0c71871df7ff52275581eb7ad4c023b8ba79 / c5a97c5a17ae2ea292790a020673dd26a0150024
+  implementation: 31975731621 / 95234808797 SUCCESS
+  candidate CI: 31975907582 / 95235253244 SUCCESS
+  published-main CI: 31976100231 / 95235742210 SUCCESS
+  second payload: Int + exact-context String only / following property bits consumed 0
 R3_18I_EVIDENCE_CLOSURE:
   Outcome A / read-only / production Rust unchanged at 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
   authority head: 45090a2c18fb517088bb411782bbaed0d7d68199

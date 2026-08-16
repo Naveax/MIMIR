@@ -474,3 +474,11 @@ Next exact pass: `R3.14E — native first-envelope differential audit`.
 - Evidence `45090a2c18fb517088bb411782bbaed0d7d68199`; workflow `31975063743/95233164711` SUCCESS; same-head CI `31975063703/95233164610` SUCCESS.
 - Artifact `9270842140` / `sha256:9890ed33780412a8900692a627b212d80428a08229f9f691d914c8def31e06e2`; 94/94 exact; 47 terminators + 47 continuations; Int=46/String=1; mismatch 0; third-property bits 0.
 - Next exact pass: R3.18J bounded native second-property payload composition.
+
+## 2026-08-17 — R3.18J published
+
+- Outcome A / production `330ab01890a7c09eff1805e437584fb3be0a1134`.
+- Exact two-file clean scope: lib + focused R3.18J test.
+- Implementation `31975731621/95234808797`, candidate CI `31975907582/95235253244`, published CI `31976100231/95235742210` SUCCESS.
+- Exactly one optional second payload is now production; Int plus exact-context String only; following property bit remains closed.
+- Next pass: R3.18K published API differential.

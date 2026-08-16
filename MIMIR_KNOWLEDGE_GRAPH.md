@@ -40,7 +40,8 @@ R3.18F second-property-header evidence decision                        |
 R3.18G bounded second-property-header production decision                    |
 R3.18H production second-header differential decision                         |
 R3.18I second-property payload evidence decision / Outcome A CLOSED            |
-R3.18J active bounded second-property payload implementation spec               |
+R3.18J bounded second-property payload production decision / CLOSED
+R3.18K active published second-payload differential spec               |
         |                               |
         +---------------+---------------+
                         |
@@ -111,13 +112,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 50. `docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md`
 51. `docs/continuity/MIMIR_R3_18I_DECISION.md`
 52. `docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md`
-53. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-54. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-55. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-56. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-57. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-58. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-59. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+53. `docs/continuity/MIMIR_R3_18J_DECISION.md`
+54. `docs/continuity/MIMIR_R3_18K_EXECUTION_SPEC.md`
+55. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+56. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+57. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+58. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+59. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+60. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+61. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
 - same-head normal CI `31975063703/95233164610` SUCCESS
@@ -125,6 +128,11 @@ scripts/verify_mimir_knowledge_archive.ps1
 - 94/94 exact; terminator=47; continuation=47; Int=46; String=1; mismatch=0; third-property bits=0
 - production unchanged at `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c`
 - next exact pass: R3.18J bounded native second-property payload composition
+### R3.18J bounded second payload: PRODUCTION / CLOSED
+- production `330ab01890a7c09eff1805e437584fb3be0a1134` / tree `5540b6a86e53d243dabbabea223a5afa8657521c`
+- implementation `31975731621/95234808797`, candidate CI `31975907582/95235253244`, published CI `31976100231/95235742210` SUCCESS
+- one optional second payload only; Int + exact-context String; following property bit remains closed
+- next exact pass: R3.18K published API differential
 
 ## Current replay-decoder chain
 

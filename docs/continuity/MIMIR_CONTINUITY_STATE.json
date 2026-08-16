@@ -3,14 +3,14 @@
   "updated_date": "2026-08-17",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "2b608aafae97b10ecbc884f99e4bd4a73abf7a5c",
-  "last_production_milestone": "R3.18G",
-  "last_production_milestone_name": "minimal native existing-actor bounded second-property header composition",
+  "last_production_code_sha": "330ab01890a7c09eff1805e437584fb3be0a1134",
+  "last_production_milestone": "R3.18J",
+  "last_production_milestone_name": "bounded native second-property payload composition",
   "last_completed_read_only_audit": "R3.18I",
-  "current_pass": "R3.18J",
-  "current_pass_kind": "production implementation / bounded second-property payload composition",
-  "current_pass_goal": "Publish exactly one optional second-property payload after the R3.18G bounded second header, only for the R3.18I-admitted Int/String surface, returning exact payload end without reading the third property_present bit.",
-  "current_pass_stop_boundary": "Terminators stop at R3.18G control end. Continuations may compose exactly one Int/String second payload through its exact end. The following property_present bit, third property, generalized loop, next actor/frame/lifecycle/raw-state/event/skill/runtime/export boundaries remain closed.",
+  "current_pass": "R3.18K",
+  "current_pass_kind": "read-only evidence / published second-property payload differential",
+  "current_pass_goal": "Differentially validate the published R3.18J optional second-payload API over the exact R3.18I 94-row lane with Int=46/String=1, exact semantic/end parity and zero following-property bits consumed.",
+  "current_pass_stop_boundary": "Stop exactly at the R3.18J second payload end. Do not read the following property_present bit; no third property, repeated loop, next actor/frame/lifecycle/raw-state/event/skill/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -134,7 +134,9 @@
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
     "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md",
     "docs/continuity/MIMIR_R3_18I_DECISION.md",
-    "docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18J_DECISION.md",
+    "docs/continuity/MIMIR_R3_18K_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18H",
   "last_completed_evidence_outcome": "A — published R3.18G differential exact on 94/94 frozen rows; 47 terminator + 47 continuation; Int=46/String=1; 32 truncation; mismatch 0; second payload/third property 0/0",
@@ -1491,5 +1493,28 @@
     "negative_controls_sha256": "272854040775158cd948dd313dcec5da7cdf6a238050e03b7fc20b8434f8962e",
     "aggregate_sha256": "6ff5e750569b4343518cb9c3fd0d8119f610d515b15434732097176482c8bbbc",
     "production_authority_unchanged": "2b608aafae97b10ecbc884f99e4bd4a73abf7a5c"
+  },
+  "r3_18j": {
+    "outcome": "A",
+    "kind": "production",
+    "production_sha": "330ab01890a7c09eff1805e437584fb3be0a1134",
+    "production_tree": "5540b6a86e53d243dabbabea223a5afa8657521c",
+    "lib_blob": "ee9b0c71871df7ff52275581eb7ad4c023b8ba79",
+    "focused_test_blob": "c5a97c5a17ae2ea292790a020673dd26a0150024",
+    "implementation_run": 31975731621,
+    "implementation_job": 95234808797,
+    "candidate_ci_run": 31975907582,
+    "candidate_ci_job": 95235253244,
+    "published_ci_run": 31976100231,
+    "published_ci_job": 95235742210,
+    "second_tags": [
+      "Int",
+      "String"
+    ],
+    "string_context": {
+      "net_version": 10,
+      "is_rl_223": false
+    },
+    "third_property_bits_consumed": 0
   }
 }
