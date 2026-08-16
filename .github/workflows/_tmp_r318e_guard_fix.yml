@@ -1,0 +1,39 @@
+name: R3.18E Oracle Count Guard Repair
+
+on:
+  push:
+    branches:
+      - evidence/r318e-control-differential
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Repair witness-only grep and self-remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/_tmp_r318e_evidence.yml')
+          s=p.read_text(encoding='utf-8')
+          old="test \"$(grep -c '^R3_18E_ORACLE' .tmp/r318e/oracle.log)\" -eq 94"
+          new="test \"$(grep -c $'^R3_18E_ORACLE\\t' .tmp/r318e/oracle.log)\" -eq 94"
+          if s.count(old) != 1:
+              raise SystemExit(f'expected one oracle count guard, got {s.count(old)}')
+          p.write_text(s.replace(old,new,1),encoding='utf-8',newline='\n')
+          print('R3_18E_ORACLE_COUNT_GUARD_REPAIR=PASS')
+          PY
+          git rm .github/workflows/_tmp_r318e_guard_fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/_tmp_r318e_evidence.yml
+          git diff --cached --check
+          git commit -m 'Repair R3.18E oracle witness count guard'
+          git push origin HEAD:evidence/r318e-control-differential
