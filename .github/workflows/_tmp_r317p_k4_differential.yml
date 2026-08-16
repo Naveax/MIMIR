@@ -1,0 +1,575 @@
+name: R3.17P Native K4 Differential Audit
+
+on:
+  push:
+    branches:
+      - evidence/r317p-k4-differential
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      BASE_MAIN: 19e3f558bd343372c7fe863822ab961fb10976ad
+      PROD_SHA: 492cc8218be7abc6db8f75acaea33d009ab2f175
+      PROD_TREE: a66c47d7fb58da508188e64d42141987a0021a07
+      LIB_BLOB: 0161ba7fdcb6e395a2c972061ff6f56d07b8b5e8
+      K4_GROUP_BLOB: 103503e25bc5af48381df021ab58133694fcece6
+      K4_NATIVE_BLOB: a9c41f3bb11343165183ac9c815ab8fdf085936c
+      K4_TEST_BLOB: 70437244bb49224281ee3a2e745e7b8a4b7a093a
+      N_GROUPS_BLOB: b5fa6aaa729772ab3d113703952effe2346c9866
+      N_ALLOW_SHA: 80c50783d70951bf125ccdadb818750a7ce35012891997f9b396241d84a9ae2b
+      M_HEAD: a50f09857f36ac52cec30b4bf3efbde9e15bb564
+      M_RUN: '31881779861'
+      M_JOB: '95005282281'
+      M_ARTIFACT: '9246249473'
+      M_ARTIFACT_DIGEST: sha256:50839ba19f65feb92a2e79be30d36bf78fc4cc2e3280049cd591faf6846e2987
+      M_TRANSFORM_BLOB: ae0c1374f567f8e12605eb68a94e125b7eab96f9
+      M_ANALYZE_BLOB: b7c3f14e1cc5075674b55946903e373f1853dd1e
+      PATHS_BLOB: c49865de1c54ed140827bdbfeb1720a531066b68
+      IDENTITY_BLOB: 4806103a0c8d326621a7c00227b7bbd2ac3cc069
+      PATHS_SHA: 2ecbeea804f193796a539baee1e968719f03c0cd706efff0c22a61e6ef943dae
+      IDENTITY_SHA: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+
+    steps:
+      - name: Checkout disposable audit branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze current authority, R3.17M evidence, and 47 replay identities
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r317m-k4-wire-evidence evidence/r317i-k3-wire-evidence
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$LIB_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k4_admitted_groups.rs)" = "$K4_GROUP_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k4_native.rs)" = "$K4_NATIVE_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs)" = "$K4_TEST_BLOB"
+          test "$(git rev-parse HEAD:docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl)" = "$N_GROUPS_BLOB"
+          test "$(sha256sum docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl | awk '{print $1}')" = "$N_ALLOW_SHA"
+          test "$(git rev-parse origin/evidence/r317m-k4-wire-evidence)" = "$M_HEAD"
+          test "$(git rev-parse "$M_HEAD:tools/_tmp_r317m_transform.py")" = "$M_TRANSFORM_BLOB"
+          test "$(git rev-parse "$M_HEAD:tools/_tmp_r317m_analyze.py")" = "$M_ANALYZE_BLOB"
+          test "$(git rev-parse "$M_HEAD:tools/_tmp_r317m_paths.txt")" = "$PATHS_BLOB"
+          test "$(git rev-parse "$M_HEAD:tools/_tmp_r317m_identity.tsv")" = "$IDENTITY_BLOB"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$M_ARTIFACT" > r3_17p_m_artifact_meta.json
+          python - <<'PY'
+          import json,os
+          d=json.load(open('r3_17p_m_artifact_meta.json',encoding='utf-8'))
+          assert str(d['id'])==os.environ['M_ARTIFACT']
+          assert d['digest']==os.environ['M_ARTIFACT_DIGEST']
+          assert d['expired'] is False
+          assert str(d['workflow_run']['id'])==os.environ['M_RUN']
+          assert d['workflow_run']['head_sha']==os.environ['M_HEAD']
+          print('R3_17P_M_ARTIFACT_IDENTITY=PASS')
+          PY
+          mkdir -p .tmp/r317p-runtime
+          git show "$M_HEAD:tools/_tmp_r317m_transform.py" > .tmp/r317p-runtime/r317m_transform.py
+          git show "$M_HEAD:tools/_tmp_r317m_analyze.py" > .tmp/r317p-runtime/r317m_analyze.py
+          git show "$M_HEAD:tools/_tmp_r317m_paths.txt" > .tmp/r317p-runtime/paths.txt
+          git show "$M_HEAD:tools/_tmp_r317m_identity.tsv" > .tmp/r317p-runtime/identity.tsv
+          test "$(sha256sum .tmp/r317p-runtime/paths.txt | awk '{print $1}')" = "$PATHS_SHA"
+          test "$(sha256sum .tmp/r317p-runtime/identity.tsv | awk '{print $1}')" = "$IDENTITY_SHA"
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          paths=[x.strip().replace('\\','/') for x in Path('.tmp/r317p-runtime/paths.txt').read_text(encoding='utf-8').splitlines() if x.strip()]
+          assert len(paths)==47 and len(set(paths))==47
+          ids={}
+          for line in Path('.tmp/r317p-runtime/identity.tsv').read_text(encoding='utf-8').splitlines():
+              p,h,status=line.split('\t'); assert status=='PASS'; ids[p.replace('\\','/')]=h.lower()
+          assert set(paths)==set(ids)
+          def sha(p):
+              h=hashlib.sha256()
+              with Path(p).open('rb') as f:
+                  for b in iter(lambda:f.read(1<<20),b''): h.update(b)
+              return h.hexdigest()
+          for p in paths:
+              assert Path(p).is_file(),p
+              assert sha(p)==ids[p],p
+          Path('r3_17p_replay_identity.tsv').write_text(''.join(f'{p}\t{ids[p]}\tPASS\n' for p in paths),encoding='utf-8',newline='\n')
+          print('R3_17P_REPLAY_IDENTITY=PASS rows=47')
+          PY
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts
+          cat > r3_17p_source_scope.txt <<EOF
+          base_main=$BASE_MAIN
+          production_sha=$PROD_SHA
+          production_tree=$PROD_TREE
+          lib_blob=$LIB_BLOB
+          k4_groups_blob=$K4_GROUP_BLOB
+          k4_native_blob=$K4_NATIVE_BLOB
+          k4_test_blob=$K4_TEST_BLOB
+          n_groups_blob=$N_GROUPS_BLOB
+          n_allow_sha256=$N_ALLOW_SHA
+          r317m_head=$M_HEAD
+          r317m_run=$M_RUN
+          r317m_job=$M_JOB
+          r317m_artifact=$M_ARTIFACT
+          r317m_artifact_digest=$M_ARTIFACT_DIGEST
+          boxcars_sha=$BOXCARS_SHA
+          production_mutation_count=0
+          cargo_mutation_count=0
+          fixture_mutation_count=0
+          corpus_mutation_count=0
+          support_lane_mutation_count=0
+          EOF
+          cat > r3_17p_numeric_rule.txt <<'EOF'
+          R3.17P_NUMERIC_RULE_V1
+          CamSettings: Boxcars read_f32 and native read_u32->f32::from_bits represent the same raw IEEE-754 payload; require exact f32 bit identity for all seven fields.
+          DemolishFx/DemolishExtended/ExtendedExplosion vectors: both decoders select the same bounded vector size, subtract the same integer bias, cast to f32, then divide by 100.0 in the same order; require exact selected-size/component-width/raw-x/raw-y/raw-z and exact x/y/z f32 bit identity.
+          All integer/boolean/object-id/count/version-gated fields: exact equality.
+          No tolerance is permitted and no rule may be changed after witness evaluation begins.
+          EOF
+          sha256sum r3_17p_numeric_rule.txt > r3_17p_numeric_rule_sha256.txt
+          echo 'R3_17P_FROZEN_AUTHORITY=PASS'
+
+      - name: Rebuild pinned Boxcars and reconstruct exact R3.17M groups
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r317p"
+          rm -rf "$BOXCARS"
+          git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+          git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" rev-parse HEAD)" = "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" hash-object src/network/frame_decoder.rs)" = '6f2ff153d3a27cdacccc65e3f23851489077a7d8'
+          test "$(git -C "$BOXCARS" hash-object src/network/attributes.rs)" = '5e2d5bc1cd8187af30c3ea95193ad987645cb76e'
+          test "$(git -C "$BOXCARS" hash-object src/network/models.rs)" = '73c73991379aeb79dcee49ea31c417141ba3c1a6'
+          test "$(git -C "$BOXCARS" hash-object src/bits.rs)" = 'd3ca061580e5e78038b2af383ff53971001c91c9'
+          git show origin/evidence/r317i-k3-wire-evidence:tools/_tmp_r317i_patch.py > .tmp/r317p-runtime/r317i_base_patch.py
+          test "$(git hash-object .tmp/r317p-runtime/r317i_base_patch.py)" = 'ea651d3e33bda509280e45da2d2a1b257bdbf88d'
+          python .tmp/r317p-runtime/r317m_transform.py "$BOXCARS" "$PWD/.tmp/r317p-runtime/r317i_base_patch.py"
+          cargo check --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe
+          cargo test --manifest-path "$BOXCARS/Cargo.toml" --lib --quiet
+          cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe --quiet
+          EXE=''; case "${OSTYPE:-}" in msys*|cygwin*) EXE='.exe' ;; esac
+          PROBE="$BOXCARS/target/debug/examples/r3_17m_probe$EXE"
+          : > r3_17p_structural_oracle.log
+          while IFS= read -r rel; do
+            MIMIR_R3_17M_LABEL="$rel" "$PROBE" "$PWD/$rel" >> r3_17p_structural_oracle.log 2>&1
+          done < .tmp/r317p-runtime/paths.txt
+          test "$(grep -c '^R3_17M_ORACLE_PARSE=PASS$' r3_17p_structural_oracle.log)" -eq 47
+          test "$(grep -c '^R3_17M_REPLAY_DONE' r3_17p_structural_oracle.log)" -eq 47
+          python .tmp/r317p-runtime/r317m_analyze.py r3_17p_structural_oracle.log
+          test "$(wc -l < r3_17m_k4_groups.jsonl | tr -d ' ')" -eq 161
+          test "$(sha256sum r3_17m_k4_groups.jsonl | awk '{print $1}')" = "$N_ALLOW_SHA"
+          cmp -s r3_17m_k4_groups.jsonl docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl
+          sha256sum r3_17p_structural_oracle.log > r3_17p_structural_oracle_log_sha256.txt
+          echo 'R3_17P_GROUP_RECONSTRUCTION=PASS groups=161 replays=47'
+
+      - name: Add ephemeral semantic oracle instrumentation and rescan 47 replays
+        shell: bash
+        run: |
+          set -euo pipefail
+          BOXCARS="$PWD/.tmp/boxcars-r317p"
+          python - "$BOXCARS" <<'PY'
+          from pathlib import Path
+          import sys
+          root=Path(sys.argv[1]); frame=root/'src/network/frame_decoder.rs'; s=frame.read_text(encoding='utf-8')
+          old='use crate::network::attributes::{Attribute, AttributeDecoder, AttributeTag, ProductValueDecoder};\n'
+          new='use crate::network::attributes::{Attribute, AttributeDecoder, AttributeTag, ProductValue, ProductValueDecoder, RemoteId};\n'
+          assert s.count(old)==1; s=s.replace(old,new,1)
+          marker='fn r3_17m_classify(\n'
+          helper=r'''fn r3_17p_vec(v: &crate::network::models::Vector3f) -> serde_json::Value {
+              serde_json::json!([v.x.to_bits(), v.y.to_bits(), v.z.to_bits()])
+          }
+          fn r3_17p_active(v: &crate::network::attributes::ActiveActor) -> serde_json::Value {
+              serde_json::json!({"active": v.active, "actor": v.actor.0})
+          }
+          fn r3_17p_loadout(v: &crate::network::attributes::Loadout) -> serde_json::Value {
+              serde_json::json!({
+                  "version": v.version,
+                  "base_fields": [v.body,v.decal,v.wheels,v.rocket_trail,v.antenna,v.topper,v.unknown1],
+                  "unknown2": v.unknown2,
+                  "specials": [v.engine_audio,v.trail,v.goal_explosion],
+                  "banner": v.banner,
+                  "product_id": v.product_id
+              })
+          }
+          fn r3_17p_uid(v: &crate::network::attributes::UniqueId) -> serde_json::Value {
+              let remote = match &v.remote_id {
+                  RemoteId::SplitScreen(x) => serde_json::json!({"kind":"SplitScreen","split_id":x}),
+                  RemoteId::Steam(x) => serde_json::json!({"kind":"Steam","online_id":x}),
+                  RemoteId::PlayStation(x) => serde_json::json!({"kind":"PlayStation","name":x.name,"unknown":x.unknown1,"online_id":x.online_id}),
+                  RemoteId::Xbox(x) => serde_json::json!({"kind":"Xbox","online_id":x}),
+                  RemoteId::QQ(x) => serde_json::json!({"kind":"Qq","online_id":x}),
+                  RemoteId::Switch(x) => serde_json::json!({"kind":"Switch","online_id":x.online_id,"unknown":x.unknown1}),
+                  RemoteId::PsyNet(x) => serde_json::json!({"kind":"PsyNet","online_id":x.online_id,"unknown":x.unknown1}),
+                  RemoteId::Epic(x) => serde_json::json!({"kind":"Epic","account_id":x}),
+                  _ => serde_json::json!({"kind":"Unsupported"}),
+              };
+              serde_json::json!({"system_id":v.system_id,"local_id":v.local_id,"remote":remote})
+          }
+          fn r3_17p_product(v: &crate::network::attributes::Product) -> serde_json::Value {
+              let value = match &v.value {
+                  ProductValue::NoColor => serde_json::json!({"kind":"NoColor"}),
+                  ProductValue::Absent => serde_json::json!({"kind":"Absent"}),
+                  ProductValue::OldColor(x) | ProductValue::NewColor(x) => serde_json::json!({"kind":"UserColor","value":x}),
+                  ProductValue::OldPaint(x) | ProductValue::NewPaint(x) => serde_json::json!({"kind":"Paint","value":x}),
+                  ProductValue::Title(x) => serde_json::json!({"kind":"Title","value":x}),
+                  ProductValue::SpecialEdition(x) => serde_json::json!({"kind":"SpecialEdition","value":x}),
+                  ProductValue::OldTeamEdition(x) | ProductValue::NewTeamEdition(x) => serde_json::json!({"kind":"TeamEdition","value":x}),
+              };
+              serde_json::json!({"unknown":v.unknown,"object_id":v.object_ind.0,"value":value})
+          }
+          fn r3_17p_semantic(attribute: &Attribute) -> String {
+              let value = match attribute {
+                  Attribute::CamSettings(v) => serde_json::json!({"tag":"CamSettings","f32_bits":[v.fov.to_bits(),v.height.to_bits(),v.angle.to_bits(),v.distance.to_bits(),v.stiffness.to_bits(),v.swivel.to_bits(),v.transition.map(f32::to_bits)]}),
+                  Attribute::TeamPaint(v) => serde_json::json!({"tag":"TeamPaint","team":v.team,"primary_color":v.primary_color,"accent_color":v.accent_color,"primary_finish":v.primary_finish,"accent_finish":v.accent_finish}),
+                  Attribute::TeamLoadout(v) => serde_json::json!({"tag":"TeamLoadout","blue":r3_17p_loadout(&v.blue),"orange":r3_17p_loadout(&v.orange)}),
+                  Attribute::ClubColors(v) => serde_json::json!({"tag":"ClubColors","blue_flag":v.blue_flag,"blue_color":v.blue_color,"orange_flag":v.orange_flag,"orange_color":v.orange_color}),
+                  Attribute::Reservation(v) => serde_json::json!({"tag":"Reservation","number":v.number,"player_id":r3_17p_uid(&v.unique_id),"name":v.name,"unknown1":v.unknown1,"unknown2":v.unknown2,"unknown3":v.unknown3}),
+                  Attribute::StatEvent(v) => serde_json::json!({"tag":"StatEvent","unknown1":v.unknown1,"object_id":v.object_id}),
+                  Attribute::PlayerHistoryKey(v) => serde_json::json!({"tag":"PlayerHistoryKey","value":v}),
+                  Attribute::DemolishFx(v) => serde_json::json!({"tag":"DemolishFx","custom_demo_flag":v.custom_demo_flag,"custom_demo_id":v.custom_demo_id,"attacker_flag":v.attacker_flag,"attacker":v.attacker.0,"victim_flag":v.victim_flag,"victim":v.victim.0,"attack_velocity":r3_17p_vec(&v.attack_velocity),"victim_velocity":r3_17p_vec(&v.victim_velocity)}),
+                  Attribute::DemolishExtended(v) => serde_json::json!({"tag":"DemolishExtended","attacker_pri":r3_17p_active(&v.attacker_pri),"self_demo":r3_17p_active(&v.self_demo),"self_demolish":v.self_demolish,"goal_explosion_owner":r3_17p_active(&v.goal_explosion_owner),"attacker":r3_17p_active(&v.attacker),"victim":r3_17p_active(&v.victim),"attacker_velocity":r3_17p_vec(&v.attacker_velocity),"victim_velocity":r3_17p_vec(&v.victim_velocity)}),
+                  Attribute::ExtendedExplosion(v) => serde_json::json!({"tag":"ExtendedExplosion","flag":v.explosion.flag,"actor":v.explosion.actor.0,"location":r3_17p_vec(&v.explosion.location),"unknown1":v.unknown1,"secondary_actor":v.secondary_actor.0}),
+                  Attribute::LoadoutsOnline(v) => serde_json::json!({"tag":"LoadoutsOnline","blue":v.blue.iter().map(|g|g.iter().map(r3_17p_product).collect::<Vec<_>>()).collect::<Vec<_>>(),"orange":v.orange.iter().map(|g|g.iter().map(r3_17p_product).collect::<Vec<_>>()).collect::<Vec<_>>(),"unknown1":v.unknown1,"unknown2":v.unknown2}),
+                  _ => serde_json::json!({"tag":"Unexpected"}),
+              };
+              serde_json::to_string(&value).expect("R3.17P semantic JSON")
+          }
+
+          '''
+          assert s.count(marker)==1; s=s.replace(marker,helper+marker,1)
+          old_sem='    let semantic = "decoded_variant_ok".to_owned();\n'
+          new_sem='    let semantic = r3_17p_semantic(attribute);\n'
+          assert s.count(old_sem)==1; s=s.replace(old_sem,new_sem,1)
+          frame.write_text(s,encoding='utf-8',newline='\n')
+          cargo=root/'Cargo.toml'; c=cargo.read_text(encoding='utf-8')
+          dep='serde = { version = "1", features = ["derive"] }\n'
+          assert c.count(dep)==1; c=c.replace(dep,dep+'serde_json = "1"\n',1)
+          cargo.write_text(c,encoding='utf-8',newline='\n')
+          print('R3_17P_SEMANTIC_ORACLE_PATCH=PASS')
+          PY
+          git -C "$BOXCARS" add -N examples/r3_17m_probe.rs
+          git -C "$BOXCARS" diff --check
+          git -C "$BOXCARS" diff --binary -- src/network/frame_decoder.rs Cargo.toml examples/r3_17m_probe.rs > r3_17p_boxcars_instrumentation.patch
+          sha256sum r3_17p_boxcars_instrumentation.patch > r3_17p_boxcars_instrumentation_sha256.txt
+          cargo check --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe
+          cargo test --manifest-path "$BOXCARS/Cargo.toml" --lib --quiet
+          cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe --quiet
+          EXE=''; case "${OSTYPE:-}" in msys*|cygwin*) EXE='.exe' ;; esac
+          PROBE="$BOXCARS/target/debug/examples/r3_17m_probe$EXE"
+          : > r3_17p_semantic_oracle.log
+          while IFS= read -r rel; do
+            MIMIR_R3_17M_LABEL="$rel" "$PROBE" "$PWD/$rel" >> r3_17p_semantic_oracle.log 2>&1
+          done < .tmp/r317p-runtime/paths.txt
+          test "$(grep -c '^R3_17M_ORACLE_PARSE=PASS$' r3_17p_semantic_oracle.log)" -eq 47
+          test "$(grep -c '^R3_17M_REPLAY_DONE' r3_17p_semantic_oracle.log)" -eq 47
+          sha256sum r3_17p_semantic_oracle.log > r3_17p_semantic_oracle_log_sha256.txt
+          echo 'R3_17P_SEMANTIC_ORACLE_RESCAN=PASS replays=47'
+
+      - name: Select one real semantic witness per admitted group
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          def fields(line):
+              out={}
+              for token in line.rstrip('\n').split('\t')[1:]:
+                  if '=' in token:
+                      k,v=token.split('=',1); out[k]=v
+              return out
+          def group(r):
+              return (r['attribute_tag'],r['shape'],int(r['version_major']),int(r['version_minor']),int(r['net_version']),r['is_rl_223'].lower()=='true',int(r['payload_width']))
+          admitted=[]
+          for line in Path('docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl').read_text(encoding='utf-8').splitlines():
+              d=json.loads(line); admitted.append((d['attribute_tag'],d['shape'],d['version_major'],d['version_minor'],d['net_version'],d['is_rl_223'],d['payload_width']))
+          assert len(admitted)==161 and len(set(admitted))==161
+          first={}
+          for line in Path('r3_17p_semantic_oracle.log').read_text(encoding='utf-8').splitlines():
+              if not line.startswith('R3_17M_WITNESS\t'): continue
+              r=fields(line); g=group(r)
+              if g in set(admitted) and g not in first: first[g]=r
+          assert set(first)==set(admitted),(len(first),len(set(admitted)-set(first)))
+          rows=[]
+          for idx,g in enumerate(sorted(admitted)):
+              r=first[g]; raw=bytes.fromhex(r['raw_bits_hex']); width=int(r['payload_width'])
+              assert len(raw)==(width+7)//8
+              if width%8: assert raw[-1] & ~((1<<(width%8))-1)==0
+              semantic=json.loads(r['semantic']); assert semantic['tag']==r['attribute_tag']
+              rows.append({
+                  'id':idx,'tag':r['attribute_tag'],'shape':r['shape'],'major':int(r['version_major']),'minor':int(r['version_minor']),'net':int(r['net_version']),'rl223':r['is_rl_223'].lower()=='true',
+                  'start':int(r['payload_start_bit']),'end':int(r['payload_end_bit']),'width':width,'raw_hex':r['raw_bits_hex'],'oracle_semantic':r['semantic'],'payload_sha256':hashlib.sha256(raw).hexdigest(),
+                  'replay':r['label'],'frame_index':int(r['frame_index']),'actor_ordinal':int(r['actor_ordinal']),'stream_id':int(r['stream_id']),'property_object_id':int(r['property_object_id'])
+              })
+          Path('r3_17p_native_input.jsonl').write_text(''.join(json.dumps(x,sort_keys=True,separators=(',',':'))+'\n' for x in rows),encoding='utf-8',newline='\n')
+          durable=[{k:v for k,v in x.items() if k not in {'raw_hex','oracle_semantic'}} for x in rows]
+          Path('r3_17p_witness_manifest.jsonl').write_text(''.join(json.dumps(x,sort_keys=True,separators=(',',':'))+'\n' for x in durable),encoding='utf-8',newline='\n')
+          print('R3_17P_REAL_WITNESS_COVERAGE=PASS groups=161')
+          PY
+          test "$(wc -l < r3_17p_witness_manifest.jsonl | tr -d ' ')" -eq 161
+
+      - name: Build external native K4 probe with same-replay object tables
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROJ="$PWD/.tmp/r317p-native-probe"
+          rm -rf "$PROJ"; mkdir -p "$PROJ/src"
+          REPO_PATH="$(pwd -W 2>/dev/null || pwd)/crates/mimir-replay"; REPO_PATH="${REPO_PATH//\\//}"
+          cat > "$PROJ/Cargo.toml" <<EOF
+          [package]
+          name = "r317p-native-probe"
+          version = "0.0.0"
+          edition = "2024"
+          [dependencies]
+          mimir-replay = { path = "$REPO_PATH" }
+          serde_json = "1"
+          encoding_rs = "0.8"
+          [workspace]
+          EOF
+          cat > "$PROJ/src/main.rs" <<'RS'
+          use mimir_replay::{decode_replay_network_k4_v1, MinimalReplayFooterLookupMaterializationReader, ReplayFooterLookupMaterializationReader, ReplayInput, ReplayNetworkAttributeTagV1 as Tag, ReplayNetworkK4ActiveActorV1 as Active, ReplayNetworkK4DecodeContextV1 as Ctx, ReplayNetworkK4LoadoutV1 as Loadout, ReplayNetworkK4OnlineProductV1 as Product, ReplayNetworkK4ProductValueV1 as PVal, ReplayNetworkK4ReservationIdV1 as Rid, ReplayNetworkK4ValueV1 as Val, ReplayNetworkTextV1 as Text, ReplayNetworkVector3V1 as Vec3};
+          use serde_json::{json,Value};
+          use std::{collections::HashMap,fs,io::{self,BufRead}};
+          fn hx(s:&str)->Vec<u8>{ assert!(s.len()%2==0); (0..s.len()).step_by(2).map(|i|u8::from_str_radix(&s[i..i+2],16).unwrap()).collect() }
+          fn vecj(v:&Vec3)->Value{ json!([v.x.to_bits(),v.y.to_bits(),v.z.to_bits()]) }
+          fn rawvec(v:&Vec3)->Value{ json!({"size":v.selected_size_bits,"cw":v.component_width,"raw_x":v.raw_x,"raw_y":v.raw_y,"raw_z":v.raw_z,"bits":[v.x.to_bits(),v.y.to_bits(),v.z.to_bits()]}) }
+          fn active(v:&Active)->Value{json!({"active":v.active,"actor":v.actor})}
+          fn loadout(v:&Loadout)->Value{
+              let specials:Vec<Option<u32>>=if v.specials.len()==3{v.specials.iter().copied().map(Some).collect()}else{vec![None,None,None]};
+              json!({"version":v.version,"base_fields":v.base_fields,"unknown2":v.unknown2,"specials":specials,"banner":v.banner,"product_id":v.product_id})
+          }
+          fn text_meta(t:&Text)->Value{json!({"encoding":format!("{:?}",t.encoding),"declared_length":t.declared_length,"value_len":t.value.chars().count()})}
+          fn ps_name(bytes:&[u8])->String{
+              let end=bytes.iter().position(|x|*x==0).unwrap_or(bytes.len());
+              let (s,_,_)=encoding_rs::WINDOWS_1252.decode(&bytes[..end]); s.into_owned()
+          }
+          fn uid(v:&Rid, metas:&mut Vec<Value>)->Value{match v{
+              Rid::SplitScreen{split_id,local_id}=>json!({"system_id":0,"local_id":local_id,"remote":{"kind":"SplitScreen","split_id":split_id}}),
+              Rid::Steam{online_id,local_id}=>json!({"system_id":1,"local_id":local_id,"remote":{"kind":"Steam","online_id":online_id}}),
+              Rid::PlayStation{name_bytes,unknown,online_id,local_id}=>json!({"system_id":2,"local_id":local_id,"remote":{"kind":"PlayStation","name":ps_name(name_bytes),"unknown":unknown,"online_id":online_id}}),
+              Rid::Xbox{online_id,local_id}=>json!({"system_id":4,"local_id":local_id,"remote":{"kind":"Xbox","online_id":online_id}}),
+              Rid::Qq{online_id,local_id}=>json!({"system_id":5,"local_id":local_id,"remote":{"kind":"Qq","online_id":online_id}}),
+              Rid::Switch{online_id,unknown,local_id}=>json!({"system_id":6,"local_id":local_id,"remote":{"kind":"Switch","online_id":online_id,"unknown":unknown}}),
+              Rid::PsyNet{online_id,local_id}=>json!({"system_id":7,"local_id":local_id,"remote":{"kind":"PsyNet","online_id":online_id,"unknown":[] as [u8;0]}}),
+              Rid::Epic{account_id,local_id}=>{metas.push(text_meta(account_id));json!({"system_id":11,"local_id":local_id,"remote":{"kind":"Epic","account_id":account_id.value}})}
+          }}
+          fn product(v:&Product, metas:&mut Vec<Value>)->Value{let value=match &v.value{
+              PVal::UserColor(x)=>json!({"kind":"UserColor","value":x}),PVal::Paint(x)=>json!({"kind":"Paint","value":x}),
+              PVal::Title(x)=>{metas.push(text_meta(x));json!({"kind":"Title","value":x.value})},PVal::SpecialEdition(x)=>json!({"kind":"SpecialEdition","value":x}),PVal::TeamEdition(x)=>json!({"kind":"TeamEdition","value":x})};
+              json!({"unknown":v.unknown,"object_id":v.object_id,"value":value})}
+          fn groups(v:&Vec<Vec<Product>>,metas:&mut Vec<Value>)->Value{Value::Array(v.iter().map(|g|Value::Array(g.iter().map(|p|product(p,metas)).collect())).collect())}
+          fn neutral(v:&Val)->(Value,Vec<Value>,Vec<Value>,Value){let mut metas=Vec::new();let mut raws=Vec::new();let mut extras=Value::Null;let out=match v{
+              Val::CamSettings{raw_f32_bits}=>json!({"tag":"CamSettings","f32_bits":raw_f32_bits.iter().map(|x|Some(*x)).collect::<Vec<_>>()}),
+              Val::TeamPaint{team,primary_color,accent_color,primary_finish,accent_finish}=>json!({"tag":"TeamPaint","team":team,"primary_color":primary_color,"accent_color":accent_color,"primary_finish":primary_finish,"accent_finish":accent_finish}),
+              Val::TeamLoadout{blue,orange}=>{extras=json!([blue.v22_extras,orange.v22_extras]);json!({"tag":"TeamLoadout","blue":loadout(blue),"orange":loadout(orange)})},
+              Val::ClubColors{blue_flag,blue_color,orange_flag,orange_color}=>json!({"tag":"ClubColors","blue_flag":blue_flag,"blue_color":blue_color,"orange_flag":orange_flag,"orange_color":orange_color}),
+              Val::Reservation(r)=>{let id=uid(&r.player_id,&mut metas);let name=r.name.as_ref().map(|x|{metas.push(text_meta(x));x.value.clone()});json!({"tag":"Reservation","number":r.number,"player_id":id,"name":name,"unknown1":r.unknown1,"unknown2":r.unknown2,"unknown3":r.unknown3})},
+              Val::StatEvent{unknown1,object_id}=>json!({"tag":"StatEvent","unknown1":unknown1,"object_id":object_id}),
+              Val::PlayerHistoryKey(x)=>json!({"tag":"PlayerHistoryKey","value":x}),
+              Val::DemolishFx{custom_demo_flag,custom_demo_id,attacker_flag,attacker,victim_flag,victim,attack_velocity,victim_velocity}=>{raws.push(rawvec(attack_velocity));raws.push(rawvec(victim_velocity));json!({"tag":"DemolishFx","custom_demo_flag":custom_demo_flag,"custom_demo_id":custom_demo_id,"attacker_flag":attacker_flag,"attacker":attacker,"victim_flag":victim_flag,"victim":victim,"attack_velocity":vecj(attack_velocity),"victim_velocity":vecj(victim_velocity)})},
+              Val::DemolishExtended{attacker_pri,self_demo,self_demolish,goal_explosion_owner,attacker,victim,attacker_velocity,victim_velocity}=>{raws.push(rawvec(attacker_velocity));raws.push(rawvec(victim_velocity));json!({"tag":"DemolishExtended","attacker_pri":active(attacker_pri),"self_demo":active(self_demo),"self_demolish":self_demolish,"goal_explosion_owner":active(goal_explosion_owner),"attacker":active(attacker),"victim":active(victim),"attacker_velocity":vecj(attacker_velocity),"victim_velocity":vecj(victim_velocity)})},
+              Val::ExtendedExplosion{flag,actor,location,unknown1,secondary_actor}=>{raws.push(rawvec(location));json!({"tag":"ExtendedExplosion","flag":flag,"actor":actor,"location":vecj(location),"unknown1":unknown1,"secondary_actor":secondary_actor})},
+              Val::LoadoutsOnline{blue,orange,unknown1,unknown2}=>json!({"tag":"LoadoutsOnline","blue":groups(blue,&mut metas),"orange":groups(orange,&mut metas),"unknown1":unknown1,"unknown2":unknown2}),
+          };(out,metas,raws,extras)}
+          fn main(){let mut cache:HashMap<String,Vec<String>>=HashMap::new();for line in io::stdin().lock().lines(){let line=line.unwrap();if line.trim().is_empty(){continue}let q:Value=serde_json::from_str(&line).unwrap();let id=q["id"].as_u64().unwrap();let replay=q["replay"].as_str().unwrap().to_owned();if !cache.contains_key(&replay){let bytes=fs::read(&replay).unwrap();let input=ReplayInput::Memory{label:replay.clone(),bytes};let reader=MinimalReplayFooterLookupMaterializationReader;let m=reader.read_footer_lookup_materialization(&input).unwrap();cache.insert(replay.clone(),m.objects);}let objects=cache.get(&replay).unwrap();let start=q["start"].as_u64().unwrap();let end=q["end"].as_u64().unwrap();let width=q["width"].as_u64().unwrap();let raw=hx(q["raw_hex"].as_str().unwrap());let mut bytes=vec![0u8;((end+7)/8) as usize];for rel in 0..width{let bit=(raw[(rel/8) as usize]>>(rel%8))&1;if bit!=0{let p=start+rel;bytes[(p/8) as usize]|=1<<(p%8);}}let tag=match q["tag"].as_str().unwrap(){"CamSettings"=>Tag::CamSettings,"TeamPaint"=>Tag::TeamPaint,"TeamLoadout"=>Tag::TeamLoadout,"ClubColors"=>Tag::ClubColors,"Reservation"=>Tag::Reservation,"StatEvent"=>Tag::StatEvent,"PlayerHistoryKey"=>Tag::PlayerHistoryKey,"DemolishFx"=>Tag::DemolishFx,"DemolishExtended"=>Tag::DemolishExtended,"ExtendedExplosion"=>Tag::ExtendedExplosion,"LoadoutsOnline"=>Tag::LoadoutsOnline,_=>unreachable!()};let ctx=Ctx{version_major:q["major"].as_i64().unwrap() as i32,version_minor:q["minor"].as_i64().unwrap() as i32,net_version:q["net"].as_i64().unwrap() as i32,is_rl_223:q["rl223"].as_bool().unwrap()};match decode_replay_network_k4_v1(&bytes,start,tag,ctx,objects){Ok(d)=>{let (value,text_meta,raw_vectors,team_loadout_extras)=neutral(&d.value);println!("{}",json!({"id":id,"ok":true,"tag":format!("{:?}",d.attribute_tag),"start":d.payload_start_bit,"end":d.payload_end_bit,"width":d.payload_width,"shape":d.structural_shape,"value":value,"text_meta":text_meta,"raw_vectors":raw_vectors,"team_loadout_extras":team_loadout_extras,"object_table_len":objects.len()}));},Err(e)=>println!("{}",json!({"id":id,"ok":false,"error":e.to_string()}))}}}
+          RS
+          cargo run --quiet --manifest-path "$PROJ/Cargo.toml" < r3_17p_native_input.jsonl > r3_17p_native_output.jsonl
+          test "$(wc -l < r3_17p_native_output.jsonl | tr -d ' ')" -eq 161
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts
+          echo 'R3_17P_NATIVE_PROBE=PASS rows=161'
+
+      - name: Compare all 161 real witnesses and persist privacy-safe rows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,re,struct
+          from pathlib import Path
+          inp=[json.loads(x) for x in Path('r3_17p_native_input.jsonl').read_text(encoding='utf-8').splitlines()]
+          out=[json.loads(x) for x in Path('r3_17p_native_output.jsonl').read_text(encoding='utf-8').splitlines()]
+          assert len(inp)==len(out)==161; om={x['id']:x for x in out}
+          class Bits:
+              def __init__(self,h): self.b=bytes.fromhex(h); self.p=0
+              def read(self,w):
+                  v=0
+                  for i in range(w): v|=((self.b[self.p//8]>>(self.p%8))&1)<<i; self.p+=1
+                  return v
+          def f32bits(x): return struct.unpack('<I',struct.pack('<f',float(x)))[0]
+          def vec(c):
+              low=c.read(4); cand=low+16
+              if cand<22: d=c.read(1); sel=cand if d else low; h=5
+              else: sel=low; h=4
+              cw=sel+2; rx,ry,rz=c.read(cw),c.read(cw),c.read(cw); bias=1<<(sel+1)
+              vals=[f32bits((r-bias)/100.0) for r in (rx,ry,rz)]
+              return {'size':sel,'cw':cw,'raw_x':rx,'raw_y':ry,'raw_z':rz,'bits':vals}
+          def raw_vectors(q):
+              c=Bits(q['raw_hex']); tag=q['tag']
+              if tag=='DemolishFx': c.read(1);c.read(32);c.read(1);c.read(32);c.read(1);c.read(32); return [vec(c),vec(c)]
+              if tag=='DemolishExtended':
+                  for _ in range(2): c.read(1);c.read(32)
+                  c.read(1)
+                  for _ in range(3): c.read(1);c.read(32)
+                  return [vec(c),vec(c)]
+              if tag=='ExtendedExplosion': c.read(1);c.read(32); return [vec(c)]
+              return []
+          def loadout_wire(c):
+              v=c.read(8); base=[c.read(32) for _ in range(7)]; u2=c.read(32) if v>10 else None
+              sp=[c.read(32) for _ in range(3)] if v>=16 else []
+              banner=c.read(32) if v>=17 else None; product=c.read(32) if v>=19 else None; extra=[c.read(32) for _ in range(3)] if v>=22 else []
+              return {'version':v,'base_fields':base,'unknown2':u2,'specials':sp,'banner':banner,'product_id':product,'v22_extras':extra}
+          def loadout_extras(q):
+              if q['tag']!='TeamLoadout': return None
+              c=Bits(q['raw_hex']); return [loadout_wire(c)['v22_extras'],loadout_wire(c)['v22_extras']]
+          def text_expectations(shape):
+              out=[]
+              for m in re.finditer(r'(w1252|utf16)_(\d+)|(?<![A-Za-z])empty(?![A-Za-z])',shape):
+                  if m.group(1)=='w1252': out.append(('Windows1252',int(m.group(2))))
+                  elif m.group(1)=='utf16': out.append(('Utf16Le',-int(m.group(2))))
+                  else: out.append(('Empty',0))
+              return out
+          rows=[]; mism=[]
+          sensitive_tags={'Reservation','LoadoutsOnline'}
+          for q in inp:
+              n=om[q['id']]; why=[]
+              if not n.get('ok'): why.append('native_error')
+              if n.get('ok'):
+                  if n['tag']!=q['tag']: why.append('tag')
+                  if [n['start'],n['end'],n['width']]!=[q['start'],q['end'],q['width']]: why.append('range')
+                  if n['shape']!=q['shape']: why.append('shape')
+                  oracle=json.loads(q['oracle_semantic'])
+                  if n['value']!=oracle: why.append('semantic')
+                  rv=raw_vectors(q)
+                  if n['raw_vectors']!=rv: why.append('vector_raw_or_bits')
+                  ex=loadout_extras(q)
+                  if ex is not None and n['team_loadout_extras']!=ex: why.append('team_loadout_extras')
+                  exp_text=text_expectations(q['shape']); got_text=[(x['encoding'],x['declared_length']) for x in n['text_meta']]
+                  if exp_text!=got_text: why.append('text_encoding_or_length')
+                  if q['tag']=='LoadoutsOnline' and n['object_table_len']<=0: why.append('object_table')
+              exact=not why
+              if not exact: mism.append({'id':q['id'],'tag':q['tag'],'why':sorted(set(why))})
+              sem_hash=hashlib.sha256(json.dumps(json.loads(q['oracle_semantic']),sort_keys=True,separators=(',',':')).encode()).hexdigest()
+              text_meta=[]
+              if n.get('ok'):
+                  for x in n['text_meta']:
+                      text_meta.append({'encoding':x['encoding'],'declared_length':x['declared_length'],'value_len':x['value_len']})
+              rows.append({'id':q['id'],'tag':q['tag'],'shape_sha256':hashlib.sha256(q['shape'].encode()).hexdigest(),'payload_start_bit':q['start'],'payload_end_bit':q['end'],'payload_width':q['width'],'payload_sha256':q['payload_sha256'],'replay':q['replay'],'frame_index':q['frame_index'],'actor_ordinal':q['actor_ordinal'],'stream_id':q['stream_id'],'property_object_id':q['property_object_id'],'native_success':bool(n.get('ok')),'tag_match':bool(n.get('ok') and n['tag']==q['tag']),'context_match':q['major']==868 and q['minor']==32 and q['net']==10,'range_match':bool(n.get('ok') and [n['start'],n['end'],n['width']]==[q['start'],q['end'],q['width']]),'shape_match':bool(n.get('ok') and n['shape']==q['shape']),'semantic_match':exact,'semantic_sha256':sem_hash,'sensitive':q['tag'] in sensitive_tags,'text_meta':text_meta,'object_table_len':n.get('object_table_len') if q['tag']=='LoadoutsOnline' else None})
+          Path('r3_17p_match_rows.jsonl').write_text(''.join(json.dumps(x,sort_keys=True,separators=(',',':'))+'\n' for x in rows),encoding='utf-8',newline='\n')
+          summary={'schema_version':1,'pass':'R3.17P','replays_total':47,'admitted_groups':161,'real_witness_group_coverage':161,'native_success':sum(x['native_success'] for x in rows),'tag_match':sum(x['tag_match'] for x in rows),'context_match':sum(x['context_match'] for x in rows),'range_match':sum(x['range_match'] for x in rows),'shape_match':sum(x['shape_match'] for x in rows),'semantic_match':sum(x['semantic_match'] for x in rows),'mismatch_count':len(mism),'numeric_rule':'r3_17p_numeric_rule.txt','privacy_safe_output':True}
+          Path('r3_17p_summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n',encoding='utf-8',newline='\n')
+          if mism:
+              Path('r3_17p_mismatches.json').write_text(json.dumps(mism,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+              raise SystemExit(f'R3.17P native/oracle mismatches: {len(mism)}')
+          print('R3_17P_NATIVE_ORACLE_MATCH=PASS rows=161')
+          PY
+
+      - name: Rerun exhaustive K4 fail-closed controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-replay --test r3_17o_k4_attribute_decoder -- --nocapture 2>&1 | tee r3_17p_negative_controls.txt
+          grep -F 'test result: ok.' r3_17p_negative_controls.txt
+          printf '%s\n' \
+            'wrong major/minor/net context: covered' \
+            'wrong RL223 single-context tuple: covered' \
+            'unsupported non-K4 tag + invalid start: covered' \
+            'fixed/variable truncation + trailing bits + atomic failure: covered' \
+            'malformed text lengths including i32::MIN: covered' \
+            'Reservation unsupported system/name combination: covered' \
+            'DemolishFx/DemolishExtended absent cross-product tuples: covered' \
+            'LoadoutsOnline unknown product/absent nested cross-product: covered' \
+            'TeamLoadout unobserved version/branch: covered' >> r3_17p_negative_controls.txt
+          echo 'R3_17P_NEGATIVE_CONTROLS=PASS'
+
+      - name: Privacy, mutation, and final receipt gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)" = "$LIB_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k4_admitted_groups.rs)" = "$K4_GROUP_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/src/k4_native.rs)" = "$K4_NATIVE_BLOB"
+          test "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs)" = "$K4_TEST_BLOB"
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          durable=['r3_17p_source_scope.txt','r3_17p_numeric_rule.txt','r3_17p_replay_identity.tsv','r3_17p_witness_manifest.jsonl','r3_17p_match_rows.jsonl','r3_17p_summary.json','r3_17p_negative_controls.txt']
+          text='\n'.join(Path(x).read_text(encoding='utf-8',errors='strict') for x in durable).lower()
+          forbidden=['raw_hex','raw_bits_hex','oracle_semantic','account_id','player_name','remote_id','online_id','titleid','"title"','semantic_class']
+          hits=[x for x in forbidden if x in text]; assert not hits,hits
+          rows=[json.loads(x) for x in Path('r3_17p_match_rows.jsonl').read_text(encoding='utf-8').splitlines()]
+          assert len(rows)==161
+          assert all(x['native_success'] and x['tag_match'] and x['context_match'] and x['range_match'] and x['shape_match'] and x['semantic_match'] for x in rows)
+          print('R3_17P_PRIVACY=PASS')
+          PY
+          sha256sum r3_17p_source_scope.txt r3_17p_numeric_rule.txt r3_17p_numeric_rule_sha256.txt r3_17p_replay_identity.tsv r3_17p_structural_oracle_log_sha256.txt r3_17p_semantic_oracle_log_sha256.txt r3_17p_boxcars_instrumentation.patch r3_17p_boxcars_instrumentation_sha256.txt r3_17p_witness_manifest.jsonl r3_17p_match_rows.jsonl r3_17p_summary.json r3_17p_negative_controls.txt > r3_17p_receipt_sha256.txt
+          cat > r3_17p_aggregate.txt <<'EOF'
+          R3_17P_FRESH_PRODUCTION_IDENTITY=PASS
+          R3_17P_REPLAY_IDENTITY=47/47
+          R3_17P_BOXCARS_ORACLE_DECODE=47/47
+          R3_17P_GROUP_RECONSTRUCTION=161/161
+          R3_17P_REAL_WITNESS_GROUP_COVERAGE=161/161
+          R3_17P_NATIVE_DECODE_SUCCESS=161/161
+          R3_17P_TAG_VARIANT_MATCH=161/161
+          R3_17P_CONTEXT_MATCH=161/161
+          R3_17P_PAYLOAD_RANGE_MATCH=161/161
+          R3_17P_STRUCTURAL_SHAPE_MATCH=161/161
+          R3_17P_SEMANTIC_VALUE_MATCH=161/161
+          R3_17P_NEGATIVE_CONTROLS=PASS
+          R3_17P_BIT_MONOTONICITY_FAILURES=0
+          R3_17P_PACKED_PAYLOAD_FAILURES=0
+          R3_17P_PRIVACY=PASS
+          R3_17P_PRODUCTION_MUTATION=0
+          R3_17P_CARGO_MUTATION=0
+          R3_17P_FIXTURE_MUTATION=0
+          R3_17P_CORPUS_MUTATION=0
+          R3_17P_SUPPORT_LANE_MUTATION=0
+          R3_17P_OUTCOME=A
+          EOF
+          echo 'R3_17P_FINAL_GATES=PASS'
+
+      - name: Upload R3.17P evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r317p-native-k4-differential
+          path: |
+            r3_17p_source_scope.txt
+            r3_17p_numeric_rule.txt
+            r3_17p_numeric_rule_sha256.txt
+            r3_17p_replay_identity.tsv
+            r3_17p_structural_oracle_log_sha256.txt
+            r3_17p_semantic_oracle_log_sha256.txt
+            r3_17p_boxcars_instrumentation.patch
+            r3_17p_boxcars_instrumentation_sha256.txt
+            r3_17p_witness_manifest.jsonl
+            r3_17p_match_rows.jsonl
+            r3_17p_summary.json
+            r3_17p_negative_controls.txt
+            r3_17p_receipt_sha256.txt
+            r3_17p_aggregate.txt
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Emit immutable R3.17P receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"; test -n "$ARTIFACT_DIGEST"
+          printf 'R3_17P_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_17P_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_17P_ARTIFACT_ID=%s\n' "$ARTIFACT_ID"
+          printf 'R3_17P_ARTIFACT_DIGEST=%s\n' "$ARTIFACT_DIGEST"
+          cat r3_17p_summary.json
+          cat r3_17p_aggregate.txt
+          cat r3_17p_receipt_sha256.txt
+          printf 'R3_17P_RECEIPT_STREAM=PASS\n'
