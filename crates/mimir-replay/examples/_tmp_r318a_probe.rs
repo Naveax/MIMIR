@@ -8,7 +8,7 @@ use std::env;
 use std::fs;
 
 fn parse_hex(text: &str) -> Result<Vec<u8>, String> {
-    if !text.len().is_multiple_of(2) {
+    if text.len() % 2 != 0 {
         return Err("hex length must be even".to_owned());
     }
     (0..text.len())
