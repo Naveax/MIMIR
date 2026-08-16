@@ -1,0 +1,95 @@
+name: R3.18H Continuity Generation
+
+on:
+  push:
+    branches:
+      - automation/r318h-continuity-generator-v1
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      MAIN: 63f5de4e49abaf76fe6441a255a1a6770388a63c
+      CANDIDATE_BRANCH: continuity/r318h-close-r318i-open-v1
+    steps:
+      - name: Checkout generator lane
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze main and build exact six-file candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          cp tools/_tmp_r318h_continuity_generate.py /tmp/r318h_generate.py
+          git checkout --detach "$MAIN"
+          git switch -c "$CANDIDATE_BRANCH"
+          python3 /tmp/r318h_generate.py
+
+          expected=$(cat <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_R3_18H_DECISION.md
+          docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+          EOF
+          )
+          actual=$(git diff --name-only "$MAIN" | sort)
+          test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
+
+          grep -Fq '# 9.7 Exact-SHA validation' MIMIR_CONTINUE_HERE.md
+          grep -Fq '# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS' MIMIR_CONTINUE_HERE.md
+          grep -Fq '# 13. CURRENT PASS CHECKLIST — R3.14A' MIMIR_CONTINUE_HERE.md
+          grep -Fq '# CURRENT PASS CHECKLIST — R3.18I' MIMIR_CONTINUE_HERE.md
+          grep -Fq 'R3.18H production second-header differential decision' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -Fq 'R3.18I active second-property payload evidence spec' MIMIR_KNOWLEDGE_GRAPH.md
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          assert d['current_pass']=='R3.18I'
+          assert d['last_completed_read_only_audit']=='R3.18H'
+          assert d['r3_18h']['native_oracle_mismatch']==0
+          assert d['r3_18h']['second_payload_bits_consumed']==0
+          assert d['r3_18h']['third_property_bits_consumed']==0
+          PY
+
+          if git diff --name-only "$MAIN" -- crates Cargo.toml Cargo.lock external_fixtures fixtures corpus support tools scripts .github | grep -q .; then
+            echo 'forbidden production/support scope mutation' >&2
+            exit 1
+          fi
+
+      - name: Knowledge archive verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+      - name: Full repository verification
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+
+      - name: Commit and publish clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_R3_18H_DECISION.md \
+            docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18H evidence and open R3.18I payload audit'
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          test "$(git diff --name-only "$MAIN" HEAD | wc -l)" -eq 6
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18H_CONTINUITY_CANDIDATE=$(git rev-parse HEAD)"
+          echo "R3_18H_CONTINUITY_TREE=$(git rev-parse HEAD^{tree})"
+          echo 'R3_18H_CONTINUITY_GENERATOR=PASS'
