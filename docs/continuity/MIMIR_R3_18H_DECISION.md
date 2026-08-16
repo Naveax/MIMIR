@@ -21,8 +21,8 @@ evidence head/tree                  1db03fddabf84bfa189f983fa4a3b9110d105442 / b
 authority run/job                   31960174729 / 95196833572 SUCCESS
 same-head normal CI                 31960174713 / 95196833409 SUCCESS
 artifact                            9267045757
-artifact size                       12070 bytes
-artifact digest                     sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+artifact size                       18658 bytes
+artifact digest                     sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
 ```
 
 ## Frozen evidence result
@@ -53,14 +53,20 @@ Frozen R3.18F replay-identity SHA256 remains `b02488b13cd6374219bbb89f884b03f835
 Artifact file SHA256 receipt:
 
 ```text
-r3_18h_source_scope.txt             38ff92a2448883802b73ea4e2ee0a65f18b83beb782d8f8c87451e2295f37fb8
+r3_18h_source_scope.txt             b85b1324cca458aa68a7433484831371097492388657401776329801d8b31ab1
 r3_18h_replay_identity.tsv          b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
 r3_18h_frozen_witnesses.json        99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7
-r3_18h_oracle_regeneration.txt      97767f90f5f9d46afcb68f568cf28d021f2081ddbf62bb5f2536d8d7d1bf569e
-r3_18h_comparison.json              de4ca9d70fb7f56aec1c279473c3289b236cfa48e3a17f1faec8942ac3548d10
-r3_18h_negative_controls.txt        4d0273b85c5af2ae2e2b1fd7b88fd5d876c210d1a20f4cdd544601d649c053c9
-r3_18h_aggregate.txt                4357bc88426ac50da065875f56bc2f806158080767292c6210623091f6fdc31b
+r3_18h_oracle_regeneration.txt      9c8ace30317132246911e5406cc425af862b61de8a59fe270c3f91a1fbbc7690
+r3_18h_comparison.json              88767c2b2087cec0313d10df0d4354c13928f1f8596c4d7e2041f5d4eeefac3
+r3_18h_negative_controls.txt        272854040775158cd948dd313dcec5da7cdf6a238050e03b7fc20b8434f8962e
+r3_18h_aggregate.txt                6ff5e750569b4343518cb9c3fd0d8119f610d515b15434732097176482c8bbbc
 ```
+
+## Receipt correction
+
+The original continuity publication recorded a stale outer artifact receipt and stale hashes for five regenerated evidence files. R3.18I v1 (`9c2bc511fd20a6ef194fa3ecdce3ebb1ebf5bd3a`, `31963757848 / 95205621914`) detected that mismatch at authority freeze and stopped **before any payload evidence**. Fresh GitHub artifact metadata and the final R3.18H job receipt now agree with the downloaded artifact: API digest `sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79`, size `18658` bytes, and all seven inner evidence hashes listed above. The downloaded ZIP bytes hash to `a0101720526e633974390dda46786fc471baa7679f387b7e03d97b5bcf7bcb55`; that local ZIP hash is intentionally recorded separately from GitHub's API artifact digest. Receipt manifest file SHA256 is `5a381630b2fc01bdc41babbb1aafe6542ff4bebbf5a99a50618214d546008b2b`.
+
+This is a documentary correction only. Frozen replay identity, frozen witness identity, Outcome A aggregate, zero mismatch, zero second-payload/third-property consumption, zero production mutation and production authority `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c` are unchanged.
 
 ## Hard stop
 

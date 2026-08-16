@@ -93,8 +93,8 @@ R3_18H_EVIDENCE_CLOSURE:
   authority head/tree: 1db03fddabf84bfa189f983fa4a3b9110d105442 / be84d7709d60477bcbb916a11b4496dbddac2ab2
   authority run/job: 31960174729 / 95196833572 SUCCESS
   exact-head normal CI: 31960174713 / 95196833409 SUCCESS
-  artifact: 9267045757 / size 12070 bytes
-  artifact digest: sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+  artifact: 9267045757 / size 18658 bytes
+  artifact digest: sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
   frozen R3.18F replay identity SHA256: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
   frozen R3.18F witness SHA256: 99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7
   94/94 native rows exact / 47 terminator + 47 continuation
@@ -105,7 +105,18 @@ R3_18H_EVIDENCE_CLOSURE:
   second payload / third property bits consumed: 0 / 0
   mismatch count: 0
   production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
-  artifact file SHA256: source_scope=38ff92a2448883802b73ea4e2ee0a65f18b83beb782d8f8c87451e2295f37fb8; replay_identity=b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf; frozen_witnesses=99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7; oracle_regeneration=97767f90f5f9d46afcb68f568cf28d021f2081ddbf62bb5f2536d8d7d1bf569e; comparison=de4ca9d70fb7f56aec1c279473c3289b236cfa48e3a17f1faec8942ac3548d10; negatives=4d0273b85c5af2ae2e2b1fd7b88fd5d876c210d1a20f4cdd544601d649c053c9; aggregate=4357bc88426ac50da065875f56bc2f806158080767292c6210623091f6fdc31b
+  artifact file SHA256: source_scope=b85b1324cca458aa68a7433484831371097492388657401776329801d8b31ab1; replay_identity=b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf; frozen_witnesses=99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7; oracle_regeneration=9c8ace30317132246911e5406cc425af862b61de8a59fe270c3f91a1fbbc7690; comparison=88767c2b2087cec0313d10df0d4354c13928f1f8596c4d7e2041f5d4eeefac3; negatives=272854040775158cd948dd313dcec5da7cdf6a238050e03b7fc20b8434f8962e; aggregate=6ff5e750569b4343518cb9c3fd0d8119f610d515b15434732097176482c8bbbc
+
+R3_18H_RECEIPT_CORRECTION:
+  status: DOCUMENTARY CORRECTION ONLY; R3.18H Outcome A remains admitted
+  detected by: R3.18I v1 authority freeze before payload evidence
+  R3.18I v1 non-authority head/run/job: 9c2bc511fd20a6ef194fa3ecdce3ebb1ebf5bd3a / 31963757848 / 95205621914 FAILED-BEFORE-EVIDENCE
+  live artifact API metadata: id 9267045757 / 18658 bytes / sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79 / expired=false at verification
+  downloaded ZIP SHA256: a0101720526e633974390dda46786fc471baa7679f387b7e03d97b5bcf7bcb55 (local downloaded ZIP bytes; deliberately distinct from GitHub API artifact digest)
+  final H job receipt and live artifact agree on all seven inner evidence hashes
+  receipt manifest file SHA256: 5a381630b2fc01bdc41babbb1aafe6542ff4bebbf5a99a50618214d546008b2b
+  semantic aggregate unchanged: Outcome A / 94/94 / 47+47 / Int46+String1 / 32 truncation / mismatch 0 / payload+third 0+0 / mutation 0/0/0/0/0
+  production authority unchanged: 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
 
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
@@ -3057,8 +3068,8 @@ Outcome: A — ADMITTED / READ-ONLY EVIDENCE
 authority head/tree: 1db03fddabf84bfa189f983fa4a3b9110d105442 / be84d7709d60477bcbb916a11b4496dbddac2ab2
 custom evidence run/job: 31960174729 / 95196833572 SUCCESS
 same-head normal CI: 31960174713 / 95196833409 SUCCESS
-artifact: 9267045757
-artifact digest: sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+artifact: 9267045757 / size 18658 bytes
+artifact digest: sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
 rows: 94/94 exact = 47 terminator + 47 continuation
 continuation tags: Int=46 / String=1
 header truncation rows: 32

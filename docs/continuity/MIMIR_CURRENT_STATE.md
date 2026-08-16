@@ -29,8 +29,8 @@ R3.18H Outcome A is admitted as read-only evidence. It differentially exercised 
 authority head/tree                 1db03fddabf84bfa189f983fa4a3b9110d105442 / be84d7709d60477bcbb916a11b4496dbddac2ab2
 custom evidence run/job             31960174729 / 95196833572 SUCCESS
 same-head normal CI                 31960174713 / 95196833409 SUCCESS
-artifact                            9267045757 / 12070 bytes
-artifact digest                     sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+artifact                            9267045757 / 18658 bytes
+artifact digest                     sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
 rows                                94/94 exact
 class split                         47 terminator / 47 continuation
 continuation tags                   Int=46 / String=1
@@ -42,6 +42,10 @@ production/Cargo/fixture/corpus/support mutation  0/0/0/0/0
 ```
 
 Unresolved-stream, tag-outside-`Int|String`, repeatability and post-stop poison controls all passed. R3.18H did not widen production.
+
+### R3.18H receipt correction
+
+The first R3.18I evidence attempt (`9c2bc511fd20a6ef194fa3ecdce3ebb1ebf5bd3a`, run/job `31963757848 / 95205621914`) stopped at authority freeze before payload evidence because the prior continuity record carried a stale R3.18H artifact receipt. Fresh GitHub API metadata reports artifact `9267045757` as `18658` bytes with digest `sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79`. The final R3.18H job receipt and the currently downloadable artifact agree on all seven inner evidence hashes, and the frozen replay/witness identities plus semantic aggregate are unchanged. Downloaded ZIP SHA256 `a0101720526e633974390dda46786fc471baa7679f387b7e03d97b5bcf7bcb55` is recorded separately from the GitHub API artifact digest. This repairs documentation only; R3.18H Outcome A and production authority remain unchanged.
 
 ## 3. R3.18I exact next pass
 

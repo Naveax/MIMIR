@@ -230,8 +230,9 @@ R3.13 static network lookup plan
       exactly two reused decoder calls / zero payload decoder calls / zero property loops / Int+String header contexts only / second payload + third property still closed
  -> R3.18H production second-header real-replay differential audit: OUTCOME A / CLOSED
       authority 1db03fddabf84bfa189f983fa4a3b9110d105442 / 31960174729 / 95196833572 SUCCESS; exact-head CI 31960174713 / 95196833409 SUCCESS
-      artifact 9267045757 / sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+      artifact 9267045757 / sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
       94/94 exact = 47 terminator + 47 continuation / Int=46 String=1 / 32 truncation / 47 no-lookup / mismatch 0 / second payload + third property 0+0
+      receipt correction: live artifact 9267045757 / 18658 bytes / sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79; final job receipt == live seven inner hashes; R3.18I v1 31963757848/95205621914 stopped before evidence on stale continuity receipt
  -> R3.18I second-property payload contract/evidence audit: ACTIVE / READ-ONLY EVIDENCE
       frozen continuation lane only: characterize exactly 46 Int + 1 String second payload through payload end; 47 terminators remain no-payload controls; no third property/control bit and no loop
 ```

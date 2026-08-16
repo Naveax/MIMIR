@@ -26,10 +26,14 @@ R3.18F frozen witnesses SHA256      99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2d
 R3.18H evidence head/tree           1db03fddabf84bfa189f983fa4a3b9110d105442 / be84d7709d60477bcbb916a11b4496dbddac2ab2
 R3.18H run/job                      31960174729 / 95196833572 SUCCESS
 R3.18H same-head CI                 31960174713 / 95196833409 SUCCESS
-R3.18H artifact                     9267045757 / sha256:340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645
+R3.18H artifact                     9267045757 / 18658 bytes / sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
 ```
 
 Fresh-read all authorities before running. Any drift or witness reselection stops the pass.
+
+### Receipt-correction prerequisite
+
+R3.18I v1 authority head `9c2bc511fd20a6ef194fa3ecdce3ebb1ebf5bd3a` / run-job `31963757848 / 95205621914` is a **non-authority failed-before-evidence trace**. It correctly rejected the stale R3.18H continuity receipt before oracle regeneration or native payload work. R3.18I may resume only from continuity that records live artifact `9267045757` as `18658` bytes / `sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79` and the final-job/live-artifact inner hashes. Downloaded ZIP SHA256 `a0101720526e633974390dda46786fc471baa7679f387b7e03d97b5bcf7bcb55` is not interchangeable with the API digest.
 
 ## 3. Exact source lane
 
