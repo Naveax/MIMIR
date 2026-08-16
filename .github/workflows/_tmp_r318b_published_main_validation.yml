@@ -1,0 +1,102 @@
+name: R3.18B Published Main Validation
+
+on:
+  push:
+    branches:
+      - validation/r318b-published-main
+
+permissions:
+  contents: read
+
+jobs:
+  published-main:
+    runs-on: windows-latest
+    timeout-minutes: 80
+    env:
+      MAIN_SHA: de7a2ba40663bb619ca7bd8654846ce87670d023
+      MAIN_TREE: d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+      PARENT_SHA: f12365b43029f19f3ab1dd889e651f9781b0655e
+    steps:
+      - name: Checkout validation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read back exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse "${MAIN_SHA}^{tree}")" = "$MAIN_TREE"
+          test "$(git rev-parse "${MAIN_SHA}^1")" = "$PARENT_SHA"
+          git reset --hard "$MAIN_SHA"
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          echo "R3_18B_PUBLISHED_MAIN_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18B_PUBLISHED_MAIN_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18B_PUBLISHED_LIB_BLOB=$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)"
+          echo "R3_18B_PUBLISHED_TEST_BLOB=$(git rev-parse HEAD:crates/mimir-replay/tests/r3_18b_single_k1_property.rs)"
+          echo 'R3_18B_PUBLISHED_MAIN_READBACK=PASS'
+
+      - name: Enforce published production scope
+        shell: pwsh
+        run: |
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18b_single_k1_property.rs'
+          ) | Sort-Object
+          $actual = @(git diff --name-only "$env:PARENT_SHA" "$env:MAIN_SHA") | Sort-Object
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) { $delta | Format-Table; exit 1 }
+          $forbidden = @(git diff --name-only "$env:PARENT_SHA" "$env:MAIN_SHA" -- Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          Write-Host 'R3_18B_PUBLISHED_SCOPE=PASS files=2 Cargo=0 fixture=0 corpus=0 support=0 workflow=0 continuity=0'
+
+      - name: Verify production boundary
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          name='pub fn decode_replay_network_existing_actor_single_primitive_property_v1('
+          assert s.count(name)==1
+          start=s.index(name)
+          end=s.index('/// Decode exactly one R3.17B-admitted primitive scalar payload.', start)
+          block=s[start:end]
+          assert block.count('decode_replay_network_existing_actor_first_property_header_v1(')==1
+          assert block.count('decode_replay_network_primitive_scalar_v1(')==1
+          for tag in ['Boolean','Byte','Enum','Float','Int','Int64']:
+              assert f'ReplayNetworkAttributeTagV1::{tag}' in block
+          for forbidden in ['decode_replay_network_k2', 'decode_replay_network_k3', 'decode_replay_network_k4_v1', 'while ', 'for ']:
+              assert forbidden not in block, forbidden
+          assert 'property-absent' in block
+          assert 'unsupported-tag' in block
+          assert 'header.stop_bit != payload_start_bit' in block
+          assert 'scalar.stop_bit != scalar.payload_end_bit' in block
+          print('R3_18B_PUBLISHED_BOUNDARY=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Focused production test
+        shell: pwsh
+        run: |
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p mimir-replay --test r3_18b_single_k1_property
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_PUBLISHED_FOCUSED=PASS'
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_PUBLISHED_FULL_VERIFIER=PASS'
+
+      - name: Receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$MAIN_TREE"
+          echo 'R3_18B_PUBLISHED_MAIN_VALIDATION=PASS'
