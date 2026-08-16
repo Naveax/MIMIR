@@ -32,7 +32,11 @@ fn parse_tag(text: &str) -> Result<ReplayNetworkAttributeTagV1, String> {
 fn lossless(value: &ReplayNetworkPrimitiveScalarValueV1) -> String {
     match value {
         ReplayNetworkPrimitiveScalarValueV1::Boolean(value) => {
-            if *value { "1".to_owned() } else { "0".to_owned() }
+            if *value {
+                "1".to_owned()
+            } else {
+                "0".to_owned()
+            }
         }
         ReplayNetworkPrimitiveScalarValueV1::Byte(value) => value.to_string(),
         ReplayNetworkPrimitiveScalarValueV1::Enum(value) => value.to_string(),
@@ -82,7 +86,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err("selected property unexpectedly absent".into());
     }
     if header.stream_id != Some(expected_stream) {
-        return Err(format!("stream mismatch: {:?} != {expected_stream}", header.stream_id).into());
+        return Err(format!(
+            "stream mismatch: {:?} != {expected_stream}",
+            header.stream_id
+        )
+        .into());
     }
     if header.resolved_property_object_index != Some(expected_property_object) {
         return Err(format!(
@@ -92,10 +100,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into());
     }
     if header.resolved_attribute_tag != Some(tag) {
-        return Err(format!("tag mismatch: {:?} != {:?}", header.resolved_attribute_tag, tag).into());
+        return Err(format!(
+            "tag mismatch: {:?} != {:?}",
+            header.resolved_attribute_tag, tag
+        )
+        .into());
     }
 
-    let base_bit = window_byte_start.checked_mul(8).ok_or("window base overflow")?;
+    let base_bit = window_byte_start
+        .checked_mul(8)
+        .ok_or("window base overflow")?;
     if base_bit + header.property_present_start_bit != global_property_start {
         return Err("property-present global start mismatch".into());
     }
