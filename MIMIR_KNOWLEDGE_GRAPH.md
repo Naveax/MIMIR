@@ -30,7 +30,8 @@ R3.17L K3 differential decision             |
 R3.17M K4 evidence decision                  |
 R3.17N K4 contract decision                  |
 R3.17O K4 production decision                   |
-R3.17P active K4 differential spec                |
+R3.17P K4 differential decision                     |
+R3.18A active single-property evidence spec               |
         |                               |
         +---------------+---------------+
                         |
@@ -81,13 +82,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 30. `docs/continuity/MIMIR_R3_17O_EXECUTION_SPEC.md`
 31. `docs/continuity/MIMIR_R3_17O_DECISION.md`
 32. `docs/continuity/MIMIR_R3_17P_EXECUTION_SPEC.md`
-33. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-34. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-35. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-36. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-37. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-38. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-39. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+33. `docs/continuity/MIMIR_R3_17P_DECISION.md`
+34. `docs/continuity/MIMIR_R3_18A_EXECUTION_SPEC.md`
+35. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+36. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+37. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+38. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+39. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+40. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+41. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -156,16 +159,23 @@ R3.13 static network lookup plan
       candidate CI 31886194387 / 95015736899 SUCCESS
       published CI 31886353485 / 95016105618 SUCCESS
       161/161 exact allowlist equality / cross-product widening 0 / focused+workspace+full verifier PASS
- -> R3.17P native K4 real-replay differential audit: ACTIVE / READ-ONLY
+ -> R3.17P native K4 real-replay differential audit: OUTCOME A / CLOSED
+      authority f2d87b732ad3103d50e2c047351f1017d4f3613f / 31937527114 / 95141677175 SUCCESS
+      exact-head CI 31937527123 / 95141677140 SUCCESS
+      artifact 9261118033 / sha256:bc366b75e003531ba17351e880f259457ceba7cda702d912580c686990ba1beb
+      47/47 oracle + 161/161 real-group native decode/tag/context/range/shape/semantic exact / 0 mismatch
+      negative controls + privacy PASS / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
+ -> R3.18A existing-actor single-property boundary evidence: ACTIVE / READ-ONLY
+      prove exactly one complete real property payload and exact end cursor; stop before next property_present bit
 ```
 
 ## Current capability lock
 
-Production at `492cc8218be7abc6db8f75acaea33d009ab2f175` can natively decode exactly one already-resolved K1 scalar, one R3.17F-admitted K2 payload, one R3.17J-admitted K3 payload, or one exact R3.17N-admitted K4 payload. Every success stops exactly at its one-value end bit and does not authorize another property, actor, frame or lifecycle mutation. R3.17P is the separate real-replay certification pass for the K4 implementation.
+Production at `492cc8218be7abc6db8f75acaea33d009ab2f175` can natively decode exactly one already-resolved K1 scalar, one R3.17F-admitted K2 payload, one R3.17J-admitted K3 payload, or one exact R3.17N-admitted K4 payload. Every success stops exactly at its one-value end bit and does not authorize another property, actor, frame or lifecycle mutation. R3.17P has now certified all 161 exact K4 groups against regenerated real-replay witnesses with zero mismatch; R3.18A is evidence-only and does not widen production.
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups; R3.17K implemented them; R3.17L matched all 1,950 against real replay witnesses. R3.17M then observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups; R3.17N admitted those 161 groups byte-for-byte; R3.17O implemented exactly that contract with zero cross-product widening. R3.17P is now the separate native K4 real-replay differential audit. Property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups; R3.17K implemented them; R3.17L matched all 1,950 against real replay witnesses. R3.17M then observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups; R3.17N admitted those 161 groups byte-for-byte; R3.17O implemented exactly that contract with zero cross-product widening; R3.17P then matched all 161 exact K4 groups against real replay witnesses with zero mismatch. R3.18A now proves one complete existing-actor property boundary only. Property-loop continuation, next actor/frame iteration and lifecycle mutation remain closed.
 
 ## R3.17G production closure
 
@@ -378,4 +388,25 @@ Cargo/fixture/corpus/support unchanged
 outcome                     A / PRODUCTION
 ```
 
-R3.17P must certify all 161 exact groups against regenerated real-replay witnesses before later parser widening is considered.
+## R3.17P K4 differential closure
+
+```text
+authority head              f2d87b732ad3103d50e2c047351f1017d4f3613f
+authority run/job           31937527114 / 95141677175 SUCCESS
+exact-head normal CI        31937527123 / 95141677140 SUCCESS
+artifact                    9261118033
+artifact digest             sha256:bc366b75e003531ba17351e880f259457ceba7cda702d912580c686990ba1beb
+replay identity/oracle      47/47
+real group coverage         161/161
+native decode               161/161
+variant/context/range       161/161 exact
+shape/semantic              161/161 exact
+mismatch count              0
+negative controls           PASS
+privacy                     PASS
+prod/Cargo/fixture/corpus/
+support mutations           0/0/0/0/0
+outcome                     A
+```
+
+R3.18A is now the first dependency-valid unfinished roadmap step: read-only evidence for exactly one complete existing-actor property payload and exact end cursor. It must stop before the next `property_present` bit; the property loop is not admitted by this transition.

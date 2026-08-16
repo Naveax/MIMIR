@@ -52,7 +52,7 @@ LAST_PRODUCTION_MILESTONE:
   R3.17O — direct native exact-contract K4 decoder implementation
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.17L — native K3 differential audit / Outcome A / 1950 of 1950 real-replay exact groups / 0 mismatch
+  R3.17P — native K4 differential audit / Outcome A / 161 of 161 real-replay exact groups / 0 mismatch
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.17M — K4 gameplay-structured wire-format evidence / Outcome A / 39463 occurrences / 161 exact groups
 
 CURRENT_PASS:
-  R3.17P — native K4 real-replay differential audit
+  R3.18A — existing-actor single-property boundary evidence
 
 CURRENT_PASS_TYPE:
-  read-only real-replay differential audit / exact 161-group certification
+  read-only real-replay evidence / one complete existing-actor property payload + exact end cursor
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -80,7 +80,7 @@ CURRENT_PRODUCTION_HARD_STOP:
   one already-resolved K1 primitive scalar OR one R3.17F-admitted K2 payload OR one R3.17J-admitted K3 payload OR one R3.17N-admitted K4 payload may be decoded natively
   K3 remains limited to its exact R3.17J structural/context allowlist; K4 remains limited to the exact 161 R3.17N tuples
   stop exactly at payload_end_bit / stop_bit after that one value
-  R3.17O production is implemented and published; R3.17P must certify it against regenerated real-replay witnesses before any later parser widening
+  R3.17P certified the published R3.17O K4 decoder on all 161 exact real-replay groups; R3.18A may now prove exactly one complete existing-actor property boundary without looping
   NO second property, next actor, next frame, lifecycle mutation, unobserved K2/K3/K4 shape or family is admitted
 
 R3_17E_EVIDENCE_CLOSURE:
@@ -249,21 +249,37 @@ R3_17O_PRODUCTION_CLOSURE:
   Cargo/fixture/corpus/support-lane changes: none
   property-loop / actor / frame / lifecycle widening: none
 
-R3_17P_OPEN_BOUNDARY:
-  read-only native K4 real-replay differential audit; production mutation forbidden
-  reuse the exact frozen 47-replay R3.17M lane and pinned Boxcars oracle
-  regenerate at least one real witness for every one of the 161 R3.17N exact groups
-  compare native/oracle tag, context, start/end/width, exact shape and semantic value
-  private account/player/title text may be compared in memory only; durable evidence must remain privacy-safe
+R3_17P_AUDIT_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 492cc8218be7abc6db8f75acaea33d009ab2f175
+  authority head: f2d87b732ad3103d50e2c047351f1017d4f3613f
+  authority run/job: 31937527114 / 95141677175 SUCCESS
+  exact-head normal CI: 31937527123 / 95141677140 SUCCESS
+  artifact: 9261118033
+  artifact digest: sha256:bc366b75e003531ba17351e880f259457ceba7cda702d912580c686990ba1beb
+  47/47 replay identity + pinned Boxcars decode
+  exact R3.17N group reconstruction + real witness coverage: 161/161
+  native decode/tag/context/range/shape/semantic equality: 161/161 each
+  mismatch count: 0; exhaustive K4 negative controls: PASS; privacy: PASS
+  frozen numeric rule: exact f32 bit equality for CamSettings; exact vector wire fields + f32 bits; exact integer/boolean/object/count/version fields; tolerance 0
+  LoadoutsOnline caller object table: same replay footer materialization, not inferred
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_17P_HARD_STOP:
+R3_18A_OPEN_BOUNDARY:
+  read-only existing-actor single-property boundary evidence; production mutation forbidden
+  select a deterministic real existing-actor update with property_present=true from the supported replay lane
+  prove the already-resolved stream/property/tag context at the exact payload start
+  decode exactly one already-admitted K1/K2/K3/K4 payload and require native payload_end_bit == pinned Boxcars oracle end bit
+  stop before consuming the next property_present bit; this pass does not admit a property loop
+
+R3_18A_HARD_STOP:
   no production Rust, Cargo, fixture, corpus or support-lane mutation
-  no second property / property-loop continuation
-  no next actor / next frame / lifecycle mutation
+  no second property and no consumption of the next property_present bit
+  no next actor / next frame / actor-table lifecycle mutation
+  no new attribute family/shape/context admission
   no raw-state, event, replay-slice, skill, runtime or export widening
 
-NEXT PASS AFTER R3.17P:
-  only after Outcome A, re-read the execution roadmap and select the first dependency-valid unfinished pass; R3.18 is not pre-admitted
+NEXT PASS AFTER R3.18A:
+  only after Outcome A, admit the minimal production one-property composition needed by roadmap R3.18; property-loop continuation remains a later separately evidenced step
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
