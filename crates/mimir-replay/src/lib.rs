@@ -2765,6 +2765,163 @@ fn network_primitive_scalar_error(category: &str, detail: impl Into<String>) -> 
     ))
 }
 
+// R3.18G BEGIN bounded second-property header composition
+/// One bounded optional second-property header after an already-valid R3.18B first primitive
+/// property.
+///
+/// This result is deliberately not a generic property cursor. A present second property stops
+/// exactly at its payload start; the payload itself, a third property and repeated iteration are
+/// outside this API.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyHeaderV1 {
+    pub control: ReplayNetworkExistingActorAfterFirstPrimitivePropertyControlV1,
+    pub second_header: Option<ReplayNetworkExistingActorFirstPropertyHeaderV1>,
+    pub stop_bit: u64,
+}
+
+/// Compose exactly one optional second-property header after an admitted R3.18B first primitive
+/// property.
+///
+/// The existing R3.18D control decoder owns the next `property_present` bit. A false bit returns
+/// immediately without consulting the lookup plan. A true bit reuses the existing property-header
+/// primitive at that same bit, admits only the R3.18F-observed `Int`/`String` header contexts and
+/// stops at `payload_start`. No second payload decoder is called.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_header_v1(
+    network_bytes: &[u8],
+    first_property: &ReplayNetworkExistingActorSinglePrimitivePropertyV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyHeaderV1> {
+    let control = decode_replay_network_existing_actor_after_first_primitive_property_control_v1(
+        network_bytes,
+        first_property,
+    )?;
+
+    if !control.next_property_present {
+        let stop_bit = control.stop_bit;
+        return Ok(
+            ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyHeaderV1 {
+                control,
+                second_header: None,
+                stop_bit,
+            },
+        );
+    }
+
+    let header = decode_replay_network_existing_actor_first_property_header_v1(
+        network_bytes,
+        control.property_present_start_bit,
+        first_property.header.actor_object_index,
+        lookup_plan,
+    )?;
+
+    if !header.property_present {
+        return Err(
+            network_existing_actor_after_first_primitive_second_property_header_error(
+                "control-header-mismatch",
+                "R3.18D control reported a present second property but the header primitive did not",
+            ),
+        );
+    }
+    if header.property_present_start_bit != control.property_present_start_bit
+        || header.property_present_end_bit != control.property_present_end_bit
+        || control.stop_bit != control.property_present_end_bit
+    {
+        return Err(
+            network_existing_actor_after_first_primitive_second_property_header_error(
+                "control-header-boundary-mismatch",
+                format!(
+                    "control present bits [{}, {}) stop {}, header present bits [{}, {})",
+                    control.property_present_start_bit,
+                    control.property_present_end_bit,
+                    control.stop_bit,
+                    header.property_present_start_bit,
+                    header.property_present_end_bit
+                ),
+            ),
+        );
+    }
+    if header.actor_object_index != first_property.header.actor_object_index {
+        return Err(
+            network_existing_actor_after_first_primitive_second_property_header_error(
+                "actor-mismatch",
+                format!(
+                    "first property actor {} does not match second header actor {}",
+                    first_property.header.actor_object_index, header.actor_object_index
+                ),
+            ),
+        );
+    }
+
+    match header.resolved_attribute_tag {
+        Some(ReplayNetworkAttributeTagV1::Int | ReplayNetworkAttributeTagV1::String) => {}
+        Some(tag) => {
+            return Err(
+                network_existing_actor_after_first_primitive_second_property_header_error(
+                    "unsupported-second-header-tag",
+                    format!("R3.18G admits only Int/String second-header contexts, got {tag:?}"),
+                ),
+            );
+        }
+        None => {
+            return Err(
+                network_existing_actor_after_first_primitive_second_property_header_error(
+                    "missing-second-header-tag",
+                    "present second header has no resolved attribute tag",
+                ),
+            );
+        }
+    }
+
+    let payload_start_bit = header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_after_first_primitive_second_property_header_error(
+            "missing-payload-start",
+            "present second header has no payload start",
+        )
+    })?;
+    if header.stop_bit != payload_start_bit {
+        return Err(
+            network_existing_actor_after_first_primitive_second_property_header_error(
+                "payload-boundary-mismatch",
+                format!(
+                    "second header stop {} does not equal payload start {}",
+                    header.stop_bit, payload_start_bit
+                ),
+            ),
+        );
+    }
+    if header.stop_bit < control.stop_bit {
+        return Err(
+            network_existing_actor_after_first_primitive_second_property_header_error(
+                "non-monotonic-stop",
+                format!(
+                    "second header stop {} precedes control stop {}",
+                    header.stop_bit, control.stop_bit
+                ),
+            ),
+        );
+    }
+
+    let stop_bit = header.stop_bit;
+    Ok(
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyHeaderV1 {
+            control,
+            second_header: Some(header),
+            stop_bit,
+        },
+    )
+}
+
+fn network_existing_actor_after_first_primitive_second_property_header_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay existing actor after first primitive second property header error: {category}: {}",
+        detail.into()
+    ))
+}
+// R3.18G END bounded second-property header composition
+
 fn network_existing_actor_after_first_property_control_error(
     category: &str,
     detail: impl Into<String>,
