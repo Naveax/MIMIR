@@ -1,0 +1,94 @@
+name: R3.18K Published Second Payload Differential
+
+on:
+  push:
+    branches:
+      - evidence/r318k-published-second-payload-v1
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Rust 1.85 toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustup default 1.85.0
+          rustc --version
+          cargo --version
+
+      - name: Run R3.18K evidence
+        shell: bash
+        run: bash tools/_tmp_r318k_run.sh
+
+      - name: Upload immutable R3.18K evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318k-published-second-payload-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            r3_18k_source_scope.txt
+            r3_18k_replay_identity.tsv
+            r3_18k_frozen_witnesses.json
+            r3_18k_r318i_authority_sha256.txt
+            r3_18k_authority_summary.json
+            r3_18k_comparison.json
+            r3_18k_negative_controls.txt
+            r3_18k_aggregate.txt
+            r3_18k_artifact_sha256.txt
+
+      - name: Emit immutable receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          normalize_digest() {
+            local digest="${1,,}"
+            digest="${digest#sha256:}"
+            [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || return 1
+            printf '%s' "$digest"
+          }
+
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          api_run_id="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq '.workflow_run.id')"
+          api_head_sha="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq '.workflow_run.head_sha')"
+          api_head_branch="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq '.workflow_run.head_branch')"
+          api_name="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq '.name')"
+          api_expired="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq '.expired')"
+          api_archive_url="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq '.archive_download_url')"
+          api_digest_raw="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq '.digest')"
+
+          test "$api_run_id" = "$GITHUB_RUN_ID"
+          test "$api_head_sha" = "$GITHUB_SHA"
+          test "$api_head_branch" = "evidence/r318k-published-second-payload-v1"
+          test "$api_name" = "r318k-published-second-payload-evidence"
+          test "$api_expired" = "false"
+          test -n "$api_archive_url"
+
+          api_digest="$(normalize_digest "$api_digest_raw")" || { echo 'invalid API digest'; exit 1; }
+          upload_digest="$(normalize_digest "$ARTIFACT_DIGEST")" || { echo 'invalid upload digest'; exit 1; }
+          test "$api_digest" = "$upload_digest"
+
+          echo "R3_18K_EVIDENCE_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18K_EVIDENCE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18K_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18K_ARTIFACT_DIGEST_SHA256=$upload_digest"
+          echo 'R3_18K_IMMUTABLE_RECEIPT=PASS'
