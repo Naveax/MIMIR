@@ -1,0 +1,72 @@
+name: R3.17P Exact Continuity Candidate Validation
+
+on:
+  push:
+    branches:
+      - validation/r317p-continuity-exact
+
+permissions:
+  contents: read
+
+jobs:
+  exact-candidate:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    env:
+      CANDIDATE_SHA: c5878cf755302fe52e9e67741486306cd30db059
+      CANDIDATE_TREE: d3e7797e7f30cecb008425c05fdc242f77cff458
+      BASE_MAIN: 19e3f558bd343372c7fe863822ab961fb10976ad
+    steps:
+      - name: Checkout validation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reset to exact clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main candidate/r3-17p-continuity-clean
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse origin/candidate/r3-17p-continuity-clean)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse "${CANDIDATE_SHA}^{tree}")" = "$CANDIDATE_TREE"
+          test "$(git rev-parse "${CANDIDATE_SHA}^1")" = "$BASE_MAIN"
+          git reset --hard "$CANDIDATE_SHA"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          printf 'R3_17P_EXACT_CANDIDATE_HEAD=%s\n' "$(git rev-parse HEAD)"
+
+      - name: Enforce exact continuity diff
+        shell: pwsh
+        run: |
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_17P_DECISION.md',
+            'docs/continuity/MIMIR_R3_18A_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $actual = @(git diff --name-only "$env:BASE_MAIN" "$env:CANDIDATE_SHA") | Sort-Object
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) { $delta | Format-Table; exit 1 }
+          if (git diff --name-only "$env:BASE_MAIN" "$env:CANDIDATE_SHA" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts) { exit 1 }
+          Write-Host 'R3_17P_EXACT_SCOPE=PASS files=6 production=0 Cargo=0 fixture=0 corpus=0 support=0'
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          echo 'R3_17P_EXACT_CANDIDATE_VALIDATION=PASS'
