@@ -1,0 +1,75 @@
+name: R3.18A Published Main Validation
+
+on:
+  push:
+    branches:
+      - validation/r318a-published-main
+
+permissions:
+  contents: read
+
+jobs:
+  published-main:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      MAIN_SHA: f12365b43029f19f3ab1dd889e651f9781b0655e
+      MAIN_TREE: 3e85d806e6d1bc43be17da6b4d1518838c5dff45
+      PARENT_SHA: c5878cf755302fe52e9e67741486306cd30db059
+    steps:
+      - name: Checkout validation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Read back exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse "${MAIN_SHA}^{tree}")" = "$MAIN_TREE"
+          test "$(git rev-parse "${MAIN_SHA}^1")" = "$PARENT_SHA"
+          git reset --hard "$MAIN_SHA"
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          echo 'R3_18A_PUBLISHED_MAIN_READBACK=PASS'
+
+      - name: Verify semantic anchors
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+          state=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          main=Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          graph=Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          assert state['last_completed_evidence_pass']=='R3.18A'
+          assert state['current_pass']=='R3.18B'
+          assert state['r3_18a']['authority_head']=='12ee215fd843260d5ece14f27aa1171cb862f49e'
+          assert state['r3_18a']['next_property_present_consumed_bits']==0
+          assert state['r3_18a']['mismatch_count']==0
+          assert 'CURRENT_PASS:\n  R3.18B' in main
+          assert 'R3_18A_EVIDENCE_CLOSURE:' in main
+          assert 'R3.18B active single-property K1 composition spec' in graph
+          print('R3_18A_PUBLISHED_MAIN_SEMANTICS=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          echo 'R3_18A_PUBLISHED_MAIN_VALIDATION=PASS'
