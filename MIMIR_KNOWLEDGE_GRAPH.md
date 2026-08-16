@@ -39,7 +39,8 @@ R3.18E control-bit differential decision                              |
 R3.18F second-property-header evidence decision                        |
 R3.18G bounded second-property-header production decision                    |
 R3.18H production second-header differential decision                         |
-R3.18I active second-property payload evidence spec                              |
+R3.18I second-property payload evidence decision / Outcome A CLOSED            |
+R3.18J active bounded second-property payload implementation spec               |
         |                               |
         +---------------+---------------+
                         |
@@ -108,13 +109,22 @@ scripts/verify_mimir_knowledge_archive.ps1
 48. `docs/continuity/MIMIR_R3_18H_EXECUTION_SPEC.md`
 49. `docs/continuity/MIMIR_R3_18H_DECISION.md`
 50. `docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md`
-51. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-52. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-53. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-54. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-55. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-56. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-57. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+51. `docs/continuity/MIMIR_R3_18I_DECISION.md`
+52. `docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md`
+53. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+54. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+55. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+56. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+57. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+58. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+59. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+### R3.18I payload evidence: OUTCOME A / CLOSED
+- evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
+- same-head normal CI `31975063703/95233164610` SUCCESS
+- artifact `9270842140` / `sha256:9890ed33780412a8900692a627b212d80428a08229f9f691d914c8def31e06e2`
+- 94/94 exact; terminator=47; continuation=47; Int=46; String=1; mismatch=0; third-property bits=0
+- production unchanged at `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c`
+- next exact pass: R3.18J bounded native second-property payload composition
 
 ## Current replay-decoder chain
 

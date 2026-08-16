@@ -467,3 +467,10 @@ Next exact pass: `R3.14E — native first-envelope differential audit`.
 - Production source mutation: 0.
 - Outcome A admitted.
 - Next: R3.15A evidence-only NewActor branch audit.
+
+## 2026-08-17 — R3.18I admitted
+
+- Outcome A, read-only evidence; production unchanged at `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c`.
+- Evidence `45090a2c18fb517088bb411782bbaed0d7d68199`; workflow `31975063743/95233164711` SUCCESS; same-head CI `31975063703/95233164610` SUCCESS.
+- Artifact `9270842140` / `sha256:9890ed33780412a8900692a627b212d80428a08229f9f691d914c8def31e06e2`; 94/94 exact; 47 terminators + 47 continuations; Int=46/String=1; mismatch 0; third-property bits 0.
+- Next exact pass: R3.18J bounded native second-property payload composition.

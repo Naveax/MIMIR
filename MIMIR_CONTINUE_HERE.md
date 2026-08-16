@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18G — minimal native existing-actor bounded second-property header composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18H — published R3.18G second-header real-replay differential audit / Outcome A / 94/94 exact / 0 mismatch
+  R3.18I — second-property payload evidence / Outcome A / 94/94 exact / Int=46 String=1 / 0 mismatch / third-property bits 0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18H — published R3.18G second-header differential / Outcome A / 47 terminators + 47 continuations / Int=46 String=1 / 0 mismatch / second payload + third property 0 + 0
+  R3.18I — second-property payload evidence / Outcome A / 47 terminators + 47 continuations / Int=46 String=1 / 0 mismatch / third property 0
 
 CURRENT_PASS:
-  R3.18I — second-property payload contract/evidence audit
+  R3.18J — bounded native second-property payload composition
 
 CURRENT_PASS_TYPE:
-  read-only evidence / characterize exactly one second-property payload on the frozen R3.18F continuation lane; no production composition and no third-property access
+  production implementation / compose exactly one optional Int|String second payload after R3.18G; stop at exact payload end; no third-property access
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -86,8 +86,19 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18G is production at 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c: after one valid R3.18B first primitive property it reuses R3.18D control plus at most one existing header primitive; terminator returns None before header lookup; continuation stops exactly at second payload_start; exact header contexts Int/String only
   R3.18G exact-live validator 31957646865/95190626723 and published validator 31957892048/95191254798 are SUCCESS; payload decoder calls 0; property loops 0
   R3.18H closed Outcome A on the published R3.18G API: 94/94 frozen rows exact, 47 terminators + 47 continuations, Int=46/String=1, 32 real header truncation negatives, mismatch 0, second payload + third-property consumption 0/0
-  R3.18I is read-only evidence only: on the same frozen lane, characterize exactly one second payload after the admitted second header; 46 Int rows and 1 String row must be handled as separate observed tag classes, with 47 terminators remaining no-payload/no-lookup controls
-  NO production second-property payload composition, third property/control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18I CLOSED Outcome A: 94/94 frozen rows exact; 47 terminators + 47 continuations; second payload Int=46/String=1; native/oracle mismatch 0; third-property bits consumed 0; production unchanged
+  R3.18J ACTIVE: may compose exactly one optional Int|String second payload through exact payload end using existing native decoders
+  NO third property/control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+R3_18I_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+  authority head: 45090a2c18fb517088bb411782bbaed0d7d68199
+  authority run/job: 31975063743 / 95233164711 SUCCESS
+  exact-head normal CI: 31975063703 / 95233164610 SUCCESS
+  artifact: 9270842140 / 18741 bytes
+  artifact digest: sha256:9890ed33780412a8900692a627b212d80428a08229f9f691d914c8def31e06e2
+  94/94 rows exact / 47 terminator + 47 continuation / Int=46 String=1 / mismatch 0
+  third-property bits consumed: 0
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 R3_18H_EVIDENCE_CLOSURE:
   Outcome A / read-only / production Rust unchanged at 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
   authority head/tree: 1db03fddabf84bfa189f983fa4a3b9110d105442 / be84d7709d60477bcbb916a11b4496dbddac2ab2

@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-08-16",
+  "updated_date": "2026-08-17",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "2b608aafae97b10ecbc884f99e4bd4a73abf7a5c",
   "last_production_milestone": "R3.18G",
   "last_production_milestone_name": "minimal native existing-actor bounded second-property header composition",
-  "last_completed_read_only_audit": "R3.18H",
-  "current_pass": "R3.18I",
-  "current_pass_kind": "read-only evidence / second-property payload contract and boundary characterization",
-  "current_pass_goal": "On the frozen R3.18F/R3.18H lane, characterize exactly one second-property payload for all 47 continuation rows (Int=46, String=1) and compare oracle/native semantics and payload end without reading a third property.",
-  "current_pass_stop_boundary": "Terminators stop at R3.18G control end. Continuations may read exactly from proven second payload_start through that one payload end. Do not read the next property_present bit; no third property, loop, actor/frame/lifecycle/raw-state/event/skill/runtime/export widening.",
+  "last_completed_read_only_audit": "R3.18I",
+  "current_pass": "R3.18J",
+  "current_pass_kind": "production implementation / bounded second-property payload composition",
+  "current_pass_goal": "Publish exactly one optional second-property payload after the R3.18G bounded second header, only for the R3.18I-admitted Int/String surface, returning exact payload end without reading the third property_present bit.",
+  "current_pass_stop_boundary": "Terminators stop at R3.18G control end. Continuations may compose exactly one Int/String second payload through its exact end. The following property_present bit, third property, generalized loop, next actor/frame/lifecycle/raw-state/event/skill/runtime/export boundaries remain closed.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -132,7 +132,9 @@
     "MIMIR_ALL_SOURCES_SUPERBOOK.md",
     "docs/chatgpt-archive/SOURCE_REGISTRY.md",
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
-    "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
+    "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md",
+    "docs/continuity/MIMIR_R3_18I_DECISION.md",
+    "docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18H",
   "last_completed_evidence_outcome": "A — published R3.18G differential exact on 94/94 frozen rows; 47 terminator + 47 continuation; Int=46/String=1; 32 truncation; mismatch 0; second payload/third property 0/0",
@@ -1449,16 +1451,23 @@
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0"
   },
   "r3_18i": {
-    "status": "active",
-    "pass_type": "read-only evidence / second-property payload characterization",
-    "frozen_terminators": 47,
-    "frozen_continuations": 47,
-    "observed_second_tags": {
-      "Int": 46,
-      "String": 1
-    },
-    "third_property_access": false,
-    "production_mutation_allowed": false
+    "outcome": "A",
+    "kind": "read-only evidence",
+    "evidence_head": "45090a2c18fb517088bb411782bbaed0d7d68199",
+    "evidence_run": 31975063743,
+    "evidence_job": 95233164711,
+    "normal_ci_run": 31975063703,
+    "normal_ci_job": 95233164610,
+    "artifact_id": 9270842140,
+    "artifact_digest": "sha256:9890ed33780412a8900692a627b212d80428a08229f9f691d914c8def31e06e2",
+    "frozen_rows": 94,
+    "terminators": 47,
+    "continuations": 47,
+    "int_rows": 46,
+    "string_rows": 1,
+    "native_oracle_mismatch": 0,
+    "third_property_bits_consumed": 0,
+    "witness_reselection": 0
   },
   "r3_18h_receipt_correction": {
     "status": "documentary correction only; semantic Outcome A unchanged",

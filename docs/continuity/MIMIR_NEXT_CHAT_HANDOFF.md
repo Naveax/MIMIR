@@ -1,19 +1,9 @@
 # MIMIR — Next Chat Handoff
 
-Repository: `Naveax/MIMIR`
+Fresh canonical continuity after R3.18I admission.
 
-Fresh main must first be compared to `7b17cb9033b6c71d476e500380d78402cbb3c56d`. Apply the latest mandatory reading order in `MIMIR_KNOWLEDGE_GRAPH.md`.
-
-Current production milestone: R3.14D first actor envelope header native reader.
-Active exact pass: R3.14E evidence-only native-vs-pinned-Boxcars differential audit.
-
-R3.14E must use the exact 47 replay identities and oracle rows from R3.14A, pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b`, selector manifest SHA-256 `28bd08e2b6a376020cd6e91fc90c1b34f076734cbd6a441d82d33ac047f19c55`, and oracle artifact SHA-256 `d404437e994fd7d539ea554bd63a456273330340b1d678e635d1bb601440c10b`.
-
-Require 47/47 exact equality for time raw u32, delta raw u32, actor_present, actor_id, alive, new, stop_bit, plus structural context. No production Rust changes. Hard stop remains before name_id and every later network/semantic layer.
-
-If Outcome A, next is R3.15A NewActor read-only differential evidence.
----
-
-## CURRENT HANDOFF OVERRIDE — R3.15A
-
-Fresh main must show R3.14E Outcome A admitted. Read `MIMIR_R3_14E_DECISION.md` and `MIMIR_R3_15A_EXECUTION_SPEC.md`. Continue only with pinned-Boxcars NewActor branch evidence. Do not change production Rust and stop retained evidence at each NewActor spawn trajectory endpoint.
+- Production authority: `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c` (R3.18G). Production still stops at second `payload_start`.
+- R3.18I: CLOSED Outcome A, read-only. Evidence `45090a2c18fb517088bb411782bbaed0d7d68199`, run/job `31975063743/95233164711`, artifact `9270842140`, digest `sha256:9890ed33780412a8900692a627b212d80428a08229f9f691d914c8def31e06e2`. 94/94 exact, Int=46, String=1, mismatch 0, third-property bits consumed 0.
+- Current pass: `R3.18J — bounded native second-property payload composition`.
+- Hard stop: exactly one optional second payload only; do not read the following `property_present` bit and do not create a property loop.
+- Read `MIMIR_CONTINUE_HERE.md`, `MIMIR_KNOWLEDGE_GRAPH.md`, continuity state/current state, R3.18I decision and R3.18J spec before mutation.
