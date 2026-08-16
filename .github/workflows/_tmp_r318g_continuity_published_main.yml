@@ -1,0 +1,107 @@
+name: R3.18G Continuity Published Main
+
+on:
+  push:
+    branches: [validation/r318g-continuity-published-main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 85
+    env:
+      PUBLISHED: 63f5de4e49abaf76fe6441a255a1a6770388a63c
+      PUBLISHED_TREE: 0cc556eca506034e2871b201b824d120dfa85880
+      PARENT: 2b608aafae97b10ecbc884f99e4bd4a73abf7a5c
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reset to exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PUBLISHED"
+          git reset --hard "$PUBLISHED"
+          test "$(git rev-parse HEAD)" = "$PUBLISHED"
+          test "$(git rev-parse HEAD^{tree})" = "$PUBLISHED_TREE"
+          test "$(git rev-parse HEAD^)" = "$PARENT"
+          test "$(git rev-list --count "$PARENT..$PUBLISHED")" = "1"
+          test "$(git rev-list --count "$PUBLISHED..$PARENT")" = "0"
+          echo 'R3_18G_CONTINUITY_PUBLISHED_IDENTITY=PASS'
+
+      - name: Verify published six-file scope
+        shell: pwsh
+        run: |
+          $expected=@(
+            'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18G_DECISION.md','docs/continuity/MIMIR_R3_18H_EXECUTION_SPEC.md'
+          )|Sort-Object
+          $actual=@(git diff --name-only $env:PARENT $env:PUBLISHED)|Where-Object{$_}|Sort-Object
+          $delta=@(Compare-Object $expected $actual)
+          if($delta.Count -ne 0){$delta|Format-Table;exit 1}
+          if(@(git diff --name-only $env:PARENT $env:PUBLISHED -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github).Count -ne 0){throw 'forbidden production/support diff'}
+          $ns=@(git diff --numstat $env:PARENT $env:PUBLISHED -- MIMIR_CONTINUE_HERE.md)
+          $p=$ns[0]-split "`t";$a=[int]$p[0];$d=[int]$p[1]
+          if($a -ne 47 -or $d -ne 5){throw "handbook exact diff mismatch +$a/-$d"}
+          git diff --check $env:PARENT $env:PUBLISHED
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          Write-Host 'R3_18G_CONTINUITY_PUBLISHED_SCOPE=PASS files=6 handbook=+47/-5 production=0'
+
+      - name: Verify published R3.18G closure and R3.18H semantics
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+          def read(p): return Path(p).read_text(encoding='utf-8')
+          s=json.loads(read('docs/continuity/MIMIR_CONTINUITY_STATE.json'))
+          current=read('docs/continuity/MIMIR_CURRENT_STATE.md')
+          decision=read('docs/continuity/MIMIR_R3_18G_DECISION.md')
+          spec=read('docs/continuity/MIMIR_R3_18H_EXECUTION_SPEC.md')
+          graph=read('MIMIR_KNOWLEDGE_GRAPH.md')
+          book=read('MIMIR_CONTINUE_HERE.md')
+          assert s['last_production_code_sha']=='2b608aafae97b10ecbc884f99e4bd4a73abf7a5c'
+          assert s['last_production_milestone']=='R3.18G' and s['current_pass']=='R3.18H'
+          g=s['r3_18g']
+          assert g['production_sha']=='2b608aafae97b10ecbc884f99e4bd4a73abf7a5c'
+          assert g['production_tree']=='b130caf211ce72577870c70d6c0d87cd006e1b29'
+          assert g['lib_rs_blob']=='5e2b9e5be9c6692e499abc97a89655c603728cef'
+          assert g['focused_test_blob']=='d56bf97d250b426e23fec4610cbb9ead6ec8a142'
+          assert (g['implementation_run'],g['implementation_job'])==(31957142924,95189376563)
+          assert (g['same_trigger_normal_ci_run'],g['same_trigger_normal_ci_job'])==(31957142895,95189376551)
+          assert (g['exact_live_candidate_validator_run'],g['exact_live_candidate_validator_job'])==(31957646865,95190626723)
+          assert (g['published_main_validator_run'],g['published_main_validator_job'])==(31957892048,95191254798)
+          assert g['payload_decoder_calls']==0 and g['property_loops']==0
+          assert g['second_header_tag_allowlist']==['Int','String']
+          assert g['second_payload_admitted'] is False and g['third_property_admitted'] is False
+          assert '**Outcome:** **A — ADMITTED / PRODUCTION**' in decision
+          assert '**Status:** ACTIVE' in spec and '**Pass type:** read-only evidence / differential validation' in spec
+          for x in ['47 terminator rows','47 continuation rows','Int=46 / String=1','zero second-payload bits consumed','zero third-property bits consumed','production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`']:
+              assert x in spec,x
+          assert 'R3.18H production second-header real-replay differential audit: ACTIVE / READ-ONLY EVIDENCE' in graph
+          assert 'LAST_PRODUCTION_CODE_SHA:\n  2b608aafae97b10ecbc884f99e4bd4a73abf7a5c' in book
+          assert 'CURRENT_PASS:\n  R3.18H' in book
+          assert 'Canonical production SHA:** `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c`' in current
+          assert 'Current exact pass:** `R3.18H' in current
+          print('R3_18G_CONTINUITY_PUBLISHED_SEMANTICS=PASS')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
