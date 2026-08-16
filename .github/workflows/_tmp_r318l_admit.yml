@@ -1,0 +1,158 @@
+name: R3.18L Admission and Continuity Sync v2
+
+on:
+  push:
+    branches:
+      - admission/r318l-v2
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  admit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN: 1b39cf1abb8b84100349bfe2540296425ef1baed
+      PROD: 330ab01890a7c09eff1805e437584fb3be0a1134
+      L_HEAD: 9205ac1616e686589938f952782a32f03d0d1488
+      L_RUN: '31978791346'
+      L_JOB: '95242213413'
+      L_CI_RUN: '31978791304'
+      L_CI_JOB: '95242213357'
+      L_ARTIFACT: '9271817700'
+      L_DIGEST: db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c
+    steps:
+      - name: Checkout admission trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze R3.18L authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          mapfile -t changed < <(git diff --name-only "$MAIN" HEAD | sort)
+          expected=(
+            '.github/workflows/_tmp_r318l_admit.yml'
+            'tools/_tmp_r318l_admit.py'
+          )
+          test "${#changed[@]}" -eq 2
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected[@]}")"
+          git diff --exit-code "$MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          test "$(git rev-parse "$PROD:crates/mimir-replay/src/lib.rs")" = 'ee9b0c71871df7ff52275581eb7ad4c023b8ba79'
+          test "$(git rev-parse "$MAIN:crates/mimir-replay/src/lib.rs")" = 'ee9b0c71871df7ff52275581eb7ad4c023b8ba79'
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$L_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$L_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$L_RUN" --jq .head_sha)" = "$L_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$L_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$L_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$L_CI_RUN" --jq .head_sha)" = "$L_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$L_ARTIFACT" --jq .workflow_run.id)" = "$L_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$L_ARTIFACT" --jq .workflow_run.head_sha)" = "$L_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$L_ARTIFACT" --jq .expired)" = false
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$L_ARTIFACT" --jq .digest)" = "sha256:$L_DIGEST"
+
+          rm -rf "$RUNNER_TEMP/r318l-artifact"
+          mkdir -p "$RUNNER_TEMP/r318l-artifact"
+          gh run download "$L_RUN" -n r318l-following-property-control-evidence -D "$RUNNER_TEMP/r318l-artifact"
+          cd "$RUNNER_TEMP/r318l-artifact"
+          declare -A hashes=(
+            [r3_18l_source_scope.txt]='7cbfc2e36b116ba9aac9f3daee29e7652a723e5ceb96a96e270118151e16fd7b'
+            [r3_18l_replay_identity.tsv]='b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf'
+            [r3_18l_frozen_witnesses.json]='99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7'
+            [r3_18l_r318k_authority_sha256.txt]='0fc4681b94749991a226a07af58709d0074bde3ecf4eae67575512a242f44f99'
+            [r3_18l_source_summary.json]='107778cbfc4971ad883c53d4dd8e33d5bd0ebe5a1aadb054b42b83810cb1ca4f'
+            [r3_18l_targets.tsv]='73afd57f43a2656c5d98f6c97b4c24015283c688a1e343494139ea3ba16d8950'
+            [r3_18l_boxcars_instrumentation_sha256.txt]='e607f40bdffe9a9a6df2a3546f33a22811624b6efc5ba073a2b954dd84ecb4cf'
+            [r3_18l_control_rows.json]='f94693fe6ae4babe7fc951013de16fc32c0279e40f1d4957943776d3f3d81381'
+            [r3_18l_negative_controls.txt]='f30d66d3b6e5fca1525dc01d1154179cadee58747fdb5bf4dbfdaeb4bd4b59c3'
+            [r3_18l_aggregate.txt]='ad1d3b129e34a97f46d0bc3ea879a723e3e46e8d7624e2c9eb8945800b15ee19'
+            [r3_18l_artifact_sha256.txt]='28f4df430ef84149cdd33a1efc7124fb232d69abd3cb94e6d2196957268985c8'
+          )
+          for file in "${!hashes[@]}"; do
+            test "$(sha256sum "$file" | awk '{print $1}')" = "${hashes[$file]}"
+          done
+          grep -Fq 'R3_18L_OUTCOME=A' r3_18l_aggregate.txt
+          grep -Fq 'R3_18L_CONTROL_FALSE=0' r3_18l_aggregate.txt
+          grep -Fq 'R3_18L_CONTROL_TRUE=47' r3_18l_aggregate.txt
+          grep -Fq 'R3_18L_NATIVE_ORACLE_MISMATCH=0' r3_18l_aggregate.txt
+          grep -Fq 'R3_18L_FOLLOWING_STREAM_BITS_CONSUMED=0' r3_18l_aggregate.txt
+          grep -Fq 'R3_18L_FOLLOWING_HEADER_BITS_CONSUMED=0' r3_18l_aggregate.txt
+          grep -Fq 'R3_18L_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' r3_18l_aggregate.txt
+          grep -Fq 'R3_18L_PRIVACY=PASS' r3_18l_aggregate.txt
+          echo 'R3_18L_ADMISSION_AUTHORITY=PASS true=47 false=0'
+
+      - name: Reconstruct clean docs-only admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318l_admit.py "$RUNNER_TEMP/r318l_admit.py"
+          python3 - "$RUNNER_TEMP/r318l_admit.py" <<'PY'
+          from pathlib import Path
+          import sys
+          p = Path(sys.argv[1])
+          s = p.read_text(encoding='utf-8')
+          old = 'db5d196b92201a3fdfc6ee01b09510d2b05d772404772bbbffe652cad4bcfc8b'
+          new = 'db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c'
+          count = s.count(old)
+          if count != 1:
+              raise SystemExit(f'R3.18L digest patch count={count}')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8', newline='\n')
+          print('R3_18L_ADMISSION_DIGEST_PATCH=PASS')
+          PY
+          git checkout --detach "$MAIN"
+          python3 "$RUNNER_TEMP/r318l_admit.py"
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          expected=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+            'docs/continuity/MIMIR_R3_18L_DECISION.md'
+            'docs/continuity/MIMIR_R3_18M_EXECUTION_SPEC.md'
+          )
+          test "${#changed[@]}" -eq 8
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected[@]}")"
+          git diff --exit-code -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts
+          test ! -e .github/workflows/_tmp_r318l_admit.yml
+          test ! -e tools/_tmp_r318l_admit.py
+          echo 'R3_18L_CLEAN_DOC_SCOPE=PASS files=8'
+
+      - name: Repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "verify_repo failed: $LASTEXITCODE" }
+
+      - name: Commit and force-free fast-forward publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18L_DECISION.md \
+            docs/continuity/MIMIR_R3_18M_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18L following-control evidence'
+          clean_sha="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          git push origin HEAD:main
+          echo "R3_18L_ADMISSION_CLEAN_SHA=$clean_sha"
+          echo 'R3_18L_ADMISSION_PUBLISH=PASS force=false'
