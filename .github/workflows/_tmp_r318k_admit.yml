@@ -1,0 +1,137 @@
+name: R3.18K Admission and Continuity Sync
+
+on:
+  push:
+    branches:
+      - admission/r318k-v1
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  admit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN: 0a9bdab3717aacf320459d738a322ce00415fec7
+      PROD: 330ab01890a7c09eff1805e437584fb3be0a1134
+      K_HEAD: 926ddd88331ef0372b17b495cb06502010ab39ac
+      K_RUN: '31977860600'
+      K_JOB: '95239932737'
+      K_CI_RUN: '31977860563'
+      K_CI_JOB: '95239932564'
+      K_ARTIFACT: '9271561853'
+      K_DIGEST: a455984c1149cb8f186eedb34d3e148fe45b8592c928cd9246d36cd52843262f
+    steps:
+      - name: Checkout admission trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze R3.18K authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          mapfile -t changed < <(git diff --name-only "$MAIN" HEAD | sort)
+          expected=(
+            '.github/workflows/_tmp_r318k_admit.yml'
+            'tools/_tmp_r318k_admit.py'
+          )
+          test "${#changed[@]}" -eq 2
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected[@]}")"
+          git diff --exit-code "$MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md
+
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          test "$(git rev-parse "$PROD:crates/mimir-replay/src/lib.rs")" = 'ee9b0c71871df7ff52275581eb7ad4c023b8ba79'
+          test "$(git rev-parse "$MAIN:crates/mimir-replay/src/lib.rs")" = 'ee9b0c71871df7ff52275581eb7ad4c023b8ba79'
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$K_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$K_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$K_RUN" --jq .head_sha)" = "$K_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$K_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$K_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$K_CI_RUN" --jq .head_sha)" = "$K_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$K_ARTIFACT" --jq .workflow_run.id)" = "$K_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$K_ARTIFACT" --jq .workflow_run.head_sha)" = "$K_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$K_ARTIFACT" --jq .expired)" = false
+          api_digest="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$K_ARTIFACT" --jq .digest)"
+          test "$api_digest" = "sha256:$K_DIGEST"
+
+          rm -rf "$RUNNER_TEMP/r318k-artifact"
+          mkdir -p "$RUNNER_TEMP/r318k-artifact"
+          gh run download "$K_RUN" -n r318k-published-second-payload-evidence -D "$RUNNER_TEMP/r318k-artifact"
+          cd "$RUNNER_TEMP/r318k-artifact"
+          test "$(sha256sum r3_18k_source_scope.txt | awk '{print $1}')" = '64ed5ce376813534cdc196e35421092db62b6d84dc244950aa51872def38151f'
+          test "$(sha256sum r3_18k_replay_identity.tsv | awk '{print $1}')" = 'b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf'
+          test "$(sha256sum r3_18k_frozen_witnesses.json | awk '{print $1}')" = '99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7'
+          test "$(sha256sum r3_18k_r318i_authority_sha256.txt | awk '{print $1}')" = '9cf75f074c46a15823556e6f0de32f727d10845382e9631537483dbd952c388e'
+          test "$(sha256sum r3_18k_authority_summary.json | awk '{print $1}')" = '40854122f5c39981514077f66fbf0e51b54d0a07997dc262bb5a6b37fe309f70'
+          test "$(sha256sum r3_18k_comparison.json | awk '{print $1}')" = '8ca0503a453550c82fccf500834b79b25cafa6c100fda71b67aa5cb7ee0558ac'
+          test "$(sha256sum r3_18k_negative_controls.txt | awk '{print $1}')" = 'f6186113fbbcde35c7670e1415dc967eaa549ffde934625e613893cf04e7b9c9'
+          test "$(sha256sum r3_18k_aggregate.txt | awk '{print $1}')" = 'a746fe172d11d55cd274df105c6a1f65b69b114c0951df0c7c7aa5d0859418bd'
+          grep -Fq 'R3_18K_OUTCOME=A' r3_18k_aggregate.txt
+          grep -Fq 'R3_18K_FROZEN_ROWS=94/94' r3_18k_aggregate.txt
+          grep -Fq 'R3_18K_NATIVE_ORACLE_MISMATCH=0' r3_18k_aggregate.txt
+          grep -Fq 'R3_18K_FOLLOWING_PROPERTY_BITS_CONSUMED=0' r3_18k_aggregate.txt
+          grep -Fq 'R3_18K_PRIVACY=PASS' r3_18k_aggregate.txt
+          echo 'R3_18K_ADMISSION_AUTHORITY=PASS'
+
+      - name: Reconstruct clean docs-only admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318k_admit.py "$RUNNER_TEMP/r318k_admit.py"
+          git checkout --detach "$MAIN"
+          python3 "$RUNNER_TEMP/r318k_admit.py"
+
+          mapfile -t changed < <(git diff --name-only | sort)
+          expected=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+            'docs/continuity/MIMIR_R3_18K_DECISION.md'
+            'docs/continuity/MIMIR_R3_18L_EXECUTION_SPEC.md'
+          )
+          test "${#changed[@]}" -eq 8
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected[@]}")"
+          git diff --exit-code -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts
+          test ! -e .github/workflows/_tmp_r318k_admit.yml
+          test ! -e tools/_tmp_r318k_admit.py
+          echo 'R3_18K_CLEAN_DOC_SCOPE=PASS files=8'
+
+      - name: Repository verification
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "verify_repo failed: $LASTEXITCODE" }
+
+      - name: Commit and force-free fast-forward publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18K_DECISION.md \
+            docs/continuity/MIMIR_R3_18L_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18K differential evidence'
+          clean_sha="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          git push origin HEAD:main
+          echo "R3_18K_ADMISSION_CLEAN_SHA=$clean_sha"
+          echo 'R3_18K_ADMISSION_PUBLISH=PASS force=false'
