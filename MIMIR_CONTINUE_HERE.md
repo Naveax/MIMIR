@@ -58,13 +58,13 @@ LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18A — existing-actor single-property boundary evidence / Outcome A / one real Int property / exact end cursor / 0 next-property bits
+  R3.18C — property-loop terminator/continuation evidence / Outcome A / 47 terminator + 47 continuation candidates / exact one-bit control / 0 mismatch
 
 CURRENT_PASS:
-  R3.18C — existing-actor property-loop terminator/continuation evidence
+  R3.18D — minimal native existing-actor next-property control bit
 
 CURRENT_PASS_TYPE:
-  read-only real-replay evidence / exact next property_present bit after one native K1 property
+  production implementation / read exactly one next property_present bit after one R3.18B K1 property
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -81,8 +81,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   K3 remains limited to its exact R3.17J structural/context allowlist; K4 remains limited to the exact 161 R3.17N tuples
   stop exactly at payload_end_bit / stop_bit after that one value
   R3.18B is published production at de7a2ba40663bb619ca7bd8654846ce87670d023 and composes exactly one existing-actor K1 property through its payload end without reading the next property_present bit
-  R3.18C is read-only evidence only: it may prove the exact next property_present location and consume exactly that one continuation/terminator bit on selected real witnesses; production mutation remains forbidden
-  NO second property stream/header/payload, production property loop, K2/K3/K4 wrapper composition, next actor, next frame, lifecycle mutation, unobserved shape/family, or extra context inference is admitted
+  R3.18C proved that this exact stop bit is the next property_present location on real terminator and continuation witnesses; the evidence probe consumed exactly one bit and zero second-stream/payload bits
+  R3.18D may publish only an after-first-K1-property control-bit reader that consumes that single next property_present bit and stops immediately after it
+  NO second property stream/header/payload, production property loop/repetition, K2/K3/K4 wrapper composition, next actor, next frame, lifecycle mutation, unobserved shape/family, or extra context inference is admitted
 
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
@@ -299,25 +300,42 @@ R3_18B_PRODUCTION_CLOSURE:
   focused tests: 8/8 PASS including R3.18A-shaped Int=62, poison trailing bits, absent/non-K1/truncation/repeatability
   production/Cargo/fixture/corpus/support/workflow/continuity mutation outside clean scope: 0/0/0/0/0/0/0
 
-R3_18C_OPEN_BOUNDARY:
-  read-only real-replay evidence; production Rust/Cargo/fixture/corpus/support mutation forbidden
-  reuse the exact supported 47-replay lane and pinned Boxcars oracle; deterministically find real existing-actor updates whose first property is R3.18B-admitted K1
-  require native R3.18B stop_bit == oracle next property_present start bit
-  prove at least one terminator witness (next property_present=false) and at least one continuation witness (next property_present=true), if both exist in the frozen lane
-  the native evidence probe may consume exactly one bit at that stop position and must stop immediately after it
-  for false, prove exact loop terminator end = start+1 and zero stream/payload bits consumed; for true, prove continuation=true but do not decode the second stream/header/payload natively
-  durable artifacts must remain privacy-safe and omit raw replay payload bytes
+R3_18C_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at de7a2ba40663bb619ca7bd8654846ce87670d023
+  canonical evidence base main/tree: f8f6467f2ee652892329f08a3e532b1e1f834fb3 / 9943ee5620091142379763422dc22178b2278fbc
+  authority head: a4b71ad43e5cf55c44c9518b24622ce29214acd2
+  authority run/job: 31944102614 / 95157425239 SUCCESS
+  exact-head normal CI: 31944102575 / 95157425128 SUCCESS
+  artifact: 9262820284
+  artifact digest: sha256:95e89cb350cc4c274d2b7a53198d78941bef54ff1b3f6a165b2ba9710659ec07
+  replay identity + pinned Boxcars parse: 47/47
+  loop-control candidate rows: 94 = 47 terminator + 47 continuation
+  selected terminator: sample_001 / frame0 / actor60 / object344 / property18 / Float raw=1092616192 / payload [36593,36625) / next bit [36625,36626)=false
+  selected continuation: sample_001 / frame0 / actor2 / object98 / property55 / Int=62 / payload [10234,10266) / next bit [10266,10267)=true
+  native first-property stop == oracle next property_present start: PASS for both classes
+  one-bit value/end exact: PASS for both classes; truncation cursor unchanged: PASS; post-stop poison: PASS; repeatability: PASS
+  second stream bits consumed: 0; second payload bits consumed: 0; mismatch count: 0; privacy: PASS
+  R3.18B focused regression: 8/8 PASS
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_18C_HARD_STOP:
-  no production mutation
-  no second property stream id, resolved header, or payload decode in the native evidence probe
-  no production property_present loop
-  no K2/K3/K4 widening through the R3.18B composition API
+R3_18D_OPEN_BOUNDARY:
+  production implementation; one loop-control bit after one already-decoded R3.18B K1 property only
+  accept network bytes plus an R3.18B single-property result (or an equivalently narrow first-property result reference) and require its boundary invariants before reading anything
+  read exactly one bit at first_property.stop_bit; return next_property_present plus start/end/stop coordinates
+  require control start == first_property.stop_bit and control stop == start+1
+  false means exact terminator observation; true means continuation observed, but neither case authorizes second stream/header/payload decode in this pass
+  implementation must not expose a reusable repeated-loop primitive that can be chained without the original first-property result
+  focused tests must cover false/true, aligned/unaligned starts, both R3.18C witness shapes, truncation with no cursor advance, poison bits after the control stop, malformed first-property boundary rejection, and repeatability
+
+R3_18D_HARD_STOP:
+  no second property stream id, resolved property header, or payload decode
+  no while/for property loop and no recursive/repeated control-bit consumption
+  no K2/K3/K4 composition through the R3.18B wrapper
   no next actor / next frame / actor-table lifecycle mutation
-  no raw-state, event, replay-slice, skill, runtime or export widening
+  no Cargo, fixture, corpus, workflow, support-lane, raw-state, event, replay-slice, skill, runtime or export widening
 
-NEXT PASS AFTER R3.18C:
-  only after Outcome A, define the smallest separately validated production loop-control step; do not infer a generalized property loop or second-payload admission from one-bit continuation evidence
+NEXT PASS AFTER R3.18D:
+  only after clean production publication + exact validation, run a separate real-replay differential audit for the one-bit production control result before considering any second-property header or repeated loop admission
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

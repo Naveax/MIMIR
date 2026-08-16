@@ -4,62 +4,86 @@
 **Repository:** `Naveax/MIMIR`
 **Canonical production SHA:** `de7a2ba40663bb619ca7bd8654846ce87670d023`
 **Production milestone:** `R3.18B — minimal native existing-actor single-property K1 composition`
-**Completed single-property evidence:** `R3.18A — Outcome A / exact one-property boundary / 0 next-property bits`
-**Current exact pass:** `R3.18C — existing-actor property-loop terminator/continuation evidence`
+**Completed loop-control evidence:** `R3.18C — Outcome A / 47 terminator + 47 continuation candidates / exact next bit / 0 mismatch`
+**Current exact pass:** `R3.18D — minimal native existing-actor next-property control bit`
 
 ## 1. Truthful production boundary
 
-Production now includes R3.18B. MIMIR can start at an existing actor's first `property_present` bit, reuse the R3.16B header decoder, and compose exactly one property only when the resolved tag is one of the six already-admitted K1 primitive scalar tags. The composition stops exactly at that scalar payload end. It does not read the next `property_present` bit and it does not dispatch K2/K3/K4 through this wrapper.
-
-Separate one-value K2/K3/K4 decoders remain production-authoritative at their previously admitted boundaries; R3.18B deliberately does not combine them into the property wrapper.
+Production remains R3.18B. It composes exactly one existing-actor K1 property and stops at that scalar payload end. R3.18C now proves on real replay witnesses that this stop is exactly the next `property_present` location, for both a false terminator and true continuation. **R3.18C did not widen production.**
 
 ```text
-production SHA               de7a2ba40663bb619ca7bd8654846ce87670d023
-production tree              d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
-parent                       f12365b43029f19f3ab1dd889e651f9781b0655e
-lib.rs blob                  478ae5b70514fcff79117b834733849517c48500
-R3.18B focused test blob     927e9a2c834115d1c918fa96fb6d0690bd03965e
+canonical git main before closure  f8f6467f2ee652892329f08a3e532b1e1f834fb3
+production SHA                     de7a2ba40663bb619ca7bd8654846ce87670d023
+production tree                    d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+lib.rs blob                        478ae5b70514fcff79117b834733849517c48500
+R3.18B focused test blob           927e9a2c834115d1c918fa96fb6d0690bd03965e
 ```
 
-## 2. R3.18B production closure
+## 2. R3.18C evidence closure
 
 ```text
-implementation run/job       31942254523 / 95153021330 SUCCESS
-exact candidate validation   31942696817 / 95154052998 SUCCESS
-published main CI            31942870294 / 95154460239 SUCCESS
-published-main validator     31942896666 / 95154519828 SUCCESS
-clean production files       2
-focused R3.18B tests          8/8 PASS
-K1 tags                       Boolean Byte Enum Float Int Int64
-R3.18A-shaped Int=62          PASS
-property absent               reject
-non-K1 tag                    reject before payload read
-header/payload truncation     reject
-trailing poison bits          no effect
-header stop == payload start  true
-composition stop == end       true
-next property bits consumed   0
-Cargo/fixture/corpus/support/
-workflow/continuity mutation  0/0/0/0/0/0/0
+authority head                     a4b71ad43e5cf55c44c9518b24622ce29214acd2
+authority run/job                  31944102614 / 95157425239 SUCCESS
+same-head normal CI                31944102575 / 95157425128 SUCCESS
+artifact                           9262820284
+artifact digest                    sha256:95e89cb350cc4c274d2b7a53198d78941bef54ff1b3f6a165b2ba9710659ec07
+replay identity / Boxcars parse    47/47
+candidate rows                     94
+terminator candidates              47
+continuation candidates            47
+native/oracle mismatch             0
+second stream bits consumed        0
+second payload bits consumed       0
+privacy                            PASS
+production/Cargo/fixture/corpus/
+support mutation                   0/0/0/0/0
 ```
 
-## 3. R3.18C exact next pass
-
-R3.18C is evidence-only. On deterministic real existing-actor witnesses whose first property is R3.18B-admitted K1, compare the native one-property `stop_bit` to the pinned Boxcars oracle's next `property_present` start. Then consume **exactly one bit** at that location in the evidence probe.
-
-Required witness classes, if both exist in the frozen supported lane:
+Selected terminator:
 
 ```text
-terminator     next property_present = false
-continuation   next property_present = true
+replay                             external_fixtures/sample_001.replay
+frame / actor ordinal / actor id   0 / 115 / 60
+actor context / property object    344 / 18
+first property                     Float / raw bits 1092616192
+payload                            [36593,36625)
+native stop / next-bit start       36625 / 36625
+next property_present              false at [36625,36626)
+one-bit evidence stop              36626
 ```
 
-For the terminator case, prove the actor's property sequence ends exactly after that one bit and no stream/payload bits are consumed. For the continuation case, prove only that continuation is true and stop immediately after the bit. A second stream ID, property header, or payload remains outside the native evidence boundary.
+Selected continuation:
+
+```text
+replay                             external_fixtures/sample_001.replay
+frame / actor ordinal / actor id   0 / 63 / 2
+actor context / property object    98 / 55
+first property                     Int / 62
+payload                            [10234,10266)
+native stop / next-bit start       10266 / 10266
+next property_present              true at [10266,10267)
+one-bit evidence stop              10267
+```
+
+Both witnesses passed exact header/semantic/payload boundaries, next-bit equality, one-bit stop, truncation-without-cursor-advance, post-stop poison, repeatability and R3.18B negative regression.
+
+## 3. R3.18D exact next pass
+
+Publish only the production equivalent of the one-bit evidence boundary. The new API should be structurally tied to an already-valid R3.18B first-property result, validate that result's end invariants, read the bit at `first_property.stop_bit`, and return:
+
+```text
+next_property_present
+property_present_start_bit
+property_present_end_bit
+stop_bit
+```
+
+The stop must equal `start + 1`. `false` records an exact terminator; `true` records only that continuation exists. Neither result may decode the second stream ID, second property header, or second payload. The API must not be a chainable generalized loop primitive detached from the original first-property result.
 
 ## 4. Still closed
 
 ```text
-production property_present loop
+repeated production property_present loop
 second property stream/header/payload
 K2/K3/K4 dispatch through the R3.18B wrapper
 next actor / next frame iteration
@@ -69,5 +93,5 @@ raw-state extraction
 native event extraction
 replay slicing
 skill/runtime/export widening
-Cargo/fixture/corpus/support-lane expansion
+Cargo/fixture/corpus/support/workflow expansion
 ```
