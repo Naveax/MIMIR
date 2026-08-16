@@ -1,0 +1,195 @@
+name: R3.18A Continuity Closure
+
+on:
+  push:
+    branches:
+      - agent/r318a-continuity-sync
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  continuity:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      BASE_MAIN: c5878cf755302fe52e9e67741486306cd30db059
+      PROD_SHA: 492cc8218be7abc6db8f75acaea33d009ab2f175
+      PROD_TREE: a66c47d7fb58da508188e64d42141987a0021a07
+      LIB_BLOB: 0161ba7fdcb6e395a2c972061ff6f56d07b8b5e8
+      K4_GROUP_BLOB: 103503e25bc5af48381df021ab58133694fcece6
+      K4_NATIVE_BLOB: a9c41f3bb11343165183ac9c815ab8fdf085936c
+      K4_TEST_BLOB: 70437244bb49224281ee3a2e745e7b8a4b7a093a
+      A_AUTH_HEAD: 12ee215fd843260d5ece14f27aa1171cb862f49e
+      A_RUN: '31941400273'
+      A_JOB: '95151024131'
+      A_CI_RUN: '31941400276'
+      A_CI_JOB: '95151024211'
+      A_ARTIFACT: '9262129856'
+      A_ARTIFACT_DIGEST: sha256:295247a5f73159ac74539ffc5abf1eb2273fb6dc07a57f8b16976552a17b3ab8
+
+    steps:
+      - name: Checkout disposable continuity branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify fresh main, production blobs, and R3.18A authority
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r318a-single-property-boundary
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "${PROD_SHA}^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/k4_admitted_groups.rs")" = "$K4_GROUP_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/src/k4_native.rs")" = "$K4_NATIVE_BLOB"
+          test "$(git rev-parse "${BASE_MAIN}:crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs")" = "$K4_TEST_BLOB"
+          test "$(git rev-parse origin/evidence/r318a-single-property-boundary)" = "$A_AUTH_HEAD"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$A_RUN" > "$RUNNER_TEMP/r318a_run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$A_CI_RUN" > "$RUNNER_TEMP/r318a_ci.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$A_ARTIFACT" > "$RUNNER_TEMP/r318a_artifact.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          temp=Path(os.environ['RUNNER_TEMP'])
+          run=json.loads((temp/'r318a_run.json').read_text(encoding='utf-8'))
+          ci=json.loads((temp/'r318a_ci.json').read_text(encoding='utf-8'))
+          art=json.loads((temp/'r318a_artifact.json').read_text(encoding='utf-8'))
+          head=os.environ['A_AUTH_HEAD']
+          assert str(run['id'])==os.environ['A_RUN'] and run['head_sha']==head and run['conclusion']=='success'
+          assert str(ci['id'])==os.environ['A_CI_RUN'] and ci['head_sha']==head and ci['conclusion']=='success'
+          assert str(art['id'])==os.environ['A_ARTIFACT'] and art['digest']==os.environ['A_ARTIFACT_DIGEST'] and not art['expired']
+          assert str(art['workflow_run']['id'])==os.environ['A_RUN'] and art['workflow_run']['head_sha']==head
+          print('R3_18A_CONTINUITY_FROZEN_AUTHORITY=PASS')
+          PY
+
+      - name: Generate closure from exact canonical main
+        shell: pwsh
+        run: |
+          $tmp = Join-Path $env:RUNNER_TEMP 'r318a_continuity.py'
+          Copy-Item tools/_tmp_r318a_continuity.py $tmp -Force
+          git reset --hard $env:BASE_MAIN
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python $tmp
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $files = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18A_DECISION.md',
+            'docs/continuity/MIMIR_R3_18B_EXECUTION_SPEC.md'
+          )
+          foreach ($f in $files) {
+            $content = Get-Content $f -Raw
+            $content = [regex]::Replace($content, '[ \t]+(?=\r?$)', '', 'Multiline')
+            [IO.File]::WriteAllText((Resolve-Path $f), $content.Replace("`r`n","`n"), [Text.UTF8Encoding]::new($false))
+          }
+          Write-Host 'R3_18A_CONTINUITY_GENERATION=PASS'
+
+      - name: Enforce exact six-file continuity scope
+        shell: pwsh
+        run: |
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18A_DECISION.md',
+            'docs/continuity/MIMIR_R3_18B_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $actual = @(
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          ) | Where-Object { $_ } | Sort-Object -Unique
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) {
+            Write-Host 'Expected:'; $expected
+            Write-Host 'Actual:'; $actual
+            $delta | Format-Table
+            exit 1
+          }
+          git diff --exit-code -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18A_CONTINUITY_SCOPE=PASS files=6 production=0 Cargo=0 fixture=0 corpus=0 support=0'
+
+      - name: Verify semantic anchors
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+          main=Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          graph=Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          current=Path('docs/continuity/MIMIR_CURRENT_STATE.md').read_text(encoding='utf-8')
+          decision=Path('docs/continuity/MIMIR_R3_18A_DECISION.md').read_text(encoding='utf-8')
+          spec=Path('docs/continuity/MIMIR_R3_18B_EXECUTION_SPEC.md').read_text(encoding='utf-8')
+          state=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          prod='492cc8218be7abc6db8f75acaea33d009ab2f175'
+          auth='12ee215fd843260d5ece14f27aa1171cb862f49e'
+          assert state['last_production_code_sha']==prod
+          assert state['last_production_milestone']=='R3.17O'
+          assert state['last_completed_evidence_pass']=='R3.18A'
+          assert state['current_pass']=='R3.18B'
+          assert state['r3_18a']['authority_head']==auth
+          assert state['r3_18a']['workflow_run']==31941400273
+          assert state['r3_18a']['exact_head_ci_run']==31941400276
+          assert state['r3_18a']['artifact_id']==9262129856
+          assert state['r3_18a']['mismatch_count']==0
+          assert state['r3_18a']['next_property_present_consumed_bits']==0
+          assert 'CURRENT_PASS:\n  R3.18B' in main
+          assert 'R3_18A_EVIDENCE_CLOSURE:' in main
+          assert 'R3_18B_OPEN_BOUNDARY:' in main
+          assert 'R3.18A single-property evidence decision' in graph
+          assert 'R3.18B active single-property K1 composition spec' in graph
+          assert 'MIMIR_R3_18A_DECISION.md' in graph and 'MIMIR_R3_18B_EXECUTION_SPEC.md' in graph
+          assert '**Outcome:** **A — ADMITTED / EVIDENCE COMPLETE**' in decision
+          assert 'next_property_present_consumed_bits = 0' in decision
+          assert '**Status:** ACTIVE' in spec and '**Property loop:** forbidden' in spec
+          assert 'Boolean / Byte / Enum / Float / Int / Int64' in spec
+          assert 'R3.18B' in current and 'Int / 62' in current
+          print('R3_18A_CONTINUITY_SEMANTICS=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean R3.18A continuity candidate via Git plumbing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_R3_18A_DECISION.md \
+            docs/continuity/MIMIR_R3_18B_EXECUTION_SPEC.md
+          tree="$(git write-tree)"
+          commit="$(printf '%s\n' 'Close R3.18A and open R3.18B K1 single-property composition' | git commit-tree "$tree" -p "$BASE_MAIN")"
+          echo "R3_18A_CONTINUITY_CANDIDATE=$commit"
+          echo "R3_18A_CONTINUITY_TREE=$tree"
+          echo "R3_18A_CONTINUITY_PARENT=$BASE_MAIN"
+          git diff-tree --no-commit-id --name-status -r "$commit"
+          git push origin "$commit:refs/heads/candidate/r3-18a-continuity-clean"
+          echo 'R3_18A_CONTINUITY_PUBLICATION=PASS'
