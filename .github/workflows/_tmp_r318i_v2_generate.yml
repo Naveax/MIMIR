@@ -89,9 +89,9 @@ jobs:
           tools/_tmp_r318i_run.sh
           EOF
           )
-          actual=$(git status --porcelain=v1 | sed -E 's/^.. //' | sort)
-          test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
           git add .github/workflows/_tmp_r318i_evidence.yml tools/_tmp_r318i_*.py tools/_tmp_r318i_native_probe.rs tools/_tmp_r318i_run.sh
+          actual=$(git diff --cached --name-only | sort)
+          test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
           test "$(git diff --cached --name-only | wc -l)" -eq 5
           git diff --cached --exit-code -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md
 
