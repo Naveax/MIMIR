@@ -1,0 +1,119 @@
+name: R3.18B Exact Production Candidate Validation
+
+on:
+  push:
+    branches:
+      - validation/r318b-production-exact
+
+permissions:
+  contents: read
+
+jobs:
+  exact-candidate:
+    runs-on: windows-latest
+    timeout-minutes: 80
+    env:
+      CANDIDATE_SHA: de7a2ba40663bb619ca7bd8654846ce87670d023
+      CANDIDATE_TREE: d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+      BASE_MAIN: f12365b43029f19f3ab1dd889e651f9781b0655e
+    steps:
+      - name: Checkout validation trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reset to exact clean production candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main candidate/r3-18b-single-k1-property-clean
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse origin/candidate/r3-18b-single-k1-property-clean)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse "${CANDIDATE_SHA}^{tree}")" = "$CANDIDATE_TREE"
+          test "$(git rev-parse "${CANDIDATE_SHA}^1")" = "$BASE_MAIN"
+          git reset --hard "$CANDIDATE_SHA"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          echo "R3_18B_EXACT_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18B_EXACT_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18B_LIB_BLOB=$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)"
+          echo "R3_18B_TEST_BLOB=$(git rev-parse HEAD:crates/mimir-replay/tests/r3_18b_single_k1_property.rs)"
+
+      - name: Enforce exact two-file production diff
+        shell: pwsh
+        run: |
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18b_single_k1_property.rs'
+          ) | Sort-Object
+          $actual = @(git diff --name-only "$env:BASE_MAIN" "$env:CANDIDATE_SHA") | Sort-Object
+          $delta = @(Compare-Object $expected $actual)
+          if ($delta.Count -ne 0) {
+            Write-Host 'Expected:'; $expected
+            Write-Host 'Actual:'; $actual
+            $delta | Format-Table
+            exit 1
+          }
+          $forbidden = @(git diff --name-only "$env:BASE_MAIN" "$env:CANDIDATE_SHA" -- Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md)
+          if ($forbidden.Count -ne 0) { $forbidden; exit 1 }
+          Write-Host 'R3_18B_EXACT_SCOPE=PASS files=2 Cargo=0 fixture=0 corpus=0 support=0 workflow=0 continuity=0'
+
+      - name: Verify exact R3.18B source boundary
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          name='pub fn decode_replay_network_existing_actor_single_primitive_property_v1('
+          assert s.count(name)==1
+          start=s.index(name)
+          end=s.index('/// Decode exactly one R3.17B-admitted primitive scalar payload.', start)
+          block=s[start:end]
+          assert block.count('decode_replay_network_existing_actor_first_property_header_v1(')==1
+          assert block.count('decode_replay_network_primitive_scalar_v1(')==1
+          for tag in ['Boolean','Byte','Enum','Float','Int','Int64']:
+              assert f'ReplayNetworkAttributeTagV1::{tag}' in block
+          for forbidden in ['decode_replay_network_k2', 'decode_replay_network_k3', 'decode_replay_network_k4_v1', 'while ', 'for ']:
+              assert forbidden not in block, forbidden
+          assert 'property-absent' in block
+          assert 'unsupported-tag' in block
+          assert 'header.stop_bit != payload_start_bit' in block
+          assert 'scalar.stop_bit != scalar.payload_end_bit' in block
+          test=Path('crates/mimir-replay/tests/r3_18b_single_k1_property.rs').read_text(encoding='utf-8')
+          for anchor in [
+              'all_six_k1_tags_compose_at_aligned_and_unaligned_property_starts',
+              'r3_18a_shaped_real_context_int_62_composes_and_stops_at_payload_end',
+              'trailing_and_next_property_poison_bits_are_never_consumed',
+              'absent_first_property_is_rejected_without_payload_composition',
+              'non_k1_resolved_tag_is_rejected_before_payload_read',
+              'header_truncation_fails_closed',
+              'payload_truncation_fails_closed_after_exact_header_resolution',
+              'repeatability_is_exact',
+          ]:
+              assert anchor in test, anchor
+          print('R3_18B_EXACT_SOURCE_BOUNDARY=PASS')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Focused exact-candidate tests
+        shell: pwsh
+        run: |
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p mimir-replay --test r3_18b_single_k1_property
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_EXACT_FOCUSED=PASS'
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host 'R3_18B_EXACT_FULL_VERIFIER=PASS'
+
+      - name: Receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$CANDIDATE_TREE"
+          echo 'R3_18B_EXACT_CANDIDATE_VALIDATION=PASS'
