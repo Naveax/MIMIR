@@ -1,0 +1,108 @@
+name: R3.18F Continuity Published Main V5
+
+on:
+  push:
+    branches: [validation/r318f-continuity-published-main-v5]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 85
+    env:
+      PREVIOUS_MAIN: 3a10ee59ba42722b59ca6c5b816205f6e5d603ea
+      PUBLISHED: 289c9cec0b709a27665370871dc7480b5df93270
+      PUBLISHED_TREE: 98100763fa27a60a149de7c958ff9ecf1049cc13
+      PROD: 4adadd185783954c7fb6ad67db14b77b377cdde5
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reset to exact published main and freeze identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$PUBLISHED"
+          test "$(git rev-parse origin/main^{tree})" = "$PUBLISHED_TREE"
+          git reset --hard "$PUBLISHED"
+          test "$(git rev-parse HEAD)" = "$PUBLISHED"
+          test "$(git rev-parse HEAD^{tree})" = "$PUBLISHED_TREE"
+          test "$(git rev-parse HEAD^)" = "$PREVIOUS_MAIN"
+          test "$(git rev-list --count "$PREVIOUS_MAIN..$PUBLISHED")" = "1"
+          test "$(git rev-list --count "$PUBLISHED..$PREVIOUS_MAIN")" = "0"
+          echo 'R3_18F_PUBLISHED_MAIN_IDENTITY=PASS'
+
+      - name: Verify published six-file scope and handbook delta
+        shell: pwsh
+        run: |
+          $expected=@(
+            'MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json','docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_R3_18F_DECISION.md','docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md'
+          )|Sort-Object
+          $actual=@(git diff --name-only $env:PREVIOUS_MAIN $env:PUBLISHED)|Where-Object{$_}|Sort-Object
+          $delta=@(Compare-Object $expected $actual)
+          if($delta.Count -ne 0){$delta|Format-Table;exit 1}
+          if(@(git diff --name-only $env:PREVIOUS_MAIN $env:PUBLISHED -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github).Count -ne 0){throw 'forbidden production/support diff'}
+          $ns=@(git diff --numstat $env:PREVIOUS_MAIN $env:PUBLISHED -- MIMIR_CONTINUE_HERE.md)
+          $p=$ns[0]-split "`t";$a=[int]$p[0];$d=[int]$p[1]
+          if($a -ne 62 -or $d -ne 23){throw "handbook exact diff mismatch +$a/-$d"}
+          $baseLines=@(git show "$env:PREVIOUS_MAIN`:MIMIR_CONTINUE_HERE.md");$newLines=@(Get-Content MIMIR_CONTINUE_HERE.md)
+          if(($newLines.Count-$baseLines.Count) -ne 39){throw 'handbook line delta mismatch'}
+          $h=Get-Content MIMIR_CONTINUE_HERE.md -Raw
+          foreach($x in @('# 9.7 Exact-SHA validation','# 10. PASS TEMPLATE — COPY THIS FOR EVERY FUTURE PASS','# 13. CURRENT PASS CHECKLIST — R3.14A','**Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA`')){if(-not $h.Contains($x)){throw "missing handbook anchor $x"}}
+          git diff --check $env:PREVIOUS_MAIN $env:PUBLISHED
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          Write-Host 'R3_18F_PUBLISHED_MAIN_SCOPE=PASS files=6 handbook=+62/-23 production=0'
+
+      - name: Verify corrected published semantics
+        shell: pwsh
+        run: |
+          @'
+          import json
+          from pathlib import Path
+          def read(p): return Path(p).read_text(encoding='utf-8')
+          S=json.loads(read('docs/continuity/MIMIR_CONTINUITY_STATE.json'))
+          docs={p:read(p) for p in ['MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md','docs/continuity/MIMIR_CURRENT_STATE.md','docs/continuity/MIMIR_R3_18F_DECISION.md','docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md']}
+          r=S['r3_18f']; spec=docs['docs/continuity/MIMIR_R3_18G_EXECUTION_SPEC.md']; decision=docs['docs/continuity/MIMIR_R3_18F_DECISION.md']; main=docs['MIMIR_CONTINUE_HERE.md']; graph=docs['MIMIR_KNOWLEDGE_GRAPH.md']
+          assert S['last_production_code_sha']=='4adadd185783954c7fb6ad67db14b77b377cdde5'
+          assert S['last_production_milestone']=='R3.18D'
+          assert S['last_completed_read_only_audit']=='R3.18F' and S['last_completed_evidence_pass']=='R3.18F'
+          assert S['current_pass']=='R3.18G'
+          assert r['evidence_head_sha']=='27a855a9cfb82a0294dd1601e4da01c9fdfad264'
+          assert r['evidence_tree']=='4058b67da82e9fbfcc078e975b26d186ec68e6f0'
+          assert (r['authority_run'],r['authority_job'])==(31951039411,95174417526)
+          assert (r['same_head_normal_ci_run'],r['same_head_normal_ci_job'])==(31951039378,95174417478)
+          assert r['artifact_id']==9264673141
+          assert r['artifact_sha256']=='e31e09abf322b6458f9034b06efe5502bb3b7f1011dfb08c9ffd6d1b1cd1b361'
+          assert r['continuation_header_native_success']=='47/47'
+          assert r['terminator_one_bit_stop_exact']=='47/47'
+          assert r['continuation_attribute_tag_counts']=={'Int':46,'String':1}
+          assert r['header_truncation_rows']==32 and r['native_oracle_mismatch_count']==0
+          assert r['second_payload_bits_consumed']==0 and r['third_property_bits_consumed']==0
+          assert r['privacy']=='PASS' and r['production_cargo_fixture_corpus_support_mutation']=='0/0/0/0/0'
+          assert 'CURRENT_PASS:\n  R3.18G' in main and 'R3_18F_EVIDENCE_CLOSURE:' in main and 'R3_18G_OPEN_BOUNDARY:' in main
+          assert 'R3.18F second-property-header evidence decision' in graph and 'R3.18G active bounded second-property-header production spec' in graph
+          assert '**Outcome:** **A — ADMITTED / READ-ONLY EVIDENCE COMPLETE**' in decision
+          for x in ['**Status:** ACTIVE','**Pass type:** production implementation','**Second-property payload decode:** forbidden','**Third property / repeated loop:** forbidden','**Generic chainable property cursor:** forbidden','require resolved tag in {Int, String}','continuation Int','continuation String header','explicit exact Int/String second-header allowlist']:
+              assert x in spec,x
+          print('R3_18F_PUBLISHED_MAIN_SEMANTICS=PASS')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+
+      - name: Full repository verifier
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
