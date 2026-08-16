@@ -9257,3 +9257,151 @@ mod tests {
         assert_error_contains(error, "first NewActor envelope error: unsupported-input");
     }
 }
+
+/// R3.18J bounded second-property payload value.
+///
+/// This enum represents exactly one second payload after the already-bounded R3.18G header
+/// composition. It is not a generic property value/cursor and does not authorize another control
+/// bit or property.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ReplayNetworkExistingActorSecondPropertyPayloadV1 {
+    Int(ReplayNetworkPrimitiveScalarDecodeV1),
+    String(ReplayNetworkK2DecodeV1),
+}
+
+/// Result of composing at most one R3.18I-admitted second-property payload.
+///
+/// A terminator retains `second_payload == None` and stops at the R3.18G control end. A
+/// continuation decodes exactly one `Int` or exact-context `String` payload and stops at that
+/// payload's end. The following `property_present` bit is outside this API.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadV1 {
+    pub header_composition: ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyHeaderV1,
+    pub second_payload: Option<ReplayNetworkExistingActorSecondPropertyPayloadV1>,
+    pub stop_bit: u64,
+}
+
+/// Compose exactly one optional R3.18I-admitted second payload after the R3.18G header boundary.
+///
+/// The String lane is intentionally restricted to the exact observed R3.18I decode context
+/// (`net_version=10`, `is_rl_223=false`). No third-property control bit is read.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_v1(
+    network_bytes: &[u8],
+    first_property: &ReplayNetworkExistingActorSinglePrimitivePropertyV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    k2_context: ReplayNetworkK2DecodeContextV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadV1> {
+    let header_composition =
+        decode_replay_network_existing_actor_after_first_primitive_second_property_header_v1(
+            network_bytes,
+            first_property,
+            lookup_plan,
+        )?;
+
+    let Some(second_header) = header_composition.second_header.as_ref() else {
+        let stop_bit = header_composition.stop_bit;
+        return Ok(
+            ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadV1 {
+                header_composition,
+                second_payload: None,
+                stop_bit,
+            },
+        );
+    };
+
+    let payload_start_bit = second_header.payload_start_bit.ok_or_else(|| {
+        network_bit_error(
+            "missing-second-payload-start",
+            "R3.18G returned a present second header without payload_start",
+        )
+    })?;
+    if second_header.stop_bit != payload_start_bit
+        || header_composition.stop_bit != payload_start_bit
+    {
+        return Err(network_bit_error(
+            "inconsistent-second-payload-start",
+            "R3.18G second-header stop does not equal payload_start",
+        ));
+    }
+
+    let tag = second_header.resolved_attribute_tag.ok_or_else(|| {
+        network_bit_error(
+            "missing-second-attribute-tag",
+            "R3.18G returned a present second header without a resolved tag",
+        )
+    })?;
+
+    let second_payload = match tag {
+        ReplayNetworkAttributeTagV1::Int => {
+            let decoded = decode_replay_network_primitive_scalar_v1(
+                network_bytes,
+                payload_start_bit,
+                ReplayNetworkAttributeTagV1::Int,
+            )?;
+            if decoded.payload_start_bit != payload_start_bit
+                || decoded.stop_bit != decoded.payload_end_bit
+            {
+                return Err(network_bit_error(
+                    "inconsistent-second-int-boundary",
+                    "primitive Int decoder returned inconsistent payload coordinates",
+                ));
+            }
+            ReplayNetworkExistingActorSecondPropertyPayloadV1::Int(decoded)
+        }
+        ReplayNetworkAttributeTagV1::String => {
+            let admitted_context = ReplayNetworkK2DecodeContextV1 {
+                net_version: 10,
+                is_rl_223: false,
+            };
+            if k2_context != admitted_context {
+                return Err(network_bit_error(
+                    "unsupported-second-string-context",
+                    format!(
+                        "R3.18I admits String only at net_version=10/is_rl_223=false, got net_version={}/is_rl_223={}",
+                        k2_context.net_version, k2_context.is_rl_223
+                    ),
+                ));
+            }
+            let decoded = decode_replay_network_k2_v1(
+                network_bytes,
+                payload_start_bit,
+                ReplayNetworkAttributeTagV1::String,
+                k2_context,
+            )?;
+            if decoded.payload_start_bit != payload_start_bit {
+                return Err(network_bit_error(
+                    "inconsistent-second-string-boundary",
+                    "K2 String decoder returned an inconsistent payload start",
+                ));
+            }
+            ReplayNetworkExistingActorSecondPropertyPayloadV1::String(decoded)
+        }
+        other => {
+            return Err(network_bit_error(
+                "unsupported-second-payload-tag",
+                format!("R3.18J admits only Int/String second payloads, got {other:?}"),
+            ));
+        }
+    };
+
+    let stop_bit = match &second_payload {
+        ReplayNetworkExistingActorSecondPropertyPayloadV1::Int(decoded) => decoded.payload_end_bit,
+        ReplayNetworkExistingActorSecondPropertyPayloadV1::String(decoded) => {
+            decoded.payload_end_bit
+        }
+    };
+    if stop_bit < payload_start_bit {
+        return Err(network_bit_error(
+            "invalid-second-payload-end",
+            "second payload end precedes payload start",
+        ));
+    }
+
+    Ok(
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadV1 {
+            header_composition,
+            second_payload: Some(second_payload),
+            stop_bit,
+        },
+    )
+}
