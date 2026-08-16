@@ -50,14 +50,15 @@ jobs:
           test "$(git rev-parse "${PROD_SHA}:crates/mimir-replay/tests/r3_17o_k4_attribute_decoder.rs")" = "$K4_TEST_BLOB"
           git cat-file -e "${P_AUTH_HEAD}^{commit}"
           test "$(git rev-parse origin/evidence/r317p-k4-differential)" = "$P_AUTH_HEAD"
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$P_RUN" > r317p_run.json
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$P_CI_RUN" > r317p_ci.json
-          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$P_ARTIFACT" > r317p_artifact.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$P_RUN" > "$RUNNER_TEMP/r317p_run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$P_CI_RUN" > "$RUNNER_TEMP/r317p_ci.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$P_ARTIFACT" > "$RUNNER_TEMP/r317p_artifact.json"
           python - <<'PY'
           import json,os
-          run=json.load(open('r317p_run.json',encoding='utf-8'))
-          ci=json.load(open('r317p_ci.json',encoding='utf-8'))
-          art=json.load(open('r317p_artifact.json',encoding='utf-8'))
+          root=os.environ['RUNNER_TEMP']
+          run=json.load(open(os.path.join(root,'r317p_run.json'),encoding='utf-8'))
+          ci=json.load(open(os.path.join(root,'r317p_ci.json'),encoding='utf-8'))
+          art=json.load(open(os.path.join(root,'r317p_artifact.json'),encoding='utf-8'))
           head=os.environ['P_AUTH_HEAD']
           assert str(run['id'])==os.environ['P_RUN'] and run['head_sha']==head and run['conclusion']=='success'
           assert str(ci['id'])==os.environ['P_CI_RUN'] and ci['head_sha']==head and ci['conclusion']=='success'
