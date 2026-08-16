@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18J — bounded native second-property payload composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18I — second-property payload evidence / Outcome A / 94/94 exact / Int=46 String=1 / 0 mismatch / third-property bits 0
+  R3.18K — published R3.18J second-property payload differential / Outcome A / 94/94 exact / Int=46 String=1 / 0 mismatch / following-property bits 0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18I — second-property payload evidence / Outcome A / 47 terminators + 47 continuations / Int=46 String=1 / 0 mismatch / third property 0
+  R3.18K — published second-property payload differential / Outcome A / 47 terminators + 47 continuations / Int=46 String=1 / 0 mismatch / following property 0
 
 CURRENT_PASS:
-  R3.18K — published second-property payload real-replay differential audit
+  R3.18L — following-property control-bit evidence after one published second payload
 
 CURRENT_PASS_TYPE:
-  read-only evidence / validate the published R3.18J API on the frozen R3.18I lane; no following property control access
+  read-only evidence / on the exact 47 R3.18K continuation rows, inspect exactly the one property_present bit at the published R3.18J stop and compare it to pinned Boxcars; no following stream/header/payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -88,8 +88,21 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18H closed Outcome A on the published R3.18G API: 94/94 frozen rows exact, 47 terminators + 47 continuations, Int=46/String=1, 32 real header truncation negatives, mismatch 0, second payload + third-property consumption 0/0
   R3.18I CLOSED Outcome A: 94/94 frozen rows exact; 47 terminators + 47 continuations; second payload Int=46/String=1; native/oracle mismatch 0; third-property bits consumed 0; production unchanged
   R3.18J PRODUCTION at 330ab01890a7c09eff1805e437584fb3be0a1134: composes exactly one optional Int|String second payload through exact payload end; String is additionally net10/non-RL223 only
-  R3.18K ACTIVE read-only differential; following property/control bit remains unobserved
-  NO following/third property control/header/payload, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18K CLOSED Outcome A: published R3.18J API matched the frozen 94-row lane exactly; mismatch 0; following-property bits consumed 0
+  R3.18L ACTIVE read-only evidence may inspect exactly one following property_present control bit after a successful R3.18J second payload
+  NO following stream/header/payload, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+R3_18K_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 330ab01890a7c09eff1805e437584fb3be0a1134
+  authority head: 926ddd88331ef0372b17b495cb06502010ab39ac
+  authority run/job: 31977860600 / 95239932737 SUCCESS
+  exact-head normal CI: 31977860563 / 95239932564 SUCCESS
+  artifact: 9271561853 / 18744 bytes
+  artifact digest: sha256:a455984c1149cb8f186eedb34d3e148fe45b8592c928cd9246d36cd52843262f
+  94/94 rows exact / 47 terminator + 47 continuation / Int=46 String=1 / mismatch 0
+  terminator no-post-control lookup: 47/47; real payload truncation: 47/47
+  String wrong-context / tag-outside-Int-String / repeatability / post-payload poison: PASS
+  following-property bits consumed: 0; witness reselection: 0; privacy: PASS
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 R3_18J_PRODUCTION_CLOSURE:
   Outcome A / production 330ab01890a7c09eff1805e437584fb3be0a1134 / tree 5540b6a86e53d243dabbabea223a5afa8657521c
   lib/test blobs: ee9b0c71871df7ff52275581eb7ad4c023b8ba79 / c5a97c5a17ae2ea292790a020673dd26a0150024
@@ -1249,7 +1262,7 @@ Full production terminal/trailer behavior remains closed until the frame iterati
 
 ---
 
-# 13. CURRENT PASS CHECKLIST — R3.14A
+# 13. HISTORICAL PASS CHECKLIST — R3.14A (CLOSED; RETAINED FOR ROADMAP HISTORY)
 
 **Goal:** gather exact differential evidence for first frame + first actor envelope header before MIMIR consumes these bits natively.
 
@@ -2494,15 +2507,15 @@ Legend:
 [x] Footer lookup materialization
 [x] Static network registries / lookup plan R3.13
 [x] R3.14 read-only network format audit
-[>] R3.14A first frame + first actor oracle evidence
-[ ] R3.14B bit-cursor/bounded-int contract
-[ ] R3.14C native bit primitive
-[ ] R3.14D first actor envelope native reader
-[ ] R3.14E differential closure
-[ ] R3.15 NewActor payload
-[ ] R3.16 existing actor/property envelope
-[ ] R3.17 attribute decoder families
-[ ] R3.18 complete property loop
+[x] R3.14A first frame + first actor oracle evidence
+[x] R3.14B bit-cursor/bounded-int contract
+[x] R3.14C native bit primitive
+[x] R3.14D first actor envelope native reader
+[x] R3.14E differential closure
+[x] R3.15 NewActor branch through admitted spawn trajectory
+[x] R3.16 existing actor/property envelope header
+[x] R3.17 attribute decoder families K1/K2/K3/K4 through admitted contracts
+[>] R3.18 complete property loop — active R3.18L following-property control evidence
 [ ] R3.19 actor lifecycle table
 [ ] R3.20 complete frame
 [ ] R3.21 frame iteration / terminal / trailer
@@ -2743,7 +2756,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR currently has an evidence-backed production static network lookup plan at R3.13, proven on 3,990,310 supported-corpus attribute updates, but it still has not admitted native actor-envelope bit consumption; R3.14A evidence is in flight on `agent/r3-14a-first-actor-envelope-evidence`, and the project must proceed through the complete roadmap in this file until replay → raw state → event/slice → skill compiler → counterfactual teacher → training/runtime adapters → Gabriel closed loop → scalable corpus intelligence is fully productionized.**
+> **MIMIR production is at R3.18J `330ab01890a7c09eff1805e437584fb3be0a1134`: one existing-actor K1 first property may compose an optional second `Int|String` payload through its exact end. R3.18K closed Outcome A on the frozen 94-row real-replay lane with zero mismatch and zero following-property-bit consumption. R3.18L is now the first unfinished canonical pass and may inspect exactly one following `property_present` control bit; following stream/header/payload and generalized looping remain closed.**
 
 ---
 
@@ -3101,7 +3114,7 @@ production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
 Production authority remains R3.18G `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c`. R3.18H admitted evidence only.
 
-# CURRENT PASS CHECKLIST — R3.18I
+# HISTORICAL PASS CHECKLIST — R3.18I (CLOSED / OUTCOME A)
 
 - [ ] Fresh-read `main`; require R3.18G production authority unchanged except continuity-only commits after it.
 - [ ] Freeze R3.18H authority receipt and the exact R3.18F 94-row lane; no witness reselection.
@@ -3115,3 +3128,35 @@ Production authority remains R3.18G `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c`. 
 - [ ] Run full regression/workspace/clippy/repository verification and same-head normal CI.
 - [ ] Require production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.
 - [ ] Outcome A may only open a separate bounded second-property payload production-composition pass; if String remains unresolved, open a narrower String payload evidence/contract pass instead. No third property or loop.
+
+---
+
+# R3.18K OUTCOME A ADMITTED / ACTIVE R3.18L — 2026-08-17
+
+```text
+production code SHA = 330ab01890a7c09eff1805e437584fb3be0a1134
+R3.18K evidence head = 926ddd88331ef0372b17b495cb06502010ab39ac
+R3.18K run/job        = 31977860600 / 95239932737 SUCCESS
+R3.18K same-head CI   = 31977860563 / 95239932564 SUCCESS
+R3.18K artifact       = 9271561853 / sha256:a455984c1149cb8f186eedb34d3e148fe45b8592c928cd9246d36cd52843262f
+R3.18K outcome        = A / 94 OF 94 PUBLISHED SECOND-PAYLOAD DIFFERENTIAL EXACT
+ACTIVE NEXT PASS      = R3.18L — following-property control-bit read-only evidence
+```
+
+R3.18K reused the exact immutable R3.18I 94-row lane without witness reselection. The published R3.18J API matched all 47 terminators and all 47 continuations; continuation tags remained `Int=46 / String=1`; semantic/shape/end/stop equality was exact; mismatch count was zero; all 47 real payload truncation controls, all 47 terminator no-lookup controls, String wrong-context, tag-outside-`Int|String`, repeatability and post-payload poison controls passed. No following property bit was consumed and production/Cargo/fixture/corpus/support mutation remained `0/0/0/0/0`.
+
+## CURRENT PASS CHECKLIST — R3.18L
+
+- [ ] Re-fetch fresh `main`; require production Rust still exactly R3.18J `330ab01890a7c09eff1805e437584fb3be0a1134` except continuity-only commits.
+- [ ] Freeze R3.18K authority receipt and immutable R3.18I/K replay+witness identities; no witness reselection.
+- [ ] Use exactly the 47 R3.18K continuation rows that successfully decoded a second payload.
+- [ ] Reconstruct the published R3.18J result and require its `stop_bit` to equal the frozen second-payload end before observing anything later.
+- [ ] With pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b`, observe exactly the next `property_present` bit at that stop for each row.
+- [ ] Compare bit start/value/end exactly; record false/true distribution without selecting easier rows.
+- [ ] Consume zero following stream/header/payload bits; no repeated loop and no third property composition.
+- [ ] Require one-bit truncation failure, post-control poison invariance and deterministic repeatability.
+- [ ] Produce privacy-safe immutable evidence with exact source/oracle/corpus identities and per-file SHA256 receipt.
+- [ ] Run full `mimir-replay`, workspace check/test/clippy, repository verifier and same-head normal CI.
+- [ ] Require production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.
+- [ ] Outcome A may open only a separate bounded production composition for this one after-second-payload control bit. No following header/payload or generic property loop.
+

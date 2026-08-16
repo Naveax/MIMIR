@@ -41,7 +41,8 @@ R3.18G bounded second-property-header production decision                    |
 R3.18H production second-header differential decision                         |
 R3.18I second-property payload evidence decision / Outcome A CLOSED            |
 R3.18J bounded second-property payload production decision / CLOSED
-R3.18K active published second-payload differential spec               |
+R3.18K published second-payload differential decision / Outcome A CLOSED
+R3.18L active following-property control-bit evidence spec                  |
         |                               |
         +---------------+---------------+
                         |
@@ -114,13 +115,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 52. `docs/continuity/MIMIR_R3_18J_EXECUTION_SPEC.md`
 53. `docs/continuity/MIMIR_R3_18J_DECISION.md`
 54. `docs/continuity/MIMIR_R3_18K_EXECUTION_SPEC.md`
-55. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-56. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-57. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-58. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-59. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-60. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-61. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+55. `docs/continuity/MIMIR_R3_18K_DECISION.md`
+56. `docs/continuity/MIMIR_R3_18L_EXECUTION_SPEC.md`
+57. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+58. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+59. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+60. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+61. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+62. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+63. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
 - same-head normal CI `31975063703/95233164610` SUCCESS
@@ -251,13 +254,19 @@ R3.13 static network lookup plan
       artifact 9267045757 / sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79
       94/94 exact = 47 terminator + 47 continuation / Int=46 String=1 / 32 truncation / 47 no-lookup / mismatch 0 / second payload + third property 0+0
       receipt correction: live artifact 9267045757 / 18658 bytes / sha256:340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79; final job receipt == live seven inner hashes; R3.18I v1 31963757848/95205621914 stopped before evidence on stale continuity receipt
- -> R3.18I second-property payload contract/evidence audit: ACTIVE / READ-ONLY EVIDENCE
-      frozen continuation lane only: characterize exactly 46 Int + 1 String second payload through payload end; 47 terminators remain no-payload controls; no third property/control bit and no loop
+ -> R3.18I second-property payload evidence: OUTCOME A / CLOSED
+      94/94 exact / Int=46 String=1 / mismatch 0 / third-property bits 0
+ -> R3.18J bounded second-property payload composition: PRODUCTION / CLOSED
+      production 330ab01890a7c09eff1805e437584fb3be0a1134 / one optional Int|String second payload through exact end
+ -> R3.18K published R3.18J second-payload differential: OUTCOME A / CLOSED
+      authority 926ddd88331ef0372b17b495cb06502010ab39ac / 31977860600/95239932737 SUCCESS / artifact 9271561853 / mismatch 0 / following bits 0
+ -> R3.18L following-property control-bit evidence: ACTIVE / READ-ONLY
+      exact 47 continuation rows only; one following property_present bit maximum; zero following stream/header/payload bits
 ```
 
 ## Current capability lock
 
-Production at `2b608aafae97b10ecbc884f99e4bd4a73abf7a5c` includes R3.18B's one-property K1 wrapper, R3.18D's structurally tied next-property control, and R3.18G's bounded optional second-property header composition. After one valid first K1 property, production may return `None` for a false next-property bit or resolve exactly one second header in the observed `Int|String` contexts and stop at that header's `payload_start`. It still cannot decode the second payload, read a third property/control bit, or expose a generalized repeated property loop. R3.18H closed Outcome A with 94/94 exact published-production differential rows and zero second-payload/third-property consumption. R3.18I may inspect exactly one second payload read-only on the frozen continuation lane, but production composition remains closed.
+Production is R3.18J `330ab01890a7c09eff1805e437584fb3be0a1134`. After one valid R3.18B K1 first property, the bounded chain may consume the R3.18D control, resolve the exact R3.18G `Int|String` second header, and decode at most one R3.18I-admitted second payload through its exact end. The String branch remains restricted to `net_version=10` and `is_rl_223=false`. R3.18K closed Outcome A by differentially validating this published API over the frozen 94-row lane with zero mismatch, zero witness reselection and zero following-property-bit consumption. R3.18L may now inspect exactly one `property_present` bit after a successful second payload as read-only evidence. Following stream/header/payload bits, a generalized property loop, next actor/frame iteration and lifecycle mutation remain closed.
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
@@ -559,4 +568,30 @@ mismatch / privacy          0 / PASS
 outcome                     A
 ```
 
-R3.18D is now the first dependency-valid unfinished roadmap step: publish only the production one-bit control observation after one valid R3.18B first K1 property. It must stop after that bit. A second stream/header/payload and repeated property loop remain unadmitted.
+Historical note: this paragraph previously named R3.18D as the first unfinished step. R3.18D through R3.18K are now closed according to the newer authority blocks above. The first unfinished canonical step is R3.18L, limited to one following property_present control bit after a successful published R3.18J second payload.
+
+## R3.18K published second-payload differential closure
+
+```text
+authority head              926ddd88331ef0372b17b495cb06502010ab39ac
+authority run/job           31977860600 / 95239932737 SUCCESS
+exact-head normal CI        31977860563 / 95239932564 SUCCESS
+artifact                    9271561853
+artifact digest             sha256:a455984c1149cb8f186eedb34d3e148fe45b8592c928cd9246d36cd52843262f
+rows                        94/94 exact
+terminator / continuation   47 / 47
+continuation tags           Int=46 / String=1
+terminator no-lookup        47/47
+real payload truncation     47/47
+wrong context/tag controls  PASS / PASS
+repeatability / poison      PASS / PASS
+native/oracle mismatch      0
+following property bits     0 consumed
+witness reselection         0
+privacy                     PASS
+prod/Cargo/fixture/corpus/
+support mutations           0/0/0/0/0
+outcome                     A
+next                        R3.18L following-property control-bit evidence
+```
+

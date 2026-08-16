@@ -482,3 +482,15 @@ Next exact pass: `R3.14E — native first-envelope differential audit`.
 - Implementation `31975731621/95234808797`, candidate CI `31975907582/95235253244`, published CI `31976100231/95235742210` SUCCESS.
 - Exactly one optional second payload is now production; Int plus exact-context String only; following property bit remains closed.
 - Next pass: R3.18K published API differential.
+
+## 2026-08-17 — R3.18K published second-payload differential
+
+- Outcome A / read-only evidence closed.
+- Production remains `330ab01890a7c09eff1805e437584fb3be0a1134` (R3.18J).
+- Authority: `926ddd88331ef0372b17b495cb06502010ab39ac`; evidence `31977860600/95239932737` SUCCESS; same-head CI `31977860563/95239932564` SUCCESS.
+- Artifact `9271561853` / `sha256:a455984c1149cb8f186eedb34d3e148fe45b8592c928cd9246d36cd52843262f`.
+- 94/94 exact = 47 terminators + 47 continuations; Int=46 / String=1; mismatch 0.
+- 47/47 terminator no-lookup and 47/47 real payload truncation controls PASS; wrong context/tag, repeatability, poison PASS.
+- Following-property bits consumed 0; witness reselection 0; privacy PASS; mutation `0/0/0/0/0`.
+- Next: R3.18L following-property one-bit read-only evidence.
+
