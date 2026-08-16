@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18D — minimal native existing-actor next-property control bit
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18E — production control-bit real-replay differential audit / Outcome A / 94/94 exact / 0 mismatch
+  R3.18F — second-property-header real-replay evidence / Outcome A / 47 continuation headers exact + 47 terminator negatives / 0 mismatch
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18E — production control-bit differential audit / Outcome A / 47 terminator + 47 continuation / 94/94 exact / 0 mismatch
+  R3.18F — second-property-header real-replay evidence / Outcome A / 47/47 continuation headers / 47/47 terminators / 0 mismatch / second payload + third property 0 + 0
 
 CURRENT_PASS:
-  R3.18F — second-property-header real-replay evidence
+  R3.18G — minimal native existing-actor second-property-header composition
 
 CURRENT_PASS_TYPE:
-  read-only evidence / observe the second property header boundary on the frozen real-replay continuation lane and stop at payload start
+  production implementation / bounded optional second-property header after one valid R3.18B first primitive property; stop at second payload_start
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -81,9 +81,10 @@ CURRENT_PRODUCTION_HARD_STOP:
   K3 remains limited to its exact R3.17J structural/context allowlist; K4 remains limited to the exact 161 R3.17N tuples
   R3.18B composes exactly one existing-actor K1 property through its payload end
   R3.18D is production at 4adadd185783954c7fb6ad67db14b77b377cdde5 and, only from an already-valid R3.18B first-property result, reads exactly the next property_present bit and stops one bit later
-  R3.18E closed Outcome A: 94/94 real-replay terminator/continuation rows matched pinned Boxcars exactly with zero second stream/header/payload consumption
-  R3.18F is read-only second-property-header evidence only: on continuation witnesses it may observe property_present + bounded stream/header resolution through payload_start, then MUST stop before payload
-  NO production second-property composition, second payload, repeated/generalized property loop, K2/K3/K4 wrapper composition, next actor, next frame, lifecycle mutation, raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18E closed Outcome A: 94/94 real-replay terminator/continuation control rows matched pinned Boxcars exactly
+  R3.18F closed Outcome A: all 47 continuation second headers matched through payload_start, all 47 terminators stopped after one bit, mismatch 0, second payload and third-property consumption 0/0
+  R3.18G may publish only one bounded optional second-property header after a valid first primitive property and R3.18D control; continuation second-header tag admission is limited to the exact R3.18F observed set Int/String; this is header resolution only and does not admit either payload family
+  NO second-property payload decode, third property, repeated/generalized property loop, K2/K3/K4 wrapper composition, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
   authority run/job: 31801482588 / 94770260529 SUCCESS
@@ -364,26 +365,64 @@ R3_18E_AUDIT_CLOSURE:
   comparison SHA256: 9789a2fb6a5573a6bdacef2702c7cff169e764f244eb1736144b9b2c8258452d
   aggregate SHA256: 1b505299bc155aa32d9e48dd6d1d39327ac9025fa480472d2c67cc721270fabd
 
-R3_18F_OPEN_BOUNDARY:
-  read-only second-property-header evidence; production Rust mutation forbidden
-  production authority remains 4adadd185783954c7fb6ad67db14b77b377cdde5; canonical docs may be newer
-  replay identity lane remains the exact 47 supported replays; pinned oracle remains nickbabcock/boxcars@c70e77df7af81b436cb545d070bb90c82f562d0b
-  deterministically reproduce the R3.18E 47 continuation + 47 terminator witness classes before observing any second header
-  continuation positive lane: after exact R3.18B first property + exact R3.18D control=true, independently invoke the existing admitted property-header primitive at that same property_present start
-  compare property_present, stream-id bit start/end/value, resolved property object, resolved attribute tag, payload_start and stop exactly with pinned Boxcars
-  stop at second-property payload_start; second payload bits consumed MUST remain zero
-  terminator negative lane: the same header primitive at control=false must consume exactly one property_present bit, expose no stream/object/tag/payload fields, and stop at the control end
-  require deterministic repeatability, privacy-safe evidence, zero native/oracle mismatch and zero production/Cargo/fixture/corpus/support mutation
+R3_18F_EVIDENCE_CLOSURE:
+  Outcome A / read-only second-property-header evidence / production Rust unchanged at 4adadd185783954c7fb6ad67db14b77b377cdde5
+  canonical continuity base: 3a10ee59ba42722b59ca6c5b816205f6e5d603ea
+  evidence authority head/tree: 27a855a9cfb82a0294dd1601e4da01c9fdfad264 / 4058b67da82e9fbfcc078e975b26d186ec68e6f0
+  authority run/job: 31951039411 / 95174417526 SUCCESS
+  exact-head normal CI: 31951039378 / 95174417478 SUCCESS
+  artifact: 9264673141
+  artifact digest: sha256:e31e09abf322b6458f9034b06efe5502bb3b7f1011dfb08c9ffd6d1b1cd1b361
+  pinned oracle: nickbabcock/boxcars@c70e77df7af81b436cb545d070bb90c82f562d0b
+  replay identity/oracle parse: 47/47
+  R3.18E witness reconstruction: 94/94 = 47 terminator + 47 continuation
+  continuation second-header native success: 47/47
+  second property_present exact: 47/47 continuation + 47/47 terminator false
+  second stream start/end/value exact: 47/47
+  second stream shape bound/prop-bits exact: 47/47
+  resolved second property object exact: 47/47
+  resolved second attribute tag exact: 47/47
+  second payload_start/stop exact: 47/47
+  terminator one-bit stop + optional header fields None: 47/47 + 47/47
+  continuation tag rows: Int=46 / String=1
+  real second-header truncation negatives: 32
+  unresolved-stream synthetic / terminator-no-lookup synthetic / post-stop poison / repeatability: PASS
+  native/oracle mismatch: 0
+  second payload bits consumed: 0
+  third-property bits consumed: 0
+  privacy: PASS
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
+  source scope SHA256: 492f63c3cfcb27967426816f97858c8f4ad1d9ebb6ce40719f6d829ff3f0ea55
+  replay identity SHA256: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+  Boxcars instrumentation receipt SHA256: ba0f63ca5cd09ff48e7f70141f6cc78dacc2307502af6c1e09a9695b2ba52e97
+  selected witnesses SHA256: 99461d2c2bf2f17dc41336d6efcd9321ce7ad6fabd2da663d8ddc3509231fdd7
+  selection summary SHA256: bd6c4d25b02533626485e4fdb000034a39e7c2b5f559d8a09a8a4eb5e5ca80d4
+  comparison SHA256: 53f4a9aefbfcc3d02e5a1501d2849455052c01612ddd299e795e89ad2938ddcd
+  aggregate SHA256: 57c90cb3617461aea1a078a7b0f72ae301fd35fc9d7c4f9fe56de6d7633a4a04
 
-R3_18F_HARD_STOP:
-  no production source, Cargo, fixture, corpus or support-lane mutation
+R3_18G_OPEN_BOUNDARY:
+  production implementation pass justified only by R3.18F Outcome A
+  production authority before pass remains 4adadd185783954c7fb6ad67db14b77b377cdde5; canonical docs may be newer
+  publish one explicitly named after-first-primitive / second-property-header composition only
+  input should be network bytes + already-valid R3.18B first-property result + lookup plan; derive actor object from the first-property header rather than expose a generic chain cursor
+  internally compose the existing R3.18D control result with the existing property-header primitive
+  terminator path: control=false -> second_header=None and stop exactly at control end; no lookup/header/payload read beyond the false bit
+  continuation path: control=true -> independently decode the second header at that exact property_present start, require the header-present coordinates to agree with the control result, resolve stream/object/tag, and stop exactly at second payload_start
+  continuation second-header tag admission is limited to the exact R3.18F observed set: Int, String
+  any other second-header tag fails closed in this new composition; String resolution does not invoke or admit the String payload decoder
+  second payload bytes/bits remain opaque and unconsumed
+
+R3_18G_HARD_STOP:
   no second-property payload decode or semantic value claim
-  no third property control/header observation and no repeated property loop
+  no third property control/header observation and no repeated/generalized property loop
+  no generic repeatedly-chainable public property cursor
   no K2/K3/K4 composition through the R3.18B wrapper
+  no second-header tag context outside exact R3.18F observed Int/String; no second-payload shape/context admission
   no next actor, next frame, lifecycle mutation, raw state, event, replay slice, skill, runtime or export widening
+  no Cargo/fixture/corpus/support/dependency widening
 
-NEXT PASS AFTER R3.18F:
-  only after Outcome A may a separate contract/production admission pass for a bounded second-property-header composition be defined; R3.18F itself publishes no production decoder and admits no second payload
+NEXT PASS AFTER R3.18G:
+  only after a clean production publication + exact published-main validation may a separate real-replay differential audit validate the production second-header composition before any second-property payload admission
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
