@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  492cc8218be7abc6db8f75acaea33d009ab2f175
+  de7a2ba40663bb619ca7bd8654846ce87670d023
 
 LAST_PRODUCTION_MILESTONE:
-  R3.17O — direct native exact-contract K4 decoder implementation
+  R3.18B — minimal native existing-actor single-property K1 composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.17P — native K4 differential audit / Outcome A / 161 of 161 real-replay exact groups / 0 mismatch
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18A — existing-actor single-property boundary evidence / Outcome A / one real Int property / exact end cursor / 0 next-property bits
 
 CURRENT_PASS:
-  R3.18B — minimal native existing-actor single-property K1 composition
+  R3.18C — existing-actor property-loop terminator/continuation evidence
 
 CURRENT_PASS_TYPE:
-  production implementation / first property-present header + exactly one K1 primitive scalar payload
+  read-only real-replay evidence / exact next property_present bit after one native K1 property
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -80,9 +80,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   one already-resolved K1 primitive scalar OR one R3.17F-admitted K2 payload OR one R3.17J-admitted K3 payload OR one R3.17N-admitted K4 payload may be decoded natively
   K3 remains limited to its exact R3.17J structural/context allowlist; K4 remains limited to the exact 161 R3.17N tuples
   stop exactly at payload_end_bit / stop_bit after that one value
-  R3.17P certified the published R3.17O K4 decoder on all 161 exact real-replay groups; R3.18A then proved one real existing-actor property header + Int payload through the exact end cursor with 0 next-property bits consumed
-  R3.18B may compose only the existing first-property header with the already-admitted K1 primitive scalar decoder; K2/K3/K4 composition and every property loop remain closed
-  NO second property, next actor, next frame, lifecycle mutation, unobserved shape/family, or extra context inference is admitted
+  R3.18B is published production at de7a2ba40663bb619ca7bd8654846ce87670d023 and composes exactly one existing-actor K1 property through its payload end without reading the next property_present bit
+  R3.18C is read-only evidence only: it may prove the exact next property_present location and consume exactly that one continuation/terminator bit on selected real witnesses; production mutation remains forbidden
+  NO second property stream/header/payload, production property loop, K2/K3/K4 wrapper composition, next actor, next frame, lifecycle mutation, unobserved shape/family, or extra context inference is admitted
 
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
@@ -283,23 +283,41 @@ R3_18A_EVIDENCE_CLOSURE:
   next property_present consumed bits: 0; truncation negative: PASS; mismatch count: 0; privacy: PASS
   production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_18B_OPEN_BOUNDARY:
-  production implementation; minimal existing-actor single-property composition only
-  reuse the existing R3.16B first-property header reader and existing R3.17C primitive scalar decoder; do not duplicate either wire codec
-  require property_present=true, resolve the exact stream/property/tag through the existing lookup plan, and admit only K1 Boolean/Byte/Enum/Float/Int/Int64 payload dispatch
-  return the exact one-property end cursor with stop_bit == payload_end_bit; do not read the next property_present bit
-  K2/K3/K4 composition is outside this pass despite those one-value decoders existing separately
-  focused tests must cover all six K1 tags, truncation/unsupported/absent cases, poison bits after payload, and an R3.18A-shaped Int=62 regression
+R3_18B_PRODUCTION_CLOSURE:
+  Outcome A / published production / minimal existing-actor one-property K1 composition
+  production SHA/tree: de7a2ba40663bb619ca7bd8654846ce87670d023 / d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+  parent main: f12365b43029f19f3ab1dd889e651f9781b0655e
+  lib.rs blob: 478ae5b70514fcff79117b834733849517c48500
+  focused test blob: 927e9a2c834115d1c918fa96fb6d0690bd03965e
+  implementation run/job: 31942254523 / 95153021330 SUCCESS
+  exact clean-candidate validation: 31942696817 / 95154052998 SUCCESS
+  published main CI: 31942870294 / 95154460239 SUCCESS
+  published-main validator: 31942896666 / 95154519828 SUCCESS
+  clean scope: crates/mimir-replay/src/lib.rs + crates/mimir-replay/tests/r3_18b_single_k1_property.rs only
+  K1 dispatch: Boolean/Byte/Enum/Float/Int/Int64 only; non-K1 rejects before payload read
+  exact one-property stop: header.stop_bit == payload_start_bit and composition.stop_bit == scalar.payload_end_bit
+  focused tests: 8/8 PASS including R3.18A-shaped Int=62, poison trailing bits, absent/non-K1/truncation/repeatability
+  production/Cargo/fixture/corpus/support/workflow/continuity mutation outside clean scope: 0/0/0/0/0/0/0
 
-R3_18B_HARD_STOP:
-  no second property and no property_present loop
-  no K2/K3/K4 composition inside the new one-property API
+R3_18C_OPEN_BOUNDARY:
+  read-only real-replay evidence; production Rust/Cargo/fixture/corpus/support mutation forbidden
+  reuse the exact supported 47-replay lane and pinned Boxcars oracle; deterministically find real existing-actor updates whose first property is R3.18B-admitted K1
+  require native R3.18B stop_bit == oracle next property_present start bit
+  prove at least one terminator witness (next property_present=false) and at least one continuation witness (next property_present=true), if both exist in the frozen lane
+  the native evidence probe may consume exactly one bit at that stop position and must stop immediately after it
+  for false, prove exact loop terminator end = start+1 and zero stream/payload bits consumed; for true, prove continuation=true but do not decode the second stream/header/payload natively
+  durable artifacts must remain privacy-safe and omit raw replay payload bytes
+
+R3_18C_HARD_STOP:
+  no production mutation
+  no second property stream id, resolved header, or payload decode in the native evidence probe
+  no production property_present loop
+  no K2/K3/K4 widening through the R3.18B composition API
   no next actor / next frame / actor-table lifecycle mutation
-  no Cargo, fixture, corpus or support-lane change
   no raw-state, event, replay-slice, skill, runtime or export widening
 
-NEXT PASS AFTER R3.18B:
-  only after clean production publication + exact validation, select a separate evidence pass for property-loop terminator/continuation; do not infer loop admission from one-property success
+NEXT PASS AFTER R3.18C:
+  only after Outcome A, define the smallest separately validated production loop-control step; do not infer a generalized property loop or second-payload admission from one-bit continuation evidence
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.

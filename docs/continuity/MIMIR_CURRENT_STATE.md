@@ -2,75 +2,66 @@
 
 **Continuity date:** 2026-08-16
 **Repository:** `Naveax/MIMIR`
-**Canonical production SHA:** `492cc8218be7abc6db8f75acaea33d009ab2f175`
-**Production milestone:** `R3.17O — direct native exact-contract K4 decoder implementation`
-**Completed K4 differential:** `R3.17P — Outcome A / 161/161 real-replay exact groups / 0 mismatch`
-**Completed single-property evidence:** `R3.18A — Outcome A / real existing-actor Int property / exact header + payload end / 0 next-property bits`
-**Current exact pass:** `R3.18B — minimal native existing-actor single-property K1 composition`
+**Canonical production SHA:** `de7a2ba40663bb619ca7bd8654846ce87670d023`
+**Production milestone:** `R3.18B — minimal native existing-actor single-property K1 composition`
+**Completed single-property evidence:** `R3.18A — Outcome A / exact one-property boundary / 0 next-property bits`
+**Current exact pass:** `R3.18C — existing-actor property-loop terminator/continuation evidence`
 
 ## 1. Truthful production boundary
 
-Production remains R3.17O. MIMIR can decode one already-resolved K1 scalar, one R3.17F-admitted K2 payload, one R3.17J-admitted K3 payload, or one exact R3.17N-admitted K4 payload. R3.17P certified K4 on all 161 exact real-replay groups. R3.18A proved that an existing-actor first-property header can be composed with an already-admitted payload decoder through the exact payload end without consuming the next property bit. **That evidence did not itself widen production.**
+Production now includes R3.18B. MIMIR can start at an existing actor's first `property_present` bit, reuse the R3.16B header decoder, and compose exactly one property only when the resolved tag is one of the six already-admitted K1 primitive scalar tags. The composition stops exactly at that scalar payload end. It does not read the next `property_present` bit and it does not dispatch K2/K3/K4 through this wrapper.
+
+Separate one-value K2/K3/K4 decoders remain production-authoritative at their previously admitted boundaries; R3.18B deliberately does not combine them into the property wrapper.
 
 ```text
-production SHA               492cc8218be7abc6db8f75acaea33d009ab2f175
-production tree              a66c47d7fb58da508188e64d42141987a0021a07
-lib.rs blob                  0161ba7fdcb6e395a2c972061ff6f56d07b8b5e8
-k4 groups blob               103503e25bc5af48381df021ab58133694fcece6
-k4 native blob               a9c41f3bb11343165183ac9c815ab8fdf085936c
-focused K4 test blob         70437244bb49224281ee3a2e745e7b8a4b7a093a
+production SHA               de7a2ba40663bb619ca7bd8654846ce87670d023
+production tree              d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+parent                       f12365b43029f19f3ab1dd889e651f9781b0655e
+lib.rs blob                  478ae5b70514fcff79117b834733849517c48500
+R3.18B focused test blob     927e9a2c834115d1c918fa96fb6d0690bd03965e
 ```
 
-## 2. R3.18A evidence closure
+## 2. R3.18B production closure
 
 ```text
-execution base main          c5878cf755302fe52e9e67741486306cd30db059
-authority head               12ee215fd843260d5ece14f27aa1171cb862f49e
-authority run/job            31941400273 / 95151024131 SUCCESS
-exact-head normal CI         31941400276 / 95151024211 SUCCESS
-artifact                     9262129856
-artifact digest              sha256:295247a5f73159ac74539ffc5abf1eb2273fb6dc07a57f8b16976552a17b3ab8
-replay identity/oracle       47/47
-eligible candidates          47 deterministic first-property scalars
-selected replay              external_fixtures/sample_001.replay
-frame / actor ordinal / id   0 / 63 / 2
-actor context object         98
-stream / bound / prop bits   27 / 67 / 6
-property object / tag/value  55 / Int / 62
-property_present             [10227,10228)
-stream                       [10228,10234)
-payload                      [10234,10266) / 32 bits
-payload SHA256               d2e2a0bd72f6f10bfb67239ca75c4fa03bb3d8e5dc3cd13e312a1620cd31290f
-header/start/semantic/end    exact / exact / exact / exact
-next property bits consumed  0
-truncation negative          PASS
-mismatch / privacy           0 / PASS
-prod/Cargo/fixture/corpus/
-support mutation             0/0/0/0/0
+implementation run/job       31942254523 / 95153021330 SUCCESS
+exact candidate validation   31942696817 / 95154052998 SUCCESS
+published main CI            31942870294 / 95154460239 SUCCESS
+published-main validator     31942896666 / 95154519828 SUCCESS
+clean production files       2
+focused R3.18B tests          8/8 PASS
+K1 tags                       Boolean Byte Enum Float Int Int64
+R3.18A-shaped Int=62          PASS
+property absent               reject
+non-K1 tag                    reject before payload read
+header/payload truncation     reject
+trailing poison bits          no effect
+header stop == payload start  true
+composition stop == end       true
+next property bits consumed   0
+Cargo/fixture/corpus/support/
+workflow/continuity mutation  0/0/0/0/0/0/0
 ```
 
-The first disposable R3.18A run was not authority because temporary probe formatting failed before native comparison. A later evidence run produced valid Outcome-A data but its same-head normal CI rejected a temporary example API newer than the Rust 1.85 MSRV. The final authority head reran every substantive gate after replacing that tooling-only API.
+## 3. R3.18C exact next pass
 
-## 3. R3.18B exact next pass
+R3.18C is evidence-only. On deterministic real existing-actor witnesses whose first property is R3.18B-admitted K1, compare the native one-property `stop_bit` to the pinned Boxcars oracle's next `property_present` start. Then consume **exactly one bit** at that location in the evidence probe.
 
-R3.18B is a narrow production composition pass. Reuse the existing R3.16B first-property header reader, require `property_present == true`, resolve the existing stream/property/tag through the lookup plan, then dispatch **only** the six already-admitted K1 primitive scalar tags to the existing R3.17C decoder:
+Required witness classes, if both exist in the frozen supported lane:
 
 ```text
-Boolean
-Byte
-Enum
-Float
-Int
-Int64
+terminator     next property_present = false
+continuation   next property_present = true
 ```
 
-Return the exact one-property payload end and set the composition stop bit to that same end. Unsupported K2/K3/K4 tags must fail closed in this new API even though their separate one-value decoders already exist. The next `property_present` bit remains opaque and unread.
+For the terminator case, prove the actor's property sequence ends exactly after that one bit and no stream/payload bits are consumed. For the continuation case, prove only that continuation is true and stop immediately after the bit. A second stream ID, property header, or payload remains outside the native evidence boundary.
 
 ## 4. Still closed
 
 ```text
-second property / property_present loop
-K2/K3/K4 dispatch in the R3.18B composition API
+production property_present loop
+second property stream/header/payload
+K2/K3/K4 dispatch through the R3.18B wrapper
 next actor / next frame iteration
 actor lifecycle mutation
 new attribute family/shape/context admission

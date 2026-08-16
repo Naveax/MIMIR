@@ -32,7 +32,8 @@ R3.17N K4 contract decision                  |
 R3.17O K4 production decision                   |
 R3.17P K4 differential decision                     |
 R3.18A single-property evidence decision                    |
-R3.18B active single-property K1 composition spec             |
+R3.18B single-property K1 production decision                  |
+R3.18C active property-loop boundary evidence spec              |
         |                               |
         +---------------+---------------+
                         |
@@ -87,13 +88,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 34. `docs/continuity/MIMIR_R3_18A_EXECUTION_SPEC.md`
 35. `docs/continuity/MIMIR_R3_18A_DECISION.md`
 36. `docs/continuity/MIMIR_R3_18B_EXECUTION_SPEC.md`
-37. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-38. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-39. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-40. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-41. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-42. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-43. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+37. `docs/continuity/MIMIR_R3_18B_DECISION.md`
+38. `docs/continuity/MIMIR_R3_18C_EXECUTION_SPEC.md`
+39. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+40. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+41. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+42. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+43. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+44. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+45. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ## Current replay-decoder chain
 
@@ -173,17 +176,24 @@ R3.13 static network lookup plan
       exact-head CI 31941400276 / 95151024211 SUCCESS
       artifact 9262129856 / sha256:295247a5f73159ac74539ffc5abf1eb2273fb6dc07a57f8b16976552a17b3ab8
       47/47 oracle parse / 47 deterministic candidates / selected sample_001 Int=62 / header+start+semantic+end exact / next-property bits 0 / mismatch 0
- -> R3.18B minimal native existing-actor single-property K1 composition: ACTIVE / PRODUCTION
-      compose existing R3.16B header + existing R3.17C K1 decoder only; property loop remains closed
+ -> R3.18B minimal native existing-actor single-property K1 composition: PRODUCTION / CLOSED
+      production de7a2ba40663bb619ca7bd8654846ce87670d023 / tree d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+      lib/test blobs 478ae5b70514fcff79117b834733849517c48500 / 927e9a2c834115d1c918fa96fb6d0690bd03965e
+      exact candidate 31942696817 / 95154052998 SUCCESS
+      published main CI 31942870294 / 95154460239 SUCCESS
+      published validator 31942896666 / 95154519828 SUCCESS
+      K1-only one-property composition / 8/8 focused PASS / next-property bits consumed 0
+ -> R3.18C existing-actor property-loop terminator/continuation evidence: ACTIVE / READ-ONLY
+      prove native stop == next property_present start and consume exactly one terminator/continuation bit; second stream/header/payload remains closed
 ```
 
 ## Current capability lock
 
-Production at `492cc8218be7abc6db8f75acaea33d009ab2f175` can natively decode exactly one already-resolved K1 scalar, one R3.17F-admitted K2 payload, one R3.17J-admitted K3 payload, or one exact R3.17N-admitted K4 payload. Every success stops exactly at its one-value end bit and does not authorize another property, actor, frame or lifecycle mutation. R3.17P has now certified all 161 exact K4 groups against regenerated real-replay witnesses with zero mismatch; R3.18A is evidence-only and does not widen production.
+Production at `de7a2ba40663bb619ca7bd8654846ce87670d023` adds the R3.18B one-property K1 wrapper: an existing actor's first property header can now be composed with exactly one Boolean/Byte/Enum/Float/Int/Int64 scalar payload and returned at the exact payload end. Separate K2/K3/K4 one-value decoders remain authoritative at their existing boundaries, but the R3.18B wrapper deliberately rejects those tags before payload read. No next property bit, second property, actor, frame or lifecycle mutation is production-admitted.
 
 R3.17H closed Outcome A without widening K2: all 469 immutable K2 witnesses matched exactly and all seven negative controls failed closed. PartyLeader `None`, non-Epic PartyLeader and every other unseen K2 variant remain closed.
 
-R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups; R3.17K implemented them; R3.17L matched all 1,950 against real replay witnesses. R3.17M then observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups; R3.17N admitted those 161 groups byte-for-byte; R3.17O implemented exactly that contract with zero cross-product widening; R3.17P then matched all 161 exact K4 groups against real replay witnesses with zero mismatch. R3.18A proved one complete real existing-actor property boundary with an Int payload, exact end cursor, and zero next-property bits consumed. R3.18B may now publish only the minimal K1 single-property composition. Property-loop continuation, K2/K3/K4 composition in that new API, next actor/frame iteration and lifecycle mutation remain closed.
+R3.17I closed Outcome A for `Location`, `RigidBody`, `ReplicatedBoost`, and `PickupNew`; R3.17J froze exactly 1,950 structural/context groups; R3.17K implemented them; R3.17L matched all 1,950 against real replay witnesses. R3.17M then observed all 11 K4 target tags across 39,463 occurrences and froze 161 exact structural/context evidence groups; R3.17N admitted those 161 groups byte-for-byte; R3.17O implemented exactly that contract with zero cross-product widening; R3.17P then matched all 161 exact K4 groups against real replay witnesses with zero mismatch. R3.18A proved one complete real existing-actor property boundary with an Int payload and zero next-property bits consumed. R3.18B published the minimal K1 one-property composition. R3.18C is now read-only evidence for the next one-bit loop-control edge; production property-loop continuation, second property payloads, K2/K3/K4 wrapper composition, next actor/frame iteration and lifecycle mutation remain closed.
 
 ## R3.17G production closure
 
@@ -440,4 +450,25 @@ support mutations           0/0/0/0/0
 outcome                     A
 ```
 
-R3.18B is now the first dependency-valid unfinished roadmap step: production composition of the existing first-property header with exactly one K1 primitive scalar payload. It must stop at the payload end; the property loop remains unadmitted.
+## R3.18B single-property K1 production closure
+
+```text
+production SHA              de7a2ba40663bb619ca7bd8654846ce87670d023
+production tree             d1889038ca2eaeb8bb0f05e44b811d906f84cf6e
+parent                      f12365b43029f19f3ab1dd889e651f9781b0655e
+lib.rs blob                 478ae5b70514fcff79117b834733849517c48500
+focused test blob           927e9a2c834115d1c918fa96fb6d0690bd03965e
+implementation run/job      31942254523 / 95153021330 SUCCESS
+exact candidate validation  31942696817 / 95154052998 SUCCESS
+published main CI           31942870294 / 95154460239 SUCCESS
+published validator         31942896666 / 95154519828 SUCCESS
+focused tests               8/8 PASS
+wrapper tags                Boolean/Byte/Enum/Float/Int/Int64
+next-property bits          0
+clean files                 2
+Cargo/fixture/corpus/
+support/workflow/docs       0/0/0/0/0/0 mutations
+outcome                     A / production
+```
+
+R3.18C is now the first dependency-valid unfinished roadmap step: read-only proof that the R3.18B stop bit is exactly the next `property_present` location, with one real terminator and one real continuation witness when available. The native evidence probe may consume only that one bit; a second stream/header/payload and production property loop remain unadmitted.
