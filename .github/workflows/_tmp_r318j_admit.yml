@@ -1,0 +1,91 @@
+name: R3.18J Admission and Continuity Sync
+
+on:
+  push:
+    branches:
+      - admission/r318j-v1
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  admit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN: 330ab01890a7c09eff1805e437584fb3be0a1134
+      EXPECTED_PARENT: 9fc863114b22b72ec56a606075f7a8e87fa6fd5c
+      PUBLISHED_RUN: '31976100231'
+      EXPECTED_LIB_BLOB: ee9b0c71871df7ff52275581eb7ad4c023b8ba79
+      EXPECTED_TEST_BLOB: c5a97c5a17ae2ea292790a020673dd26a0150024
+    steps:
+      - name: Checkout admission trigger
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze production authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_MAIN"
+          test "$(gh api repos/$GITHUB_REPOSITORY/branches/main --jq .commit.sha)" = "$EXPECTED_MAIN"
+          test "$(git rev-parse "$EXPECTED_MAIN^")" = "$EXPECTED_PARENT"
+          test "$(git rev-parse "$EXPECTED_MAIN:crates/mimir-replay/src/lib.rs")" = "$EXPECTED_LIB_BLOB"
+          test "$(git rev-parse "$EXPECTED_MAIN:crates/mimir-replay/tests/r3_18j_second_property_payload.rs")" = "$EXPECTED_TEST_BLOB"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_RUN --jq .head_sha)" = "$EXPECTED_MAIN"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_RUN --jq .conclusion)" = success
+          cp tools/_tmp_r318j_admit.py /tmp/r318j_admit.py
+
+      - name: Reconstruct clean docs-only admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach "$EXPECTED_MAIN"
+          python /tmp/r318j_admit.py
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+          mapfile -t changed < <(git status --short | sed -E 's/^.. //' | sort)
+          cat >/tmp/expected <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18J_DECISION.md
+          docs/continuity/MIMIR_R3_18K_EXECUTION_SPEC.md
+          EOF
+          printf '%s\n' "${changed[@]}" >/tmp/actual
+          diff -u /tmp/expected /tmp/actual
+
+      - name: Repository verification
+        shell: pwsh
+        run: |
+          ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "verify_repo failed: $LASTEXITCODE" }
+
+      - name: Commit and force-free fast-forward publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18J_DECISION.md \
+            docs/continuity/MIMIR_R3_18K_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m 'Admit R3.18J bounded second payload'
+          clean_sha="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_MAIN"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN"
+          git push origin "$clean_sha":refs/heads/main
+          echo "R3_18J_ADMISSION_SHA=$clean_sha"
+          echo 'R3_18J_ADMISSION=PASS'
