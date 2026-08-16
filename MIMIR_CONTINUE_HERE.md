@@ -58,13 +58,13 @@ LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.17M — K4 gameplay-structured wire-format evidence / Outcome A / 39463 occurrences / 161 exact groups
+  R3.18A — existing-actor single-property boundary evidence / Outcome A / one real Int property / exact end cursor / 0 next-property bits
 
 CURRENT_PASS:
-  R3.18A — existing-actor single-property boundary evidence
+  R3.18B — minimal native existing-actor single-property K1 composition
 
 CURRENT_PASS_TYPE:
-  read-only real-replay evidence / one complete existing-actor property payload + exact end cursor
+  production implementation / first property-present header + exactly one K1 primitive scalar payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -80,8 +80,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   one already-resolved K1 primitive scalar OR one R3.17F-admitted K2 payload OR one R3.17J-admitted K3 payload OR one R3.17N-admitted K4 payload may be decoded natively
   K3 remains limited to its exact R3.17J structural/context allowlist; K4 remains limited to the exact 161 R3.17N tuples
   stop exactly at payload_end_bit / stop_bit after that one value
-  R3.17P certified the published R3.17O K4 decoder on all 161 exact real-replay groups; R3.18A may now prove exactly one complete existing-actor property boundary without looping
-  NO second property, next actor, next frame, lifecycle mutation, unobserved K2/K3/K4 shape or family is admitted
+  R3.17P certified the published R3.17O K4 decoder on all 161 exact real-replay groups; R3.18A then proved one real existing-actor property header + Int payload through the exact end cursor with 0 next-property bits consumed
+  R3.18B may compose only the existing first-property header with the already-admitted K1 primitive scalar decoder; K2/K3/K4 composition and every property loop remain closed
+  NO second property, next actor, next frame, lifecycle mutation, unobserved shape/family, or extra context inference is admitted
 
 R3_17E_EVIDENCE_CLOSURE:
   evidence head: 19db534a3668f84f1c5ce36ef1252c52841d890f
@@ -264,22 +265,41 @@ R3_17P_AUDIT_CLOSURE:
   LoadoutsOnline caller object table: same replay footer materialization, not inferred
   production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_18A_OPEN_BOUNDARY:
-  read-only existing-actor single-property boundary evidence; production mutation forbidden
-  select a deterministic real existing-actor update with property_present=true from the supported replay lane
-  prove the already-resolved stream/property/tag context at the exact payload start
-  decode exactly one already-admitted K1/K2/K3/K4 payload and require native payload_end_bit == pinned Boxcars oracle end bit
-  stop before consuming the next property_present bit; this pass does not admit a property loop
+R3_18A_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at 492cc8218be7abc6db8f75acaea33d009ab2f175
+  execution base main: c5878cf755302fe52e9e67741486306cd30db059
+  authority head: 12ee215fd843260d5ece14f27aa1171cb862f49e
+  authority run/job: 31941400273 / 95151024131 SUCCESS
+  exact-head normal CI: 31941400276 / 95151024211 SUCCESS
+  artifact: 9262129856
+  artifact digest: sha256:295247a5f73159ac74539ffc5abf1eb2273fb6dc07a57f8b16976552a17b3ab8
+  replay identity + pinned Boxcars parse: 47/47
+  deterministic eligible first-property scalar candidates: 47
+  selected witness: external_fixtures/sample_001.replay / frame 0 / actor ordinal 63 / actor id 2 / actor context object 98
+  selected property: ordinal 0 / stream 27 of bound 67 / property object 55 / Int / value 62
+  property_present bits: [10227,10228); stream bits: [10228,10234); payload bits: [10234,10266) / width 32
+  payload SHA256: d2e2a0bd72f6f10bfb67239ca75c4fa03bb3d8e5dc3cd13e312a1620cd31290f
+  native header/payload-start/semantic/payload-end equality: PASS/PASS/PASS/PASS
+  next property_present consumed bits: 0; truncation negative: PASS; mismatch count: 0; privacy: PASS
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 
-R3_18A_HARD_STOP:
-  no production Rust, Cargo, fixture, corpus or support-lane mutation
-  no second property and no consumption of the next property_present bit
+R3_18B_OPEN_BOUNDARY:
+  production implementation; minimal existing-actor single-property composition only
+  reuse the existing R3.16B first-property header reader and existing R3.17C primitive scalar decoder; do not duplicate either wire codec
+  require property_present=true, resolve the exact stream/property/tag through the existing lookup plan, and admit only K1 Boolean/Byte/Enum/Float/Int/Int64 payload dispatch
+  return the exact one-property end cursor with stop_bit == payload_end_bit; do not read the next property_present bit
+  K2/K3/K4 composition is outside this pass despite those one-value decoders existing separately
+  focused tests must cover all six K1 tags, truncation/unsupported/absent cases, poison bits after payload, and an R3.18A-shaped Int=62 regression
+
+R3_18B_HARD_STOP:
+  no second property and no property_present loop
+  no K2/K3/K4 composition inside the new one-property API
   no next actor / next frame / actor-table lifecycle mutation
-  no new attribute family/shape/context admission
+  no Cargo, fixture, corpus or support-lane change
   no raw-state, event, replay-slice, skill, runtime or export widening
 
-NEXT PASS AFTER R3.18A:
-  only after Outcome A, admit the minimal production one-property composition needed by roadmap R3.18; property-loop continuation remains a later separately evidenced step
+NEXT PASS AFTER R3.18B:
+  only after clean production publication + exact validation, select a separate evidence pass for property-loop terminator/continuation; do not infer loop admission from one-property success
 ```
 
 **Important:** the newest `main` commit can be newer than `LAST_PRODUCTION_CODE_SHA` because docs-only continuity commits are expected. Never confuse “newest main SHA” with “newest production Rust SHA.” Always inspect the diff.
