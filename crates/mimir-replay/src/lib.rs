@@ -2499,6 +2499,151 @@ pub fn decode_replay_network_existing_actor_single_primitive_property_v1(
     })
 }
 
+/// Exactly one loop-control bit immediately after an already-decoded R3.18B first K1 property.
+///
+/// This result is deliberately not a reusable property-loop cursor. `stop_bit` is exactly one bit
+/// after `first_property.stop_bit` and does not authorize a second stream/header/payload decode.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitivePropertyControlV1 {
+    pub next_property_present: bool,
+    pub property_present_start_bit: u64,
+    pub property_present_end_bit: u64,
+    pub stop_bit: u64,
+}
+
+/// Read exactly the next `property_present` bit after one valid R3.18B first K1 property.
+///
+/// The caller must supply the already-decoded first-property result. This function validates that
+/// result's published boundary invariants, reuses the private LSB-first network cursor for one bit,
+/// and stops immediately. It never decodes a second stream id, property header, or payload.
+pub fn decode_replay_network_existing_actor_after_first_primitive_property_control_v1(
+    network_bytes: &[u8],
+    first_property: &ReplayNetworkExistingActorSinglePrimitivePropertyV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitivePropertyControlV1> {
+    if !first_property.header.property_present {
+        return Err(network_existing_actor_after_first_property_control_error(
+            "invalid-first-property",
+            "first property result is not present",
+        ));
+    }
+
+    let payload_start_bit = first_property.header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_after_first_property_control_error(
+            "invalid-first-property",
+            "first property header is missing payload_start_bit",
+        )
+    })?;
+    if first_property.header.stop_bit != payload_start_bit
+        || first_property.scalar.payload_start_bit != payload_start_bit
+        || first_property.scalar.stop_bit != first_property.scalar.payload_end_bit
+        || first_property.stop_bit != first_property.scalar.payload_end_bit
+    {
+        return Err(network_existing_actor_after_first_property_control_error(
+            "boundary-mismatch",
+            format!(
+                "header_stop={} header_payload_start={} scalar_start={} scalar_end={} scalar_stop={} first_stop={}",
+                first_property.header.stop_bit,
+                payload_start_bit,
+                first_property.scalar.payload_start_bit,
+                first_property.scalar.payload_end_bit,
+                first_property.scalar.stop_bit,
+                first_property.stop_bit,
+            ),
+        ));
+    }
+
+    if first_property.header.resolved_attribute_tag != Some(first_property.scalar.attribute_tag) {
+        return Err(network_existing_actor_after_first_property_control_error(
+            "tag-mismatch",
+            format!(
+                "header tag {:?} differs from scalar tag {:?}",
+                first_property.header.resolved_attribute_tag, first_property.scalar.attribute_tag
+            ),
+        ));
+    }
+
+    let decoded_width = first_property
+        .scalar
+        .payload_end_bit
+        .checked_sub(first_property.scalar.payload_start_bit)
+        .ok_or_else(|| {
+            network_existing_actor_after_first_property_control_error(
+                "boundary-mismatch",
+                "scalar payload end precedes payload start",
+            )
+        })?;
+    if decoded_width != u64::from(first_property.scalar.payload_width) {
+        return Err(network_existing_actor_after_first_property_control_error(
+            "width-mismatch",
+            format!(
+                "scalar range width {decoded_width} differs from declared width {}",
+                first_property.scalar.payload_width
+            ),
+        ));
+    }
+
+    let property_present_start_bit = first_property.stop_bit;
+    let property_present_end_bit = property_present_start_bit.checked_add(1).ok_or_else(|| {
+        network_existing_actor_after_first_property_control_error(
+            "invalid-position",
+            "next property_present end bit overflows u64",
+        )
+    })?;
+    let start = usize::try_from(property_present_start_bit).map_err(|_| {
+        network_existing_actor_after_first_property_control_error(
+            "invalid-position",
+            format!(
+                "next property_present start bit {property_present_start_bit} does not fit usize"
+            ),
+        )
+    })?;
+    let end = usize::try_from(property_present_end_bit).map_err(|_| {
+        network_existing_actor_after_first_property_control_error(
+            "invalid-position",
+            format!("next property_present end bit {property_present_end_bit} does not fit usize"),
+        )
+    })?;
+    let total_bits = network_bytes.len().checked_mul(8).ok_or_else(|| {
+        network_existing_actor_after_first_property_control_error(
+            "invalid-length",
+            "network bit length overflows usize",
+        )
+    })?;
+    if end > total_bits {
+        return Err(network_existing_actor_after_first_property_control_error(
+            "insufficient-bits",
+            format!(
+                "need one property_present bit at position {start}, but network bit length is {total_bits}"
+            ),
+        ));
+    }
+
+    let mut cursor = NetworkBitCursor::new(network_bytes);
+    cursor.bit_position = start;
+    let next_property_present = cursor.read_bit()?;
+    let stop_bit = u64::try_from(cursor.position_bits()).map_err(|_| {
+        network_existing_actor_after_first_property_control_error(
+            "invalid-position",
+            "one-bit control stop does not fit u64",
+        )
+    })?;
+    if stop_bit != property_present_end_bit {
+        return Err(network_existing_actor_after_first_property_control_error(
+            "control-stop-mismatch",
+            format!("one-bit control stopped at {stop_bit}, expected {property_present_end_bit}"),
+        ));
+    }
+
+    Ok(
+        ReplayNetworkExistingActorAfterFirstPrimitivePropertyControlV1 {
+            next_property_present,
+            property_present_start_bit,
+            property_present_end_bit,
+            stop_bit,
+        },
+    )
+}
+
 /// Decode exactly one R3.17B-admitted primitive scalar payload.
 ///
 /// The caller supplies an already resolved attribute tag and the exact
@@ -2616,6 +2761,16 @@ pub fn decode_replay_network_primitive_scalar_v1(
 fn network_primitive_scalar_error(category: &str, detail: impl Into<String>) -> MimirError {
     MimirError::message(format!(
         "replay primitive scalar attribute error: {category}: {}",
+        detail.into()
+    ))
+}
+
+fn network_existing_actor_after_first_property_control_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay existing actor after first primitive property control error: {category}: {}",
         detail.into()
     ))
 }
