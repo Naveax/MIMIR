@@ -1,0 +1,49 @@
+name: R3.17P Disposable Harness Repair
+
+on:
+  push:
+    branches:
+      - evidence/r317p-k4-differential
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout disposable audit branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Repair only the known native-probe JSON expression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/_tmp_r317p_k4_differential.yml')
+          s = p.read_text(encoding='utf-8')
+          old = '"unknown":[] as [u8;0]'
+          new = '"unknown":Vec::<u8>::new()'
+          count = s.count(old)
+          if count == 1:
+              p.write_text(s.replace(old, new, 1), encoding='utf-8', newline='\n')
+              print('R3_17P_HARNESS_REPAIR=APPLIED')
+          elif count == 0 and new in s:
+              print('R3_17P_HARNESS_REPAIR=ALREADY_APPLIED')
+          else:
+              raise SystemExit(f'unexpected repair cardinality: old={count}, new={s.count(new)}')
+          PY
+          git diff --check
+          git diff --exit-code 19e3f558bd343372c7fe863822ab961fb10976ad..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts
+          if git diff --quiet; then
+            exit 0
+          fi
+          test "$(git diff --name-only | tr -d '\r')" = '.github/workflows/_tmp_r317p_k4_differential.yml'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/_tmp_r317p_k4_differential.yml
+          git commit -m 'Fix disposable R3.17P native probe JSON expression'
+          git push origin HEAD:evidence/r317p-k4-differential
