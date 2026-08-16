@@ -4,40 +4,39 @@
 **Repository:** `Naveax/MIMIR`
 **Canonical production SHA:** `4adadd185783954c7fb6ad67db14b77b377cdde5`
 **Production milestone:** `R3.18D — minimal native existing-actor next-property control bit`
-**Completed loop-control evidence:** `R3.18C — Outcome A / 47 terminator + 47 continuation candidates / exact next bit / 0 mismatch`
-**Current exact pass:** `R3.18E — production control-bit real-replay differential audit`
+**Completed production differential:** `R3.18E — Outcome A / 94 real-replay rows / 94/94 exact / 0 mismatch / second stream+header+payload 0+0+0`
+**Current exact pass:** `R3.18F — second-property-header real-replay evidence`
 
 ## 1. Truthful production boundary
 
-R3.18D is production. Given one already-valid R3.18B first K1 property result, production may validate that result's boundary invariants, read exactly the next `property_present` bit at `first_property.stop_bit`, and return the one-bit start/end/stop plus the boolean continuation value. The new API stops immediately after that bit. It does not decode a second stream ID, property header/tag, or payload, and it is not a generalized repeatable property-loop cursor.
+Production remains R3.18D at `4adadd185783954c7fb6ad67db14b77b377cdde5`. After one already-valid R3.18B first K1 property, production may read exactly one next `property_present` bit and stop one bit later. R3.18E validated that exact production boundary against pinned Boxcars on 94 deterministic real-replay rows with zero mismatch. No production source changed during R3.18E.
 
 ```text
-previous canonical main              e9f3c4d34ebd84fc9c51431ad4489c4d407b1535
 production SHA                       4adadd185783954c7fb6ad67db14b77b377cdde5
 production tree                      67b1969eaff49d2913b88b3921f27b1bd7fe8193
 lib.rs blob                          42bc3fd3e8ea6bd1d15df82e4c6d8809b8443662
 R3.18D focused test blob             2f5b188cc5b3ce8200c9961d964f1dc66b3ab49b
-implementation run/job               31945358707 / 95160386174 SUCCESS
-exact candidate validator            31947511554 / 95165765329 SUCCESS
-published main CI                    31947695046 / 95166220676 SUCCESS
-published-main validator             31947722626 / 95166287502 SUCCESS
+R3.18E evidence head                 aae03a7fdec85e30be3954d14ffdc8cd1d86121e
+R3.18E authority run/job             31949407736 / 95170443262 SUCCESS
+R3.18E same-head normal CI           31949407685 / 95170443059 SUCCESS
+R3.18E artifact                      9264243765
+R3.18E artifact SHA256               005afc3c97bd6bdb9aef69be993538fd813e30481923c59beefcf37e71cdfc9b
 ```
 
-## 2. R3.18D admitted behavior
+## 2. R3.18E admitted evidence
 
-The production control function is structurally tied to `ReplayNetworkExistingActorSinglePrimitivePropertyV1`. It requires the first property/header/scalar boundaries to agree, checks the one-bit end with checked arithmetic, uses the existing private LSB-first `NetworkBitCursor`, performs exactly one `read_bit()`, and returns `next_property_present`, `property_present_start_bit`, `property_present_end_bit`, and `stop_bit`.
+The exact 47-replay identity/oracle lane reproduced 47 terminator and 47 continuation rows. Published R3.18B first-property decoding and published R3.18D control decoding succeeded on 94/94 rows. First-property stop equaled the oracle control start on 94/94; control start, boolean and end/stop were exact on 94/94; mismatch count was zero. Truncation, post-stop poison, repeatability and malformed-first negatives passed. Second stream/header/payload consumption remained 0/0/0, privacy passed, and production/Cargo/fixture/corpus/support mutation remained 0/0/0/0/0.
 
-Independent source audit proved zero `read_bits_le`, bounded stream, property-header, scalar, K2/K3/K4 decoder or production `while`/`for` calls inside the new control function. Focused tests cover false terminator, true continuation, aligned and unaligned ends, the R3.18C Float and Int=62 shapes, post-stop poison, missing-next-bit failure, malformed first-property rejection and repeatability.
+## 3. R3.18F exact next pass
 
-## 3. R3.18E exact next pass
-
-R3.18E is read-only. Reconstruct the deterministic R3.18C real-replay loop-control witness policy on the exact 47 supported replay lane, target the frozen 94 terminator/continuation rows when reproduced, and run the published R3.18B first-property decoder followed by the published R3.18D one-bit control API. Compare the native first-property stop, control start, boolean value and one-bit end/stop with pinned Boxcars. Require zero mismatch and zero second stream/header/payload bits consumed.
+R3.18F is read-only second-property-header evidence. Reproduce the R3.18E witness classes. On each continuation row, require the R3.18D control bit to be true, then independently run the existing property-header primitive at that same `property_present` start and compare the second stream-ID range/value, resolved property object/tag, payload-start and stop against pinned Boxcars. Stop exactly at second-property payload start. On terminator rows, the header primitive must consume only the false property-present bit and expose no header/payload fields.
 
 ## 4. Still closed
 
 ```text
-second property stream/header/payload
-repeated/generalized property_present loop
+production second-property header composition
+second-property payload decode / semantic value claim
+third property or repeated/generalized property loop
 K2/K3/K4 dispatch through the R3.18B wrapper
 next actor / next frame iteration
 actor lifecycle mutation
