@@ -1,0 +1,109 @@
+name: R3.18I V2 Evidence Head Generator
+
+on:
+  push:
+    branches:
+      - automation/r318i-v2-generator
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      MAIN: 3257d32fbc617b6dae7bb42d41629639acf6ce95
+      MAIN_TREE: 9afee5526db01c2e1b2939ee605b9744d490a07b
+      V1: 9c2bc511fd20a6ef194fa3ecdce3ebb1ebf5bd3a
+      STAGING: staging/r318i-second-property-payload-v2
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build exact one-commit v2 evidence head
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main evidence/r318i-second-property-payload-v1 --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          test "$(git rev-parse "$MAIN^{tree}")" = "$MAIN_TREE"
+          test "$(git rev-parse origin/evidence/r318i-second-property-payload-v1)" = "$V1"
+
+          mkdir -p /tmp/r318i-v2/tools /tmp/r318i-v2/.github/workflows
+          for p in tools/_tmp_r318i_analyze.py tools/_tmp_r318i_extend_boxcars.py tools/_tmp_r318i_native_probe.rs; do
+            git show "$V1:$p" > "/tmp/r318i-v2/$p"
+          done
+          test "$(git hash-object /tmp/r318i-v2/tools/_tmp_r318i_analyze.py)" = '7cb3a26c8ac17cc0212026e0641970a7b50a7025'
+          test "$(git hash-object /tmp/r318i-v2/tools/_tmp_r318i_extend_boxcars.py)" = '8ade6d09b52c59b54a38ec48fb4acc606ca357fd'
+          test "$(git hash-object /tmp/r318i-v2/tools/_tmp_r318i_native_probe.rs)" = '3a9bf757729fdfebe849cf93840ae25097b6c8b7'
+
+          git show "$V1:tools/_tmp_r318i_run.sh" > /tmp/r318i-v2/tools/_tmp_r318i_run.sh
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/r318i-v2/tools/_tmp_r318i_run.sh')
+          s=p.read_text(encoding='utf-8')
+          pairs=[
+            ("MAIN='3e1fc68eea41378bac07992b5ccfc05485edd4c6'", "MAIN='3257d32fbc617b6dae7bb42d41629639acf6ce95'"),
+            ("MAIN_TREE='0d21e6da9022e2db4a8450722a9d39d1234b3adc'", "MAIN_TREE='9afee5526db01c2e1b2939ee605b9744d490a07b'"),
+            ("R318I_SPEC_BLOB='088b3edd9d4fac4ff1144213cf92c951de66afac'", "R318I_SPEC_BLOB='ebb3077b3e1e02d51d528cad60792d36fa098d0e'"),
+            ("R318H_ARTIFACT_DIGEST='340f75e21be2e0fc5592584e3b6c3d42ea759fa13ae934d85570486068e89645'", "R318H_ARTIFACT_DIGEST='340f75e22875cb5b00d66f2b4b05bbd6aa9c1a64625d79d0fb5bd0dcc104bb79'"),
+            ("R318H_PUBLISHED_CONTINUITY_RUN='31963228589'", "R318H_PUBLISHED_CONTINUITY_RUN='31965245337'"),
+            ("R318H_PUBLISHED_CONTINUITY_JOB='95204290405'", "R318H_PUBLISHED_CONTINUITY_JOB='95209317665'"),
+          ]
+          for old,new in pairs:
+            n=s.count(old)
+            if n != 1:
+              raise SystemExit(f'exact replacement count {n} for {old}')
+            s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8',newline='\n')
+          PY
+
+          git show "$V1:.github/workflows/_tmp_r318i_evidence.yml" > /tmp/r318i-v2/.github/workflows/_tmp_r318i_evidence.yml
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/r318i-v2/.github/workflows/_tmp_r318i_evidence.yml')
+          s=p.read_text(encoding='utf-8')
+          old='      - evidence/r318i-second-property-payload-v1\n'
+          new='      - evidence/r318i-second-property-payload-v2\n'
+          if s.count(old) != 1:
+            raise SystemExit('workflow branch replacement not exact')
+          p.write_text(s.replace(old,new,1),encoding='utf-8',newline='\n')
+          PY
+
+          git checkout --detach "$MAIN"
+          git switch -c "$STAGING"
+          mkdir -p tools .github/workflows
+          cp /tmp/r318i-v2/tools/_tmp_r318i_analyze.py tools/
+          cp /tmp/r318i-v2/tools/_tmp_r318i_extend_boxcars.py tools/
+          cp /tmp/r318i-v2/tools/_tmp_r318i_native_probe.rs tools/
+          cp /tmp/r318i-v2/tools/_tmp_r318i_run.sh tools/
+          cp /tmp/r318i-v2/.github/workflows/_tmp_r318i_evidence.yml .github/workflows/
+
+          expected=$(cat <<'EOF'
+          .github/workflows/_tmp_r318i_evidence.yml
+          tools/_tmp_r318i_analyze.py
+          tools/_tmp_r318i_extend_boxcars.py
+          tools/_tmp_r318i_native_probe.rs
+          tools/_tmp_r318i_run.sh
+          EOF
+          )
+          actual=$(git status --porcelain=v1 | sed -E 's/^.. //' | sort)
+          test "$actual" = "$(printf '%s\n' "$expected" | sed 's/^          //' | sort)"
+          git add .github/workflows/_tmp_r318i_evidence.yml tools/_tmp_r318i_*.py tools/_tmp_r318i_native_probe.rs tools/_tmp_r318i_run.sh
+          test "$(git diff --cached --name-only | wc -l)" -eq 5
+          git diff --cached --exit-code -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Run R3.18I second-property payload evidence v2'
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          test "$(git diff --name-only "$MAIN" HEAD | wc -l)" -eq 5
+          test "$(git rev-parse HEAD:tools/_tmp_r318i_analyze.py)" = '7cb3a26c8ac17cc0212026e0641970a7b50a7025'
+          test "$(git rev-parse HEAD:tools/_tmp_r318i_extend_boxcars.py)" = '8ade6d09b52c59b54a38ec48fb4acc606ca357fd'
+          test "$(git rev-parse HEAD:tools/_tmp_r318i_native_probe.rs)" = '3a9bf757729fdfebe849cf93840ae25097b6c8b7'
+          git push --force-with-lease origin "HEAD:refs/heads/$STAGING"
+          echo "R3_18I_V2_STAGING_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18I_V2_STAGING_TREE=$(git rev-parse HEAD^{tree})"
+          echo 'R3_18I_V2_GENERATION=PASS'
