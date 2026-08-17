@@ -49,7 +49,8 @@ R3.18O following-property header evidence decision / Outcome A CLOSED           
 R3.18P following-property exact-context contract decision / Outcome A CLOSED              |
 R3.18Q bounded following-property header production decision / CLOSED                         |
 R3.18R published following-property header differential decision / Outcome A CLOSED             |
-R3.18S active following-property payload contract/evidence discovery spec                       |
+R3.18S following-property payload evidence decision / Outcome A CLOSED                           |
+R3.18T active bounded following-property payload production composition spec                       |
         |                               |
         +---------------+---------------+
                         |
@@ -140,13 +141,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 70. `docs/continuity/MIMIR_R3_18R_EXECUTION_SPEC.md`
 71. `docs/continuity/MIMIR_R3_18R_DECISION.md`
 72. `docs/continuity/MIMIR_R3_18S_EXECUTION_SPEC.md`
-73. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-74. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-75. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-76. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-77. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-78. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-79. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+73. `docs/continuity/MIMIR_R3_18S_DECISION.md`
+74. `docs/continuity/MIMIR_R3_18T_EXECUTION_SPEC.md`
+75. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+76. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+77. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+78. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+79. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+80. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+81. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -192,10 +195,18 @@ scripts/verify_mimir_knowledge_archive.ps1
 - Boolean=39 / ActiveActor=8; payload/another-control bits 0/0; witness reselection 0; privacy PASS
 - next exact pass: R3.18S read-only following-property payload contract/evidence discovery
 
-### R3.18S following-property payload contract/evidence discovery: ACTIVE
-- exact same frozen 47 rows and 18 contexts; production `f41c59d26ed6c810a640b4fa8cd76129decb32aa` frozen
-- start only at proven R3.18Q payload_start; characterize one payload end independently for Boolean and ActiveActor classes
-- no another property control, loop/cursor, production mutation or later actor/frame/semantic/runtime widening
+### R3.18S following-property payload contract/evidence discovery: OUTCOME A / CLOSED
+- production unchanged at `f41c59d26ed6c810a640b4fa8cd76129decb32aa`
+- evidence `7fed9a90d2cb1e356b2a388503650b434d7f3f87` / tree `c552e5ef2cb8e7d1cb3b4022b3ff1ec6dc763989` / `32047433925/95438466699` SUCCESS; exact-head CI `32047433876/95438466663` SUCCESS
+- artifact `9293436309` / `18955` bytes / `sha256:dac07647e288bfc3b177000e1bfa6b9cfd892b80fd77d46c2f4974a3832cf422`
+- one payload exact 47/47 across 18 exact contexts; Boolean=39×1 bit; ActiveActor=8×33 bits; mismatch 0
+- witness reselection 0; repeatability/negative controls 47/47; another-control bits 0; privacy PASS
+- next exact pass: R3.18T bounded following-property payload production composition
+
+### R3.18T bounded following-property payload production composition: ACTIVE
+- production before pass `f41c59d26ed6c810a640b4fa8cd76129decb32aa`; exact admitted payload tags only Boolean|ActiveActor
+- reuse published R3.18Q + primitive Boolean/K2 ActiveActor decoders; preserve exact R3.18P context
+- stop exactly at one payload end; no another property control, loop/cursor, actor/frame or semantic/runtime widening
 
 ### R3.18O following-property header evidence: OUTCOME A / CLOSED
 - production unchanged at `fd74ba8c520ab83b808730572c41e45d6dc616e6`
@@ -715,3 +726,11 @@ next                        R3.18M true-only one-bit production composition
 - Following-payload and another-control consumption stayed 0/0; production remains `f41c59d26ed6c810a640b4fa8cd76129decb32aa`.
 - R3.18S is read-only one-following-payload contract/evidence discovery. Boolean=39 and ActiveActor=8 are separate evidence classes, not inferred decoder contracts.
 - Another control, repeated property loop/cursor, next actor/frame, lifecycle, raw state, events, slices, skills, counterfactual/runtime/export widening remain closed.
+
+
+## CURRENT OVERRIDE — R3.18S CLOSED / R3.18T ACTIVE
+
+- R3.18S Outcome A authority `32047433925/95438466699` on `7fed9a90d2cb1e356b2a388503650b434d7f3f87`; artifact `9293436309` / `sha256:dac07647e288bfc3b177000e1bfa6b9cfd892b80fd77d46c2f4974a3832cf422`; same-head CI `32047433876/95438466663`.
+- Exact one-payload evidence: 47/47 rows, 18/18 contexts, Boolean=39×1 bit, ActiveActor=8×33 bits, mismatch 0, later-control consumption 0.
+- R3.18T is the bounded production-composition gate for exactly those two admitted payload forms.
+- Another property control/header/payload, loop/cursor, context widening, next actor/frame, lifecycle, raw state/events/slices/skills/counterfactual/runtime/export remain closed.

@@ -6,24 +6,24 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18R admitted / R3.18S active
+# 0. Current override — R3.18S admitted / R3.18T active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## OPEN / PRODUCTION
-- production remains R3.18Q at `f41c59d26ed6c810a640b4fa8cd76129decb32aa`; exactly one following property header is admitted after a valid R3.18M true control, with exact R3.18P seven-field membership and stop at `payload_start`.
+- production remains R3.18Q at `f41c59d26ed6c810a640b4fa8cd76129decb32aa` and stops at the admitted following-header `payload_start`.
 
-## ADMITTED READ-ONLY EVIDENCE — R3.18R
-- published Q exact 47/47; exact contexts 18/18; multiplicities 47/47; mismatch 0; witness reselection 0; payload/another-control consumption 0/0.
-- authority `32044430149/95429267025`; artifact `9292549978` / `sha256:142a2480f38a7ddc4f74e73dd9ce84ed70ccd740645f05d2e90579825927220f`.
+## ADMITTED READ-ONLY EVIDENCE — R3.18S
+- exact 47/47 one-payload boundaries/semantics on 18 exact R3.18P contexts; Boolean=39×1 bit; ActiveActor=8×33 bits; mismatch 0; later-control consumption 0.
+- authority `32047433925/95438466699`; artifact `9293436309` / `sha256:dac07647e288bfc3b177000e1bfa6b9cfd892b80fd77d46c2f4974a3832cf422`.
 
-## ACTIVE EVIDENCE GATE — R3.18S
-- may characterize exactly one following payload on the same frozen 47 rows, beginning only at the proven `payload_start`;
-- Boolean=39 and ActiveActor=8 must be audited independently; no tag-only semantic or width inference;
-- stop at one proven payload end.
+## ACTIVE PRODUCTION GATE — R3.18T
+- may compose exactly one following payload after R3.18Q using only admitted Boolean primitive-scalar or ActiveActor K2 decode;
+- exact R3.18P context remains mandatory;
+- stop at one payload end.
 
 ## CLOSED
-- production following-payload composition; another control bit; repeated/generalized property loop; generic cursor;
+- another property control/header/payload; repeated/generalized property loop; generic cursor; context widening;
 - next actor/frame/lifecycle; raw state, events, slices, skills, counterfactual runtime and exports.
 
 ---
@@ -670,3 +670,11 @@ CLOSED:
 - Artifact `9292549978` / `18820` bytes / `sha256:142a2480f38a7ddc4f74e73dd9ce84ed70ccd740645f05d2e90579825927220f` is canonical; published Q/header/control equality is 47/47 with 18 exact contexts and mismatch 0.
 - R3.18S may inspect one following payload from each frozen `payload_start` through one independently proven payload end only.
 - Boolean and ActiveActor are separate evidence classes. No payload production API, another `property_present`, loop/cursor, next actor/frame or semantic/runtime widening is open.
+
+
+## R3.18S evidence closure / R3.18T active production lock
+
+- R3.18S authority `32047433925/95438466699` and same-head CI `32047433876/95438466663` are SUCCESS on `7fed9a90d2cb1e356b2a388503650b434d7f3f87`.
+- Artifact `9293436309` / `18955` bytes / `sha256:dac07647e288bfc3b177000e1bfa6b9cfd892b80fd77d46c2f4974a3832cf422` is canonical evidence; 47/47 one-payload exact, 18 contexts, Boolean 39×1 bit, ActiveActor 8×33 bits, mismatch 0.
+- R3.18T may publish only one exact admitted following payload after R3.18Q and must stop at payload end.
+- Another `property_present`, another header/payload, loop/cursor, context widening, actor/frame or semantic/runtime widening is not open.

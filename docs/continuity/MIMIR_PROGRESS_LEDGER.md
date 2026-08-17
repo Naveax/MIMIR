@@ -623,3 +623,40 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - R3.18S — following-property payload contract / evidence discovery.
+
+
+---
+
+## 2026-08-17 — R3.18S — Following-property payload contract / evidence
+Production base SHA: `f41c59d26ed6c810a640b4fa8cd76129decb32aa`
+Production commit SHA: unchanged (`f41c59d26ed6c810a640b4fa8cd76129decb32aa`)
+Pass type: read-only payload-boundary/semantic evidence
+Outcome: A — admitted
+
+What changed:
+- No production code changed. The exact frozen 47-row following-payload lane was independently compared against pinned Boxcars and existing MIMIR lower-level decoders.
+
+Evidence:
+- authority head/tree `7fed9a90d2cb1e356b2a388503650b434d7f3f87` / `c552e5ef2cb8e7d1cb3b4022b3ff1ec6dc763989`; run/job `32047433925/95438466699` SUCCESS;
+- artifact `9293436309` / `18955` bytes / `sha256:dac07647e288bfc3b177000e1bfa6b9cfd892b80fd77d46c2f4974a3832cf422`;
+- 47/47 rows and 18/18 exact R3.18P contexts; witness reselection 0; native/oracle mismatch 0;
+- Boolean 39 rows × 1 bit; ActiveActor 8 rows × 33 bits;
+- repeatability, truncation, wrong-decoder, wrong-exact-context and post-payload/next-control poison invariance 47/47;
+- another-control bits consumed 0; privacy PASS.
+
+Validation:
+- same-head normal CI `32047433876/95438466663` SUCCESS;
+- artifact ZIP digest matched GitHub artifact digest; all nine inner manifest entries verified;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+Important negative fact:
+- Boolean and ActiveActor are total fixed-width value domains; there is no invalid complete 1-bit/33-bit pattern to fabricate. Truncation is the structural malformed-payload control.
+
+Boundaries opened:
+- R3.18T may attempt bounded production composition of exactly one Boolean|ActiveActor following payload.
+
+Boundaries still closed:
+- another property control/header/payload; repeated/generalized loops/cursors; context widening; next actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening.
+
+Next exact pass:
+- R3.18T — bounded following-property payload production composition.
