@@ -720,3 +720,13 @@ Next exact pass:
 - Next stream/header/payload/second later control consumption 0/0/0/0; witness reselection 0.
 - Production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
 - Next pass opened: R3.18W true-only bounded production control composition.
+
+## 2026-08-17 — R3.18W production published / R3.18X opened
+
+- Outcome A production: `58872e94f00ef094807f21ab2ff984ac66b97d91` / tree `d6965d77903ea99dad0465bb350b6a673ee7dd00`; parent `49011a8be77e59b1834c0ecbb648ee6d699ca6c8`.
+- Exact clean scope: `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18w_following_payload_control.rs`.
+- Authority `32060501395/95480474127`, clean candidate CI `32062120856/95485540552`, PR #27 CI `32062533181/95486877308`, published CI `32062965119/95488256583` all SUCCESS.
+- R3.18W validates one exact R3.18T following-payload end, reads exactly one LSB-first control bit, admits true only, rejects false, and stops one bit later.
+- R3.18V frozen evidence remains `9297068554` / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2` with 47 true, 0 false and adjacent consumption 0/0/0/0.
+- Production/Cargo/fixture/corpus/docs/support mutation outside the two-file clean production scope: 0/0/0/0/0/0.
+- Opened R3.18X as a separate read-only published-W differential on exactly the same 47 V witnesses.

@@ -53,7 +53,8 @@ R3.18S following-property payload evidence decision / Outcome A CLOSED          
 R3.18T bounded following-property payload production decision / CLOSED                            |
 R3.18U published R3.18T following-payload differential decision / Outcome A CLOSED                    |
 R3.18V next property-control bit evidence decision / Outcome A CLOSED                                    |
-R3.18W active bounded true-only after-following-payload control production spec                           |
+R3.18W bounded true-only after-following-payload control production decision / CLOSED                        |
+R3.18X active published R3.18W after-following-payload control differential spec                         |
         |                               |
         +---------------+---------------+
                         |
@@ -152,13 +153,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 78. `docs/continuity/MIMIR_R3_18V_EXECUTION_SPEC.md`
 79. `docs/continuity/MIMIR_R3_18V_DECISION.md`
 80. `docs/continuity/MIMIR_R3_18W_EXECUTION_SPEC.md`
-81. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-82. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-83. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-84. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-85. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-86. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-87. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+81. `docs/continuity/MIMIR_R3_18W_DECISION.md`
+82. `docs/continuity/MIMIR_R3_18X_EXECUTION_SPEC.md`
+83. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+84. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+85. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+86. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+87. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+88. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+89. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -776,3 +779,11 @@ next                        R3.18M true-only one-bit production composition
 - published R3.18T exact 47/47; one-bit control false=0 true=47; native/oracle mismatch 0; witness reselection 0
 - truncation/repeatability/prior-stop mismatch/post-control poison 47/47; next stream/header/payload/second-control bits 0/0/0/0; privacy PASS
 - next exact pass: R3.18W bounded true-only after-following-payload control production composition
+
+## CURRENT OVERRIDE — R3.18W PRODUCTION / R3.18X ACTIVE
+
+- Production `58872e94f00ef094807f21ab2ff984ac66b97d91` / tree `d6965d77903ea99dad0465bb350b6a673ee7dd00` is R3.18W: exact R3.18T payload-end validation, one true-only control bit, false fail-closed, stop +1.
+- Authority `32060501395/95480474127`, clean CI `32062120856/95485540552`, PR CI `32062533181/95486877308`, published CI `32062965119/95488256583` are SUCCESS.
+- Frozen differential authority is R3.18V artifact `9297068554` / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2` with false=0 true=47 and adjacent consumption 0/0/0/0.
+- Active R3.18X is read-only published-W differential on those exact 47 rows.
+- Next stream/header/payload, second control, loops/cursors, actor/frame and semantic/runtime widening remain closed.

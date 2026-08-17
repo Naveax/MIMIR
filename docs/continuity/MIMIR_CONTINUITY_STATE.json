@@ -3,14 +3,14 @@
   "updated_date": "2026-08-17",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "c2765ab9f04f9c981a6868cb6503bdf0e339ce1b",
-  "last_production_milestone": "R3.18T",
-  "last_production_milestone_name": "bounded following-property payload production composition",
+  "last_production_code_sha": "58872e94f00ef094807f21ab2ff984ac66b97d91",
+  "last_production_milestone": "R3.18W",
+  "last_production_milestone_name": "bounded true-only after-following-payload control composition",
   "last_completed_read_only_audit": "R3.18V",
-  "current_pass": "R3.18W",
-  "current_pass_kind": "production implementation / bounded true-only control bit after published R3.18T following payload",
-  "current_pass_goal": "Validate an exact R3.18T payload-end stop, read exactly one following property_present bit, admit true only, reject false, and stop one bit later.",
-  "current_pass_stop_boundary": "Stop exactly one bit after the R3.18W control. No next stream/header/payload, second later control, loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "current_pass": "R3.18X",
+  "current_pass_kind": "read-only differential / published R3.18W after-following-payload control",
+  "current_pass_goal": "Validate published R3.18W exactly on the immutable R3.18V 47-row lane through one true control-bit stop with zero adjacent consumption.",
+  "current_pass_stop_boundary": "Stop exactly at published R3.18W control end. No next stream/header/payload, second control, generalized loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -70,7 +70,11 @@
     "second later property control bit after R3.18V",
     "false following property control in after-following-payload production context (R3.18V observed false=0)",
     "next stream/header/payload after R3.18W control",
-    "second later property control bit after R3.18W"
+    "second later property control bit after R3.18W",
+    "false success semantics after the published R3.18W control boundary",
+    "next stream/header/payload after published R3.18W",
+    "second later property control bit after published R3.18W",
+    "repeated/generalized property loop or generic cursor after R3.18W"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -156,6 +160,8 @@
     "docs/continuity/MIMIR_R3_18V_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18V_DECISION.md",
     "docs/continuity/MIMIR_R3_18W_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18W_DECISION.md",
+    "docs/continuity/MIMIR_R3_18X_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -1902,5 +1908,36 @@
     "second_later_control_bits_consumed": 0,
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
     "privacy_scan": "PASS"
+  },
+  "r3_18w": {
+    "outcome": "A — published / bounded true-only control composition",
+    "production_source_changed": true,
+    "production_sha": "58872e94f00ef094807f21ab2ff984ac66b97d91",
+    "production_tree": "d6965d77903ea99dad0465bb350b6a673ee7dd00",
+    "parent_sha": "49011a8be77e59b1834c0ecbb648ee6d699ca6c8",
+    "lib_blob": "d997ae8c3ad2d201b3f43c6ccca7ded2ef03b73b",
+    "test_blob": "ac176135c2e6ed56f0b91bdde8c7548f17641cf0",
+    "execution_spec_blob": "4252804b2b1edb22a6e729e953681844a25d9ef9",
+    "implementation_authority_run": 32060501395,
+    "implementation_authority_job": 95480474127,
+    "clean_candidate_ci_run": 32062120856,
+    "clean_candidate_ci_job": 95485540552,
+    "pr_number": 27,
+    "pr_ci_run": 32062533181,
+    "pr_ci_job": 95486877308,
+    "published_ci_run": 32062965119,
+    "published_ci_job": 95488256583,
+    "observed_control_distribution": {
+      "false": 0,
+      "true": 47
+    },
+    "false_success_admitted": false,
+    "control_bits_consumed": 1,
+    "next_stream_header_payload_second_control_bits_consumed": "0/0/0/0",
+    "clean_scope": [
+      "crates/mimir-replay/src/lib.rs",
+      "crates/mimir-replay/tests/r3_18w_following_payload_control.rs"
+    ],
+    "cargo_lock_fixture_corpus_docs_support_mutation": "0/0/0/0/0/0"
   }
 }

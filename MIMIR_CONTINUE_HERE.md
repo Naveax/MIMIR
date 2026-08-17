@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  c2765ab9f04f9c981a6868cb6503bdf0e339ce1b
+  58872e94f00ef094807f21ab2ff984ac66b97d91
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18T — bounded following-property payload production composition
+  R3.18W — bounded true-only after-following-payload control composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18V — next property-control bit evidence / Outcome A / 47/47 / false=0 true=47 / mismatch 0 / adjacent bits 0/0/0/0
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18V — one next property_present bit after R3.18T / Outcome A / 47 rows / false=0 true=47 / no next stream-header-payload-second-control
 
 CURRENT_PASS:
-  R3.18W — bounded true-only after-following-payload control-bit production composition
+  R3.18X — published R3.18W after-following-payload control differential
 
 CURRENT_PASS_TYPE:
-  production implementation / validate R3.18T payload end, read exactly one control bit, true-only success, false fail-closed
+  read-only differential / validate published R3.18W on immutable R3.18V 47-row lane; exact one-bit start/value/end/stop; no next header
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -99,8 +99,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18S CLOSED Outcome A: one payload exact 47/47; Boolean 39×1 bit; ActiveActor 8×33 bits; mismatch 0; another-control bits 0; artifact 9293436309
   R3.18T PRODUCTION at c2765ab9f04f9c981a6868cb6503bdf0e339ce1b: exactly one admitted Boolean|ActiveActor following payload after R3.18Q; stop exactly at payload end; no later control
   R3.18U CLOSED Outcome A: published T matched frozen S 47/47 across 18/18 contexts; mismatch 0; header identity 47/47; another-control bits 0; artifact 9296199852
-  R3.18V CLOSED Outcome A: exactly one next property_present bit matched 47/47; false=0 true=47; mismatch 0; next stream/header/payload/second-control bits 0/0/0/0; artifact {V_ART}
-  R3.18W ACTIVE bounded production composition of exactly one true-only control bit after a valid R3.18T payload
+  R3.18V CLOSED Outcome A: exactly one next property_present bit matched 47/47; false=0 true=47; mismatch 0; next stream/header/payload/second-control bits 0/0/0/0; artifact 9297068554
+  R3.18W PRODUCTION at 58872e94f00ef094807f21ab2ff984ac66b97d91: validates exact R3.18T payload end, consumes exactly one following property_present bit, admits true only, false fails closed, stops one bit later
+  R3.18X ACTIVE read-only published-W differential on the immutable R3.18V 47-row lane
   NO false success, next stream/header/payload, second later control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
@@ -140,6 +141,18 @@ R3_18Q_PRODUCTION_CLOSURE:
   Q/R3.18M control equality: 47/47; Q/stateless-header equality: 47/47
   following payload / another-control bits consumed: 0/0
   clean scope: lib.rs + r3_18q_following_header.rs only; Cargo/fixture/corpus/docs/workflow/support mutation 0
+R3_18W_PRODUCTION_CLOSURE:
+  Outcome A / production 58872e94f00ef094807f21ab2ff984ac66b97d91 / tree d6965d77903ea99dad0465bb350b6a673ee7dd00
+  parent: 49011a8be77e59b1834c0ecbb648ee6d699ca6c8
+  lib/test blobs: d997ae8c3ad2d201b3f43c6ccca7ded2ef03b73b / ac176135c2e6ed56f0b91bdde8c7548f17641cf0
+  execution spec blob: 4252804b2b1edb22a6e729e953681844a25d9ef9
+  implementation authority: 32060501395 / 95480474127 SUCCESS
+  exact clean-candidate CI: 32062120856 / 95485540552 SUCCESS
+  PR #27 exact-head CI: 32062533181 / 95486877308 SUCCESS
+  published-main CI: 32062965119 / 95488256583 SUCCESS
+  clean scope: lib.rs + r3_18w_following_payload_control.rs only; Cargo/lock/fixture/corpus/docs/support mutation 0/0/0/0/0/0
+  admitted control: property_present=true only; false fails closed
+  stop exactly at prior R3.18T payload end + 1 bit; next stream/header/payload/second-control consumed 0/0/0/0
 R3_18V_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at c2765ab9f04f9c981a6868cb6503bdf0e339ce1b
   authority head/tree: 2b0c9f01559e77a6fdf21a097b8ab4d1a27b6ff5 / 229b3d68a82f6dadc19518614e27ff09e8006ad2
@@ -2897,7 +2910,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR production is now R3.18T `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b`. It composes exactly one R3.18S-admitted Boolean|ActiveActor following payload after the R3.18Q header and stops at payload end. R3.18U is the active read-only published-API differential; another control/header/payload, generalized loop/cursor, actor/frame and semantic/runtime widening remain closed.**
+> **MIMIR production is now R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`. It validates one exact R3.18T following-payload end, consumes exactly one true-only property control bit, and stops one bit later. R3.18X is the active read-only published-API differential; next stream/header/payload, second control, generalized loop/cursor, actor/frame and semantic/runtime widening remain closed.**
 
 ---
 
@@ -3446,7 +3459,7 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18W
+# HISTORICAL PASS CHECKLIST — R3.18W (PUBLISHED OUTCOME A)
 
 **Goal:** publish exactly one true-only property-control bit after an internally-valid R3.18T following payload, then stop.
 
@@ -3467,4 +3480,27 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 [ ] Publish only an exact clean lib.rs + one focused-test commit after clean-head CI SUCCESS.
 [ ] Fast-forward main force=false only after PR exact-head CI SUCCESS, then require published-main CI SUCCESS.
 [ ] After publication, sync continuity/knowledge graph and open a separate published-API real-replay differential.
+```
+
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18X
+
+**Goal:** validate published R3.18W on the exact immutable R3.18V 47-row lane through its one-bit control stop. Production remains frozen.
+
+```text
+[ ] Fetch fresh main; require production 58872e94f00ef094807f21ab2ff984ac66b97d91 / tree d6965d77903ea99dad0465bb350b6a673ee7dd00.
+[ ] Verify W authority 32060501395/95480474127, candidate CI 32062120856/95485540552, PR CI 32062533181/95486877308, published CI 32062965119/95488256583.
+[ ] Verify lib/test blobs d997ae8c3ad2d201b3f43c6ccca7ded2ef03b73b / ac176135c2e6ed56f0b91bdde8c7548f17641cf0, W spec blob 4252804b2b1edb22a6e729e953681844a25d9ef9, and V artifact 9297068554.
+[ ] Reuse exactly the 47 frozen V witnesses; witness reselection = 0.
+[ ] Reconstruct exact published T prior through payload end before every W call.
+[ ] Call published W; require control start/value/end/stop exact against frozen V rows.
+[ ] Require false=0 / true=47 and mismatch 0.
+[ ] Require deterministic double-run equality.
+[ ] Run truncation, false-control, prior-boundary corruption and post-stop poison negatives.
+[ ] Prove next stream/header/payload/second-control consumption = 0/0/0/0.
+[ ] Produce privacy-safe immutable artifact with per-row comparisons, aggregates and SHA-256 manifest.
+[ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0 and same-head normal CI SUCCESS.
+[ ] Outcome A admits only the published differential; the next header requires separate R3.18Y evidence.
 ```

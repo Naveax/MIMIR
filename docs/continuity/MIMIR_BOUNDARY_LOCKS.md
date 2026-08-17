@@ -6,26 +6,25 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18V closed / R3.18W active
+# 0. Current override — R3.18W production / R3.18X active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## OPEN / PRODUCTION
-- R3.18T at `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` composes exactly one admitted Boolean|ActiveActor following payload after R3.18Q and stops exactly at payload end.
+- R3.18W at `58872e94f00ef094807f21ab2ff984ac66b97d91` validates one exact R3.18T following-payload end, consumes exactly one `property_present` bit, admits true only, and stops one bit later.
 
 ## CLOSED EVIDENCE — R3.18V Outcome A
-- exactly one next property_present bit observed on immutable 47 rows;
-- false=0 / true=47; pinned Boxcars vs independent read mismatch 0;
+- immutable 47 rows; false=0 / true=47; native-oracle mismatch 0;
 - next stream/header/payload/second-control bits consumed 0/0/0/0;
 - artifact `9297068554` / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2`.
 
-## ACTIVE PRODUCTION GATE — R3.18W
-- from an already-valid R3.18T result, validate prior stop==payload end;
-- read exactly one following control bit; admit true only; false fails closed;
-- stop exactly one bit later.
+## ACTIVE READ-ONLY GATE — R3.18X
+- run published W on exactly the same 47 V witnesses;
+- require exact control start/value/end/stop and mismatch 0;
+- production mutation and adjacent decoding remain forbidden.
 
 ## CLOSED
-- false success semantics at the after-following-payload boundary;
+- false control success at this exact boundary;
 - next stream/header/payload, second later control, repeated/generalized property loop/cursor;
 - next actor/frame/lifecycle; raw state, events, slices, skills, counterfactual runtime and exports.
 
