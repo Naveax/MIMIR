@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "contract": "MIMIR_R3_18P_FOLLOWING_PROPERTY_HEADER_CONTEXTS",
+  "status": "admitted",
+  "admission_date": "2026-08-17",
+  "membership_policy": "exact_tuple_only",
+  "tuple_fields": [
+    "stream_id_bound",
+    "prop_id_bits",
+    "property_object_index",
+    "attribute_tag",
+    "version_major",
+    "version_minor",
+    "net_version"
+  ],
+  "observed_row_count": 47,
+  "unique_exact_context_count": 18,
+  "authority": {
+    "base_main_sha": "a431d57e945505b6b4879475e51fc2c2e1c14df7",
+    "production_sha": "fd74ba8c520ab83b808730572c41e45d6dc616e6",
+    "r3_18o_evidence_head": "5046e1594b87ce2828db5faa48aceba456c3166f",
+    "r3_18o_run": 32017369100,
+    "r3_18o_job": 95349613184,
+    "r3_18o_artifact_id": 9284144768,
+    "r3_18o_artifact_size": 25129,
+    "r3_18o_artifact_sha256": "e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d",
+    "r3_18o_source_summary_sha256": "f1bc285db764a71091c904e74a82c28e369cec1e62bed1b7ae503effef4824bc",
+    "r3_18o_header_rows_sha256": "599657a154498451d6317bf148da7bcf6e7077f35315426023da526a955ee2a4",
+    "r3_18o_aggregate_sha256": "170bad20b7d3d11596f879865a1380ade3910eba069311bec7e6d51eae2a4233",
+    "witness_reselection": 0
+  },
+  "admitted_contexts": [
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 32,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 41,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 2
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 78,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 4
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 79,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 19
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 80,
+      "attribute_tag": "ActiveActor",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 6
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 83,
+      "attribute_tag": "ActiveActor",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 85,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 87,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 2
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 89,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 94,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 102,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 2
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 103,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 106,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 116,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 67,
+      "prop_id_bits": 6,
+      "property_object_index": 61,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 72,
+      "prop_id_bits": 6,
+      "property_object_index": 62,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 72,
+      "prop_id_bits": 6,
+      "property_object_index": 65,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 110,
+      "prop_id_bits": 6,
+      "property_object_index": 36,
+      "attribute_tag": "ActiveActor",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    }
+  ],
+  "anti_widening": {
+    "tag_only_membership": false,
+    "component_only_membership": false,
+    "cartesian_product_membership": false,
+    "versionless_membership": false,
+    "multiplicity_is_runtime_frequency_promise": false,
+    "contexts_outside_exact_set_admitted": false
+  }
+}

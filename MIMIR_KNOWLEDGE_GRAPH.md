@@ -46,7 +46,8 @@ R3.18L following-property control-bit evidence decision / Outcome A CLOSED
 R3.18M bounded after-second-payload true-only control production decision / CLOSED
 R3.18N published after-second-payload control differential decision / Outcome A CLOSED
 R3.18O following-property header evidence decision / Outcome A CLOSED             |
-R3.18P active following-property exact-context contract spec                               |
+R3.18P following-property exact-context contract decision / Outcome A CLOSED              |
+R3.18Q active bounded following-property header production spec                              |
         |                               |
         +---------------+---------------+
                         |
@@ -130,13 +131,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 63. `docs/continuity/MIMIR_R3_18O_DECISION.md`
 64. `docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md`
 65. `docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md`
-66. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-67. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-68. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-69. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-70. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-71. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-72. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+66. `docs/continuity/MIMIR_R3_18P_ADMITTED_HEADER_CONTEXTS.json`
+67. `docs/continuity/MIMIR_R3_18P_DECISION.md`
+68. `docs/continuity/MIMIR_R3_18Q_EXECUTION_SPEC.md`
+69. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+70. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+71. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+72. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+73. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+74. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+75. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -178,10 +182,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 - canonical artifact digest `e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d` verified against current GitHub artifact metadata and fresh run download
 - exact 18 tuple identities + inner hashes corrected; Outcome A unchanged; production unchanged
 
-### R3.18P following-property header context contract: ACTIVE
-- contract-only; production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6`
-- exact R3.18O 18-tuple identity + 47 multiplicities only
-- no tag/component-only support, no Cartesian product, no payload/control/loop widening
+### R3.18P following-property header context contract: OUTCOME A / CLOSED
+- production unchanged at `fd74ba8c520ab83b808730572c41e45d6dc616e6`
+- exact 18 full structural tuples / multiplicities sum 47
+- contract `sha256:0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b`; membership exact-tuple-only
+- tag/component-only, Cartesian-product and versionless widening rejected
+
+### R3.18Q bounded following-property header composition: ACTIVE
+- production pass; base production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6` until admitted
+- one header only after valid R3.18M true control; exact R3.18P membership required
+- stop at payload_start; payload/another-control/loop widening closed
 
 ## Current replay-decoder chain
 

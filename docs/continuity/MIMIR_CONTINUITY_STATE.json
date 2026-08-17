@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.18M",
   "last_production_milestone_name": "bounded native after-second-payload true-only control composition",
   "last_completed_read_only_audit": "R3.18O",
-  "current_pass": "R3.18P",
-  "current_pass_kind": "contract-only following-property header exact-context crystallization",
-  "current_pass_goal": "Crystallize the immutable R3.18O 18 exact following-header structural context tuples and their 47-row multiplicities into one privacy-safe committed contract artifact with no cross-product widening.",
-  "current_pass_stop_boundary": "No production code change. Admit only exact R3.18O tuple identity; no following payload, another control, generalized loop, actor/frame, semantic or runtime widening.",
+  "current_pass": "R3.18Q",
+  "current_pass_kind": "bounded production following-property header composition",
+  "current_pass_goal": "Compose exactly one following header after a valid R3.18M true control, require exact R3.18P tuple membership, and stop at payload_start.",
+  "current_pass_stop_boundary": "Exactly one following header through payload_start; no payload, another control, generalized loop, actor/frame or semantic/runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -134,6 +134,9 @@
     "docs/continuity/MIMIR_R3_18O_DECISION.md",
     "docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md",
     "docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18P_ADMITTED_HEADER_CONTEXTS.json",
+    "docs/continuity/MIMIR_R3_18P_DECISION.md",
+    "docs/continuity/MIMIR_R3_18Q_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -154,7 +157,7 @@
   ],
   "last_completed_evidence_pass": "R3.18O",
   "last_completed_evidence_outcome": "A — exact frozen 47-row following-property header evidence; 47/47 native/oracle exact, 18 exact structural context tuples, mismatch 0, witness reselection 0, following payload/another-control consumption 0/0.",
-  "last_completed_contract_pass": "R3.17N",
+  "last_completed_contract_pass": "R3.18P",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -1678,5 +1681,18 @@
     "privacy": "PASS",
     "next_pass": "R3.18P",
     "receipt_correction": "2026-08-17 canonical GitHub artifact metadata + fresh run download; exact tuple identities and immutable hashes corrected; Outcome A unchanged"
+  },
+  "r3_18p": {
+    "outcome": "A — admitted / contract-only",
+    "production_source_changed": false,
+    "production_sha": "fd74ba8c520ab83b808730572c41e45d6dc616e6",
+    "base_main_sha": "a431d57e945505b6b4879475e51fc2c2e1c14df7",
+    "contract_file": "docs/continuity/MIMIR_R3_18P_ADMITTED_HEADER_CONTEXTS.json",
+    "contract_sha256": "0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b",
+    "observed_rows": 47,
+    "unique_exact_contexts": 18,
+    "membership_policy": "exact_tuple_only",
+    "witness_reselection": 0,
+    "next_pass": "R3.18Q"
   }
 }

@@ -1,6 +1,6 @@
 # MIMIR — Progress Ledger
 
-**Policy:** append-only milestone ledger.  
+**Policy:** append-only milestone ledger.
 Do not rewrite old entries to make history prettier. If an earlier entry is later found wrong, append a correction entry.
 
 ---
@@ -95,9 +95,9 @@ These milestones established prerequisites but did not constitute a native netwo
 
 ## R3.13 — Static replay network lookup plan
 
-**Production commit SHA:** `ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa`  
-**Commit message:** `Add replay network lookup plan`  
-**Pass type:** production implementation + differential audit + publication  
+**Production commit SHA:** `ee23fe4d6975caf4910fd6db84a18c3a2f3f70aa`
+**Commit message:** `Add replay network lookup plan`
+**Pass type:** production implementation + differential audit + publication
 **Outcome:** closed / production
 
 ### What changed
@@ -192,8 +192,8 @@ Read-only R3.14 format audit.
 
 ## R3.14 — Native bitstream order read-only audit
 
-**Pass type:** read-only format audit  
-**Production source changed:** no  
+**Pass type:** read-only format audit
+**Production source changed:** no
 **Outcome:** sufficient to plan R3.14A
 
 ### Exact order established
@@ -561,3 +561,17 @@ Next exact pass:
 ## 2026-08-17 — R3.18O immutable receipt correction
 
 Fresh exact-run artifact re-download caught stale receipt values before R3.18P admission. Correct ZIP digest: `e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d`. Exact tuple identities and inner hashes were corrected; aggregate Outcome A facts and production boundary are unchanged. R3.18P remains active and must use corrected authority.
+
+## 2026-08-17 — R3.18P — Following-property header exact-context contract
+
+Production SHA: `fd74ba8c520ab83b808730572c41e45d6dc616e6` (unchanged)
+Pass type: contract-only
+Outcome: **A — ADMITTED**
+
+- immutable R3.18O authority reverified;
+- exact 18 full structural tuples admitted with exact multiplicities summing to 47;
+- committed contract SHA-256 `0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b`;
+- tag/component-only, Cartesian-product, version-drop and nineteenth-tuple widening remain rejected;
+- no production/Cargo/fixture/corpus/support mutation.
+
+Next exact pass: **R3.18Q bounded following-property header production composition**; hard stop remains following `payload_start`.
