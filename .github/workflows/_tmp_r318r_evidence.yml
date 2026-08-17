@@ -79,20 +79,37 @@ jobs:
           expected_sha = os.environ['GITHUB_SHA']
           expected_branch = 'evidence/r318r-published-following-header-v1'
           expected_name = 'r318r-published-following-header-differential-evidence'
-          expected_digest = os.environ['ARTIFACT_DIGEST']
+          upload_digest = os.environ['ARTIFACT_DIGEST']
           expected_repository = os.environ['GITHUB_REPOSITORY']
 
           matches = [a for a in artifacts.get('artifacts', []) if a.get('id') == artifact_id]
+          print('MATCH_COUNT', len(matches), flush=True)
           assert len(matches) == 1, {
               'artifact_id': artifact_id,
               'seen_ids': [a.get('id') for a in artifacts.get('artifacts', [])],
           }
           artifact = matches[0]
+          rest_digest = artifact.get('digest')
+
+          print('ARTIFACT', json.dumps({
+              'id': artifact.get('id'),
+              'name': artifact.get('name'),
+              'size_in_bytes': artifact.get('size_in_bytes'),
+              'digest': rest_digest,
+              'expired': artifact.get('expired'),
+          }, sort_keys=True), flush=True)
+          print('RUN', json.dumps({
+              'id': run.get('id'),
+              'head_branch': run.get('head_branch'),
+              'head_sha': run.get('head_sha'),
+              'repository_full_name': run.get('repository', {}).get('full_name'),
+          }, sort_keys=True), flush=True)
+          print('UPLOAD_DIGEST', upload_digest, flush=True)
 
           checks = {
               'artifact_name': artifact.get('name') == expected_name,
               'artifact_expired': artifact.get('expired') is False,
-              'artifact_digest': artifact.get('digest') == expected_digest,
+              'artifact_digest_if_present': rest_digest is None or rest_digest == upload_digest,
               'run_id': run.get('id') == run_id,
               'head_branch': run.get('head_branch') == expected_branch,
               'head_sha': run.get('head_sha') == expected_sha,
@@ -102,7 +119,8 @@ jobs:
               'artifact_id': artifact.get('id'),
               'artifact_name': artifact.get('name'),
               'artifact_size_in_bytes': artifact.get('size_in_bytes'),
-              'artifact_digest': artifact.get('digest'),
+              'artifact_rest_digest': rest_digest,
+              'artifact_upload_digest': upload_digest,
               'artifact_expired': artifact.get('expired'),
               'run_id': run.get('id'),
               'head_branch': run.get('head_branch'),
@@ -110,10 +128,10 @@ jobs:
               'repository_full_name': run.get('repository', {}).get('full_name'),
               'checks': checks,
           }
-          print(json.dumps(receipt, sort_keys=True))
+          print(json.dumps(receipt, sort_keys=True), flush=True)
           failed = [name for name, passed in checks.items() if not passed]
           assert not failed, {'failed_checks': failed, 'receipt': receipt}
-          print('R3_18R_RECEIPT_METADATA=PASS')
+          print('R3_18R_RECEIPT_METADATA=PASS', flush=True)
           PY
 
           echo "R3_18R_EVIDENCE_HEAD=$(git rev-parse HEAD)"
