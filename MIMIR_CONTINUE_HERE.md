@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18Q — bounded following-property header production composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18O — following-property header differential / Outcome A / 47/47 exact / 18 exact structural contexts / 0 mismatch / following payload+another-control bits 0
+  R3.18R — published following-property header differential / Outcome A / 47/47 exact / 18 exact contexts / 0 mismatch / following payload+another-control bits 0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18P — following-property header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18O — following-property header evidence / Outcome A / 47 rows / 18 exact structural contexts / 0 mismatch / no following payload or another-control
+  R3.18R — published R3.18Q differential / Outcome A / 47 rows / 18 exact contexts / 0 mismatch / no following payload or another-control
 
 CURRENT_PASS:
-  R3.18R — published following-property header real-replay differential audit
+  R3.18S — following-property payload contract / evidence discovery
 
 CURRENT_PASS_TYPE:
-  read-only differential / validate the published R3.18Q production API on the immutable R3.18O 47-row lane; exact R3.18P membership; no payload or later control
+  read-only evidence / characterize exactly one following payload on the immutable 47-row lane; Boolean and ActiveActor independently; no later control or production mutation
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -95,7 +95,8 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18O CLOSED Outcome A: 47/47 following headers exact through payload_start; 18 exact structural contexts; mismatch 0; following payload/another-control consumption 0/0
   R3.18P CLOSED Outcome A: exact 18-tuple contract admitted; multiplicities sum 47; contract sha256 0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b; production unchanged
   R3.18Q PRODUCTION at f41c59d26ed6c810a640b4fa8cd76129decb32aa: one following header only after valid R3.18M true control; exact R3.18P seven-field membership; stop exactly at payload_start; 47/47 frozen authority rows exact
-  R3.18R ACTIVE read-only differential on the immutable R3.18O 47-row lane
+  R3.18R CLOSED Outcome A: published-Q control/header exact 47/47; exact contexts 18/18; multiplicities 47/47; mismatch 0; payload/another-control bits 0/0; artifact 9292549978
+  R3.18S ACTIVE read-only following-payload contract/evidence discovery on the same 47 rows
   NO following payload, another control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
@@ -135,6 +136,18 @@ R3_18Q_PRODUCTION_CLOSURE:
   Q/R3.18M control equality: 47/47; Q/stateless-header equality: 47/47
   following payload / another-control bits consumed: 0/0
   clean scope: lib.rs + r3_18q_following_header.rs only; Cargo/fixture/corpus/docs/workflow/support mutation 0
+R3_18R_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at f41c59d26ed6c810a640b4fa8cd76129decb32aa
+  authority head/tree: 47bf441f2c795702e4ee75c66b4dbe710ccc9a9c / 0dd95a0f8d4e8729191176d1e2614cbafd75d80e
+  authority run/job: 32044430149 / 95429267025 SUCCESS
+  exact-head normal CI: 32044430126 / 95429266690 SUCCESS
+  artifact: 9292549978 / 18820 bytes / sha256:142a2480f38a7ddc4f74e73dd9ce84ed70ccd740645f05d2e90579825927220f
+  published Q rows 47/47 / exact contexts 18/18 / multiplicities 47/47 / mismatch 0
+  R3.18M control equality 47/47 / stateless-header equality 47/47
+  Boolean 39 / ActiveActor 8 / version 868.32 net10
+  Q negatives + repeatability + post-payload poison 47/47; Cartesian/component/version widening negatives PASS
+  following payload/another-control bits consumed 0/0; witness reselection 0; privacy PASS
+  production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
 R3_18P_CONTRACT_CLOSURE:
   Outcome A / contract-only / production unchanged at fd74ba8c520ab83b808730572c41e45d6dc616e6
   exact structural contexts: 18 / observed multiplicities: 47 / witness reselection: 0
@@ -2834,7 +2847,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR production is now at R3.18Q `f41c59d26ed6c810a640b4fa8cd76129decb32aa`: after a valid R3.18M true following control it decodes exactly one following property header, requires exact R3.18P seven-field tuple membership, and stops at that header\'s `payload_start`. R3.18R is the active read-only published-API differential on the immutable R3.18O 47-row lane. Following payload, another control bit, generalized loops/cursors, actor/frame iteration, raw state, events and skills remain closed.**
+> **MIMIR production remains R3.18Q `f41c59d26ed6c810a640b4fa8cd76129decb32aa`. R3.18R is admitted Outcome A: published Q matched the immutable 47-row lane with control/header equality 47/47, exact contexts 18/18, mismatch 0, witness reselection 0 and zero following-payload/another-control consumption. R3.18S is the active read-only following-payload contract/evidence pass; production payload composition and every later control/loop/actor/frame/semantic/runtime layer remain closed.**
 
 ---
 
@@ -3316,7 +3329,7 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18R
+# HISTORICAL PASS CHECKLIST — R3.18R (CLOSED OUTCOME A)
 
 **Goal:** differentially validate published R3.18Q on the exact immutable R3.18O 47-row lane. Production Rust is frozen.
 
@@ -3334,4 +3347,26 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 [ ] Run focused Q tests, full mimir-replay/workspace/clippy/repository verification and same-head normal CI.
 [ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 [ ] Outcome A may open a later separate following-payload evidence/contract pass only; R3.18R itself admits no payload.
+```
+
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18S
+
+**Goal:** characterize exactly one following payload from the proven R3.18Q `payload_start` on the same immutable 47-row lane. Production Rust remains frozen.
+
+```text
+[ ] Fetch fresh main; require production f41c59d26ed6c810a640b4fa8cd76129decb32aa / tree 606db4b5778e5218f2bd0117cc5dd72d7f3e37a5.
+[ ] Verify R3.18R authority 32044430149/95429267025, exact-head CI 32044430126/95429266690, artifact 9292549978 / sha256:142a2480f38a7ddc4f74e73dd9ce84ed70ccd740645f05d2e90579825927220f.
+[ ] Reuse exactly the 47 frozen witnesses; witness reselection = 0; preserve exact 18 R3.18P contexts.
+[ ] Reconstruct R3.18Q following headers exactly and begin only at each proven payload_start.
+[ ] Audit Boolean=39 and ActiveActor=8 payload classes independently; do not infer width/semantics from tag count.
+[ ] Capture exact payload start/end/width and independently justified semantic comparison without reading another property control.
+[ ] Require deterministic double-run equality and exact applicable native/oracle comparisons.
+[ ] Run truncation, wrong decoder/tag, wrong context/version, malformed payload, repeatability and post-payload/next-control poison negatives.
+[ ] Produce privacy-safe immutable evidence with hashes and mutation/consumption counters.
+[ ] Run focused decoder tests, full mimir-replay/workspace/clippy/repository verification and same-head normal CI.
+[ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0 and another-control bits consumed 0.
+[ ] Outcome A may admit only a narrow payload evidence/contract; production composition requires a later separate pass.
 ```

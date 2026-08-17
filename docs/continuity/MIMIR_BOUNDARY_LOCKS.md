@@ -6,25 +6,25 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18P admitted / R3.18Q active
+# 0. Current override — R3.18R admitted / R3.18S active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## OPEN / PRODUCTION
-- production remains R3.18M at `fd74ba8c520ab83b808730572c41e45d6dc616e6`; exactly one true following control bit is production-admitted.
+- production remains R3.18Q at `f41c59d26ed6c810a640b4fa8cd76129decb32aa`; exactly one following property header is admitted after a valid R3.18M true control, with exact R3.18P seven-field membership and stop at `payload_start`.
 
-## ADMITTED CONTRACT — R3.18P
-- exact 18 full following-header structural tuples; observed multiplicities sum 47;
-- contract `sha256:0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b`;
-- exact tuple membership only; no component-wise or Cartesian-product widening.
+## ADMITTED READ-ONLY EVIDENCE — R3.18R
+- published Q exact 47/47; exact contexts 18/18; multiplicities 47/47; mismatch 0; witness reselection 0; payload/another-control consumption 0/0.
+- authority `32044430149/95429267025`; artifact `9292549978` / `sha256:142a2480f38a7ddc4f74e73dd9ce84ed70ccd740645f05d2e90579825927220f`.
 
-## ACTIVE PRODUCTION GATE — R3.18Q
-- may compose exactly one following header after valid R3.18M true control;
-- exact R3.18P membership required; stop at `payload_start`.
+## ACTIVE EVIDENCE GATE — R3.18S
+- may characterize exactly one following payload on the same frozen 47 rows, beginning only at the proven `payload_start`;
+- Boolean=39 and ActiveActor=8 must be audited independently; no tag-only semantic or width inference;
+- stop at one proven payload end.
 
 ## CLOSED
-- following payload; another control bit; repeated/generalized property loop; generic cursor;
-- next actor/frame/lifecycle; raw state, events, slices, skills, runtime and exports.
+- production following-payload composition; another control bit; repeated/generalized property loop; generic cursor;
+- next actor/frame/lifecycle; raw state, events, slices, skills, counterfactual runtime and exports.
 
 ---
 
@@ -662,3 +662,11 @@ CLOSED:
 - Production/Cargo/fixture/corpus/support mutation is forbidden.
 - Following payload, another `property_present`, loop/cursor, actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening is forbidden.
 - Outcome A may only open a later separate payload evidence/contract pass; it does not itself admit payload.
+
+
+## R3.18R evidence closure / R3.18S active payload lock
+
+- R3.18R read-only authority `32044430149/95429267025` and same-head CI `32044430126/95429266690` are SUCCESS on `47bf441f2c795702e4ee75c66b4dbe710ccc9a9c`.
+- Artifact `9292549978` / `18820` bytes / `sha256:142a2480f38a7ddc4f74e73dd9ce84ed70ccd740645f05d2e90579825927220f` is canonical; published Q/header/control equality is 47/47 with 18 exact contexts and mismatch 0.
+- R3.18S may inspect one following payload from each frozen `payload_start` through one independently proven payload end only.
+- Boolean and ActiveActor are separate evidence classes. No payload production API, another `property_present`, loop/cursor, next actor/frame or semantic/runtime widening is open.

@@ -584,3 +584,42 @@ Next exact pass: **R3.18Q bounded following-property header production compositi
 - R3.18P exact contract `0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b`; 18 exact contexts; 47/47 frozen production compositions exact.
 - Q/R3.18M control equality 47/47; Q/stateless-header equality 47/47; following payload / another-control consumption 0/0.
 - Opened R3.18R read-only published-API differential; production frozen.
+
+
+---
+
+## 2026-08-17 — R3.18R — Published following-property header differential
+Production base SHA: `f41c59d26ed6c810a640b4fa8cd76129decb32aa`
+Production commit SHA: unchanged (`f41c59d26ed6c810a640b4fa8cd76129decb32aa`)
+Pass type: read-only differential evidence
+Outcome: A — admitted
+
+What changed:
+- No production code changed. Canonical continuity records the completed published-Q differential and opens R3.18S read-only following-payload discovery.
+
+Evidence:
+- authority head/tree `47bf441f2c795702e4ee75c66b4dbe710ccc9a9c` / `0dd95a0f8d4e8729191176d1e2614cbafd75d80e`; run/job `32044430149/95429267025` SUCCESS;
+- artifact `9292549978` / `18820` bytes / `sha256:142a2480f38a7ddc4f74e73dd9ce84ed70ccd740645f05d2e90579825927220f`;
+- published-Q rows 47/47; R3.18M control equality 47/47; stateless-header equality 47/47;
+- exact R3.18P contexts 18/18 and multiplicities 47/47; native/oracle mismatch 0;
+- Boolean=39, ActiveActor=8, all 868.32/net10; witness reselection 0;
+- following payload / another-control consumption 0/0; privacy PASS.
+
+Validation:
+- same-head normal CI `32044430126/95429266690` SUCCESS;
+- Q truncation, wrong actor, unresolved lookup, wrong version, repeatability and post-payload poison controls 47/47;
+- fabricated Cartesian and component/tag/version widening negatives PASS;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+Boundaries opened:
+- read-only R3.18S may investigate exactly one following payload on the frozen 47-row lane.
+
+Boundaries still closed:
+- production following-payload composition; another property control; repeated/generalized loops/cursors; next actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening.
+
+Important negative facts / anti-regressions:
+- Boolean=39 and ActiveActor=8 are observed tag counts, not payload-width or semantic contracts.
+- R3.18R consumed zero payload and zero later-control bits.
+
+Next exact pass:
+- R3.18S — following-property payload contract / evidence discovery.
