@@ -6,24 +6,20 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18S admitted / R3.18T active
+# 0. Current override — R3.18T production / R3.18U active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## OPEN / PRODUCTION
-- production remains R3.18Q at `f41c59d26ed6c810a640b4fa8cd76129decb32aa` and stops at the admitted following-header `payload_start`.
+- R3.18T at `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` composes exactly one admitted Boolean|ActiveActor following payload after the R3.18Q header; exact R3.18P context remains mandatory; stop exactly at payload end.
 
-## ADMITTED READ-ONLY EVIDENCE — R3.18S
-- exact 47/47 one-payload boundaries/semantics on 18 exact R3.18P contexts; Boolean=39×1 bit; ActiveActor=8×33 bits; mismatch 0; later-control consumption 0.
-- authority `32047433925/95438466699`; artifact `9293436309` / `sha256:dac07647e288bfc3b177000e1bfa6b9cfd892b80fd77d46c2f4974a3832cf422`.
-
-## ACTIVE PRODUCTION GATE — R3.18T
-- may compose exactly one following payload after R3.18Q using only admitted Boolean primitive-scalar or ActiveActor K2 decode;
-- exact R3.18P context remains mandatory;
-- stop at one payload end.
+## ACTIVE EVIDENCE GATE — R3.18U
+- read-only published-T differential on the exact frozen 47-row R3.18S lane;
+- compare exact header/payload boundary/typed semantics/final stop;
+- production mutation and another-control access forbidden.
 
 ## CLOSED
-- another property control/header/payload; repeated/generalized property loop; generic cursor; context widening;
+- another property control/header/payload; repeated/generalized property loop; generic cursor; context/tag widening;
 - next actor/frame/lifecycle; raw state, events, slices, skills, counterfactual runtime and exports.
 
 ---
@@ -678,3 +674,11 @@ CLOSED:
 - Artifact `9293436309` / `18955` bytes / `sha256:dac07647e288bfc3b177000e1bfa6b9cfd892b80fd77d46c2f4974a3832cf422` is canonical evidence; 47/47 one-payload exact, 18 contexts, Boolean 39×1 bit, ActiveActor 8×33 bits, mismatch 0.
 - R3.18T may publish only one exact admitted following payload after R3.18Q and must stop at payload end.
 - Another `property_present`, another header/payload, loop/cursor, context widening, actor/frame or semantic/runtime widening is not open.
+
+
+## R3.18T production closure / R3.18U active differential lock
+
+- Production `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` / tree `a6f27fe606cd3446da02ef1cb8cf53fff071e383`; lib/test blobs `cf992670b461e9d923e773ed375bef2b42aea20d` / `430676ec118fa0755a9c64abc0067bf5c5c88d05`.
+- Implementation `32049639448/95445637593`, candidate CI `32049893219/95446478223`, PR CI `32050205389/95447503058`, published CI `32050650336/95448937493` are SUCCESS.
+- Production decodes exactly one R3.18S-admitted Boolean|ActiveActor payload and stops at payload end.
+- R3.18U may only validate that published boundary on the frozen 47-row lane. Another `property_present`, another header/payload, loop/cursor, context widening or actor/frame/runtime widening is not open.

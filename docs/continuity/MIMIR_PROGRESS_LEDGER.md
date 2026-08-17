@@ -660,3 +660,37 @@ Boundaries still closed:
 
 Next exact pass:
 - R3.18T — bounded following-property payload production composition.
+
+
+---
+
+## 2026-08-17 — R3.18T — Bounded following-property payload production composition
+Production base SHA: `ac1b284099a01be895c3e9d644a9d98b6dfe3da2`
+Production commit SHA: `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b`
+Pass type: production implementation
+Outcome: A — published
+
+What changed:
+- Added exactly one public bounded composition for the following payload after R3.18Q.
+- Reused existing primitive-scalar Boolean and K2 ActiveActor decoders; no duplicate wire decoder or generic loop was introduced.
+
+Authority / validation:
+- implementation `32049639448/95445637593` SUCCESS;
+- clean-candidate CI `32049893219/95446478223` SUCCESS;
+- PR #23 CI `32050205389/95447503058` SUCCESS;
+- published-main CI `32050650336/95448937493` SUCCESS;
+- lib/test blobs `cf992670b461e9d923e773ed375bef2b42aea20d` / `430676ec118fa0755a9c64abc0067bf5c5c88d05`; tree `a6f27fe606cd3446da02ef1cb8cf53fff071e383`.
+
+Clean scope:
+- `crates/mimir-replay/src/lib.rs`
+- `crates/mimir-replay/tests/r3_18t_following_payload.rs`
+- Cargo/lock/fixture/corpus/docs/support mutation 0/0/0/0/0/0.
+
+Admitted behavior:
+- Boolean exactly 1 bit; ActiveActor exactly 33 bits; exact nested R3.18P context remains mandatory; stop exactly at one payload end; another-control bits consumed 0.
+
+Boundaries still closed:
+- another property control/header/payload; generalized property loops/cursors; context/tag widening; next actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening.
+
+Next exact pass:
+- R3.18U — published R3.18T following-payload differential on the immutable R3.18S 47-row lane.

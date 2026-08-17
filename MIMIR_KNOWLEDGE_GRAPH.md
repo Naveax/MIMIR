@@ -50,7 +50,8 @@ R3.18P following-property exact-context contract decision / Outcome A CLOSED    
 R3.18Q bounded following-property header production decision / CLOSED                         |
 R3.18R published following-property header differential decision / Outcome A CLOSED             |
 R3.18S following-property payload evidence decision / Outcome A CLOSED                           |
-R3.18T active bounded following-property payload production composition spec                       |
+R3.18T bounded following-property payload production decision / CLOSED                            |
+R3.18U active published R3.18T following-payload differential spec                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -143,13 +144,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 72. `docs/continuity/MIMIR_R3_18S_EXECUTION_SPEC.md`
 73. `docs/continuity/MIMIR_R3_18S_DECISION.md`
 74. `docs/continuity/MIMIR_R3_18T_EXECUTION_SPEC.md`
-75. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-76. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-77. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-78. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-79. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-80. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-81. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+75. `docs/continuity/MIMIR_R3_18T_DECISION.md`
+76. `docs/continuity/MIMIR_R3_18U_EXECUTION_SPEC.md`
+77. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+78. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+79. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+80. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+81. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+82. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+83. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -203,10 +206,17 @@ scripts/verify_mimir_knowledge_archive.ps1
 - witness reselection 0; repeatability/negative controls 47/47; another-control bits 0; privacy PASS
 - next exact pass: R3.18T bounded following-property payload production composition
 
-### R3.18T bounded following-property payload production composition: ACTIVE
-- production before pass `f41c59d26ed6c810a640b4fa8cd76129decb32aa`; exact admitted payload tags only Boolean|ActiveActor
-- reuse published R3.18Q + primitive Boolean/K2 ActiveActor decoders; preserve exact R3.18P context
-- stop exactly at one payload end; no another property control, loop/cursor, actor/frame or semantic/runtime widening
+### R3.18T bounded following-property payload production composition: PRODUCTION / CLOSED
+- production `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` / tree `a6f27fe606cd3446da02ef1cb8cf53fff071e383`; parent `ac1b284099a01be895c3e9d644a9d98b6dfe3da2`
+- lib/test blobs `cf992670b461e9d923e773ed375bef2b42aea20d` / `430676ec118fa0755a9c64abc0067bf5c5c88d05`
+- authority `32049639448/95445637593`, candidate CI `32049893219/95446478223`, PR CI `32050205389/95447503058`, published CI `32050650336/95448937493` SUCCESS
+- exactly one Boolean|ActiveActor payload; widths 1/33; exact R3.18P context retained; stop at payload end; later-control bits 0
+- next exact pass: R3.18U published R3.18T differential
+
+### R3.18U published R3.18T following-payload differential: ACTIVE
+- production `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` frozen; exact same 47 S witnesses / 18 contexts
+- compare published T header/payload/start/end/width/value/final-stop to frozen S evidence
+- no another property control, loop/cursor, production mutation or later actor/frame/semantic/runtime widening
 
 ### R3.18O following-property header evidence: OUTCOME A / CLOSED
 - production unchanged at `fd74ba8c520ab83b808730572c41e45d6dc616e6`
@@ -734,3 +744,11 @@ next                        R3.18M true-only one-bit production composition
 - Exact one-payload evidence: 47/47 rows, 18/18 contexts, Boolean=39×1 bit, ActiveActor=8×33 bits, mismatch 0, later-control consumption 0.
 - R3.18T is the bounded production-composition gate for exactly those two admitted payload forms.
 - Another property control/header/payload, loop/cursor, context widening, next actor/frame, lifecycle, raw state/events/slices/skills/counterfactual/runtime/export remain closed.
+
+
+## CURRENT OVERRIDE — R3.18T PRODUCTION / R3.18U ACTIVE
+
+- Production is `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` / `a6f27fe606cd3446da02ef1cb8cf53fff071e383`; exact one following Boolean|ActiveActor payload after R3.18Q, stop at payload end.
+- T authority `32049639448/95445637593`; candidate/PR/published CI `32049893219`, `32050205389`, `32050650336` all SUCCESS.
+- R3.18U is read-only published-T differential on the exact 47-row R3.18S lane.
+- Another property control/header/payload, generalized loop/cursor, context/tag widening, next actor/frame and semantic/runtime/export layers remain closed.

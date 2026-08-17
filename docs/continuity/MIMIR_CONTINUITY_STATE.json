@@ -3,14 +3,14 @@
   "updated_date": "2026-08-17",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "f41c59d26ed6c810a640b4fa8cd76129decb32aa",
-  "last_production_milestone": "R3.18Q",
+  "last_production_code_sha": "c2765ab9f04f9c981a6868cb6503bdf0e339ce1b",
+  "last_production_milestone": "R3.18T",
   "last_production_milestone_name": "bounded following-property header production composition",
   "last_completed_read_only_audit": "R3.18S",
-  "current_pass": "R3.18T",
-  "current_pass_kind": "production implementation / bounded following-property payload composition",
-  "current_pass_goal": "Compose exactly one following payload after published R3.18Q using only exact admitted Boolean primitive-scalar or ActiveActor K2 decoding, then stop at payload end.",
-  "current_pass_stop_boundary": "Stop exactly at the one following payload end. No another property control/header/payload, generalized loop/cursor, context widening, next actor/frame or semantic/runtime/export widening.",
+  "current_pass": "R3.18U",
+  "current_pass_kind": "read-only differential / published R3.18T following payload",
+  "current_pass_goal": "Validate published R3.18T exactly on the immutable R3.18S 47-row lane through one payload end with zero later-control consumption.",
+  "current_pass_stop_boundary": "Stop exactly at published R3.18T payload end. No another property control/header/payload, generalized loop/cursor, context widening, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -51,7 +51,6 @@
   "bounded_integer_rule": "Not fixed-width. Decode low bits according to bound and preserve the value-dependent extra discriminator-bit behavior used by Rocket League/Boxcars.",
   "closed_now": [
     "false following property control in after-second-payload production context (R3.18L observed false=0)",
-    "following-property payload production is closed until R3.18T passes; only exact Boolean|ActiveActor composition is under test",
     "another property control bit beyond the R3.18Q stop",
     "following-header contexts outside the exact R3.18P seven-field tuple set",
     "repeated/generalized production property_present loop",
@@ -64,7 +63,9 @@
     "replay slicing",
     "skill mining",
     "counterfactual rollout execution from native replay state",
-    "another property control bit beyond the one R3.18T payload end"
+    "another property control bit beyond the published R3.18T payload end",
+    "another following property header/payload beyond R3.18T",
+    "repeated/generalized property loop or generic cursor after R3.18T"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -144,6 +145,8 @@
     "docs/continuity/MIMIR_R3_18S_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18S_DECISION.md",
     "docs/continuity/MIMIR_R3_18T_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18T_DECISION.md",
+    "docs/continuity/MIMIR_R3_18U_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -1794,5 +1797,35 @@
     "another_control_bits_consumed": 0,
     "privacy_scan": "PASS",
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0"
+  },
+  "r3_18t": {
+    "outcome": "A — published / bounded production composition",
+    "production_source_changed": true,
+    "production_sha": "c2765ab9f04f9c981a6868cb6503bdf0e339ce1b",
+    "production_tree": "a6f27fe606cd3446da02ef1cb8cf53fff071e383",
+    "parent_sha": "ac1b284099a01be895c3e9d644a9d98b6dfe3da2",
+    "lib_blob": "cf992670b461e9d923e773ed375bef2b42aea20d",
+    "test_blob": "430676ec118fa0755a9c64abc0067bf5c5c88d05",
+    "implementation_authority_run": 32049639448,
+    "implementation_authority_job": 95445637593,
+    "clean_candidate_ci_run": 32049893219,
+    "clean_candidate_ci_job": 95446478223,
+    "pr_number": 23,
+    "pr_ci_run": 32050205389,
+    "pr_ci_job": 95447503058,
+    "published_ci_run": 32050650336,
+    "published_ci_job": 95448937493,
+    "allowed_payload_tags": [
+      "Boolean",
+      "ActiveActor"
+    ],
+    "boolean_width_bits": 1,
+    "active_actor_width_bits": 33,
+    "another_control_bits_consumed": 0,
+    "clean_scope": [
+      "crates/mimir-replay/src/lib.rs",
+      "crates/mimir-replay/tests/r3_18t_following_payload.rs"
+    ],
+    "cargo_lock_fixture_corpus_docs_support_mutation": "0/0/0/0/0/0"
   }
 }
