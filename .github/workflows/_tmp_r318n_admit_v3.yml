@@ -1,0 +1,87 @@
+name: R3.18N Admission Orchestrator v3
+
+on:
+  push:
+    branches:
+      - orchestration/r318n-admission-v3
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  admit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      MAIN: 1992ec94ab6a368e4143aad403ad6a223e3d3e5a
+      EVIDENCE_HEAD: 9bbf59745c950b7be5a5a592724f41db80874973
+      EVIDENCE_RUN: '32007040663'
+      EVIDENCE_JOB: '95318554719'
+      CI_RUN: '32007040500'
+      CI_JOB: '95318554225'
+      ARTIFACT_ID: '9280430420'
+      ARTIFACT_DIGEST: 772447a31e174355b3848605357667936ca522777d601dda504896aa0f663102
+      ARTIFACT_SIZE: '21060'
+      CANDIDATE_BRANCH: candidate/r318n-admission-v1
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze admission authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$MAIN"
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EVIDENCE_RUN" --jq .head_sha)" = "$EVIDENCE_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EVIDENCE_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$EVIDENCE_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN" --jq .head_sha)" = "$EVIDENCE_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .workflow_run.id)" = "$EVIDENCE_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .workflow_run.head_sha)" = "$EVIDENCE_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .name)" = 'r318n-published-following-control-evidence'
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .digest)" = "sha256:$ARTIFACT_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .size_in_bytes)" = "$ARTIFACT_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .expired)" = false
+          cp tools/_tmp_r318n_admit.py /tmp/r318n_admit.py
+          sed -i 's/77245223aa0513b9ffaf65ed1cf404b70bb31908e81dc643800d0fd676d49021/772447a31e174355b3848605357667936ca522777d601dda504896aa0f663102/g' /tmp/r318n_admit.py
+          grep -Fq 'ADIG = "772447a31e174355b3848605357667936ca522777d601dda504896aa0f663102"' /tmp/r318n_admit.py
+
+      - name: Build and publish clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach "$MAIN"
+          python3 /tmp/r318n_admit.py
+          expected=(
+            MIMIR_CONTINUE_HERE.md
+            MIMIR_KNOWLEDGE_GRAPH.md
+            docs/continuity/MIMIR_CONTINUITY_STATE.json
+            docs/continuity/MIMIR_CURRENT_STATE.md
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md
+            docs/continuity/MIMIR_R3_18N_DECISION.md
+            docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md
+          )
+          mapfile -t changed < <(git status --short | awk '{print $2}' | sort)
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 8
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
+          git diff --exit-code "$MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "${expected[@]}"
+          git commit -m 'Admit R3.18N and open R3.18O'
+          test "$(git rev-parse HEAD^)" = "$MAIN"
+          test "$(git diff --name-only "$MAIN" HEAD | wc -l)" -eq 8
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH" --force-with-lease
+          echo "R3_18N_CANDIDATE_SHA=$(git rev-parse HEAD)"
+          echo R3_18N_ADMISSION_CANDIDATE=PASS
