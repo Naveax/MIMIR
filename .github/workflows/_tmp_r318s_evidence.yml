@@ -32,7 +32,45 @@ jobs:
 
       - name: Run R3.18S evidence
         shell: bash
-        run: bash tools/_tmp_r318s_run.sh
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tools/_tmp_r318s_run.sh')
+          s=p.read_text(encoding='utf-8')
+          old="""import json,sys
+          h=json.load(open(sys.argv[1],encoding='utf-8'))
+          r=json.load(open(sys.argv[2],encoding='utf-8'))
+          assert len(h['rows'])==47 and h['aggregate']['distinct_exact_header_context_tuples']==18
+          assert all(x['native_oracle_exact'] for x in h['rows'])
+          assert all(x['following_payload_bits_consumed']==0 and x['another_control_bits_consumed']==0 for x in h['rows'])
+          assert r['aggregate']['rows']==47 and r['aggregate']['distinct_exact_header_context_tuples']==18
+          assert r['aggregate']['published_q_native_mismatch']==0
+          print('R3_18S_UPSTREAM_LANE=PASS rows=47 contexts=18 reselection=0')
+          """
+          new="""import json,sys
+          h=json.load(open(sys.argv[1],encoding='utf-8'))
+          r=json.load(open(sys.argv[2],encoding='utf-8'))
+          assert len(h['rows'])==47 and h['aggregate']['rows']==47
+          context_keys=('stream_id_bound','prop_id_bits','resolved_property_object_index','resolved_attribute_tag','version_major','version_minor','net_version')
+          contexts={tuple(x[k] for k in context_keys) for x in h['rows']}
+          assert len(contexts)==18
+          assert all(x['native_oracle_exact'] for x in h['rows'])
+          assert all(x['following_payload_bits_consumed']==0 and x['another_control_bits_consumed']==0 for x in h['rows'])
+          assert h['aggregate']['native_oracle_mismatch']==0 and h['aggregate']['witness_reselection']==0
+          assert r['outcome']=='A' and r['published_q_rows']==47
+          assert r['r3_18p_exact_contract_equality']=='18/18 contexts; 47/47 multiplicities'
+          assert r['native_oracle_mismatch']==0 and r['witness_reselection']==0
+          assert r['following_payload_bits_consumed']==0 and r['another_control_bits_consumed']==0
+          assert r['boolean_rows']==39 and r['active_actor_rows']==8
+          print('R3_18S_UPSTREAM_LANE=PASS rows=47 contexts=18 reselection=0')
+          """
+          if s.count(old)!=1:
+              raise SystemExit(f'upstream schema patch expected one match, got {s.count(old)}')
+          p.write_text(s.replace(old,new,1),encoding='utf-8',newline='\n')
+          print('R3_18S_UPSTREAM_SCHEMA_NORMALIZATION=PASS')
+          PY
+          bash tools/_tmp_r318s_run.sh
 
       - name: Upload immutable R3.18S evidence
         id: upload
