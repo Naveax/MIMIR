@@ -1,0 +1,149 @@
+name: R3.18M Implementation Validation v2
+on:
+  push:
+    branches: [implementation/r318m-after-second-payload-control-v2]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE: 346f5596c1ad38dd944cc50404206aab508ba951
+      BASE_TREE: 13e375e404d34d0e86d755de09bf07de46cf1cf9
+      PROD: 330ab01890a7c09eff1805e437584fb3be0a1134
+      PROD_TREE: 5540b6a86e53d243dabbabea223a5afa8657521c
+      LIB_BLOB: ee9b0c71871df7ff52275581eb7ad4c023b8ba79
+      J_TEST_BLOB: c5a97c5a17ae2ea292790a020673dd26a0150024
+      M_SPEC_BLOB: ef93595983907f5b2eb5b17f22d9b317f29adcf4
+      L_HEAD: 9205ac1616e686589938f952782a32f03d0d1488
+      L_RUN: '31978791346'
+      L_JOB: '95242213413'
+      L_CI_RUN: '31978791304'
+      L_CI_JOB: '95242213357'
+      L_ARTIFACT: '9271817700'
+      L_DIGEST: sha256:db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c
+    steps:
+      - uses: actions/checkout@v6
+        with: {fetch-depth: 0}
+      - name: Toolchain 1.85
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt,clippy
+          rustup override set 1.85.0
+          rustc --version | grep -F '1.85.0'
+      - name: Authority freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          test "$(git rev-parse "$PROD^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$BASE:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$BASE:crates/mimir-replay/tests/r3_18j_second_property_payload.rs")" = "$J_TEST_BLOB"
+          test "$(git rev-parse "$BASE:docs/continuity/MIMIR_R3_18M_EXECUTION_SPEC.md")" = "$M_SPEC_BLOB"
+          mapfile -t got < <(git diff --name-only "$BASE" HEAD | sort)
+          test "${#got[@]}" -eq 2
+          test "${got[0]}" = '.github/workflows/_tmp_r318m_implementation_v2.yml'
+          test "${got[1]}" = 'tools/_tmp_r318m_patch.py'
+          test -z "$(git diff --name-only "$BASE" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md)"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$L_RUN --jq .head_sha)" = "$L_HEAD"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$L_RUN --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/jobs/$L_JOB --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$L_CI_RUN --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/jobs/$L_CI_JOB --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/$L_ARTIFACT --jq .digest)" = "$L_DIGEST"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/$L_ARTIFACT --jq .expired)" = false
+          mkdir -p .tmp/r318m/l
+          gh run download "$L_RUN" -n r318l-following-property-control-evidence -D .tmp/r318m/l
+          grep -Fx 'R3_18L_OUTCOME=A' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_FROZEN_ROWS=47/47' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_CONTROL_FALSE=0' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_CONTROL_TRUE=47' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_NATIVE_ORACLE_MISMATCH=0' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_FOLLOWING_STREAM_BITS_CONSUMED=0' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_FOLLOWING_HEADER_BITS_CONSUMED=0' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' .tmp/r318m/l/r3_18l_aggregate.txt
+          grep -Fx 'R3_18L_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' .tmp/r318m/l/r3_18l_aggregate.txt
+      - name: Apply patch and source boundary audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318m_patch.py "$RUNNER_TEMP/r318m_patch.py"
+          python3 tools/_tmp_r318m_patch.py
+          cargo fmt --all
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('crates/mimir-replay/src/lib.rs').read_text()
+          name='decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_control_v1'
+          p=s.index('pub fn '+name); q=s.index('\n}',p)+2; f=s[p:q]
+          assert f.count('cursor.read_bit()')==1, f.count('cursor.read_bit()')
+          for x in ['read_bounded_u32','decode_replay_network_existing_actor_first_property_header_v1','decode_replay_network_primitive_scalar_v1','decode_replay_network_k2_v1','decode_replay_network_k3_v1','decode_replay_network_k4_v1','while ','for ']: assert x not in f, x
+          assert 'unadmitted-false-following-control' in f
+          assert 'prior-stop-mismatch' in f
+          print('R3_18M_SOURCE_BOUNDARY=PASS read_bit=1 following_decoders=0 loops=0 false=reject')
+          PY
+      - name: Focused R3.18M tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-replay --test r3_18m_following_control
+      - name: Full mimir-replay regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-replay
+      - name: Workspace check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo check --locked --workspace
+      - name: Workspace tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked --workspace
+      - name: Workspace clippy
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Repository verifier
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "verify_repo failed: $LASTEXITCODE" }
+      - name: Production scope audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t got < <(git diff --name-only "$BASE" | sort)
+          printf '%s\n' "${got[@]}"
+          test "${#got[@]}" -eq 4
+          test -z "$(git diff --name-only "$BASE" -- Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md)"
+      - name: Build clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/r318m_patch.py" /tmp/r318m_patch.py
+          git reset --hard "$BASE"
+          python3 /tmp/r318m_patch.py
+          cargo fmt --all
+          mapfile -t got < <(git diff --name-only | sort)
+          test "${#got[@]}" -eq 2
+          test "${got[0]}" = 'crates/mimir-replay/src/lib.rs'
+          test "${got[1]}" = 'crates/mimir-replay/tests/r3_18m_following_control.rs'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18m_following_control.rs
+          git commit -m 'Implement R3.18M following control'
+          echo "R3_18M_CLEAN_SHA=$(git rev-parse HEAD)"
+          echo "R3_18M_CLEAN_TREE=$(git rev-parse HEAD^{tree})"
+          git push origin HEAD:refs/heads/candidate/r318m-after-second-payload-control-v2
+          echo 'R3_18M_CLEAN_CANDIDATE_PUSH=PASS'
