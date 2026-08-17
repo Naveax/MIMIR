@@ -1,0 +1,66 @@
+name: R3.18O Receipt Correction
+on:
+  push:
+    branches: [ops/r318o-receipt-correction]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  correct:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with: {fetch-depth: 0}
+      - name: Toolchain
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+      - name: Verify canonical O artifact and build clean correction
+        env:
+          BASE_MAIN: b2d9feaee5d7579c88466431dd52d879cddfb70b
+          CLEAN_BRANCH: admission/r318o-receipt-correction
+        run: |
+          set -euxo pipefail
+          OPS="$PWD"; ART="$(mktemp -d)"; WORK="$(mktemp -d)"; trap 'rm -rf "$ART" "$WORK"' EXIT
+          git fetch origin main --force; test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/9284144768 --jq .digest)" = 'sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d'
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/9284144768 --jq .workflow_run.id)" = 32017369100
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/artifacts/9284144768 --jq .workflow_run.head_sha)" = 5046e1594b87ce2828db5faa48aceba456c3166f
+          gh run download 32017369100 -n r318o-following-property-header-evidence -D "$ART"
+          (cd "$ART" && sha256sum -c r3_18o_artifact_sha256.txt)
+          test "$(sha256sum "$ART/r3_18o_source_summary.json"|awk '{print $1}')" = f1bc285db764a71091c904e74a82c28e369cec1e62bed1b7ae503effef4824bc
+          test "$(sha256sum "$ART/r3_18o_header_rows.json"|awk '{print $1}')" = 599657a154498451d6317bf148da7bcf6e7077f35315426023da526a955ee2a4
+          test "$(sha256sum "$ART/r3_18o_aggregate.txt"|awk '{print $1}')" = 170bad20b7d3d11596f879865a1380ade3910eba069311bec7e6d51eae2a4233
+          grep -Fq 'R3_18O_OUTCOME=A' "$ART/r3_18o_aggregate.txt"; grep -Fq 'R3_18O_FOLLOWING_HEADER_EXACT=47/47' "$ART/r3_18o_aggregate.txt"; grep -Fq 'R3_18O_NATIVE_ORACLE_MISMATCH=0' "$ART/r3_18o_aggregate.txt"
+          echo R3_18O_CANONICAL_ARTIFACT=PASS
+
+          git worktree add --detach "$WORK" "$BASE_MAIN"; python3 "$OPS/tools/_tmp_r318o_receipt_fix.py" "$WORK"; cd "$WORK"; git diff --check
+          expected=(MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18O_DECISION.md docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md)
+          mapfile -t changed < <(git status --short|sed -E 's/^.. //'|sort); mapfile -t want < <(printf '%s\n' "${expected[@]}"|sort)
+          test "${#changed[@]}" -eq 9; test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${want[@]}")"
+          git diff --exit-code "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github/workflows
+          ! grep -R -F 'e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d' -- "${expected[@]}"
+          grep -R -Fq 'e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d' docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text())
+          assert d['current_pass']=='R3.18P'
+          assert d['r3_18o']['artifact_sha256']=='e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d'
+          f=d['next_files_to_read']; a=f.index('docs/continuity/MIMIR_R3_18O_DECISION.md'); assert f[a+1]=='docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md' and f[a+2]=='docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md'
+          print('R3_18O_CORRECTED_CONTINUITY=PASS')
+          PY
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          git config user.name 'MIMIR Admission Bot'; git config user.email 'actions@users.noreply.github.com'; git add -- "${expected[@]}"; git commit -m 'Correct R3.18O immutable receipts'
+          SHA="$(git rev-parse HEAD)"; test "$(git rev-parse HEAD^)" = "$BASE_MAIN"; test "$(git diff --name-only "$BASE_MAIN" HEAD|sort)" = "$(printf '%s\n' "${want[@]}")"; git diff --exit-code "$BASE_MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github/workflows; pwsh -NoProfile -File scripts/verify_repo.ps1
+          if git ls-remote --exit-code --heads origin "$CLEAN_BRANCH" >/dev/null 2>&1; then exit 1; fi
+          git push origin "HEAD:refs/heads/$CLEAN_BRANCH"; test "$(git ls-remote origin refs/heads/$CLEAN_BRANCH|awk '{print $1}')" = "$SHA"; echo "R3_18O_CORRECTION_SHA=$SHA" > "$OPS/r3_18o_correction_receipt.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r318o-receipt-correction-receipt
+          path: r3_18o_correction_receipt.txt
+          if-no-files-found: error
