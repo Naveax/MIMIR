@@ -6,25 +6,27 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18U closed / R3.18V active
+# 0. Current override — R3.18V closed / R3.18W active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## OPEN / PRODUCTION
-- R3.18T at `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` composes exactly one admitted Boolean|ActiveActor following payload after the R3.18Q header; exact R3.18P context remains mandatory; stop exactly at payload end.
+- R3.18T at `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` composes exactly one admitted Boolean|ActiveActor following payload after R3.18Q and stops exactly at payload end.
 
-## CLOSED EVIDENCE — R3.18U Outcome A
-- published T matched frozen S exactly on 47/47 rows and 18/18 contexts;
-- Boolean=39×1 bit / ActiveActor=8×33 bits / mismatch 0 / header identity 47/47;
-- another-control bits consumed 0; artifact `9296199852` / `sha256:13262328812bc56c9ea58bbc42364308fb6c65487c51f062296b14993f3a626e`.
+## CLOSED EVIDENCE — R3.18V Outcome A
+- exactly one next property_present bit observed on immutable 47 rows;
+- false=0 / true=47; pinned Boxcars vs independent read mismatch 0;
+- next stream/header/payload/second-control bits consumed 0/0/0/0;
+- artifact `9297068554` / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2`.
 
-## ACTIVE EVIDENCE GATE — R3.18V
-- read-only observation of exactly one next `property_present` bit at published T `stop_bit`;
-- same immutable 47 witnesses, no reselection; false/true distribution must be discovered;
-- stop one bit later; no next stream/header/payload or second later control.
+## ACTIVE PRODUCTION GATE — R3.18W
+- from an already-valid R3.18T result, validate prior stop==payload end;
+- read exactly one following control bit; admit true only; false fails closed;
+- stop exactly one bit later.
 
 ## CLOSED
-- next stream/header/payload; second later control; repeated/generalized property loop; generic cursor; context/tag widening;
+- false success semantics at the after-following-payload boundary;
+- next stream/header/payload, second later control, repeated/generalized property loop/cursor;
 - next actor/frame/lifecycle; raw state, events, slices, skills, counterfactual runtime and exports.
 
 ---

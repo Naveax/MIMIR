@@ -5,27 +5,28 @@
 **Canonical production SHA:** `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b`
 **Production tree:** `a6f27fe606cd3446da02ef1cb8cf53fff071e383`
 **Production milestone:** `R3.18T — bounded following-property payload production composition`
-**Last read-only evidence:** `R3.18U — Outcome A / 47/47 / 18 exact contexts / published-T=frozen-S / mismatch 0 / later-control bits 0`
+**Last read-only evidence:** `R3.18V — Outcome A / 47/47 / next control false=0 true=47 / mismatch 0 / next stream-header-payload-second-control 0/0/0/0`
 **Last structural contract:** `R3.18P — exact seven-field tuple membership / 18 contexts / 47 multiplicities`
-**Current exact pass:** `R3.18V — exactly one next property-control bit evidence after published R3.18T payload`
+**Current exact pass:** `R3.18W — bounded true-only after-following-payload control-bit production composition`
 
 ## Truthful production boundary
 
-Production composes exactly one R3.18S-admitted `Boolean | ActiveActor` following payload after the R3.18Q following header, retains exact R3.18P context membership and stops exactly at that payload end. R3.18U proved the published API reproduces the frozen 47-row authority with mismatch 0 and consumes zero bits beyond the payload end.
+Production remains R3.18T and stops exactly at the one admitted following payload end. R3.18V proved that the next exact bit on all 47 frozen real witnesses is `property_present=true`, with pinned Boxcars and independent one-bit observation agreeing 47/47 and no adjacent stream/header/payload/second-control consumption.
 
 ```text
 production SHA/tree                 c2765ab9f04f9c981a6868cb6503bdf0e339ce1b / a6f27fe606cd3446da02ef1cb8cf53fff071e383
 lib/test blobs                      cf992670b461e9d923e773ed375bef2b42aea20d / 430676ec118fa0755a9c64abc0067bf5c5c88d05
-R3.18U evidence head/tree           a53d0c8b4c88bab229e5ac9ec2db7dda5f9400b4 / f0c716278ef47665e43572d0129c4e8acd9be182
-R3.18U authority                    32055189778 / 95463604513 SUCCESS
-R3.18U same-head CI                 32055189737 / 95463604366 SUCCESS
-R3.18U artifact                     9296199852 / 20181 / sha256:13262328812bc56c9ea58bbc42364308fb6c65487c51f062296b14993f3a626e
+R3.18V evidence head/tree           2b0c9f01559e77a6fdf21a097b8ab4d1a27b6ff5 / 229b3d68a82f6dadc19518614e27ff09e8006ad2
+R3.18V authority                    32057732310 / 95471639989 SUCCESS
+R3.18V same-head CI                 32057732335 / 95471640230 SUCCESS
+R3.18V artifact                     9297068554 / 20484 / sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2
+control distribution                false=0 / true=47
 ```
 
 ## Current gate
 
-R3.18V is read-only. Starting at the exact published T payload-end stop, it may observe exactly one next `property_present` bit, compare pinned Boxcars with an independent one-bit read, record the evidence-derived false/true distribution and stop one bit later.
+R3.18W is production implementation. It may read exactly one bit after an internally-valid R3.18T payload-end stop and succeed only when that bit is true. False fails closed. It stops one bit later.
 
 ## Hard stop
 
-The next stream/header/payload, a second later control bit, generalized/repeated property loop/cursor, context/tag widening, next actor/frame/lifecycle, raw-state/event/slice/skill/counterfactual/runtime/export behavior remain closed.
+The following stream/header/payload, second later control, generic/repeated property loop/cursor, next actor/frame/lifecycle, raw-state/event/slice/skill/counterfactual/runtime/export behavior remain closed.

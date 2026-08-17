@@ -707,3 +707,16 @@ Next exact pass:
 - Another-control consumption 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
 - Superseded initial attempt failed only on transient GitHub artifact-download HTTP 503 before semantic evidence; final authority used unchanged evidence criteria with bounded transport retry.
 - Next pass opened: R3.18V, read-only exactly-one-next-property-control-bit evidence.
+
+## R3.18V — Next property-control bit evidence — Outcome A / CLOSED
+
+- Production unchanged: `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` / tree `a6f27fe606cd3446da02ef1cb8cf53fff071e383`.
+- Evidence head/tree: `2b0c9f01559e77a6fdf21a097b8ab4d1a27b6ff5` / `229b3d68a82f6dadc19518614e27ff09e8006ad2`.
+- Authority `32057732310 / 95471639989` SUCCESS; same-head CI `32057732335 / 95471640230` SUCCESS.
+- Artifact `9297068554` / `20484` bytes / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2`; ZIP digest and 11-entry internal manifest verified.
+- Published R3.18T reconstruction exact 47/47.
+- One-bit distribution discovered without filtering: false=0 / true=47; pinned Boxcars vs independent read mismatch 0.
+- Truncation, repeatability, prior-stop mismatch and post-control poison: PASS 47/47.
+- Next stream/header/payload/second later control consumption 0/0/0/0; witness reselection 0.
+- Production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+- Next pass opened: R3.18W true-only bounded production control composition.

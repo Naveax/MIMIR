@@ -52,7 +52,8 @@ R3.18R published following-property header differential decision / Outcome A CLO
 R3.18S following-property payload evidence decision / Outcome A CLOSED                           |
 R3.18T bounded following-property payload production decision / CLOSED                            |
 R3.18U published R3.18T following-payload differential decision / Outcome A CLOSED                    |
-R3.18V active next property-control bit evidence spec                                                     |
+R3.18V next property-control bit evidence decision / Outcome A CLOSED                                    |
+R3.18W active bounded true-only after-following-payload control production spec                           |
         |                               |
         +---------------+---------------+
                         |
@@ -149,13 +150,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 76. `docs/continuity/MIMIR_R3_18U_EXECUTION_SPEC.md`
 77. `docs/continuity/MIMIR_R3_18U_DECISION.md`
 78. `docs/continuity/MIMIR_R3_18V_EXECUTION_SPEC.md`
-79. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-80. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-81. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-82. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-83. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-84. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-85. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+79. `docs/continuity/MIMIR_R3_18V_DECISION.md`
+80. `docs/continuity/MIMIR_R3_18W_EXECUTION_SPEC.md`
+81. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+82. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+83. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+84. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+85. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+86. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+87. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -764,3 +767,12 @@ next                        R3.18M true-only one-bit production composition
 - published T = frozen S on 47/47 rows; 18/18 exact contexts; header identity 47/47; mismatch 0; witness reselection 0
 - Boolean=39×1 bit / ActiveActor=8×33 bits; all required negatives 47/47; another-control bits 0; privacy PASS
 - next exact pass: R3.18V read-only evidence for exactly one next property-control bit at published T stop; no next header/payload
+
+
+### R3.18V next property-control bit evidence: OUTCOME A / CLOSED
+- production unchanged at `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` / tree `a6f27fe606cd3446da02ef1cb8cf53fff071e383`
+- evidence `2b0c9f01559e77a6fdf21a097b8ab4d1a27b6ff5` / tree `229b3d68a82f6dadc19518614e27ff09e8006ad2` / `32057732310/95471639989` SUCCESS; exact-head CI `32057732335/95471640230` SUCCESS
+- artifact `9297068554` / `20484` bytes / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2`; Boxcars instrumentation `198096b6693c91cc146aae10fb0a5d3729dd778b7038e3915ede59fd246032b3`
+- published R3.18T exact 47/47; one-bit control false=0 true=47; native/oracle mismatch 0; witness reselection 0
+- truncation/repeatability/prior-stop mismatch/post-control poison 47/47; next stream/header/payload/second-control bits 0/0/0/0; privacy PASS
+- next exact pass: R3.18W bounded true-only after-following-payload control production composition
