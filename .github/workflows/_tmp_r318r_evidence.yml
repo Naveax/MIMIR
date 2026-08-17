@@ -61,12 +61,17 @@ jobs:
           set -euo pipefail
           test -n "$ARTIFACT_ID"
           test -n "$ARTIFACT_DIGEST"
+
+          # One authoritative chain: artifact -> workflow run id -> exact run SHA/branch.
+          # Avoid redundantly trusting nested head fields when the run endpoint already owns them.
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .workflow_run.id)" = "$GITHUB_RUN_ID"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .workflow_run.head_sha)" = "$GITHUB_SHA"
-          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .workflow_run.head_branch)" = 'evidence/r318r-published-following-header-v1'
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .head_sha)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .head_branch)" = 'evidence/r318r-published-following-header-v1'
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .workflow_run.repository_id)" = '1331779246'
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .name)" = 'r318r-published-following-header-differential-evidence'
-          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .expired)" = false
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .expired)" = 'false'
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" --jq .digest)" = "$ARTIFACT_DIGEST"
+
           echo "R3_18R_EVIDENCE_HEAD=$(git rev-parse HEAD)"
           echo "R3_18R_EVIDENCE_TREE=$(git rev-parse HEAD^{tree})"
           echo "R3_18R_AUTHORITY_RUN=$GITHUB_RUN_ID"
