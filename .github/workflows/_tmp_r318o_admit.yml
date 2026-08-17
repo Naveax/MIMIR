@@ -1,0 +1,106 @@
+name: R3.18O Clean Admission Preparation
+
+on:
+  push:
+    branches:
+      - ops/r318o-admission-prepare
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout ops head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustup default 1.85.0
+          rustc --version | grep -F 'rustc 1.85.0 '
+
+      - name: Build and validate clean admission commit
+        shell: bash
+        env:
+          BASE_MAIN: c1d68daf989952ccf40645ca99616bccf43bb2f4
+          ADMISSION_BRANCH: admission/r318o-following-property-header
+        run: |
+          set -euo pipefail
+          OPS="$PWD"
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git worktree add --detach "$WORK" "$BASE_MAIN"
+          python3 "$OPS/tools/_tmp_r318o_admit.py" "$WORK"
+
+          cd "$WORK"
+          git diff --check
+          mapfile -t changed < <(git status --short | sed -E 's/^.. //' | sort)
+          expected=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+            'docs/continuity/MIMIR_R3_18O_DECISION.md'
+            'docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md'
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 9
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
+
+          git diff --exit-code "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github/workflows
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -Fq 'R3.18O following-property header evidence: OUTCOME A / CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -Fq 'R3.18P following-property header context contract: ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -Fq '# CURRENT PASS CHECKLIST — R3.18P' MIMIR_CONTINUE_HERE.md
+          test "$(grep -c '^# CURRENT PASS CHECKLIST — R3.18N$' MIMIR_CONTINUE_HERE.md)" -eq 0
+          grep -Fq 'artifact `9284144768`' docs/continuity/MIMIR_R3_18O_DECISION.md
+          grep -Fq 'sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d' docs/continuity/MIMIR_R3_18O_DECISION.md
+          grep -Fq 'unique_exact_context_count = 18' docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md
+
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- "${expected[@]}"
+          git commit -m 'Admit R3.18O and open R3.18P'
+          CLEAN_SHA="$(git rev-parse HEAD)"
+          CLEAN_TREE="$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          test "$(git diff --name-only "$BASE_MAIN" HEAD | sort)" = "$(printf '%s\n' "${expected_sorted[@]}")"
+          git diff --exit-code "$BASE_MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github/workflows
+
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+
+          git ls-remote --exit-code --heads origin "$ADMISSION_BRANCH" >/dev/null 2>&1 && {
+            echo "admission branch already exists; refusing overwrite"
+            exit 1
+          } || true
+          git push origin "HEAD:refs/heads/$ADMISSION_BRANCH"
+          test "$(git ls-remote origin "refs/heads/$ADMISSION_BRANCH" | awk '{print $1}')" = "$CLEAN_SHA"
+
+          printf 'R3_18O_CLEAN_ADMISSION_SHA=%s\n' "$CLEAN_SHA" | tee "$OPS/r3_18o_clean_admission_receipt.txt"
+          printf 'R3_18O_CLEAN_ADMISSION_TREE=%s\n' "$CLEAN_TREE" | tee -a "$OPS/r3_18o_clean_admission_receipt.txt"
+          printf 'R3_18O_CLEAN_ADMISSION_PARENT=%s\n' "$BASE_MAIN" | tee -a "$OPS/r3_18o_clean_admission_receipt.txt"
+          printf 'R3_18O_CLEAN_ADMISSION_SCOPE=9_DOCS_ONLY\n' | tee -a "$OPS/r3_18o_clean_admission_receipt.txt"
+          printf 'R3_18O_CLEAN_ADMISSION_VERIFY_REPO=PASS\n' | tee -a "$OPS/r3_18o_clean_admission_receipt.txt"
+
+      - name: Upload clean admission receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318o-clean-admission-receipt
+          if-no-files-found: error
+          retention-days: 30
+          path: r3_18o_clean_admission_receipt.txt
