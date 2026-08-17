@@ -33,7 +33,7 @@ jobs:
           BASE_MAIN: c1d68daf989952ccf40645ca99616bccf43bb2f4
           ADMISSION_BRANCH: admission/r318o-following-property-header
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           OPS="$PWD"
           WORK="$(mktemp -d)"
           trap 'rm -rf "$WORK"' EXIT
@@ -58,6 +58,7 @@ jobs:
             'docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md'
           )
           mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          printf '%s\n' '--- CHANGED ---' "${changed[@]}" '--- EXPECTED ---' "${expected_sorted[@]}"
           test "${#changed[@]}" -eq 9
           test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
 
@@ -67,7 +68,7 @@ jobs:
           grep -Fq 'R3.18P following-property header context contract: ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
           grep -Fq '# CURRENT PASS CHECKLIST — R3.18P' MIMIR_CONTINUE_HERE.md
           test "$(grep -c '^# CURRENT PASS CHECKLIST — R3.18N$' MIMIR_CONTINUE_HERE.md)" -eq 0
-          grep -Fq 'artifact `9284144768`' docs/continuity/MIMIR_R3_18O_DECISION.md
+          grep -Fq 'artifact: `9284144768`' docs/continuity/MIMIR_R3_18O_DECISION.md
           grep -Fq 'sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d' docs/continuity/MIMIR_R3_18O_DECISION.md
           grep -Fq 'unique_exact_context_count = 18' docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md
 
@@ -85,10 +86,10 @@ jobs:
 
           pwsh -NoProfile -File scripts/verify_repo.ps1
 
-          git ls-remote --exit-code --heads origin "$ADMISSION_BRANCH" >/dev/null 2>&1 && {
+          if git ls-remote --exit-code --heads origin "$ADMISSION_BRANCH" >/dev/null 2>&1; then
             echo "admission branch already exists; refusing overwrite"
             exit 1
-          } || true
+          fi
           git push origin "HEAD:refs/heads/$ADMISSION_BRANCH"
           test "$(git ls-remote origin "refs/heads/$ADMISSION_BRANCH" | awk '{print $1}')" = "$CLEAN_SHA"
 
