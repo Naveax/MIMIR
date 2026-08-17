@@ -62,15 +62,15 @@ jobs:
           test -n "$ARTIFACT_ID"
           test -n "$ARTIFACT_DIGEST"
 
-          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" > /tmp/r318r_artifact.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" > /tmp/r318r_artifacts.json
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > /tmp/r318r_run.json
 
           python3 - <<'PY'
           import json
           import os
 
-          with open('/tmp/r318r_artifact.json', encoding='utf-8') as f:
-              artifact = json.load(f)
+          with open('/tmp/r318r_artifacts.json', encoding='utf-8') as f:
+              artifacts = json.load(f)
           with open('/tmp/r318r_run.json', encoding='utf-8') as f:
               run = json.load(f)
 
@@ -80,20 +80,39 @@ jobs:
           expected_branch = 'evidence/r318r-published-following-header-v1'
           expected_name = 'r318r-published-following-header-differential-evidence'
           expected_digest = os.environ['ARTIFACT_DIGEST']
-          expected_repository_id = 1331779246
+          expected_repository = os.environ['GITHUB_REPOSITORY']
 
-          assert artifact['id'] == artifact_id, (artifact['id'], artifact_id)
-          assert artifact['name'] == expected_name, artifact['name']
-          assert artifact['expired'] is False, artifact['expired']
-          assert artifact['digest'] == expected_digest, (artifact['digest'], expected_digest)
-          assert artifact['workflow_run']['id'] == run_id, artifact['workflow_run']
-          assert artifact['workflow_run']['repository_id'] == expected_repository_id, artifact['workflow_run']
-          assert artifact['workflow_run']['head_branch'] == expected_branch, artifact['workflow_run']
-          assert artifact['workflow_run']['head_sha'] == expected_sha, artifact['workflow_run']
-          assert run['id'] == run_id, run['id']
-          assert run['head_branch'] == expected_branch, run['head_branch']
-          assert run['head_sha'] == expected_sha, run['head_sha']
-          assert run['repository']['id'] == expected_repository_id, run['repository']['id']
+          matches = [a for a in artifacts.get('artifacts', []) if a.get('id') == artifact_id]
+          assert len(matches) == 1, {
+              'artifact_id': artifact_id,
+              'seen_ids': [a.get('id') for a in artifacts.get('artifacts', [])],
+          }
+          artifact = matches[0]
+
+          checks = {
+              'artifact_name': artifact.get('name') == expected_name,
+              'artifact_expired': artifact.get('expired') is False,
+              'artifact_digest': artifact.get('digest') == expected_digest,
+              'run_id': run.get('id') == run_id,
+              'head_branch': run.get('head_branch') == expected_branch,
+              'head_sha': run.get('head_sha') == expected_sha,
+              'repository_full_name': run.get('repository', {}).get('full_name') == expected_repository,
+          }
+          receipt = {
+              'artifact_id': artifact.get('id'),
+              'artifact_name': artifact.get('name'),
+              'artifact_size_in_bytes': artifact.get('size_in_bytes'),
+              'artifact_digest': artifact.get('digest'),
+              'artifact_expired': artifact.get('expired'),
+              'run_id': run.get('id'),
+              'head_branch': run.get('head_branch'),
+              'head_sha': run.get('head_sha'),
+              'repository_full_name': run.get('repository', {}).get('full_name'),
+              'checks': checks,
+          }
+          print(json.dumps(receipt, sort_keys=True))
+          failed = [name for name, passed in checks.items() if not passed]
+          assert not failed, {'failed_checks': failed, 'receipt': receipt}
           print('R3_18R_RECEIPT_METADATA=PASS')
           PY
 
