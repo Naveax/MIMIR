@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18W — bounded true-only after-following-payload control composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18X — published R3.18W differential / Outcome A / 47/47 / true=47 false=0 / mismatch 0 / adjacent 0/0/0/0
+  R3.18Y — one post-W following header evidence / Outcome A / 47/47 / 18 exact contexts / mismatch 0 / payload-control 0/0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18P — following-property header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18X — published W one-bit differential / Outcome A / 47 rows / all negatives 47/47 / no adjacent consumption
+  R3.18Y — post-W following header / Outcome A / 47 rows / 18 exact tuples / ActiveActor=39 Int=7 UniqueId=1 / R3.18P inheritance 0
 
 CURRENT_PASS:
-  R3.18Y — one following property header evidence after published R3.18W
+  R3.18Z — after-R3.18W following-header exact-context contract
 
 CURRENT_PASS_TYPE:
-  read-only structural evidence / observe exactly one following header at W boundary; discover exact tuples; stop at payload_start; no payload
+  contract-only / admit exact seven-field tuple membership from R3.18Y; no R3.18P inheritance; production frozen
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -102,8 +102,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18V CLOSED Outcome A: exactly one next property_present bit matched 47/47; false=0 true=47; mismatch 0; next stream/header/payload/second-control bits 0/0/0/0; artifact 9297068554
   R3.18W PRODUCTION at 58872e94f00ef094807f21ab2ff984ac66b97d91: validates exact R3.18T payload end, consumes exactly one following property_present bit, admits true only, false fails closed, stops one bit later
   R3.18X CLOSED Outcome A: published W exact 47/47; true=47 false=0; mismatch 0; all negatives 47/47; adjacent stream/header/payload/second-control 0/0/0/0; artifact 9299790869
-  R3.18Y ACTIVE read-only evidence for exactly one following property header beginning at the W boundary and stopping at payload_start
-  NO following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18Y CLOSED Outcome A: one post-W header exact 47/47; 18 contexts; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0; artifact 9303584468
+  R3.18Z ACTIVE exact-context contract-only admission for this later boundary; R3.18P is not inherited
+  NO post-W header production, following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -142,6 +143,17 @@ R3_18Q_PRODUCTION_CLOSURE:
   Q/R3.18M control equality: 47/47; Q/stateless-header equality: 47/47
   following payload / another-control bits consumed: 0/0
   clean scope: lib.rs + r3_18q_following_header.rs only; Cargo/fixture/corpus/docs/workflow/support mutation 0
+R3_18Y_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at 58872e94f00ef094807f21ab2ff984ac66b97d91
+  authority head/tree: 413d6c24f8f390a57c21ed345f3f868c263f413c / c48630bf89c23a8348936f2adbb8f0c9ad0c977b
+  authority run/job: 32076198677 / 95529856476 SUCCESS
+  exact-head normal CI: 32076881407 / 95531867271 SUCCESS via CI-only PR #30, closed not merged
+  artifact: 9303584468 / 19642 bytes / sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29
+  header summary/rows/aggregate sha256: 035e56fcdfb643aec00e7474fddfc378afb8f8e4e9ad531c532159f0111a591f / 0bfb38ca10d329d7c8cb66cee57449c17108213c9588a64d0ed4b511afbe9d47 / 618ac3901b46c04732d57469b583ba2187bfe1007c3ff210094039cfc2e63082
+  rows 47/47 / exact contexts 18 / multiplicity sum 47 / ActiveActor=39 Int=7 UniqueId=1
+  native-oracle mismatch 0 / witness reselection 0 / R3.18P inheritance assumed 0
+  repeatability/property-truncation/stream-truncation/prior-stop/wrong-actor/unresolved-lookup/wrong-context/post-payload_start-poison 47/47
+  following payload / another-control bits consumed 0/0; privacy PASS; mutation 0/0/0/0/0
 R3_18X_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 58872e94f00ef094807f21ab2ff984ac66b97d91
   authority head/tree: 75259a9b3705b16b21d89b975ee584a7765e8134 / fe90b38c98039cd1dde05b96613645d0ab69a8a9
@@ -3519,7 +3531,7 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18Y
+# HISTORICAL PASS CHECKLIST — R3.18Y (ADMITTED OUTCOME A)
 
 **Goal:** on exactly the frozen 47 X/V witnesses, validate one following header after published W and stop at payload_start. Production remains frozen.
 
@@ -3536,4 +3548,23 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 [ ] Prove following payload bits = 0 and another-control bits = 0.
 [ ] Produce privacy-safe immutable artifact and same-head normal CI SUCCESS.
 [ ] Production/Cargo/fixture/corpus/support mutation = 0/0/0/0/0.
+```
+
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18Z
+
+**Goal:** admit an exact-tuple-only structural contract for the one post-W following header characterized by R3.18Y. Production stays frozen at `58872e94f00ef094807f21ab2ff984ac66b97d91`.
+
+```text
+[ ] Freeze fresh main and exact R3.18Y authority/artifact/inner hashes.
+[ ] Read the exact 18 contexts from the immutable Y summary; require multiplicity sum 47.
+[ ] Create MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json with full seven-field identity and exact_tuple_only membership.
+[ ] Record authority receipts and anti-widening flags; R3.18P inheritance must be false.
+[ ] Prove exact tuple equality 18/18 and multiplicity equality 18/18, sum 47.
+[ ] Reject tag-only, component-only, Cartesian, versionless, nineteenth-tuple and R3.18P-cross-boundary candidates.
+[ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+[ ] Run knowledge archive verifier, exact clean-head CI + Knowledge Archive, PR CI + Knowledge Archive, then force=false publication.
+[ ] Outcome A opens only R3.18AA bounded one-header production composition; payload and another control stay closed.
 ```

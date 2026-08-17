@@ -6,26 +6,26 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18X admitted / R3.18Y active
+# 0. Current override — R3.18Y admitted / R3.18Z active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION
 - R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`: exact R3.18T payload-end validation, one true-only property control bit, false fail-closed, stop +1.
 
-## CLOSED EVIDENCE — R3.18X Outcome A
-- published W exact 47/47 on frozen V lane; false=0 true=47; mismatch 0;
-- repeat/truncation/false/prior-boundary/post-stop-poison 47/47;
-- next stream/header/payload/second-control consumption 0/0/0/0;
-- artifact `9299790869` / `sha256:ac32daa92d88f1753da34123d074dcd8f3c98c58fdeb0b91f89cb837ea02ebff`.
+## CLOSED EVIDENCE — R3.18Y Outcome A
+- exactly one post-W following header matched pinned Boxcars on 47/47 rows through `payload_start`;
+- 18 exact seven-field contexts / multiplicity sum 47 / ActiveActor=39 / Int=7 / UniqueId=1;
+- native/oracle mismatch 0; reselection 0; payload/another-control consumption 0/0;
+- R3.18P inheritance assumed 0; artifact `9303584468` / `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29`.
 
-## ACTIVE READ-ONLY GATE — R3.18Y
-- observe exactly one following header beginning at the W boundary;
-- discover structural tuples from evidence, do not inherit R3.18P by assumption;
-- stop exactly at payload_start; following payload and another control remain closed.
+## ACTIVE CONTRACT GATE — R3.18Z
+- admit only exact tuple membership for the 18 Y contexts;
+- preserve multiplicities as evidence provenance;
+- reject tag/component/Cartesian/versionless/R3.18P cross-boundary widening.
 
 ## CLOSED
-- false control success; following payload; another property control; generic/repeated property cursor/loop;
+- post-W header production composition; following payload; another property control; generic/repeated property cursor/loop;
 - next actor/frame/lifecycle; raw state/events/slices/skills/counterfactual/runtime/export widening.
 
 ---

@@ -740,3 +740,13 @@ Next exact pass:
 - Repeatability/truncation/false/prior-boundary/post-stop-poison negatives 47/47; adjacent stream/header/payload/second-control 0/0/0/0.
 - Witness reselection 0; privacy PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 - Opened R3.18Y as separate read-only one-header discovery. No P-contract inheritance by assumption; no payload or another control.
+
+
+## 2026-08-18 — R3.18Y Outcome A admitted; R3.18Z opened
+
+- Y evidence head/tree: `413d6c24f8f390a57c21ed345f3f868c263f413c` / `c48630bf89c23a8348936f2adbb8f0c9ad0c977b`.
+- Authority `32076198677/95529856476` SUCCESS; same-head normal CI `32076881407/95531867271` SUCCESS via CI-only PR #30, closed without merge.
+- Immutable artifact `9303584468` / `19642` / `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29`; 9/9 manifest payloads verified and ZIP digest exact.
+- Exact result: 47/47 rows; 18 complete seven-field contexts; multiplicity sum 47; ActiveActor=39, Int=7, UniqueId=1; native/oracle mismatch 0; witness reselection 0.
+- All structural negatives 47/47; following payload bits 0; another-control bits 0; R3.18P inheritance assumed 0; privacy PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+- Production remains R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`. R3.18Z is contract-only and may admit only exact tuple membership.

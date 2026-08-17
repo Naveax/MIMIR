@@ -55,7 +55,8 @@ R3.18U published R3.18T following-payload differential decision / Outcome A CLOS
 R3.18V next property-control bit evidence decision / Outcome A CLOSED                                    |
 R3.18W bounded true-only after-following-payload control production decision / CLOSED                        |
 R3.18X published R3.18W control differential decision / Outcome A CLOSED                            |
-R3.18Y active one-following-property-header evidence spec                                           |
+R3.18Y one-following-property-header evidence decision / Outcome A CLOSED                         |
+R3.18Z active post-W following-header exact-context contract spec                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -158,13 +159,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 82. `docs/continuity/MIMIR_R3_18X_EXECUTION_SPEC.md`
 83. `docs/continuity/MIMIR_R3_18X_DECISION.md`
 84. `docs/continuity/MIMIR_R3_18Y_EXECUTION_SPEC.md`
-85. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-86. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-87. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-88. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-89. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-90. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-91. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+85. `docs/continuity/MIMIR_R3_18Y_DECISION.md`
+86. `docs/continuity/MIMIR_R3_18Z_EXECUTION_SPEC.md`
+87. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+88. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+89. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+90. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+91. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+92. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+93. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -798,3 +801,14 @@ next                        R3.18M true-only one-bit production composition
 - R3.18Y is active read-only one-header evidence starting at W boundary and stopping at payload_start.
 - R3.18P contexts are historical only at this later boundary; Y must discover its own exact tuples.
 - Following payload, another control, loops/cursors, actor/frame and semantic/runtime widening remain closed.
+
+
+### R3.18Y post-W following header: OUTCOME A / CLOSED
+- evidence `413d6c24f8f390a57c21ed345f3f868c263f413c` / tree `c48630bf89c23a8348936f2adbb8f0c9ad0c977b` / `32076198677/95529856476` SUCCESS; same-head CI `32076881407/95531867271` SUCCESS
+- artifact `9303584468` / `19642` / `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29`; manifest 9/9; ZIP digest exact
+- 47/47 frozen rows; 18 exact seven-field contexts; multiplicity sum 47; ActiveActor=39 / Int=7 / UniqueId=1; mismatch 0
+- R3.18P inheritance 0; following payload/another-control 0/0; next exact pass R3.18Z contract-only
+
+### R3.18Z post-W following-header exact-context contract: ACTIVE
+- admit full seven-field exact tuple membership only from Y; no R3.18P inheritance or cross-product widening
+- production remains `58872e94f00ef094807f21ab2ff984ac66b97d91`; no payload/control/loop/cursor widening
