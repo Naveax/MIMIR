@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  330ab01890a7c09eff1805e437584fb3be0a1134
+  fd74ba8c520ab83b808730572c41e45d6dc616e6
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18J — bounded native second-property payload composition
+  R3.18M — bounded native after-second-payload true-only control composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18L — following-property control-bit evidence / Outcome A / 47/47 exact / false=0 true=47 / 0 mismatch / following stream+header+payload bits 0
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18L — after-second-payload property_present evidence / Outcome A / 47 continuation rows / false=0 true=47 / 0 mismatch / no following stream/header/payload
 
 CURRENT_PASS:
-  R3.18M — bounded native after-second-payload control-bit composition
+  R3.18N — published after-second-payload control real-replay differential audit
 
 CURRENT_PASS_TYPE:
-  production implementation / from one already-valid R3.18J second-payload result, consume exactly one following property_present bit; admit only the R3.18L-observed true context and stop one bit later
+  read-only differential / validate the published R3.18M true-only following-control API on the exact frozen R3.18L 47-row lane; no following stream/header/payload access
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -90,8 +90,21 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18J PRODUCTION at 330ab01890a7c09eff1805e437584fb3be0a1134: composes exactly one optional Int|String second payload through exact payload end; String is additionally net10/non-RL223 only
   R3.18K CLOSED Outcome A: published R3.18J API matched the frozen 94-row lane exactly; mismatch 0; following-property bits consumed 0
   R3.18L CLOSED Outcome A: exact 47 continuation rows matched one following property_present bit; false=0 true=47; mismatch 0; following stream/header/payload bits consumed 0
-  R3.18M ACTIVE production implementation may compose exactly this one after-second-payload control bit, true context only; false is evidence-unobserved and must fail closed
-  NO following stream/header/payload, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18M PRODUCTION at fd74ba8c520ab83b808730572c41e45d6dc616e6: from one valid R3.18J second-payload result it validates the prior payload boundary, consumes exactly one following property_present bit, admits only true, and stops one bit later; false remains fail-closed
+  R3.18N ACTIVE read-only differential on the exact frozen R3.18L 47-row true-only lane
+  NO following stream/header/payload, another control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+R3_18M_PRODUCTION_CLOSURE:
+  Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
+  lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
+  implementation v3: 31999687944 / 95297550306 SUCCESS
+  same-head temp CI: 31999687880 / 95297550231 SUCCESS
+  exact clean-candidate CI: 31999898754 / 95298116788 SUCCESS
+  published-main CI: 32000211020 / 95298954375 SUCCESS
+  focused R3.18M tests: 6 PASS; full mimir-replay/workspace/clippy/repository verification: PASS
+  source boundary: exactly one read_bit / following stream-header-payload decoder calls 0 / property loops 0
+  admitted value: following property_present=true only; false fails closed
+  stop: exactly prior R3.18J payload end + 1 bit
+  Cargo/fixture/corpus/support/workflow mutation in clean production commit: 0/0/0/0/0
 R3_18L_EVIDENCE_CLOSURE:
   Outcome A / read-only / production Rust unchanged at 330ab01890a7c09eff1805e437584fb3be0a1134
   authority head: 9205ac1616e686589938f952782a32f03d0d1488
@@ -2770,7 +2783,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR production is at R3.18J `330ab01890a7c09eff1805e437584fb3be0a1134`: one existing-actor K1 first property may compose an optional second `Int|String` payload through its exact end. R3.18K closed Outcome A on the frozen 94-row real-replay lane with zero mismatch and zero following-property-bit consumption. R3.18L is now the first unfinished canonical pass and may inspect exactly one following `property_present` control bit; following stream/header/payload and generalized looping remain closed.**
+> **MIMIR production is now at R3.18M `fd74ba8c520ab83b808730572c41e45d6dc616e6`: after one valid R3.18J second payload, exactly one following `property_present` bit is consumed; only the R3.18L-observed `true` context is admitted and the API stops one bit later. R3.18N is the active read-only published-API differential on the frozen 47-row lane. Following stream/header/payload, another control bit, a generalized property loop, actor/frame iteration, raw state, events and skills remain closed.**
 
 ---
 
@@ -3205,3 +3218,25 @@ R3.18L reused exactly the 47 R3.18K continuation rows and first reconstructed th
 - [ ] Fresh-main ancestry audit and force=false fast-forward publication only after every gate passes.
 - [ ] Published exact-main CI/readback must pass before R3.18M is production-closed.
 
+
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18N
+
+**Goal:** differentially validate the published R3.18M true-only following-control composition on the exact frozen R3.18L 47-row lane. Production Rust is frozen.
+
+```text
+[ ] Fresh-read main; require production SHA fd74ba8c520ab83b808730572c41e45d6dc616e6 and exact lib/test blobs.
+[ ] Freeze R3.18L authority head/run/job/artifact/digest; witness reselection = 0.
+[ ] Reconstruct the exact 47 valid R3.18J second-payload results used by R3.18L.
+[ ] Invoke the published R3.18M API, not a lower-level bit reader.
+[ ] Require following property_present start/value/end/stop exact on 47/47 rows.
+[ ] Require value distribution false=0 / true=47 and native/oracle mismatch=0.
+[ ] Require no following stream/header/payload or another control bit consumed.
+[ ] Run truncation, prior-boundary mismatch, repeatability and post-stop poison controls.
+[ ] Produce privacy-safe immutable evidence with per-file hashes and exact production receipts.
+[ ] Run same-head normal CI plus full repository verification.
+[ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+[ ] Outcome A may open a separate following-property header evidence pass only; it does not itself admit that header.
+```

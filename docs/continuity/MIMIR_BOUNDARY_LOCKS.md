@@ -598,3 +598,29 @@ static object-index spawn-kind lookup plan
 ```
 
 R3.15A is EVIDENCE-ONLY. It may instrument pinned Boxcars through one NewActor spawn trajectory and compare static spawn-kind selection. Production decoding remains CLOSED for `name_id`, opaque post-new bit, `object_id`, location/rotation spawn payloads, properties, actor/frame iteration, state, events, and skills.
+
+
+---
+
+## CURRENT OVERRIDE — R3.18M PRODUCTION / R3.18N ACTIVE
+
+Fresh source/tests and exact-SHA evidence override older current-like sections above.
+
+```text
+OPEN / PRODUCTION:
+  R3.18M at fd74ba8c520ab83b808730572c41e45d6dc616e6
+  from one valid R3.18J second-payload result, validate exact prior payload end
+  read exactly one following property_present bit
+  admit true only; false fails closed
+  stop exactly one bit later
+
+ACTIVE EVIDENCE:
+  R3.18N published-R3.18M differential on exact frozen R3.18L 47-row lane
+
+CLOSED:
+  false following-control production context
+  following stream/header/payload
+  another control bit
+  repeated/generalized property loop
+  next actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening
+```

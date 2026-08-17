@@ -1,63 +1,42 @@
 # MIMIR — Current Canonical State
 
-**Continuity date:** 2026-08-17  
-**Repository:** `Naveax/MIMIR`  
-**Canonical main before this continuity sync:** `1b39cf1abb8b84100349bfe2540296425ef1baed`  
-**Canonical production SHA:** `330ab01890a7c09eff1805e437584fb3be0a1134`  
-**Production milestone:** `R3.18J — bounded native existing-actor second-property payload composition`  
-**Completed read-only differential/evidence:** `R3.18L — Outcome A / 47/47 exact following property_present / false=0 true=47 / mismatch 0`  
-**Current exact pass:** `R3.18M — bounded native after-second-payload control-bit composition`
+**Continuity date:** 2026-08-17
+**Repository:** `Naveax/MIMIR`
+**Canonical production SHA:** `fd74ba8c520ab83b808730572c41e45d6dc616e6`
+**Production milestone:** `R3.18M — bounded native after-second-payload true-only control composition`
+**Completed read-only evidence:** `R3.18L — Outcome A / 47/47 / false=0 true=47 / mismatch 0`
+**Current exact pass:** `R3.18N — published R3.18M after-second-payload control real-replay differential audit`
 
-## 1. Truthful production boundary
+## Truthful production boundary
 
-Production remains R3.18J. It may decode at most one optional `Int|String` second payload through its exact end. It still does not consume the following `property_present` bit.
-
-```text
-production SHA/tree                 330ab01890a7c09eff1805e437584fb3be0a1134 / 5540b6a86e53d243dabbabea223a5afa8657521c
-lib.rs blob                         ee9b0c71871df7ff52275581eb7ad4c023b8ba79
-R3.18J focused test blob            c5a97c5a17ae2ea292790a020673dd26a0150024
-published-main CI                   31976100231 / 95235742210 SUCCESS
-```
-
-## 2. R3.18L closure
-
-R3.18L Outcome A is admitted as read-only evidence. It reused exactly the 47 R3.18K continuation rows and reconstructed published R3.18J through the frozen second-payload end before observing one later bit.
+Production accepts one already-valid R3.18J second-payload result, proves its stop is exactly the second payload end, reads exactly one following `property_present` bit, accepts only the R3.18L-observed `true` context, and stops exactly one bit later. `false` remains fail-closed because R3.18L observed no false witness. No following stream/header/payload is read.
 
 ```text
-authority head                      9205ac1616e686589938f952782a32f03d0d1488
-evidence run/job                    31978791346 / 95242213413 SUCCESS
-same-head normal CI                 31978791304 / 95242213357 SUCCESS
-artifact                            9271817700 / 20906 bytes
-artifact digest                     sha256:db5d2db96429a4f2b699dca5176fc4d218f9eb9e4faa8dee813b766896f70c1c
-rows                                47/47 exact
-following control false / true      0 / 47
-R3.18J reconstruction               47/47 exact
-native/oracle mismatch              0
-control truncation                  47/47 PASS
-repeatability / post-control poison 47/47 PASS / 47/47 PASS
-prior-stop mismatch negative        47/47 PASS
-following stream/header/payload     0 / 0 / 0 bits consumed
-witness reselection                 0
-privacy                             PASS
-production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+production SHA/tree                 fd74ba8c520ab83b808730572c41e45d6dc616e6 / 6285928b3ca724c77b761e70c54f7bd0763f11f0
+lib/test blobs                      029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
+implementation v3                   31999687944 / 95297550306 SUCCESS
+same-head temp CI                   31999687880 / 95297550231 SUCCESS
+exact clean-candidate CI            31999898754 / 95298116788 SUCCESS
+published-main CI                   32000211020 / 95298954375 SUCCESS
+focused R3.18M tests                6 PASS
+following control admission         true only; false rejected
+following stream/header/payload     0 / 0 / 0
 ```
 
-The pinned Boxcars source remained exact. Its temporary oracle build was isolated to stable rustc 1.90.0 because current transitive oracle dependencies exceed Rust 1.85; MIMIR workspace validation itself ran under rustc 1.85.0. Failed v1/v2 attempts are non-authoritative tooling attempts only: v1 exposed a probe `u32`/production `u8` type mismatch; v2 incorrectly applied the MIMIR MSRV to the external oracle dependency graph. v3 is the sole R3.18L authority.
+## Current gate
 
-## 3. R3.18M exact next pass
+R3.18N must invoke the published R3.18M API on the immutable 47-row R3.18L lane and prove exact control start/value/end/stop with zero mismatch and zero following stream/header/payload access. Production source is frozen.
 
-R3.18M may add one deliberately non-generic production composition after an already-valid R3.18J result. It validates the prior stop, reads exactly one following `property_present` bit and succeeds only when the bit is `true`, because R3.18L observed `true=47 / false=0`. False is not evidence-admitted in this context and must fail closed. Success stops exactly one bit later. No following stream/header/payload may be read.
-
-## 4. Still closed
+## Still closed
 
 ```text
 false after-second-payload control context
 following property stream/header/payload
+another property control bit
 repeated/generalized property loop
 generic repeatedly-chainable property cursor
 next actor / next frame iteration
 actor lifecycle mutation
 raw-state extraction / events / replay slicing
 skill / teacher / runtime / export widening
-dependency or corpus/support expansion
 ```
