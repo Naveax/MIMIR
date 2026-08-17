@@ -12,6 +12,8 @@ jobs:
   prepare:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
     steps:
       - name: Checkout ops head
         uses: actions/checkout@v6
@@ -23,7 +25,6 @@ jobs:
         run: |
           set -euo pipefail
           rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
-          rustup default 1.85.0
           rustc --version | grep -F 'rustc 1.85.0 '
 
       - name: Build and validate clean admission commit
