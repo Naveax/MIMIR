@@ -13,10 +13,10 @@ Convert the admitted R3.18O following-header evidence into one canonical, privac
 - R3.18O evidence head: `5046e1594b87ce2828db5faa48aceba456c3166f`
 - R3.18O run/job: `32017369100` / `95349613184` — SUCCESS
 - same-head normal CI: `32017369071` / `95349613066` — SUCCESS
-- artifact: `9284144768` / `sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d` / `25129` bytes
-- source-summary SHA-256: `a261368f51770efee56e3d8d760390f633b6190bed81446feaf57b076189ae01`
-- header-rows SHA-256: `503bae96ac51ff27532fc80b5e537b3cb7ccd58cea1584a9a1f975da8a4748a9`
-- aggregate SHA-256: `02324f5a0caa68257a0af93999245124242569f8d582ab2aba2f8119fe6cd676`
+- artifact: `9284144768` / `sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d` / `25129` bytes
+- source-summary SHA-256: `f1bc285db764a71091c904e74a82c28e369cec1e62bed1b7ae503effef4824bc`
+- header-rows SHA-256: `599657a154498451d6317bf148da7bcf6e7077f35315426023da526a955ee2a4`
+- aggregate SHA-256: `170bad20b7d3d11596f879865a1380ade3910eba069311bec7e6d51eae2a4233`
 - exact frozen lane: 47 rows, witness reselection 0
 
 ## Required contract artifact
@@ -35,24 +35,24 @@ The canonical candidate tuple set is:
 
 | stream_id_bound | prop_id_bits | property object index | attribute tag | version | observed rows |
 |---:|---:|---:|---|---|---:|
-| 60 | 5 | 12 | `Boolean` | `868.32 / net10` | 1 |
-| 60 | 5 | 13 | `Boolean` | `868.32 / net10` | 2 |
-| 60 | 5 | 14 | `ActiveActor` | `868.32 / net10` | 3 |
-| 60 | 5 | 17 | `Boolean` | `868.32 / net10` | 3 |
-| 60 | 5 | 18 | `Boolean` | `868.32 / net10` | 3 |
-| 60 | 5 | 19 | `Boolean` | `868.32 / net10` | 7 |
-| 60 | 5 | 21 | `Boolean` | `868.32 / net10` | 1 |
-| 60 | 5 | 22 | `Boolean` | `868.32 / net10` | 2 |
-| 60 | 5 | 23 | `Boolean` | `868.32 / net10` | 8 |
-| 60 | 5 | 27 | `ActiveActor` | `868.32 / net10` | 3 |
-| 60 | 5 | 30 | `ActiveActor` | `868.32 / net10` | 2 |
-| 60 | 5 | 42 | `Boolean` | `868.32 / net10` | 1 |
-| 60 | 5 | 43 | `Boolean` | `868.32 / net10` | 1 |
-| 60 | 5 | 44 | `Boolean` | `868.32 / net10` | 3 |
-| 60 | 5 | 54 | `Boolean` | `868.32 / net10` | 3 |
-| 67 | 6 | 37 | `Boolean` | `868.32 / net10` | 1 |
-| 72 | 6 | 15 | `Boolean` | `868.32 / net10` | 2 |
-| 110 | 6 | 44 | `Boolean` | `868.32 / net10` | 1 |
+| 60 | 5 | 32 | `Boolean` | `868.32 / net10` | 1 |
+| 60 | 5 | 41 | `Boolean` | `868.32 / net10` | 2 |
+| 60 | 5 | 78 | `Boolean` | `868.32 / net10` | 4 |
+| 60 | 5 | 79 | `Boolean` | `868.32 / net10` | 19 |
+| 60 | 5 | 80 | `ActiveActor` | `868.32 / net10` | 6 |
+| 60 | 5 | 83 | `ActiveActor` | `868.32 / net10` | 1 |
+| 60 | 5 | 85 | `Boolean` | `868.32 / net10` | 1 |
+| 60 | 5 | 87 | `Boolean` | `868.32 / net10` | 2 |
+| 60 | 5 | 89 | `Boolean` | `868.32 / net10` | 1 |
+| 60 | 5 | 94 | `Boolean` | `868.32 / net10` | 1 |
+| 60 | 5 | 102 | `Boolean` | `868.32 / net10` | 2 |
+| 60 | 5 | 103 | `Boolean` | `868.32 / net10` | 1 |
+| 60 | 5 | 106 | `Boolean` | `868.32 / net10` | 1 |
+| 60 | 5 | 116 | `Boolean` | `868.32 / net10` | 1 |
+| 67 | 6 | 61 | `Boolean` | `868.32 / net10` | 1 |
+| 72 | 6 | 62 | `Boolean` | `868.32 / net10` | 1 |
+| 72 | 6 | 65 | `Boolean` | `868.32 / net10` | 1 |
+| 110 | 6 | 36 | `ActiveActor` | `868.32 / net10` | 1 |
 
 ## Equality gate
 

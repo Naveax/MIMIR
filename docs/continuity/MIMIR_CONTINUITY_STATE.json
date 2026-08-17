@@ -132,6 +132,7 @@
     "docs/continuity/MIMIR_R3_18N_DECISION.md",
     "docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18O_DECISION.md",
+    "docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md",
     "docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
@@ -1649,7 +1650,7 @@
     "same_head_ci_job": 95349613066,
     "artifact_id": 9284144768,
     "artifact_size": 25129,
-    "artifact_sha256": "e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d",
+    "artifact_sha256": "e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d",
     "artifact_inner_manifest_verified": "11/11",
     "frozen_rows": 47,
     "native_oracle_exact": "47/47",
@@ -1675,6 +1676,7 @@
     "another_control_bits_consumed": 0,
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
     "privacy": "PASS",
-    "next_pass": "R3.18P"
+    "next_pass": "R3.18P",
+    "receipt_correction": "2026-08-17 canonical GitHub artifact metadata + fresh run download; exact tuple identities and immutable hashes corrected; Outcome A unchanged"
   }
 }

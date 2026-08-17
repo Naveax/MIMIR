@@ -128,14 +128,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 61. `docs/continuity/MIMIR_R3_18N_DECISION.md`
 62. `docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md`
 63. `docs/continuity/MIMIR_R3_18O_DECISION.md`
-64. `docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md`
-65. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-66. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-67. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-68. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-69. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-70. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-71. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+64. `docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md`
+65. `docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md`
+66. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+67. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+68. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+69. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+70. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+71. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+72. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -168,10 +169,14 @@ scripts/verify_mimir_knowledge_archive.ps1
 ### R3.18O following-property header evidence: OUTCOME A / CLOSED
 - production unchanged at `fd74ba8c520ab83b808730572c41e45d6dc616e6`
 - evidence `5046e1594b87ce2828db5faa48aceba456c3166f` / `32017369100/95349613184` SUCCESS; same-head CI `32017369071/95349613066` SUCCESS
-- artifact `9284144768` / `sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d` / `25129` bytes; inner manifest 11/11 exact
+- artifact `9284144768` / `sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d` / `25129` bytes; inner manifest 11/11 exact
 - frozen 47/47; following header exact 47/47; mismatch 0; witness reselection 0
 - 18 exact structural contexts; Boolean=39 / ActiveActor=8; all 868.32/net10
 - following payload / another-control consumption 0/0; no production widening
+
+### R3.18O receipt correction: CLOSED
+- canonical artifact digest `e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d` verified against current GitHub artifact metadata and fresh run download
+- exact 18 tuple identities + inner hashes corrected; Outcome A unchanged; production unchanged
 
 ### R3.18P following-property header context contract: ACTIVE
 - contract-only; production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6`

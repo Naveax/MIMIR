@@ -18,7 +18,7 @@ Updated: 2026-08-17
 - evidence run/job: `32017369100` / `95349613184` — SUCCESS
 - same-head normal CI: `32017369071` / `95349613066` — SUCCESS
 - artifact: `9284144768` / `25129` bytes
-- artifact digest: `sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d`
+- artifact digest: `sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d`
 - artifact inner manifest: `11/11` exact
 - R3.18J reconstruction: `47/47` exact
 - published R3.18M following control: `47/47` exact

@@ -530,7 +530,7 @@ What changed:
 Evidence:
 - evidence `5046e1594b87ce2828db5faa48aceba456c3166f` / `32017369100` / `95349613184` SUCCESS;
 - same-head CI `32017369071` / `95349613066` SUCCESS;
-- artifact `9284144768` / `25129` bytes / `sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d`;
+- artifact `9284144768` / `25129` bytes / `sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d`;
 - artifact inner manifest 11/11 exact;
 - R3.18J reconstruction 47/47; published R3.18M control 47/47; following header 47/47; mismatch 0;
 - 18 exact structural context tuples over 47 rows; Boolean=39 / ActiveActor=8;
@@ -557,3 +557,7 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - `R3.18P — following-property header exact-context contract`.
+
+## 2026-08-17 — R3.18O immutable receipt correction
+
+Fresh exact-run artifact re-download caught stale receipt values before R3.18P admission. Correct ZIP digest: `e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d`. Exact tuple identities and inner hashes were corrected; aggregate Outcome A facts and production boundary are unchanged. R3.18P remains active and must use corrected authority.

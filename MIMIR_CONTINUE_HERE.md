@@ -126,7 +126,7 @@ R3_18O_EVIDENCE_CLOSURE:
   authority run/job: 32017369100 / 95349613184 SUCCESS
   exact-head normal CI: 32017369071 / 95349613066 SUCCESS
   artifact: 9284144768 / 25129 bytes
-  artifact digest: sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d
+  artifact digest: sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d
   inner artifact manifest: 11/11 exact
   frozen rows: 47/47 / R3.18J reconstruction 47/47 / published R3.18M control 47/47 / following header 47/47 / mismatch 0
   exact structural contexts: 18 / tags Boolean=39 ActiveActor=8 / all rows 868.32 net10
@@ -3258,14 +3258,18 @@ production code SHA = fd74ba8c520ab83b808730572c41e45d6dc616e6
 R3.18O evidence head = 5046e1594b87ce2828db5faa48aceba456c3166f
 R3.18O run/job        = 32017369100 / 95349613184 SUCCESS
 R3.18O same-head CI   = 32017369071 / 95349613066 SUCCESS
-R3.18O artifact       = 9284144768 / sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d
+R3.18O artifact       = 9284144768 / sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d
 R3.18O outcome        = A / 47 OF 47 FOLLOWING HEADERS EXACT / 18 EXACT CONTEXT TUPLES
 ACTIVE NEXT PASS      = R3.18P — following-property header exact-context contract
 ```
 
 R3.18O reused the exact frozen 47-row authority and stopped the MIMIR observer exactly at the following property's `payload_start`. The observed domain contains 18 exact structural tuples. Those tuple identities, not their individual components, are the only evidence-supported basis for the next contract pass.
 
-## CURRENT PASS CHECKLIST — R3.18P
+## R3.18O RECEIPT CORRECTION — 2026-08-17
+
+Canonical GitHub artifact digest is `sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d`. Exact 18 tuple identities and inner hashes are those in `docs/continuity/MIMIR_R3_18O_RECEIPT_CORRECTION.md`. R3.18O Outcome A is unchanged; R3.18P must use only the corrected authority.
+
+# CURRENT PASS CHECKLIST — R3.18P
 
 - [ ] Fresh-read `main`; require production still exactly R3.18M `fd74ba8c520ab83b808730572c41e45d6dc616e6` and no production/Cargo/fixture/corpus/support drift.
 - [ ] Freeze R3.18O head/run/job/CI/artifact/digest plus all 11 inner SHA-256 receipts.
