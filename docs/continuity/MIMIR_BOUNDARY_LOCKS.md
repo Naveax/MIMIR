@@ -6,6 +6,41 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
+# 0. Current override — R3.18O admitted / R3.18P active
+
+This current override supersedes older R3.18M/N/O status wording later in this historical lock file.
+
+## OPEN / PRODUCTION
+
+- production remains R3.18M at `fd74ba8c520ab83b808730572c41e45d6dc616e6`;
+- exactly one true following `property_present` bit after a valid R3.18J second payload is production-admitted;
+- no later following header is production-admitted yet.
+
+## EVIDENCE-ONLY — R3.18O
+
+- exact frozen 47-row following-header evidence is admitted Outcome A;
+- 47/47 native/oracle headers matched through `payload_start`;
+- exactly 18 structural context tuples were observed, all at `868.32 / net10`;
+- `Boolean=39`, `ActiveActor=8`; witness reselection=0; mismatch=0;
+- following payload and another-control observer consumption remain 0/0.
+
+## ACTIVE CONTRACT GATE — R3.18P
+
+- only exact 18-tuple identity and exact 47-row multiplicities may be crystallized;
+- tag-only/component-only/Cartesian-product widening is forbidden;
+- production Rust remains frozen.
+
+## CLOSED
+
+- production composition of the following header until a contract is separately admitted;
+- contexts outside the exact admitted tuple set;
+- following payload;
+- another property control bit;
+- repeated/generalized property loop or generic repeatable cursor;
+- next actor/frame, lifecycle mutation, raw state, events, replay slices, skills, runtime and exports.
+
+---
+
 # 1. Status vocabulary
 
 ## OPEN / PRODUCTION
