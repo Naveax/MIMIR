@@ -1,0 +1,69 @@
+name: R3.18Y Published Receipt Probe
+
+on:
+  push:
+    branches: [ops/r318y-published-receipt-v1]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  receipt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: ff69da3ce17d3632cfa544190a515a227f6e65f2
+    steps:
+      - uses: actions/checkout@v6
+        with: {fetch-depth: 0}
+      - name: Resolve published main CI and KA
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f tools/_tmp_r318y_published_receipt.txt; then
+            cat tools/_tmp_r318y_published_receipt.txt
+            exit 0
+          fi
+          for attempt in $(seq 1 50); do
+            gh api -X GET "repos/$GITHUB_REPOSITORY/actions/runs" -f head_sha="$TARGET_SHA" -f event=push -f per_page=100 > /tmp/runs.json
+            CI_RUN="$(jq -r '[.workflow_runs[] | select(.name=="CI" and .head_branch=="main" and .head_sha==env.TARGET_SHA)][0].id // empty' /tmp/runs.json)"
+            KA_RUN="$(jq -r '[.workflow_runs[] | select(.name=="Knowledge Archive" and .head_branch=="main" and .head_sha==env.TARGET_SHA)][0].id // empty' /tmp/runs.json)"
+            if test -n "$CI_RUN" && test -n "$KA_RUN"; then
+              CI_STATUS="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN" --jq .status)"
+              CI_CONC="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN" --jq .conclusion)"
+              KA_STATUS="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$KA_RUN" --jq .status)"
+              KA_CONC="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$KA_RUN" --jq .conclusion)"
+              if test "$CI_STATUS" = completed && test "$KA_STATUS" = completed; then
+                test "$CI_CONC" = success
+                test "$KA_CONC" = success
+                CI_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN/jobs" --jq '.jobs[] | select(.name=="rust") | .id' | head -n1)"
+                KA_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$KA_RUN/jobs" --jq '.jobs[] | select(.name=="verify") | .id' | head -n1)"
+                test -n "$CI_JOB" && test -n "$KA_JOB"
+                test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$CI_JOB" --jq .conclusion)" = success
+                test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$KA_JOB" --jq .conclusion)" = success
+                mkdir -p tools
+                cat > tools/_tmp_r318y_published_receipt.txt <<EOF
+TARGET_SHA=$TARGET_SHA
+PUBLISHED_CI_RUN=$CI_RUN
+PUBLISHED_CI_JOB=$CI_JOB
+PUBLISHED_CI_CONCLUSION=success
+PUBLISHED_KA_RUN=$KA_RUN
+PUBLISHED_KA_JOB=$KA_JOB
+PUBLISHED_KA_CONCLUSION=success
+EOF
+                git config user.name 'MIMIR Receipt Bot'
+                git config user.email 'actions@users.noreply.github.com'
+                git add tools/_tmp_r318y_published_receipt.txt
+                git commit -m 'ops(r318y): record published-main receipts'
+                git push origin HEAD:ops/r318y-published-receipt-v1
+                cat tools/_tmp_r318y_published_receipt.txt
+                exit 0
+              fi
+            fi
+            echo "R3_18Y_PUBLISHED_RECEIPT_WAIT attempt=$attempt ci=${CI_RUN:-none} ka=${KA_RUN:-none}"
+            sleep 10
+          done
+          echo R3_18Y_PUBLISHED_RECEIPT_TIMEOUT
+          exit 1
