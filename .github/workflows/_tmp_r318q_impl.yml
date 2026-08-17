@@ -27,7 +27,9 @@ jobs:
           rustc --version | grep -F 'rustc 1.85.0 '
 
       - name: Build and prove clean R3.18Q candidate
-        run: bash tools/_tmp_r318q_impl.sh
+        run: |
+          sed -i "s|grep -c '\^R3_18O_NATIVE'|grep -c '\^R3_18O_NATIVE[[:space:]]'|" tools/_tmp_r318q_impl.sh
+          bash tools/_tmp_r318q_impl.sh
 
       - uses: actions/upload-artifact@v4
         with:
