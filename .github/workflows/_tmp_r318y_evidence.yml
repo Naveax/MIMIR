@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   actions: read
+  statuses: write
 
 jobs:
   evidence:
@@ -97,3 +98,24 @@ jobs:
           cat r3_18y_aggregate.txt
           cat r3_18y_artifact_sha256.txt
           echo 'R3_18Y_IMMUTABLE_RECEIPT=PASS'
+      - name: Publish discoverable authority status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+        run: |
+          set -euo pipefail
+          case "$JOB_STATUS" in
+            success) STATE=success ;;
+            failure) STATE=failure ;;
+            cancelled) STATE=error ;;
+            *) STATE=error ;;
+          esac
+          AID="${ARTIFACT_ID:-none}"
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state="$STATE" \
+            -f context='r318y-authority-receipt' \
+            -f description="run=$GITHUB_RUN_ID status=$JOB_STATUS artifact=$AID" \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+          echo "R3_18Y_DISCOVERABLE_STATUS=PASS run=$GITHUB_RUN_ID state=$STATE artifact=$AID"
