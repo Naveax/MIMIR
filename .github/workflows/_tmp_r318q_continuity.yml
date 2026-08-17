@@ -1,0 +1,106 @@
+name: R3.18Q Continuity Sync
+
+on:
+  push:
+    branches: [ops/r318q-continuity-v1]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Toolchain
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc --version | grep -F 'rustc 1.85.0 '
+
+      - name: Generate and verify clean continuity candidate
+        env:
+          BASE_MAIN: f41c59d26ed6c810a640b4fa8cd76129decb32aa
+          CANDIDATE_BRANCH: continuity/r318q-sync-v1
+        run: |
+          set -euxo pipefail
+          ROOT="$PWD"
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git worktree add --detach "$WORK" "$BASE_MAIN"
+          cd "$WORK"
+          python3 "$ROOT/tools/_tmp_r318q_continuity.py"
+
+          expected=(
+            MIMIR_CONTINUE_HERE.md
+            MIMIR_KNOWLEDGE_GRAPH.md
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+            docs/continuity/MIMIR_CONTINUITY_STATE.json
+            docs/continuity/MIMIR_CURRENT_STATE.md
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md
+            docs/continuity/MIMIR_R3_18Q_DECISION.md
+            docs/continuity/MIMIR_R3_18R_EXECUTION_SPEC.md
+          )
+          mapfile -t changed < <(git status --short | sed -E 's/^.. //' | sort)
+          mapfile -t want < <(printf '%s\n' "${expected[@]}" | sort)
+          printf '%s\n' '--- CONTINUITY CHANGED ---' "${changed[@]}"
+          test "${#changed[@]}" -eq 9
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${want[@]}")"
+
+          git diff --exit-code "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github/workflows MIMIR_ALL_SOURCES_SUPERBOOK.md docs/chatgpt-archive
+          git add -- "${expected[@]}"
+          git diff --cached --check
+
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          prod='f41c59d26ed6c810a640b4fa8cd76129decb32aa'
+          st=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          assert st['last_production_code_sha']==prod
+          assert st['last_production_milestone']=='R3.18Q'
+          assert st['current_pass']=='R3.18R'
+          assert st['last_completed_read_only_audit']=='R3.18O'
+          assert st['last_completed_contract_pass']=='R3.18P'
+          f=st['next_files_to_read']
+          i=f.index('docs/continuity/MIMIR_R3_18Q_EXECUTION_SPEC.md')
+          assert f[i+1:i+3]==['docs/continuity/MIMIR_R3_18Q_DECISION.md','docs/continuity/MIMIR_R3_18R_EXECUTION_SPEC.md']
+          kg=Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          assert 'R3.18Q bounded following-property header production decision / CLOSED' in kg
+          assert 'R3.18R active published following-property header differential spec' in kg
+          hand=Path('MIMIR_CONTINUE_HERE.md').read_text(encoding='utf-8')
+          assert 'R3_18Q_PRODUCTION_CLOSURE:' in hand
+          assert '# CURRENT PASS CHECKLIST — R3.18R' in hand
+          print('R3_18Q_CONTINUITY_VALIDATION=PASS')
+          PY
+
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Admit R3.18Q and open R3.18R'
+          SHA="$(git rev-parse HEAD)"
+          TREE="$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          test "$(git diff --name-only "$BASE_MAIN" HEAD | sort)" = "$(printf '%s\n' "${want[@]}")"
+          git diff --exit-code "$BASE_MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github/workflows MIMIR_ALL_SOURCES_SUPERBOOK.md docs/chatgpt-archive
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+
+          if git ls-remote --exit-code --heads origin "$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "continuity candidate already exists" >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          test "$(git ls-remote origin "refs/heads/$CANDIDATE_BRANCH" | awk '{print $1}')" = "$SHA"
+          printf 'R3_18Q_CONTINUITY_SHA=%s\nR3_18Q_CONTINUITY_TREE=%s\nR3_18Q_CONTINUITY_PARENT=%s\nR3_18Q_CONTINUITY_SCOPE=9_DOCS_ONLY\n' "$SHA" "$TREE" "$BASE_MAIN"
