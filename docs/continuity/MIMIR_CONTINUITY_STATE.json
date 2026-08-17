@@ -6,11 +6,11 @@
   "last_production_code_sha": "fd74ba8c520ab83b808730572c41e45d6dc616e6",
   "last_production_milestone": "R3.18M",
   "last_production_milestone_name": "bounded native after-second-payload true-only control composition",
-  "last_completed_read_only_audit": "R3.18L",
-  "current_pass": "R3.18N",
-  "current_pass_kind": "read-only differential / published R3.18M after-second-payload true-only control audit",
-  "current_pass_goal": "Differentially validate the published R3.18M API over the exact frozen R3.18L 47-row lane, requiring exact true control start/value/end/stop and zero following stream/header/payload access.",
-  "current_pass_stop_boundary": "Stop exactly one bit after the R3.18J second payload end. No following stream/header/payload, another control bit, repeated/generalized loop, next actor/frame/lifecycle/raw-state/event/skill/runtime/export widening.",
+  "last_completed_read_only_audit": "R3.18N",
+  "current_pass": "R3.18O",
+  "current_pass_kind": "read-only following-property header evidence",
+  "current_pass_goal": "Characterize exactly one following property header after the published R3.18M true-only control on the same frozen 47-row lane and stop at payload_start.",
+  "current_pass_stop_boundary": "Stop exactly at following-property payload_start. Consume zero following payload bits and zero another-control bits; no generalized loop or later runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -128,6 +128,8 @@
     "docs/continuity/MIMIR_R3_18H_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18H_DECISION.md",
     "docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18N_DECISION.md",
+    "docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -146,8 +148,8 @@
     "docs/continuity/MIMIR_R3_18M_DECISION.md",
     "docs/continuity/MIMIR_R3_18N_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18L",
-  "last_completed_evidence_outcome": "A — 47/47 frozen after-second-payload control rows exact; false=0 true=47; mismatch 0; following stream/header/payload 0/0/0; production unchanged before R3.18M.",
+  "last_completed_evidence_pass": "R3.18N",
+  "last_completed_evidence_outcome": "A — published R3.18M API exact on frozen 47-row lane; false=0 true=47; mismatch 0; following stream/header/payload/another-control consumption 0/0/0/0.",
   "last_completed_contract_pass": "R3.17N",
   "r3_14a": {
     "outcome": "A",
@@ -1606,5 +1608,29 @@
       "crates/mimir-replay/src/lib.rs",
       "crates/mimir-replay/tests/r3_18m_following_control.rs"
     ]
+  },
+  "r3_18n": {
+    "outcome": "A — admitted / complete / read-only",
+    "production_source_changed": false,
+    "production_sha": "fd74ba8c520ab83b808730572c41e45d6dc616e6",
+    "evidence_head": "9bbf59745c950b7be5a5a592724f41db80874973",
+    "evidence_run": 32007040663,
+    "evidence_job": 95318554719,
+    "same_head_ci_run": 32007040500,
+    "same_head_ci_job": 95318554225,
+    "artifact_id": 9280430420,
+    "artifact_size_bytes": 21060,
+    "artifact_sha256": "772447a31e174355b3848605357667936ca522777d601dda504896aa0f663102",
+    "frozen_rows": 47,
+    "control_false": 0,
+    "control_true": 47,
+    "r3_18j_reconstruction_exact": 47,
+    "published_r3_18m_oracle_mismatch": 0,
+    "following_stream_bits_consumed": 0,
+    "following_header_bits_consumed": 0,
+    "following_payload_bits_consumed": 0,
+    "another_control_bits_consumed": 0,
+    "witness_reselection": 0,
+    "next_pass": "R3.18O"
   }
 }

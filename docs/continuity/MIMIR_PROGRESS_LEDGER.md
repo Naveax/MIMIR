@@ -505,3 +505,13 @@ Next exact pass: `R3.14E — native first-envelope differential audit`.
 - MIMIR validation used Rust 1.85.0; pinned Boxcars oracle build was isolated to stable rustc 1.90.0 due external transitive dependency MSRV.
 - Next: R3.18M true-only bounded after-second-payload control-bit production composition.
 
+## R3.18N — Published Following-Control Differential
+
+- status: **Outcome A / ADMITTED / READ-ONLY**
+- production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6`
+- evidence `9bbf59745c950b7be5a5a592724f41db80874973` / `32007040663` / `95318554719` SUCCESS
+- same-head CI `32007040500` / `95318554225` SUCCESS
+- artifact `9280430420` / `sha256:772447a31e174355b3848605357667936ca522777d601dda504896aa0f663102` / 21060 bytes
+- frozen 47/47; false=0 true=47; published R3.18M/oracle mismatch=0
+- following stream/header/payload/another-control bits consumed 0/0/0/0; reselection=0
+- next canonical pass: **R3.18O following-property header evidence**

@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18M — bounded native after-second-payload true-only control composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18L — following-property control-bit evidence / Outcome A / 47/47 exact / false=0 true=47 / 0 mismatch / following stream+header+payload bits 0
+  R3.18N — published R3.18M following-control differential / Outcome A / 47/47 exact / false=0 true=47 / 0 mismatch / following stream+header+payload+another-control bits 0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.17N — evidence-supported K4 gameplay-structured contract / Outcome A / 161 exact groups / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18L — after-second-payload property_present evidence / Outcome A / 47 continuation rows / false=0 true=47 / 0 mismatch / no following stream/header/payload
+  R3.18N — published after-second-payload control differential / Outcome A / 47 continuation rows / false=0 true=47 / 0 mismatch / no following stream/header/payload/another-control
 
 CURRENT_PASS:
-  R3.18N — published after-second-payload control real-replay differential audit
+  R3.18O — following-property header evidence
 
 CURRENT_PASS_TYPE:
-  read-only differential / validate the published R3.18M true-only following-control API on the exact frozen R3.18L 47-row lane; no following stream/header/payload access
+  read-only differential / characterize exactly one following property header on the frozen 47-row lane and stop at payload_start; no following payload or another-control access
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -91,8 +91,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18K CLOSED Outcome A: published R3.18J API matched the frozen 94-row lane exactly; mismatch 0; following-property bits consumed 0
   R3.18L CLOSED Outcome A: exact 47 continuation rows matched one following property_present bit; false=0 true=47; mismatch 0; following stream/header/payload bits consumed 0
   R3.18M PRODUCTION at fd74ba8c520ab83b808730572c41e45d6dc616e6: from one valid R3.18J second-payload result it validates the prior payload boundary, consumes exactly one following property_present bit, admits only true, and stops one bit later; false remains fail-closed
-  R3.18N ACTIVE read-only differential on the exact frozen R3.18L 47-row true-only lane
-  NO following stream/header/payload, another control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18N CLOSED Outcome A: published R3.18M API matched the exact frozen 47-row lane; false=0 true=47; mismatch 0; following stream/header/payload/another-control consumption 0/0/0/0
+  R3.18O ACTIVE read-only following-property header evidence; stop at following payload_start
+  NO following payload, another control bit, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -105,6 +106,19 @@ R3_18M_PRODUCTION_CLOSURE:
   admitted value: following property_present=true only; false fails closed
   stop: exactly prior R3.18J payload end + 1 bit
   Cargo/fixture/corpus/support/workflow mutation in clean production commit: 0/0/0/0/0
+R3_18N_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production Rust unchanged at fd74ba8c520ab83b808730572c41e45d6dc616e6
+  authority head: 9bbf59745c950b7be5a5a592724f41db80874973
+  authority run/job: 32007040663 / 95318554719 SUCCESS
+  exact-head normal CI: 32007040500 / 95318554225 SUCCESS
+  artifact: 9280430420 / 21060 bytes
+  artifact digest: sha256:772447a31e174355b3848605357667936ca522777d601dda504896aa0f663102
+  frozen rows: 47/47 exact / R3.18J reconstruction 47/47 / published R3.18M-oracle mismatch 0
+  following control distribution: false=0 / true=47
+  truncation / prior-stop / missing-header / missing-payload / false-control negatives: PASS 47/47
+  repeatability / post-stop poison: PASS 47/47
+  following stream/header/payload/another-control bits consumed: 0/0/0/0; witness reselection: 0; privacy: PASS
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 R3_18L_EVIDENCE_CLOSURE:
   Outcome A / read-only / production Rust unchanged at 330ab01890a7c09eff1805e437584fb3be0a1134
   authority head: 9205ac1616e686589938f952782a32f03d0d1488
@@ -2783,7 +2797,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR production is now at R3.18M `fd74ba8c520ab83b808730572c41e45d6dc616e6`: after one valid R3.18J second payload, exactly one following `property_present` bit is consumed; only the R3.18L-observed `true` context is admitted and the API stops one bit later. R3.18N is the active read-only published-API differential on the frozen 47-row lane. Following stream/header/payload, another control bit, a generalized property loop, actor/frame iteration, raw state, events and skills remain closed.**
+> **MIMIR production remains R3.18M `fd74ba8c520ab83b808730572c41e45d6dc616e6`. R3.18N is admitted Outcome A: the published true-only following-control API is exact on the frozen 47-row lane with false=0, true=47, mismatch 0 and zero following stream/header/payload/another-control consumption. R3.18O is the active read-only following-property header evidence pass and must stop at `payload_start`; payload, another control, generalized loops and later runtime layers remain closed.**
 
 ---
 
