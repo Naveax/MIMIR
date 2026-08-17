@@ -694,3 +694,16 @@ Boundaries still closed:
 
 Next exact pass:
 - R3.18U — published R3.18T following-payload differential on the immutable R3.18S 47-row lane.
+
+## R3.18U — Published R3.18T following-payload differential — Outcome A / CLOSED
+
+- Production unchanged: `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` / tree `a6f27fe606cd3446da02ef1cb8cf53fff071e383`.
+- Final evidence head/tree: `a53d0c8b4c88bab229e5ac9ec2db7dda5f9400b4` / `f0c716278ef47665e43572d0129c4e8acd9be182`.
+- Authority: `32055189778 / 95463604513` SUCCESS; same-head CI `32055189737 / 95463604366` SUCCESS.
+- Artifact: `9296199852` / `20181` bytes / `sha256:13262328812bc56c9ea58bbc42364308fb6c65487c51f062296b14993f3a626e`; ZIP digest and internal SHA-256 manifest verified.
+- Exact lane: 47/47 rows, 18/18 R3.18P contexts, Boolean=39×1 bit, ActiveActor=8×33 bits.
+- Published-T/frozen-S mismatch 0; embedded header identity 47/47; witness reselection 0.
+- Repeatability, truncation, wrong actor, unresolved lookup, wrong context, fabricated context and post-payload poison controls: 47/47.
+- Another-control consumption 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+- Superseded initial attempt failed only on transient GitHub artifact-download HTTP 503 before semantic evidence; final authority used unchanged evidence criteria with bounded transport retry.
+- Next pass opened: R3.18V, read-only exactly-one-next-property-control-bit evidence.

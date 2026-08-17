@@ -6,20 +6,25 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18T production / R3.18U active
+# 0. Current override — R3.18U closed / R3.18V active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## OPEN / PRODUCTION
 - R3.18T at `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` composes exactly one admitted Boolean|ActiveActor following payload after the R3.18Q header; exact R3.18P context remains mandatory; stop exactly at payload end.
 
-## ACTIVE EVIDENCE GATE — R3.18U
-- read-only published-T differential on the exact frozen 47-row R3.18S lane;
-- compare exact header/payload boundary/typed semantics/final stop;
-- production mutation and another-control access forbidden.
+## CLOSED EVIDENCE — R3.18U Outcome A
+- published T matched frozen S exactly on 47/47 rows and 18/18 contexts;
+- Boolean=39×1 bit / ActiveActor=8×33 bits / mismatch 0 / header identity 47/47;
+- another-control bits consumed 0; artifact `9296199852` / `sha256:13262328812bc56c9ea58bbc42364308fb6c65487c51f062296b14993f3a626e`.
+
+## ACTIVE EVIDENCE GATE — R3.18V
+- read-only observation of exactly one next `property_present` bit at published T `stop_bit`;
+- same immutable 47 witnesses, no reselection; false/true distribution must be discovered;
+- stop one bit later; no next stream/header/payload or second later control.
 
 ## CLOSED
-- another property control/header/payload; repeated/generalized property loop; generic cursor; context/tag widening;
+- next stream/header/payload; second later control; repeated/generalized property loop; generic cursor; context/tag widening;
 - next actor/frame/lifecycle; raw state, events, slices, skills, counterfactual runtime and exports.
 
 ---

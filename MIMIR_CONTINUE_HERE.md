@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18T — bounded following-property payload production composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18S — following-property payload evidence / Outcome A / 47/47 exact / Boolean 39×1 bit / ActiveActor 8×33 bits / 0 mismatch / another-control bits 0
+  R3.18U — published R3.18T following-payload differential / Outcome A / 47/47 exact / 18 contexts / mismatch 0 / another-control bits 0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18P — following-property header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18S — following-property payload evidence / Outcome A / 47 rows / 18 exact contexts / Boolean+ActiveActor exact / no another-control
+  R3.18U — published R3.18T following-payload differential / Outcome A / 47 rows / 18 exact contexts / Boolean+ActiveActor exact / no another-control
 
 CURRENT_PASS:
-  R3.18U — published R3.18T following-payload differential
+  R3.18V — exactly one next property-control bit evidence after published R3.18T payload
 
 CURRENT_PASS_TYPE:
-  read-only differential / validate published R3.18T on the immutable R3.18S 47-row lane; exact payload semantics/end; no later control
+  read-only evidence / observe exactly one next property_present bit at published R3.18T stop; discover false/true distribution; no next header/payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -98,8 +98,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18R CLOSED Outcome A: published-Q control/header exact 47/47; exact contexts 18/18; multiplicities 47/47; mismatch 0; payload/another-control bits 0/0; artifact 9292549978
   R3.18S CLOSED Outcome A: one payload exact 47/47; Boolean 39×1 bit; ActiveActor 8×33 bits; mismatch 0; another-control bits 0; artifact 9293436309
   R3.18T PRODUCTION at c2765ab9f04f9c981a6868cb6503bdf0e339ce1b: exactly one admitted Boolean|ActiveActor following payload after R3.18Q; stop exactly at payload end; no later control
-  R3.18U ACTIVE read-only published-T differential on the immutable R3.18S 47-row lane
-  NO another control bit/header/payload, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18U CLOSED Outcome A: published T matched frozen S 47/47 across 18/18 contexts; mismatch 0; header identity 47/47; another-control bits 0; artifact {U_ART}
+  R3.18V ACTIVE read-only evidence for exactly one next property_present bit at the published T payload-end stop
+  NO next stream/header/payload, second later control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -138,6 +139,17 @@ R3_18Q_PRODUCTION_CLOSURE:
   Q/R3.18M control equality: 47/47; Q/stateless-header equality: 47/47
   following payload / another-control bits consumed: 0/0
   clean scope: lib.rs + r3_18q_following_header.rs only; Cargo/fixture/corpus/docs/workflow/support mutation 0
+R3_18U_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at c2765ab9f04f9c981a6868cb6503bdf0e339ce1b
+  authority head/tree: a53d0c8b4c88bab229e5ac9ec2db7dda5f9400b4 / f0c716278ef47665e43572d0129c4e8acd9be182
+  authority run/job: 32055189778 / 95463604513 SUCCESS
+  exact-head normal CI: 32055189737 / 95463604366 SUCCESS
+  artifact: 9296199852 / 20181 bytes / sha256:13262328812bc56c9ea58bbc42364308fb6c65487c51f062296b14993f3a626e
+  rows 47/47 / exact contexts 18/18 / published-T=frozen-S mismatch 0 / header identity 47/47 / witness reselection 0
+  Boolean 39×1 bit / ActiveActor 8×33 bits
+  repeatability/truncation/wrong-actor/unresolved-lookup/wrong-context/fabricated-context/post-payload-poison 47/47
+  another-control bits consumed 0; privacy PASS
+  production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
 R3_18T_PRODUCTION_CLOSURE:
   Outcome A / production c2765ab9f04f9c981a6868cb6503bdf0e339ce1b / tree a6f27fe606cd3446da02ef1cb8cf53fff071e383
   parent: ac1b284099a01be895c3e9d644a9d98b6dfe3da2
@@ -3422,21 +3434,22 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18U
+# CURRENT PASS CHECKLIST — R3.18V
 
-**Goal:** validate published R3.18T on the exact immutable R3.18S 47-row lane through one payload end. Production remains frozen.
+**Goal:** characterize exactly one next `property_present` bit after the published R3.18T payload end on the immutable 47-row authority lane. Production remains frozen.
 
 ```text
-[ ] Fetch fresh main; require production c2765ab9f04f9c981a6868cb6503bdf0e339ce1b / tree a6f27fe606cd3446da02ef1cb8cf53fff071e383.
-[ ] Verify T authority 32049639448/95445637593, candidate CI 32049893219/95446478223, PR CI 32050205389/95447503058, published CI 32050650336/95448937493.
-[ ] Verify lib/test blobs cf992670b461e9d923e773ed375bef2b42aea20d / 430676ec118fa0755a9c64abc0067bf5c5c88d05, R3.18P contract and R3.18S artifact 9293436309.
-[ ] Reuse exactly the 47 frozen S witnesses; witness reselection = 0; exact contexts = 18.
-[ ] Call the published T API and compare embedded Q header, tag, payload start/end/width/value and final stop against frozen S evidence.
-[ ] Require Boolean 39×1 bit / ActiveActor 8×33 bits and mismatch 0.
-[ ] Require deterministic double-run equality.
-[ ] Run truncation, wrong actor/lookup/context, fabricated-context and post-stop/next-control poison negatives.
-[ ] Prove another-control bits consumed = 0.
-[ ] Produce privacy-safe immutable artifact with per-row comparisons, aggregate counters and SHA-256 manifest.
-[ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0 and same-head normal CI SUCCESS.
-[ ] Outcome A admits only the published differential; another property-control boundary requires a later separate pass.
+[ ] Fetch fresh main; require production c2765ab9f04f9c981a6868cb6503bdf0e339ce1b / tree a6f27fe606cd3446da02ef1cb8cf53fff071e383 and lib/test blobs unchanged.
+[ ] Freeze R3.18U head/tree a53d0c8b4c88bab229e5ac9ec2db7dda5f9400b4 / f0c716278ef47665e43572d0129c4e8acd9be182.
+[ ] Freeze R3.18U authority 32055189778/95463604513, same-head CI 32055189737/95463604366, artifact 9296199852/sha256:13262328812bc56c9ea58bbc42364308fb6c65487c51f062296b14993f3a626e.
+[ ] Verify the artifact manifest and exact 47 replay/witness identities; witness reselection must remain 0.
+[ ] Reconstruct published R3.18T exactly on all 47 rows; require its stop_bit == frozen payload end before observing anything later.
+[ ] Instrument pinned Boxcars observation-only at exactly that bit offset.
+[ ] Independently read exactly one LSB-first property_present bit at the same offset.
+[ ] Require oracle/evidence start/value/end equality for 47/47 and report the full false/true distribution without filtering.
+[ ] Stop exactly one bit later; next stream/header/payload and second later control consumption must remain 0/0/0/0.
+[ ] Run truncation, prior-stop mismatch, repeatability and post-control poison negatives.
+[ ] Run focused R3.18T tests, full mimir-replay, workspace check/test/clippy and repository verifier.
+[ ] Require same exact evidence-head normal CI SUCCESS and privacy scan PASS.
+[ ] If Outcome A, admit only the one-bit evidence and define a separate bounded production pass restricted to evidence-observed forms.
 ```

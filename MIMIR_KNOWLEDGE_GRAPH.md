@@ -51,7 +51,8 @@ R3.18Q bounded following-property header production decision / CLOSED           
 R3.18R published following-property header differential decision / Outcome A CLOSED             |
 R3.18S following-property payload evidence decision / Outcome A CLOSED                           |
 R3.18T bounded following-property payload production decision / CLOSED                            |
-R3.18U active published R3.18T following-payload differential spec                                  |
+R3.18U published R3.18T following-payload differential decision / Outcome A CLOSED                    |
+R3.18V active next property-control bit evidence spec                                                     |
         |                               |
         +---------------+---------------+
                         |
@@ -146,13 +147,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 74. `docs/continuity/MIMIR_R3_18T_EXECUTION_SPEC.md`
 75. `docs/continuity/MIMIR_R3_18T_DECISION.md`
 76. `docs/continuity/MIMIR_R3_18U_EXECUTION_SPEC.md`
-77. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-78. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-79. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-80. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-81. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-82. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-83. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+77. `docs/continuity/MIMIR_R3_18U_DECISION.md`
+78. `docs/continuity/MIMIR_R3_18V_EXECUTION_SPEC.md`
+79. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+80. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+81. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+82. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+83. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+84. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+85. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -752,3 +755,12 @@ next                        R3.18M true-only one-bit production composition
 - T authority `32049639448/95445637593`; candidate/PR/published CI `32049893219`, `32050205389`, `32050650336` all SUCCESS.
 - R3.18U is read-only published-T differential on the exact 47-row R3.18S lane.
 - Another property control/header/payload, generalized loop/cursor, context/tag widening, next actor/frame and semantic/runtime/export layers remain closed.
+
+
+### R3.18U published following-payload differential: OUTCOME A / CLOSED
+- production unchanged at `c2765ab9f04f9c981a6868cb6503bdf0e339ce1b` / tree `a6f27fe606cd3446da02ef1cb8cf53fff071e383`
+- evidence `a53d0c8b4c88bab229e5ac9ec2db7dda5f9400b4` / tree `f0c716278ef47665e43572d0129c4e8acd9be182` / `32055189778/95463604513` SUCCESS; exact-head CI `32055189737/95463604366` SUCCESS
+- artifact `9296199852` / `20181` bytes / `sha256:13262328812bc56c9ea58bbc42364308fb6c65487c51f062296b14993f3a626e`
+- published T = frozen S on 47/47 rows; 18/18 exact contexts; header identity 47/47; mismatch 0; witness reselection 0
+- Boolean=39×1 bit / ActiveActor=8×33 bits; all required negatives 47/47; another-control bits 0; privacy PASS
+- next exact pass: R3.18V read-only evidence for exactly one next property-control bit at published T stop; no next header/payload
