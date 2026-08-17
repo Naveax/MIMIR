@@ -9956,3 +9956,139 @@ mod r3_18q_following_header_contract_tests {
         ));
     }
 }
+
+/// Exactly one R3.18S-admitted payload after the bounded R3.18Q following-property header.
+///
+/// This enum is deliberately closed to the two payload forms proven on the immutable
+/// R3.18S lane. It is not a generic attribute-payload carrier.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadValueV1 {
+    Boolean(ReplayNetworkPrimitiveScalarDecodeV1),
+    ActiveActor(ReplayNetworkK2DecodeV1),
+}
+
+/// Bounded composition of the published R3.18Q following header plus exactly one
+/// R3.18S-admitted payload.
+///
+/// `stop_bit` is exactly the first bit after that payload. It does not imply permission
+/// to read another property-control bit, another header/payload, actor, frame, or loop.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadV1 {
+    pub header_composition:
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingHeaderV1,
+    pub following_payload:
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadValueV1,
+    pub stop_bit: u64,
+}
+
+/// Compose exactly one R3.18S-admitted following payload after the published R3.18Q
+/// following-property header.
+///
+/// This function deliberately stops at the payload end and never reads the next
+/// `property_present` control bit. Exact R3.18P structural/version membership remains
+/// enforced by the nested R3.18Q header composition.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadV1> {
+    let k2_context = ReplayNetworkK2DecodeContextV1 {
+        net_version: context.net_version,
+        is_rl_223: context.is_rl_223,
+    };
+    let header_composition =
+        decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_header_v1(
+            network_bytes,
+            prior,
+            lookup_plan,
+            context,
+        )?;
+
+    let tag = header_composition
+        .following_header
+        .resolved_attribute_tag
+        .ok_or_else(|| {
+            MimirError::message(
+                "replay existing actor R3.18T following payload error: missing-resolved-attribute-tag",
+            )
+        })?;
+    let payload_start_bit = header_composition
+        .following_header
+        .payload_start_bit
+        .ok_or_else(|| {
+            MimirError::message(
+                "replay existing actor R3.18T following payload error: missing-payload-start",
+            )
+        })?;
+    if payload_start_bit != header_composition.stop_bit
+        || payload_start_bit != header_composition.following_header.stop_bit
+    {
+        return Err(MimirError::message(format!(
+            "replay existing actor R3.18T following payload error: header-stop-mismatch: payload_start={payload_start_bit}, composition_stop={}, header_stop={}",
+            header_composition.stop_bit, header_composition.following_header.stop_bit,
+        )));
+    }
+
+    let (following_payload, stop_bit) = match tag {
+        ReplayNetworkAttributeTagV1::Boolean => {
+            let decoded =
+                decode_replay_network_primitive_scalar_v1(network_bytes, payload_start_bit, tag)?;
+            if decoded.attribute_tag != ReplayNetworkAttributeTagV1::Boolean
+                || decoded.payload_start_bit != payload_start_bit
+                || decoded.payload_width != 1
+                || decoded.payload_end_bit != decoded.stop_bit
+            {
+                return Err(MimirError::message(format!(
+                    "replay existing actor R3.18T following payload error: boolean-boundary-mismatch: start={}, end={}, width={}, stop={}",
+                    decoded.payload_start_bit,
+                    decoded.payload_end_bit,
+                    decoded.payload_width,
+                    decoded.stop_bit,
+                )));
+            }
+            let stop_bit = decoded.stop_bit;
+            (
+                ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadValueV1::Boolean(decoded),
+                stop_bit,
+            )
+        }
+        ReplayNetworkAttributeTagV1::ActiveActor => {
+            let decoded =
+                decode_replay_network_k2_v1(network_bytes, payload_start_bit, tag, k2_context)?;
+            if decoded.attribute_tag != ReplayNetworkAttributeTagV1::ActiveActor
+                || decoded.payload_start_bit != payload_start_bit
+                || decoded.payload_width != 33
+            {
+                return Err(MimirError::message(format!(
+                    "replay existing actor R3.18T following payload error: active-actor-boundary-mismatch: start={}, end={}, width={}",
+                    decoded.payload_start_bit, decoded.payload_end_bit, decoded.payload_width,
+                )));
+            }
+            let stop_bit = decoded.payload_end_bit;
+            (
+                ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadValueV1::ActiveActor(decoded),
+                stop_bit,
+            )
+        }
+        other => {
+            return Err(MimirError::message(format!(
+                "replay existing actor R3.18T following payload error: unsupported-following-payload-tag: R3.18S admits only Boolean/ActiveActor, got {other:?}",
+            )));
+        }
+    };
+
+    if stop_bit < payload_start_bit {
+        return Err(MimirError::message(format!(
+            "replay existing actor R3.18T following payload error: invalid-stop: payload_start={payload_start_bit}, stop={stop_bit}",
+        )));
+    }
+
+    Ok(
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadV1 {
+            header_composition,
+            following_payload,
+            stop_bit,
+        },
+    )
+}
