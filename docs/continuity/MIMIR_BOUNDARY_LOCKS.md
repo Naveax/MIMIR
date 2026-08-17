@@ -6,27 +6,27 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18W production / R3.18X active
+# 0. Current override — R3.18X admitted / R3.18Y active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## OPEN / PRODUCTION
-- R3.18W at `58872e94f00ef094807f21ab2ff984ac66b97d91` validates one exact R3.18T following-payload end, consumes exactly one `property_present` bit, admits true only, and stops one bit later.
+## PRODUCTION
+- R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`: exact R3.18T payload-end validation, one true-only property control bit, false fail-closed, stop +1.
 
-## CLOSED EVIDENCE — R3.18V Outcome A
-- immutable 47 rows; false=0 / true=47; native-oracle mismatch 0;
-- next stream/header/payload/second-control bits consumed 0/0/0/0;
-- artifact `9297068554` / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2`.
+## CLOSED EVIDENCE — R3.18X Outcome A
+- published W exact 47/47 on frozen V lane; false=0 true=47; mismatch 0;
+- repeat/truncation/false/prior-boundary/post-stop-poison 47/47;
+- next stream/header/payload/second-control consumption 0/0/0/0;
+- artifact `9299790869` / `sha256:ac32daa92d88f1753da34123d074dcd8f3c98c58fdeb0b91f89cb837ea02ebff`.
 
-## ACTIVE READ-ONLY GATE — R3.18X
-- run published W on exactly the same 47 V witnesses;
-- require exact control start/value/end/stop and mismatch 0;
-- production mutation and adjacent decoding remain forbidden.
+## ACTIVE READ-ONLY GATE — R3.18Y
+- observe exactly one following header beginning at the W boundary;
+- discover structural tuples from evidence, do not inherit R3.18P by assumption;
+- stop exactly at payload_start; following payload and another control remain closed.
 
 ## CLOSED
-- false control success at this exact boundary;
-- next stream/header/payload, second later control, repeated/generalized property loop/cursor;
-- next actor/frame/lifecycle; raw state, events, slices, skills, counterfactual runtime and exports.
+- false control success; following payload; another property control; generic/repeated property cursor/loop;
+- next actor/frame/lifecycle; raw state/events/slices/skills/counterfactual/runtime/export widening.
 
 ---
 

@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18W — bounded true-only after-following-payload control composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18V — next property-control bit evidence / Outcome A / 47/47 / false=0 true=47 / mismatch 0 / adjacent bits 0/0/0/0
+  R3.18X — published R3.18W differential / Outcome A / 47/47 / true=47 false=0 / mismatch 0 / adjacent 0/0/0/0
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18P — following-property header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / zero cross-product widening
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18V — one next property_present bit after R3.18T / Outcome A / 47 rows / false=0 true=47 / no next stream-header-payload-second-control
+  R3.18X — published W one-bit differential / Outcome A / 47 rows / all negatives 47/47 / no adjacent consumption
 
 CURRENT_PASS:
-  R3.18X — published R3.18W after-following-payload control differential
+  R3.18Y — one following property header evidence after published R3.18W
 
 CURRENT_PASS_TYPE:
-  read-only differential / validate published R3.18W on immutable R3.18V 47-row lane; exact one-bit start/value/end/stop; no next header
+  read-only structural evidence / observe exactly one following header at W boundary; discover exact tuples; stop at payload_start; no payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -101,8 +101,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18U CLOSED Outcome A: published T matched frozen S 47/47 across 18/18 contexts; mismatch 0; header identity 47/47; another-control bits 0; artifact 9296199852
   R3.18V CLOSED Outcome A: exactly one next property_present bit matched 47/47; false=0 true=47; mismatch 0; next stream/header/payload/second-control bits 0/0/0/0; artifact 9297068554
   R3.18W PRODUCTION at 58872e94f00ef094807f21ab2ff984ac66b97d91: validates exact R3.18T payload end, consumes exactly one following property_present bit, admits true only, false fails closed, stops one bit later
-  R3.18X ACTIVE read-only published-W differential on the immutable R3.18V 47-row lane
-  NO false success, next stream/header/payload, second later control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18X CLOSED Outcome A: published W exact 47/47; true=47 false=0; mismatch 0; all negatives 47/47; adjacent stream/header/payload/second-control 0/0/0/0; artifact 9299790869
+  R3.18Y ACTIVE read-only evidence for exactly one following property header beginning at the W boundary and stopping at payload_start
+  NO following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -141,6 +142,16 @@ R3_18Q_PRODUCTION_CLOSURE:
   Q/R3.18M control equality: 47/47; Q/stateless-header equality: 47/47
   following payload / another-control bits consumed: 0/0
   clean scope: lib.rs + r3_18q_following_header.rs only; Cargo/fixture/corpus/docs/workflow/support mutation 0
+R3_18X_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at 58872e94f00ef094807f21ab2ff984ac66b97d91
+  authority head/tree: 75259a9b3705b16b21d89b975ee584a7765e8134 / fe90b38c98039cd1dde05b96613645d0ab69a8a9
+  authority run/job: 32065498170 / 95496521378 SUCCESS
+  exact-head normal CI: 32065498109 / 95496518762 SUCCESS
+  artifact: 9299790869 / 19761 bytes / sha256:ac32daa92d88f1753da34123d074dcd8f3c98c58fdeb0b91f89cb837ea02ebff
+  frozen rows 47/47 / published T exact 47/47 / published-W=frozen-V mismatch 0
+  control distribution false=0 true=47; repeatability/truncation/false/prior-boundary/post-stop-poison 47/47
+  next stream/header/payload/second-control consumed 0/0/0/0; witness reselection 0; privacy PASS
+  production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
 R3_18W_PRODUCTION_CLOSURE:
   Outcome A / production 58872e94f00ef094807f21ab2ff984ac66b97d91 / tree d6965d77903ea99dad0465bb350b6a673ee7dd00
   parent: 49011a8be77e59b1834c0ecbb648ee6d699ca6c8
@@ -3485,7 +3496,7 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18X
+# HISTORICAL PASS CHECKLIST — R3.18X (CLOSED OUTCOME A)
 
 **Goal:** validate published R3.18W on the exact immutable R3.18V 47-row lane through its one-bit control stop. Production remains frozen.
 
@@ -3503,4 +3514,26 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 [ ] Produce privacy-safe immutable artifact with per-row comparisons, aggregates and SHA-256 manifest.
 [ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0 and same-head normal CI SUCCESS.
 [ ] Outcome A admits only the published differential; the next header requires separate R3.18Y evidence.
+```
+
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18Y
+
+**Goal:** on exactly the frozen 47 X/V witnesses, validate one following header after published W and stop at payload_start. Production remains frozen.
+
+```text
+[ ] Fetch fresh main and verify production 58872e94f00ef094807f21ab2ff984ac66b97d91 / tree d6965d77903ea99dad0465bb350b6a673ee7dd00.
+[ ] Verify X authority 32065498170/95496521378, same-head CI 32065498109/95496518762, artifact 9299790869/sha256:ac32daa92d88f1753da34123d074dcd8f3c98c58fdeb0b91f89cb837ea02ebff.
+[ ] Verify exact 47 replay identities and witness reselection = 0.
+[ ] Reconstruct published T + W exactly before each header observation.
+[ ] Starting at W boundary, measure exactly one header with pinned Boxcars + independent/native comparison.
+[ ] Record stream-id bounds/width/value, property object, tag, version tuple, payload_start for every row.
+[ ] Discover exact unique structural tuples and multiplicities; do not assume R3.18P applies.
+[ ] Require native/oracle mismatch 0 and deterministic double-run equality.
+[ ] Run truncation, prior-stop, wrong-actor, lookup/context and post-payload-start poison negatives.
+[ ] Prove following payload bits = 0 and another-control bits = 0.
+[ ] Produce privacy-safe immutable artifact and same-head normal CI SUCCESS.
+[ ] Production/Cargo/fixture/corpus/support mutation = 0/0/0/0/0.
 ```

@@ -730,3 +730,13 @@ Next exact pass:
 - R3.18V frozen evidence remains `9297068554` / `sha256:e17426aad6d476eba17bb471dc92cd24b4b4d8727ad427ad15fa6e9c1dda9eb2` with 47 true, 0 false and adjacent consumption 0/0/0/0.
 - Production/Cargo/fixture/corpus/docs/support mutation outside the two-file clean production scope: 0/0/0/0/0/0.
 - Opened R3.18X as a separate read-only published-W differential on exactly the same 47 V witnesses.
+
+## 2026-08-17 — R3.18X Outcome A admitted / R3.18Y opened
+
+- R3.18X authority `32065498170/95496521378` SUCCESS on exact evidence head `75259a9b3705b16b21d89b975ee584a7765e8134` / tree `fe90b38c98039cd1dde05b96613645d0ab69a8a9`.
+- Same-head normal CI `32065498109/95496518762` SUCCESS.
+- Artifact `9299790869` / 19761 bytes / `sha256:ac32daa92d88f1753da34123d074dcd8f3c98c58fdeb0b91f89cb837ea02ebff`; ZIP digest exact; 8/8 internal manifest payload hashes PASS.
+- Frozen rows 47/47; true=47 false=0; published T exact 47/47; published W vs frozen V mismatch 0.
+- Repeatability/truncation/false/prior-boundary/post-stop-poison negatives 47/47; adjacent stream/header/payload/second-control 0/0/0/0.
+- Witness reselection 0; privacy PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+- Opened R3.18Y as separate read-only one-header discovery. No P-contract inheritance by assumption; no payload or another control.
