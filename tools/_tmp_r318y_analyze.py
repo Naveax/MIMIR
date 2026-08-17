@@ -27,7 +27,7 @@ def main():
     o=parse(oracle,'R3_18Y_HEADER'); n=parse(native,'R3_18Y_NATIVE')
     req(set(o)==set(n),'oracle/native label set mismatch')
     int_fields=['frame_index','actor_ordinal','actor_context_object_id','property_present_start_bit','property_present_end_bit','stream_id_start_bit','stream_id_end_bit','stream_id','stream_id_bound','prop_id_bits','property_object_id','version_major','version_minor','net_version','payload_start_bit']
-    nmap={'property_present_start_bit':'present_start','property_present_end_bit':'present_end','stream_id_start_bit':'stream_start','stream_id_end_bit':'stream_end','stream_id_bound':'stream_bound','prop_id_bits':'prop_bits','property_object_id':'property_object'}
+    nmap={'property_present_start_bit':'present_start','property_present_end_bit':'present_end','stream_id_start_bit':'stream_start','stream_id_end_bit':'stream_end','stream_id_bound':'stream_bound','prop_id_bits':'prop_bits','property_object_id':'property_object','payload_start_bit':'payload_start'}
     rows=[]; tuples=collections.Counter(); tags=collections.Counter(); mismatch=0
     for label in sorted(o):
         a=o[label]; b=n[label]; exact=True
