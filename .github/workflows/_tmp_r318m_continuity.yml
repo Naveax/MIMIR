@@ -1,0 +1,104 @@
+name: R3.18M Continuity Sync
+on:
+  push:
+    branches: [continuity/r318m-sync-v1]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE: fd74ba8c520ab83b808730572c41e45d6dc616e6
+      BASE_TREE: 6285928b3ca724c77b761e70c54f7bd0763f11f0
+      PUBLISHED_CI: '32000211020'
+      PUBLISHED_CI_JOB: '95298954375'
+      CANDIDATE_CI: '31999898754'
+      CANDIDATE_CI_JOB: '95298116788'
+      IMPL_RUN: '31999687944'
+      IMPL_JOB: '95297550306'
+    steps:
+      - uses: actions/checkout@v6
+        with: {fetch-depth: 0}
+      - name: Authority freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_CI --jq .head_sha)" = "$BASE"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_CI --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/jobs/$PUBLISHED_CI_JOB --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_CI --jq .head_sha)" = "$BASE"
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_CI --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/jobs/$CANDIDATE_CI_JOB --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/runs/$IMPL_RUN --jq .conclusion)" = success
+          test "$(gh api repos/$GITHUB_REPOSITORY/actions/jobs/$IMPL_JOB --jq .conclusion)" = success
+          mapfile -t got < <(git diff --name-only "$BASE" HEAD | sort)
+          test "${#got[@]}" -eq 2
+          test "${got[0]}" = '.github/workflows/_tmp_r318m_continuity.yml'
+          test "${got[1]}" = 'tools/_tmp_r318m_continuity.py'
+      - name: Apply continuity patch and verify archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python3 tools/_tmp_r318m_continuity.py
+          if ($LASTEXITCODE -ne 0) { throw "continuity patch failed: $LASTEXITCODE" }
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json > $null
+          if ($LASTEXITCODE -ne 0) { throw "state json invalid: $LASTEXITCODE" }
+          & ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed: $LASTEXITCODE" }
+      - name: Continuity scope audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t got < <({ git diff --name-only "$BASE"; git ls-files --others --exclude-standard; } | sort -u)
+          printf '%s\n' "${got[@]}"
+          test "${#got[@]}" -eq 9
+          expected=(
+            '.github/workflows/_tmp_r318m_continuity.yml'
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_R3_18M_DECISION.md'
+            'docs/continuity/MIMIR_R3_18N_EXECUTION_SPEC.md'
+            'tools/_tmp_r318m_continuity.py'
+          )
+          for i in "${!expected[@]}"; do test "${got[$i]}" = "${expected[$i]}"; done
+          test -z "$(git diff --name-only "$BASE" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus)"
+          echo 'R3_18M_CONTINUITY_SCOPE=PASS clean_docs=7 temporary=2'
+      - name: Build clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318m_continuity.py /tmp/r318m_continuity.py
+          git reset --hard "$BASE"
+          git clean -fdx
+          python3 /tmp/r318m_continuity.py
+          mapfile -t got < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          printf '%s\n' "${got[@]}"
+          test "${#got[@]}" -eq 7
+          expected=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_R3_18M_DECISION.md'
+            'docs/continuity/MIMIR_R3_18N_EXECUTION_SPEC.md'
+          )
+          for i in "${!expected[@]}"; do test "${got[$i]}" = "${expected[$i]}"; done
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "${expected[@]}"
+          git commit -m 'Admit R3.18M and open R3.18N'
+          echo "R3_18M_CONTINUITY_SHA=$(git rev-parse HEAD)"
+          echo "R3_18M_CONTINUITY_TREE=$(git rev-parse HEAD^{tree})"
+          git push origin HEAD:refs/heads/candidate/r318m-continuity-v1
+          echo 'R3_18M_CONTINUITY_CANDIDATE_PUSH=PASS'
