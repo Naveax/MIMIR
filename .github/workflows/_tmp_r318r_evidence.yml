@@ -82,6 +82,12 @@ jobs:
           upload_digest = os.environ['ARTIFACT_DIGEST']
           expected_repository = os.environ['GITHUB_REPOSITORY']
 
+          def normalize_sha256(value):
+              if value is None:
+                  return None
+              value = value.strip().lower()
+              return value[7:] if value.startswith('sha256:') else value
+
           matches = [a for a in artifacts.get('artifacts', []) if a.get('id') == artifact_id]
           print('MATCH_COUNT', len(matches), flush=True)
           assert len(matches) == 1, {
@@ -90,6 +96,8 @@ jobs:
           }
           artifact = matches[0]
           rest_digest = artifact.get('digest')
+          rest_digest_normalized = normalize_sha256(rest_digest)
+          upload_digest_normalized = normalize_sha256(upload_digest)
 
           print('ARTIFACT', json.dumps({
               'id': artifact.get('id'),
@@ -105,11 +113,13 @@ jobs:
               'repository_full_name': run.get('repository', {}).get('full_name'),
           }, sort_keys=True), flush=True)
           print('UPLOAD_DIGEST', upload_digest, flush=True)
+          print('REST_DIGEST_NORMALIZED', rest_digest_normalized, flush=True)
+          print('UPLOAD_DIGEST_NORMALIZED', upload_digest_normalized, flush=True)
 
           checks = {
               'artifact_name': artifact.get('name') == expected_name,
               'artifact_expired': artifact.get('expired') is False,
-              'artifact_digest_if_present': rest_digest is None or rest_digest == upload_digest,
+              'artifact_digest_if_present': rest_digest is None or rest_digest_normalized == upload_digest_normalized,
               'run_id': run.get('id') == run_id,
               'head_branch': run.get('head_branch') == expected_branch,
               'head_sha': run.get('head_sha') == expected_sha,
@@ -121,6 +131,8 @@ jobs:
               'artifact_size_in_bytes': artifact.get('size_in_bytes'),
               'artifact_rest_digest': rest_digest,
               'artifact_upload_digest': upload_digest,
+              'artifact_rest_digest_normalized': rest_digest_normalized,
+              'artifact_upload_digest_normalized': upload_digest_normalized,
               'artifact_expired': artifact.get('expired'),
               'run_id': run.get('id'),
               'head_branch': run.get('head_branch'),
