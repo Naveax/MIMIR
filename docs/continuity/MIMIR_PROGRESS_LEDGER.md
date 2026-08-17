@@ -515,3 +515,45 @@ Next exact pass: `R3.14E — native first-envelope differential audit`.
 - frozen 47/47; false=0 true=47; published R3.18M/oracle mismatch=0
 - following stream/header/payload/another-control bits consumed 0/0/0/0; reselection=0
 - next canonical pass: **R3.18O following-property header evidence**
+
+## 2026-08-17 — R3.18O — Following-property header evidence
+
+Production base SHA: `fd74ba8c520ab83b808730572c41e45d6dc616e6`
+Production commit SHA: unchanged
+Pass type: read-only evidence / differential
+Outcome: **A — ADMITTED / READ-ONLY**
+
+What changed:
+- no production code changed;
+- the exact frozen 47-row R3.18N lane was extended only through one following existing-actor property header and stopped at `payload_start`.
+
+Evidence:
+- evidence `5046e1594b87ce2828db5faa48aceba456c3166f` / `32017369100` / `95349613184` SUCCESS;
+- same-head CI `32017369071` / `95349613066` SUCCESS;
+- artifact `9284144768` / `25129` bytes / `sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d`;
+- artifact inner manifest 11/11 exact;
+- R3.18J reconstruction 47/47; published R3.18M control 47/47; following header 47/47; mismatch 0;
+- 18 exact structural context tuples over 47 rows; Boolean=39 / ActiveActor=8;
+- all 47 rows 868.32/net10; witness reselection 0.
+
+Validation:
+- property-present and stream truncation, prior-stop mismatch, wrong actor-stream context, outside-exact-tuple, repeatability and post-payload-start poison controls PASS;
+- following payload / another-control bits consumed 0/0;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0;
+- privacy PASS.
+
+Boundaries opened:
+- evidence support only for the exact 18 observed following-header structural contexts.
+
+Boundaries still closed:
+- production composition of that following header;
+- any context outside the exact observed tuples;
+- following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle and all semantic/runtime layers.
+
+Important negative facts / anti-regressions:
+- tag/component membership alone is not support;
+- do not cross-product individually observed bounds, widths, object indices or tags;
+- Boxcars continuing its own parse after the instrumentation point is not MIMIR observer consumption.
+
+Next exact pass:
+- `R3.18P — following-property header exact-context contract`.

@@ -45,7 +45,8 @@ R3.18K published second-payload differential decision / Outcome A CLOSED
 R3.18L following-property control-bit evidence decision / Outcome A CLOSED
 R3.18M bounded after-second-payload true-only control production decision / CLOSED
 R3.18N published after-second-payload control differential decision / Outcome A CLOSED
-R3.18O active following-property header evidence spec                             |
+R3.18O following-property header evidence decision / Outcome A CLOSED             |
+R3.18P active following-property exact-context contract spec                               |
         |                               |
         +---------------+---------------+
                         |
@@ -126,13 +127,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 60. `docs/continuity/MIMIR_R3_18N_EXECUTION_SPEC.md`
 61. `docs/continuity/MIMIR_R3_18N_DECISION.md`
 62. `docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md`
-63. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-64. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-65. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-66. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-67. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-68. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-69. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+63. `docs/continuity/MIMIR_R3_18O_DECISION.md`
+64. `docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md`
+65. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+66. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+67. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+68. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+69. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+70. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+71. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -162,10 +165,18 @@ scripts/verify_mimir_knowledge_archive.ps1
 - following stream/header/payload/another-control bits consumed 0/0/0/0
 - next exact pass: R3.18O following-property header evidence, hard stop at payload_start
 
-### R3.18O following-property header evidence: ACTIVE
-- exact frozen 47-row N/L lane only; no witness reselection
-- evidence-only; production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6`
-- stop at following payload_start; payload and another control remain closed
+### R3.18O following-property header evidence: OUTCOME A / CLOSED
+- production unchanged at `fd74ba8c520ab83b808730572c41e45d6dc616e6`
+- evidence `5046e1594b87ce2828db5faa48aceba456c3166f` / `32017369100/95349613184` SUCCESS; same-head CI `32017369071/95349613066` SUCCESS
+- artifact `9284144768` / `sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d` / `25129` bytes; inner manifest 11/11 exact
+- frozen 47/47; following header exact 47/47; mismatch 0; witness reselection 0
+- 18 exact structural contexts; Boolean=39 / ActiveActor=8; all 868.32/net10
+- following payload / another-control consumption 0/0; no production widening
+
+### R3.18P following-property header context contract: ACTIVE
+- contract-only; production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6`
+- exact R3.18O 18-tuple identity + 47 multiplicities only
+- no tag/component-only support, no Cartesian product, no payload/control/loop widening
 
 ## Current replay-decoder chain
 

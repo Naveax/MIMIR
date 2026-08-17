@@ -6,11 +6,11 @@
   "last_production_code_sha": "fd74ba8c520ab83b808730572c41e45d6dc616e6",
   "last_production_milestone": "R3.18M",
   "last_production_milestone_name": "bounded native after-second-payload true-only control composition",
-  "last_completed_read_only_audit": "R3.18N",
-  "current_pass": "R3.18O",
-  "current_pass_kind": "read-only following-property header evidence",
-  "current_pass_goal": "Characterize exactly one following property header after the published R3.18M true-only control on the same frozen 47-row lane and stop at payload_start.",
-  "current_pass_stop_boundary": "Stop exactly at following-property payload_start. Consume zero following payload bits and zero another-control bits; no generalized loop or later runtime widening.",
+  "last_completed_read_only_audit": "R3.18O",
+  "current_pass": "R3.18P",
+  "current_pass_kind": "contract-only following-property header exact-context crystallization",
+  "current_pass_goal": "Crystallize the immutable R3.18O 18 exact following-header structural context tuples and their 47-row multiplicities into one privacy-safe committed contract artifact with no cross-product widening.",
+  "current_pass_stop_boundary": "No production code change. Admit only exact R3.18O tuple identity; no following payload, another control, generalized loop, actor/frame, semantic or runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -51,7 +51,8 @@
   "bounded_integer_rule": "Not fixed-width. Decode low bits according to bound and preserve the value-dependent extra discriminator-bit behavior used by Rocket League/Boxcars.",
   "closed_now": [
     "false following property control in after-second-payload production context (R3.18L observed false=0)",
-    "following property stream/header/payload after the R3.18M control bit",
+    "production following-property header composition after the R3.18M control bit (R3.18O is evidence-only)",
+    "following payload after the R3.18O evidence stop",
     "another property control bit beyond the R3.18M stop",
     "repeated/generalized production property_present loop",
     "generic repeatedly-chainable public property cursor",
@@ -130,6 +131,8 @@
     "docs/continuity/MIMIR_R3_18I_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18N_DECISION.md",
     "docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18O_DECISION.md",
+    "docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -148,8 +151,8 @@
     "docs/continuity/MIMIR_R3_18M_DECISION.md",
     "docs/continuity/MIMIR_R3_18N_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18N",
-  "last_completed_evidence_outcome": "A — published R3.18M API exact on frozen 47-row lane; false=0 true=47; mismatch 0; following stream/header/payload/another-control consumption 0/0/0/0.",
+  "last_completed_evidence_pass": "R3.18O",
+  "last_completed_evidence_outcome": "A — exact frozen 47-row following-property header evidence; 47/47 native/oracle exact, 18 exact structural context tuples, mismatch 0, witness reselection 0, following payload/another-control consumption 0/0.",
   "last_completed_contract_pass": "R3.17N",
   "r3_14a": {
     "outcome": "A",
@@ -1632,5 +1635,46 @@
     "another_control_bits_consumed": 0,
     "witness_reselection": 0,
     "next_pass": "R3.18O"
+  },
+  "r3_18o": {
+    "outcome": "A — admitted / read-only evidence",
+    "production_source_changed": false,
+    "production_sha": "fd74ba8c520ab83b808730572c41e45d6dc616e6",
+    "base_main_sha": "c1d68daf989952ccf40645ca99616bccf43bb2f4",
+    "evidence_head_sha": "5046e1594b87ce2828db5faa48aceba456c3166f",
+    "evidence_tree_sha": "74fb036dfde837e3ecb7e459da00df9ff6c22e28",
+    "evidence_run": 32017369100,
+    "evidence_job": 95349613184,
+    "same_head_ci_run": 32017369071,
+    "same_head_ci_job": 95349613066,
+    "artifact_id": 9284144768,
+    "artifact_size": 25129,
+    "artifact_sha256": "e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d",
+    "artifact_inner_manifest_verified": "11/11",
+    "frozen_rows": 47,
+    "native_oracle_exact": "47/47",
+    "native_oracle_mismatch": 0,
+    "witness_reselection": 0,
+    "unique_exact_header_context_tuples": 18,
+    "attribute_tag_counts": {
+      "ActiveActor": 8,
+      "Boolean": 39
+    },
+    "prop_id_bits_counts": {
+      "5": 43,
+      "6": 4
+    },
+    "stream_id_bound_counts": {
+      "60": 43,
+      "67": 1,
+      "72": 2,
+      "110": 1
+    },
+    "version_context": "868.32/net10 on 47/47",
+    "following_payload_bits_consumed": 0,
+    "another_control_bits_consumed": 0,
+    "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
+    "privacy": "PASS",
+    "next_pass": "R3.18P"
   }
 }

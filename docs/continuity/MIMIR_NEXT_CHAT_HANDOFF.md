@@ -1,16 +1,18 @@
-# MIMIR Next Chat Handoff — R3.18O
+# MIMIR Next Chat Handoff — R3.18P
 
-Fresh-read `main` before work. Production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6` at R3.18M. R3.18N is admitted Outcome A and production source did not change.
+Fresh-read `main` before work. Production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6` at R3.18M. R3.18O is admitted Outcome A and production source did not change.
 
-Canonical R3.18N authority:
-- evidence head `9bbf59745c950b7be5a5a592724f41db80874973`
-- run/job `32007040663` / `95318554719` SUCCESS
-- same-head CI `32007040500` / `95318554225` SUCCESS
-- artifact `9280430420`
-- digest `sha256:772447a31e174355b3848605357667936ca522777d601dda504896aa0f663102`
-- exact frozen rows `47/47`, false=0 true=47, published API/oracle mismatch=0
-- following stream/header/payload/another-control consumption `0/0/0/0`
+Canonical R3.18O authority:
+- evidence head `5046e1594b87ce2828db5faa48aceba456c3166f` / tree `74fb036dfde837e3ecb7e459da00df9ff6c22e28`
+- run/job `32017369100` / `95349613184` SUCCESS
+- same-head CI `32017369071` / `95349613066` SUCCESS
+- artifact `9284144768` / `25129` bytes
+- digest `sha256:e6dc02f087395e2d6b5fb568233484430feba51223848367edd2c6cf15b4b94d`
+- inner manifest `11/11` exact
+- exact frozen rows `47/47`; following-header native/oracle mismatch `0`
+- exact structural contexts `18`; tags Boolean=39 / ActiveActor=8
+- following payload / another-control consumption `0/0`; witness reselection `0`
 
-First unfinished canonical pass: **R3.18O following-property header evidence**.
+First unfinished canonical pass: **R3.18P following-property header exact-context contract**.
 
-Read `MIMIR_CONTINUE_HERE.md`, apply the `MIMIR_KNOWLEDGE_GRAPH.md` mandatory order, then execute `docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md`. Reuse the exact frozen N/L witness lane; witness reselection is forbidden. Stop at following `payload_start`; do not consume payload or another control bit and do not modify production Rust during evidence.
+Read `MIMIR_CONTINUE_HERE.md`, apply the `MIMIR_KNOWLEDGE_GRAPH.md` mandatory order, then execute `docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md`. Derive the contract only from immutable R3.18O authority. Preserve all 18 exact tuples and all 47 multiplicities. No component-wise or Cartesian-product widening. Production Rust remains frozen.
