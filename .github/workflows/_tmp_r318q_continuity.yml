@@ -39,6 +39,17 @@ jobs:
           git worktree add --detach "$WORK" "$BASE_MAIN"
           cd "$WORK"
           python3 "$ROOT/tools/_tmp_r318q_continuity.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in [
+              'docs/continuity/MIMIR_CURRENT_STATE.md',
+              'docs/continuity/MIMIR_R3_18Q_DECISION.md',
+              'docs/continuity/MIMIR_R3_18R_EXECUTION_SPEC.md',
+          ]:
+              p=Path(name)
+              lines=p.read_text(encoding='utf-8').splitlines()
+              p.write_text('\n'.join(line.rstrip() for line in lines)+'\n',encoding='utf-8',newline='\n')
+          PY
 
           expected=(
             MIMIR_CONTINUE_HERE.md
