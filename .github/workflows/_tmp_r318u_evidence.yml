@@ -34,7 +34,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bash tools/_tmp_r318u_run.sh
+          for attempt in 1 2 3; do
+            if bash tools/_tmp_r318u_run.sh; then
+              echo "R3_18U_RUN_ATTEMPT=$attempt"
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo 'R3_18U_RUN_RETRIES_EXHAUSTED=FAIL'
+              exit 1
+            fi
+            echo "R3_18U_TRANSIENT_RETRY=$attempt"
+            sleep $((attempt * 10))
+          done
 
       - name: Upload immutable R3.18U evidence
         id: upload
