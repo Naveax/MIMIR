@@ -47,7 +47,8 @@ R3.18M bounded after-second-payload true-only control production decision / CLOS
 R3.18N published after-second-payload control differential decision / Outcome A CLOSED
 R3.18O following-property header evidence decision / Outcome A CLOSED             |
 R3.18P following-property exact-context contract decision / Outcome A CLOSED              |
-R3.18Q active bounded following-property header production spec                              |
+R3.18Q bounded following-property header production decision / CLOSED                         |
+R3.18R active published following-property header differential spec                            |
         |                               |
         +---------------+---------------+
                         |
@@ -134,13 +135,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 66. `docs/continuity/MIMIR_R3_18P_ADMITTED_HEADER_CONTEXTS.json`
 67. `docs/continuity/MIMIR_R3_18P_DECISION.md`
 68. `docs/continuity/MIMIR_R3_18Q_EXECUTION_SPEC.md`
-69. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-70. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-71. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-72. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-73. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-74. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-75. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+69. `docs/continuity/MIMIR_R3_18Q_DECISION.md`
+70. `docs/continuity/MIMIR_R3_18R_EXECUTION_SPEC.md`
+71. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+72. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+73. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+74. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+75. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+76. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+77. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -169,6 +172,20 @@ scripts/verify_mimir_knowledge_archive.ps1
 - 47/47 exact; false=0 true=47; published R3.18M/oracle mismatch=0; witness reselection=0
 - following stream/header/payload/another-control bits consumed 0/0/0/0
 - next exact pass: R3.18O following-property header evidence, hard stop at payload_start
+
+### R3.18Q following-property header: PRODUCTION / CLOSED
+- production `f41c59d26ed6c810a640b4fa8cd76129decb32aa` / tree `606db4b5778e5218f2bd0117cc5dd72d7f3e37a5`; parent `1a3f89e7256c7c7ff4bf6b747a434504f1f2e572`
+- lib/test blobs `b01b1e8629a4f4bc2452e67024ffb0d064bf58fb` / `4bb65af1d533752edc062202192232d6f1d4239c`
+- authority `32026722346/95377559363`, ops CI `32026722356/95377559490`, clean-candidate CI `32027055064/95378560725`, published CI `32027421491/95379649817` SUCCESS
+- immutable R3.18P contract `0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b`; exact contexts 18; frozen Q reconstruction 47/47
+- Q/R3.18M control equality 47/47; Q/stateless-header equality 47/47; payload/another-control consumption 0/0
+- next exact pass: R3.18R published R3.18Q API differential on the immutable R3.18O 47-row lane
+
+### R3.18R published following header differential: ACTIVE
+- read-only only; production `f41c59d26ed6c810a640b4fa8cd76129decb32aa` frozen
+- source lane: immutable R3.18O artifact `9284144768` / `sha256:e6dc02f08ad025e816d772227a8c21a595902e45a9d71b5a9eb07c28fab4b94d` and exact R3.18P contract
+- require 47/47 published-Q/oracle equality, exact tuple membership, negative controls, privacy and zero mutation
+- following payload and another property control remain closed
 
 ### R3.18O following-property header evidence: OUTCOME A / CLOSED
 - production unchanged at `fd74ba8c520ab83b808730572c41e45d6dc616e6`

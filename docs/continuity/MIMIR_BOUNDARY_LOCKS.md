@@ -646,3 +646,19 @@ CLOSED:
   repeated/generalized property loop
   next actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening
 ```
+
+## R3.18Q following-property header production lock
+
+- Production SHA/tree: `f41c59d26ed6c810a640b4fa8cd76129decb32aa` / `606db4b5778e5218f2bd0117cc5dd72d7f3e37a5`.
+- Exact R3.18P contract: `0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b`; membership is the full seven-field tuple only.
+- From one valid R3.18J second payload, R3.18Q reuses R3.18M true control and decodes exactly one stateless following header.
+- Exact stop is the following header `payload_start`; following-payload bits consumed `0`; another-control bits consumed `0`.
+- Frozen authority result: 47/47 Q rows exact, 47/47 R3.18M control equality, 47/47 stateless-header equality.
+- No tag-only/component-only/Cartesian/versionless widening, no repeated/generalized property loop/cursor.
+
+## R3.18R active differential hard stop
+
+- Read-only audit of published R3.18Q on the immutable R3.18O 47-row lane.
+- Production/Cargo/fixture/corpus/support mutation is forbidden.
+- Following payload, another `property_present`, loop/cursor, actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening is forbidden.
+- Outcome A may only open a later separate payload evidence/contract pass; it does not itself admit payload.

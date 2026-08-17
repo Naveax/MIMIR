@@ -575,3 +575,12 @@ Outcome: **A — ADMITTED**
 - no production/Cargo/fixture/corpus/support mutation.
 
 Next exact pass: **R3.18Q bounded following-property header production composition**; hard stop remains following `payload_start`.
+
+## 2026-08-17 — R3.18Q — bounded following-property header production — Outcome A
+
+- Published production `f41c59d26ed6c810a640b4fa8cd76129decb32aa` / tree `606db4b5778e5218f2bd0117cc5dd72d7f3e37a5`; parent `1a3f89e7256c7c7ff4bf6b747a434504f1f2e572`.
+- Authority `32026722346/95377559363` SUCCESS; exact-candidate CI `32027055064/95378560725` SUCCESS; published-main CI `32027421491/95379649817` SUCCESS.
+- Clean scope: `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18q_following_header.rs` only.
+- R3.18P exact contract `0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b`; 18 exact contexts; 47/47 frozen production compositions exact.
+- Q/R3.18M control equality 47/47; Q/stateless-header equality 47/47; following payload / another-control consumption 0/0.
+- Opened R3.18R read-only published-API differential; production frozen.
