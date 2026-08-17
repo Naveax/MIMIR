@@ -70,6 +70,7 @@ jobs:
           p.write_text(s.replace(old,new,1),encoding='utf-8',newline='\n')
           print('R3_18S_UPSTREAM_SCHEMA_NORMALIZATION=PASS')
           PY
+          mkdir -p crates/mimir-replay/examples
           bash tools/_tmp_r318s_run.sh
 
       - name: Upload immutable R3.18S evidence
