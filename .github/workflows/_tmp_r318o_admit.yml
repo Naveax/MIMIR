@@ -31,7 +31,7 @@ jobs:
         shell: bash
         env:
           BASE_MAIN: c1d68daf989952ccf40645ca99616bccf43bb2f4
-          ADMISSION_BRANCH: admission/r318o-following-property-header
+          ADMISSION_BRANCH: admission/r318o-following-property-header-v2
         run: |
           set -euxo pipefail
           OPS="$PWD"
@@ -42,6 +42,35 @@ jobs:
           test "$(git rev-parse origin/main)" = "$BASE_MAIN"
           git worktree add --detach "$WORK" "$BASE_MAIN"
           python3 "$OPS/tools/_tmp_r318o_admit.py" "$WORK"
+
+          python3 - "$WORK" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          root = Path(sys.argv[1])
+          p = root / "docs/continuity/MIMIR_CONTINUITY_STATE.json"
+          d = json.loads(p.read_text(encoding="utf-8"))
+
+          files = d["next_files_to_read"]
+          o_spec = "docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md"
+          o_decision = "docs/continuity/MIMIR_R3_18O_DECISION.md"
+          p_spec = "docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md"
+          files = [x for x in files if x not in {o_decision, p_spec}]
+          idx = files.index(o_spec) + 1
+          files[idx:idx] = [o_decision, p_spec]
+          d["next_files_to_read"] = files
+
+          closed = d["closed_now"]
+          old = "following property stream/header/payload after the R3.18M control bit"
+          if old not in closed:
+              raise SystemExit("closed_now R3.18O wording drift")
+          closed[closed.index(old)] = "production following-property header composition after the R3.18M control bit (R3.18O is evidence-only)"
+          closed.insert(closed.index("another property control bit beyond the R3.18M stop"), "following payload after the R3.18O evidence stop")
+
+          p.write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+          print("R3_18O_ADMISSION_ORDER_FIX=PASS")
+          PY
 
           cd "$WORK"
           git diff --check
@@ -64,8 +93,38 @@ jobs:
 
           git diff --exit-code "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github/workflows
           python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text(encoding='utf-8'))
+          f=d['next_files_to_read']
+          trio=[
+              'docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md',
+              'docs/continuity/MIMIR_R3_18O_DECISION.md',
+              'docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md',
+          ]
+          pos=[f.index(x) for x in trio]
+          if not (pos[0] + 1 == pos[1] and pos[1] + 1 == pos[2]):
+              raise SystemExit(f'continuity reading-order drift: {pos}')
+          if 'production following-property header composition after the R3.18M control bit (R3.18O is evidence-only)' not in d['closed_now']:
+              raise SystemExit('production/evidence boundary wording missing')
+          print('R3_18O_CONTINUITY_ORDER=PASS')
+          PY
           grep -Fq 'R3.18O following-property header evidence: OUTCOME A / CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
           grep -Fq 'R3.18P following-property header context contract: ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('MIMIR_KNOWLEDGE_GRAPH.md').read_text(encoding='utf-8')
+          trio=[
+              'docs/continuity/MIMIR_R3_18O_EXECUTION_SPEC.md',
+              'docs/continuity/MIMIR_R3_18O_DECISION.md',
+              'docs/continuity/MIMIR_R3_18P_EXECUTION_SPEC.md',
+          ]
+          pos=[s.index(f'`{x}`') for x in trio]
+          if not pos[0] < pos[1] < pos[2]:
+              raise SystemExit(f'KG reading-order drift: {pos}')
+          print('R3_18O_KG_ORDER=PASS')
+          PY
           grep -Fq '# CURRENT PASS CHECKLIST — R3.18P' MIMIR_CONTINUE_HERE.md
           test "$(grep -c '^# CURRENT PASS CHECKLIST — R3.18N$' MIMIR_CONTINUE_HERE.md)" -eq 0
           grep -Fq 'artifact: `9284144768`' docs/continuity/MIMIR_R3_18O_DECISION.md
