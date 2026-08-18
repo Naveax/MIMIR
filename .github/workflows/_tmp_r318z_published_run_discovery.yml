@@ -12,7 +12,7 @@ permissions:
 jobs:
   discover:
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
         with:
@@ -21,13 +21,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PUBLISHED_SHA: ac24d29edeacd04152afe318e25ae296385159c3
-        shell: bash
+        shell: pwsh
         run: |
-          set -euo pipefail
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&head_sha=$PUBLISHED_SHA&event=push&per_page=20" \
-            --jq '{published_sha: env.PUBLISHED_SHA, workflow_runs: [.workflow_runs[] | {id,name,status,conclusion,head_sha,event,path,created_at,updated_at}]}' \
-            > r318z_published_runs.json
-          cat r318z_published_runs.json
+          $ErrorActionPreference = 'Stop'
+          gh api "repos/$env:GITHUB_REPOSITORY/actions/runs?branch=main&head_sha=$env:PUBLISHED_SHA&event=push&per_page=20" `
+            --jq '{published_sha: env.PUBLISHED_SHA, workflow_runs: [.workflow_runs[] | {id,name,status,conclusion,head_sha,event,path,created_at,updated_at}]}' `
+            | Set-Content -Encoding utf8 r318z_published_runs.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content r318z_published_runs.json
       - name: Upload published-main receipt
         uses: actions/upload-artifact@v4
         with:
