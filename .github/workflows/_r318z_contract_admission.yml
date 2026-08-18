@@ -1,0 +1,498 @@
+name: R3.18Z Contract Admission Builder
+
+on:
+  push:
+    branches:
+      - agent/r318z-contract-admission
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-clean-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_MAIN_SHA: ff69da3ce17d3632cfa544190a515a227f6e65f2
+      PRODUCTION_SHA: 58872e94f00ef094807f21ab2ff984ac66b97d91
+      PRODUCTION_TREE: d6965d77903ea99dad0465bb350b6a673ee7dd00
+      Y_ARTIFACT_ID: '9303584468'
+      Y_ARTIFACT_SHA256: 46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29
+      Y_SUMMARY_SHA256: 035e56fcdfb643aec00e7474fddfc378afb8f8e4e9ad531c532159f0111a591f
+      Y_ROWS_SHA256: 0bfb38ca10d329d7c8cb66cee57449c17108213c9588a64d0ed4b511afbe9d47
+      Y_AGGREGATE_SHA256: 618ac3901b46c04732d57469b583ba2187bfe1007c3ff210094039cfc2e63082
+      Y_MANIFEST_FILE_SHA256: 0de7e6cc92a748577f141108043a6db959ac281846de89a884b27619631bbbd2
+      Y_INSTRUMENT_SHA256: 2f219d67eaa49c3365386265784a7991534cb1ffc8e1ac69d9444cfdda73273a
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fresh-main ancestry guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --no-tags
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN_SHA"
+
+      - name: Download and verify immutable R3.18Y authority
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r318y
+          curl --fail --silent --show-error --location \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${Y_ARTIFACT_ID}/zip" \
+            -o /tmp/r318y.zip
+          echo "$Y_ARTIFACT_SHA256  /tmp/r318y.zip" | sha256sum -c -
+          unzip -q /tmp/r318y.zip -d /tmp/r318y
+          echo "$Y_SUMMARY_SHA256  /tmp/r318y/r3_18y_header_summary.json" | sha256sum -c -
+          echo "$Y_ROWS_SHA256  /tmp/r318y/r3_18y_header_rows.json" | sha256sum -c -
+          echo "$Y_AGGREGATE_SHA256  /tmp/r318y/r3_18y_aggregate.txt" | sha256sum -c -
+          test "$(sha256sum /tmp/r318y/r3_18y_artifact_sha256.txt | awk '{print $1}')" = "$Y_MANIFEST_FILE_SHA256"
+          test "$(grep 'r3_18y_boxcars_header_instrumentation.patch' /tmp/r318y/r3_18y_artifact_sha256.txt | awk '{print $1}')" = "$Y_INSTRUMENT_SHA256"
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          root = Path('/tmp/r318y')
+          lines = (root/'r3_18y_artifact_sha256.txt').read_text().splitlines()
+          verified = 0
+          for line in lines:
+              if not line.strip():
+                  continue
+              expected, name = line.split(None, 1)
+              p = root / name.strip()
+              if not p.exists():
+                  continue
+              got = hashlib.sha256(p.read_bytes()).hexdigest()
+              assert got == expected, (name, expected, got)
+              verified += 1
+          assert verified == 9, verified
+          print('R3.18Y manifest payload verification: 9/9 PASS')
+          PY
+
+      - name: Generate exact R3.18Z contract and continuity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, re
+
+          ROOT = Path('.')
+          Y = json.loads(Path('/tmp/r318y/r3_18y_header_summary.json').read_text())
+          FIELDS = [
+              'stream_id_bound', 'prop_id_bits', 'property_object_index', 'attribute_tag',
+              'version_major', 'version_minor', 'net_version'
+          ]
+          EXPECTED = [
+              (60,5,34,'ActiveActor',868,32,10,1),
+              (60,5,43,'ActiveActor',868,32,10,2),
+              (60,5,80,'ActiveActor',868,32,10,4),
+              (60,5,81,'ActiveActor',868,32,10,19),
+              (60,5,84,'Int',868,32,10,6),
+              (60,5,87,'ActiveActor',868,32,10,1),
+              (60,5,87,'Int',868,32,10,1),
+              (60,5,89,'ActiveActor',868,32,10,2),
+              (60,5,91,'ActiveActor',868,32,10,1),
+              (60,5,96,'ActiveActor',868,32,10,1),
+              (60,5,104,'ActiveActor',868,32,10,2),
+              (60,5,105,'ActiveActor',868,32,10,1),
+              (60,5,108,'ActiveActor',868,32,10,1),
+              (60,5,118,'ActiveActor',868,32,10,1),
+              (67,6,63,'ActiveActor',868,32,10,1),
+              (72,6,65,'ActiveActor',868,32,10,1),
+              (72,6,68,'ActiveActor',868,32,10,1),
+              (110,6,25,'UniqueId',868,32,10,1),
+          ]
+          actual = [tuple(c[f] for f in FIELDS) + (c['observed_count'],) for c in Y['contexts']]
+          assert actual == EXPECTED
+          assert Y['rows'] == 47 and Y['unique_exact_contexts'] == 18
+          assert sum(c['observed_count'] for c in Y['contexts']) == 47
+          assert Y['tags'] == {'ActiveActor': 39, 'Int': 7, 'UniqueId': 1}
+          assert Y['native_oracle_mismatch'] == 0
+          assert Y['witness_reselection'] == 0
+          assert Y['r3_18p_inheritance_assumed'] is False
+          assert Y['membership_policy_candidate'] == 'exact_tuple_only'
+
+          contract = {
+              'schema_version': 1,
+              'contract': 'MIMIR_R3_18Z_POST_W_FOLLOWING_HEADER_CONTEXTS',
+              'status': 'admitted',
+              'admission_date': '2026-08-18',
+              'membership_policy': 'exact_tuple_only',
+              'tuple_fields': FIELDS,
+              'observed_row_count': 47,
+              'unique_exact_context_count': 18,
+              'authority': {
+                  'base_main_sha': 'ff69da3ce17d3632cfa544190a515a227f6e65f2',
+                  'production_sha': '58872e94f00ef094807f21ab2ff984ac66b97d91',
+                  'production_tree': 'd6965d77903ea99dad0465bb350b6a673ee7dd00',
+                  'r3_18y_evidence_head': '413d6c24f8f390a57c21ed345f3f868c263f413c',
+                  'r3_18y_evidence_tree': 'c48630bf89c23a8348936f2adbb8f0c9ad0c977b',
+                  'r3_18y_run': 32076198677,
+                  'r3_18y_job': 95529856476,
+                  'r3_18y_same_head_ci_run': 32076881407,
+                  'r3_18y_same_head_ci_job': 95531867271,
+                  'r3_18y_artifact_id': 9303584468,
+                  'r3_18y_artifact_size': 19642,
+                  'r3_18y_artifact_sha256': '46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29',
+                  'r3_18y_source_summary_sha256': '035e56fcdfb643aec00e7474fddfc378afb8f8e4e9ad531c532159f0111a591f',
+                  'r3_18y_header_rows_sha256': '0bfb38ca10d329d7c8cb66cee57449c17108213c9588a64d0ed4b511afbe9d47',
+                  'r3_18y_aggregate_sha256': '618ac3901b46c04732d57469b583ba2187bfe1007c3ff210094039cfc2e63082',
+                  'r3_18y_manifest_file_sha256': '0de7e6cc92a748577f141108043a6db959ac281846de89a884b27619631bbbd2',
+                  'r3_18y_boxcars_instrumentation_sha256': '2f219d67eaa49c3365386265784a7991534cb1ffc8e1ac69d9444cfdda73273a',
+                  'witness_reselection': 0,
+                  'r3_18p_inheritance_assumed': False,
+              },
+              'admitted_contexts': [dict(c) for c in Y['contexts']],
+              'anti_widening': {
+                  'tag_only_membership': False,
+                  'component_only_membership': False,
+                  'cartesian_product_membership': False,
+                  'versionless_membership': False,
+                  'nineteenth_tuple_membership': False,
+                  'r3_18p_cross_boundary_inheritance': False,
+                  'multiplicity_is_runtime_frequency_promise': False,
+                  'contexts_outside_exact_set_admitted': False,
+              },
+          }
+          contract_path = ROOT/'docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json'
+          contract_text = json.dumps(contract, indent=2, ensure_ascii=False) + '\n'
+          contract_path.write_text(contract_text, encoding='utf-8')
+          contract_sha = hashlib.sha256(contract_text.encode()).hexdigest()
+
+          # Exact membership and anti-widening tests.
+          def key(c):
+              return tuple(c[f] for f in FIELDS)
+          zset = {key(c) for c in contract['admitted_contexts']}
+          assert len(zset) == 18
+          assert [key(c) for c in contract['admitted_contexts']] == [x[:7] for x in EXPECTED]
+          assert [c['observed_count'] for c in contract['admitted_contexts']] == [x[7] for x in EXPECTED]
+          assert sum(c['observed_count'] for c in contract['admitted_contexts']) == 47
+          assert (110,6,25,'ActiveActor',868,32,10) not in zset  # Cartesian fabrication.
+          assert (60,5,119,'ActiveActor',868,32,10) not in zset   # Nineteenth tuple.
+          assert (60,5,34,'ActiveActor',868,32,11) not in zset   # Wrong version.
+          p = json.loads((ROOT/'docs/continuity/MIMIR_R3_18P_ADMITTED_HEADER_CONTEXTS.json').read_text())
+          pset = {tuple(c[f] for f in FIELDS) for c in p['admitted_contexts']}
+          p_only = (60,5,32,'Boolean',868,32,10)
+          assert p_only in pset and p_only not in zset
+          assert all(len(t) == 7 for t in zset)
+
+          decision = f'''# MIMIR R3.18Z Decision — Post-W Following-Header Exact-Context Contract
+
+Date: 2026-08-18  
+Outcome: **A — ADMITTED / CONTRACT-ONLY**
+
+## Authority
+
+- base main: `ff69da3ce17d3632cfa544190a515a227f6e65f2`
+- production remains: `58872e94f00ef094807f21ab2ff984ac66b97d91` / `d6965d77903ea99dad0465bb350b6a673ee7dd00` (R3.18W)
+- R3.18Y evidence: `413d6c24f8f390a57c21ed345f3f868c263f413c` / `32076198677/95529856476` SUCCESS
+- R3.18Y same-head CI: `32076881407/95531867271` SUCCESS
+- immutable artifact: `9303584468` / `19642` bytes / `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29`
+- source summary: `sha256:035e56fcdfb643aec00e7474fddfc378afb8f8e4e9ad531c532159f0111a591f`
+- header rows: `sha256:0bfb38ca10d329d7c8cb66cee57449c17108213c9588a64d0ed4b511afbe9d47`
+- aggregate: `sha256:618ac3901b46c04732d57469b583ba2187bfe1007c3ff210094039cfc2e63082`
+- immutable manifest payload verification: `9/9`
+- witness reselection: `0`
+- R3.18P inheritance assumed: `false`
+
+## Contract
+
+Committed artifact: `docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json`  
+SHA-256: `{contract_sha}`
+
+The contract contains exactly **18** unique seven-field tuples and their exact **47-row** evidence multiplicities. Tuple identity is exactly `(stream_id_bound, prop_id_bits, property_object_index, attribute_tag, version_major, version_minor, net_version)`.
+
+Admission is **exact tuple membership only**. Tag-only, component-only, Cartesian-product, versionless, nineteenth-tuple and R3.18P cross-boundary inheritance are all outside the contract. Multiplicity is evidence provenance, not a runtime frequency promise.
+
+## Validation
+
+- immutable Y ZIP SHA-256 exact: PASS
+- immutable Y source summary hash exact: PASS
+- manifest payload files: 9/9 PASS
+- exact tuple equality: 18/18
+- exact multiplicities: 18/18; sum 47
+- tag-only/component-only widening: rejected by full seven-field membership
+- fabricated Cartesian tuple `(110,6,25,ActiveActor,868,32,10)`: REJECTED
+- version-changed tuple: REJECTED
+- nineteenth tuple: REJECTED
+- R3.18P-valid/Z-absent tuple `(60,5,32,Boolean,868,32,10)`: REJECTED
+- production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
+
+## Admission boundary
+
+R3.18Z changes no production Rust capability. It crystallizes only the later post-W header structural domain observed by R3.18Y. The post-W header is not yet a production composition; its payload, another control bit, generalized/repeated loops, next actor/frame and semantic/runtime layers remain closed.
+
+## Next exact pass
+
+**R3.18AA — bounded post-W following-header production composition.** It may compose exactly one header after a valid R3.18W true control, must require exact R3.18Z tuple membership, and must stop exactly at `payload_start`.
+'''
+          (ROOT/'docs/continuity/MIMIR_R3_18Z_DECISION.md').write_text(decision, encoding='utf-8')
+
+          aa = f'''# MIMIR R3.18AA Execution Spec — Bounded Post-W Following-Header Production Composition
+
+Date: 2026-08-18  
+Pass type: **production / bounded composition**
+
+## Goal
+
+Compose exactly one following existing-actor property header after a valid published R3.18W true control, using the already-published stateless existing-actor header primitive and the exact R3.18Z admitted structural-context contract.
+
+## Frozen authority
+
+- canonical production: `58872e94f00ef094807f21ab2ff984ac66b97d91` / `d6965d77903ea99dad0465bb350b6a673ee7dd00` (R3.18W)
+- R3.18Z contract SHA-256: `{contract_sha}`
+- admitted domain: exactly 18 full seven-field tuples / 47 evidence rows
+- R3.18Y evidence hard stop: following header `payload_start`
+- R3.18P cross-boundary inheritance: forbidden
+
+## Allowed production behavior
+
+1. accept only a previously valid R3.18T following-payload result;
+2. reuse published R3.18W control composition and require its admitted true result;
+3. decode exactly one following header beginning at the R3.18W stop;
+4. require exact R3.18Z full-tuple membership including version context;
+5. stop exactly at that header `payload_start`;
+6. preserve atomic fail-closed behavior on boundary/context/truncation error.
+
+## Forbidden widening
+
+- no R3.18P contract inheritance;
+- no tag-only/component-only/Cartesian/versionless structural support;
+- no following payload decode;
+- no another `property_present` control bit;
+- no generic/repeatable property cursor or property loop;
+- no next actor/frame/lifecycle state;
+- no raw-state/event/slice/skill/counterfactual/runtime/export widening;
+- no Boxcars production dependency.
+
+## Required validation
+
+- fresh-read `main` before implementation; pin the exact R3.18Z admission main SHA;
+- verify this R3.18Z contract SHA-256 before code mutation;
+- focused tests for all 18 admitted tuples plus outside-contract failures;
+- exact frozen 47-row native reconstruction through `payload_start`;
+- truncation before header completion fails closed;
+- wrong actor/context and P-valid-but-Z-absent tuples fail closed;
+- post-`payload_start` poison cannot affect header result;
+- existing R3.18W behavior remains unchanged;
+- full fmt/test/check/clippy/repository verification on exact clean candidate SHA;
+- production/Cargo/fixture/corpus/support scope audit;
+- clean-head CI, PR CI and published-main validation before widening further.
+
+## Outcome rule
+
+- **A:** bounded one-header composition is admitted and published; next pass is a separate published API differential before any payload widening.
+- **B:** any scope/context/boundary/regression gate fails; publish nothing.
+'''
+          (ROOT/'docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md').write_text(aa, encoding='utf-8')
+
+          def replace_once(path, old, new):
+              p = ROOT/path
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise AssertionError(f'{path}: expected one occurrence, got {text.count(old)} for {old!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # Primary continuity handbook.
+          ch = ROOT/'MIMIR_CONTINUE_HERE.md'
+          text = ch.read_text(encoding='utf-8')
+          text = text.replace('LAST_COMPLETED_CONTRACT_PASS:\n  R3.18P — following-property header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / zero cross-product widening',
+                              f'LAST_COMPLETED_CONTRACT_PASS:\n  R3.18Z — post-W following-header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / sha256 {contract_sha}')
+          text = text.replace('CURRENT_PASS:\n  R3.18Z — after-R3.18W following-header exact-context contract',
+                              'CURRENT_PASS:\n  R3.18AA — bounded post-W following-header production composition')
+          text = text.replace('CURRENT_PASS_TYPE:\n  contract-only / admit exact seven-field tuple membership from R3.18Y; no R3.18P inheritance; production frozen',
+                              'CURRENT_PASS_TYPE:\n  production / compose exactly one post-W following header under exact R3.18Z tuple membership; stop at payload_start')
+          text = text.replace('  R3.18Z ACTIVE exact-context contract-only admission for this later boundary; R3.18P is not inherited\n  NO post-W header production, following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted',
+                              f'  R3.18Z CLOSED Outcome A: exact 18-tuple later-boundary contract admitted; multiplicities sum 47; contract sha256 {contract_sha}; R3.18P inheritance false\n  R3.18AA ACTIVE bounded production composition for exactly one post-W following header under exact R3.18Z membership; stop at payload_start\n  NO following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted')
+          marker = 'R3_18Y_EVIDENCE_CLOSURE:\n'
+          idx = text.find(marker)
+          assert idx >= 0
+          zclosure = f'''R3_18Z_CONTRACT_CLOSURE:\n  Outcome A / contract-only / production unchanged at 58872e94f00ef094807f21ab2ff984ac66b97d91\n  exact structural contexts: 18 / observed multiplicities: 47 / R3.18P inheritance: false\n  contract artifact: docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json\n  contract sha256: {contract_sha}\n  membership: exact full seven-field tuple only / no tag-only, component-only, Cartesian, versionless, nineteenth or P-cross-boundary widening\n  next pass: R3.18AA bounded post-W following-header production composition\n'''
+          if 'R3_18Z_CONTRACT_CLOSURE:' not in text:
+              text = text[:idx] + zclosure + text[idx:]
+          text = text.replace('# CURRENT PASS CHECKLIST — R3.18Z', '# HISTORICAL PASS CHECKLIST — R3.18Z (ADMITTED OUTCOME A)', 1)
+          aa_check = f'''\n\n---\n\n# CURRENT PASS CHECKLIST — R3.18AA\n\n**Goal:** publish exactly one post-W following-header production composition under the exact R3.18Z contract and stop at `payload_start`.\n\n```text\n[ ] Fresh-read main; pin the exact R3.18Z admission SHA and verify contract sha256 {contract_sha}.\n[ ] Inspect published R3.18W control and stateless existing-actor header primitive; compose rather than duplicate.\n[ ] Require valid R3.18W true control and exact R3.18Z full seven-field tuple membership.\n[ ] Reject R3.18P-valid/Z-absent, tag-only, component-only, Cartesian, versionless and fabricated contexts.\n[ ] Stop exactly at the one following header payload_start; payload bits consumed = 0; another-control bits consumed = 0.\n[ ] Add focused 18-context, truncation, wrong-context and post-stop poison tests.\n[ ] Keep generic/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export closed.\n[ ] Run fmt/test/check/clippy/repository verification on the exact clean candidate.\n[ ] Require clean-head CI, PR CI and published-main validation; publish only by fresh-main ancestry + force=false.\n[ ] Outcome A opens only a separate published-AA differential before payload evidence.\n```\n'''
+          if '# CURRENT PASS CHECKLIST — R3.18AA' not in text:
+              text = text.rstrip() + aa_check
+          ch.write_text(text, encoding='utf-8')
+
+          # Knowledge graph: update current node, mandatory order, and append current closure.
+          kg = ROOT/'MIMIR_KNOWLEDGE_GRAPH.md'
+          text = kg.read_text(encoding='utf-8')
+          oldnode = 'R3.18Z active post-W following-header exact-context contract spec'
+          if oldnode in text:
+              text = text.replace(oldnode,
+                  'R3.18Z post-W following-header exact-context contract decision / Outcome A CLOSED\nR3.18AA active bounded post-W following-header production spec', 1)
+          lines = text.splitlines()
+          numbered = []
+          start = None
+          end = None
+          for i, line in enumerate(lines):
+              m = re.match(r'^(\d+)\. `([^`]+)`$', line.strip())
+              if m and m.group(2) == 'MIMIR_CONTINUE_HERE.md':
+                  start = i
+              if start is not None and m:
+                  numbered.append(m.group(2))
+                  end = i
+              elif start is not None and end is not None and i > end:
+                  break
+          assert start is not None and end is not None and 'docs/continuity/MIMIR_PASS_PROTOCOL.md' in numbered
+          additions = [
+              'docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json',
+              'docs/continuity/MIMIR_R3_18Z_DECISION.md',
+              'docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md',
+          ]
+          for a in additions:
+              if a not in numbered:
+                  numbered.insert(numbered.index('docs/continuity/MIMIR_PASS_PROTOCOL.md'), a)
+          rebuilt = [f'{i+1}. `{p}`' for i,p in enumerate(numbered)]
+          lines = lines[:start] + rebuilt + lines[end+1:]
+          text = '\n'.join(lines) + ('\n' if text.endswith('\n') else '')
+          kg_append = f'''\n\n### R3.18Z post-W following-header context contract: OUTCOME A / CLOSED\n- immutable R3.18Y authority reverified from artifact `9303584468`; ZIP/source-summary/header-rows/aggregate hashes exact; manifest payloads 9/9\n- exact 18 full seven-field tuples / multiplicity sum 47 / ActiveActor=39 / Int=7 / UniqueId=1\n- contract `sha256:{contract_sha}`; exact-tuple-only membership; R3.18P cross-boundary inheritance rejected\n- tag/component/Cartesian/versionless/nineteenth/P-valid-Z-absent widening rejected; production remains R3.18W\n\n### R3.18AA bounded post-W following-header composition: ACTIVE\n- production pass only; require valid R3.18W true control + exact R3.18Z membership\n- decode exactly one header and stop at payload_start; following payload and another control remain closed\n'''
+          if '### R3.18AA bounded post-W following-header composition: ACTIVE' not in text:
+              text = text.rstrip() + kg_append
+          kg.write_text(text, encoding='utf-8')
+
+          # Current-state file is deliberately compact and canonical.
+          current_state = f'''# MIMIR — Current Canonical State\n\n**Continuity date:** 2026-08-18\n**Repository:** `Naveax/MIMIR`\n**Canonical production SHA:** `58872e94f00ef094807f21ab2ff984ac66b97d91`\n**Production tree:** `d6965d77903ea99dad0465bb350b6a673ee7dd00`\n**Production milestone:** `R3.18W — bounded true-only after-following-payload control composition`\n**Last read-only evidence:** `R3.18Y — Outcome A / 47/47 / 18 exact contexts / ActiveActor=39 Int=7 UniqueId=1 / mismatch 0 / payload-control 0/0`\n**Last contract admission:** `R3.18Z — Outcome A / 18 exact tuples / 47 multiplicities / sha256:{contract_sha}`\n**Current exact pass:** `R3.18AA — bounded post-W following-header production composition`\n\n## Truthful boundary\n\nProduction remains R3.18W. R3.18Y characterized one later post-W following header through `payload_start`; R3.18Z now admits only those 18 complete seven-field contexts as an exact structural contract. R3.18P is not inherited across this boundary.\n\n```text\nproduction SHA/tree                 58872e94f00ef094807f21ab2ff984ac66b97d91 / d6965d77903ea99dad0465bb350b6a673ee7dd00\nY evidence head/tree                413d6c24f8f390a57c21ed345f3f868c263f413c / c48630bf89c23a8348936f2adbb8f0c9ad0c977b\nY authority                         32076198677 / 95529856476 SUCCESS\nY artifact                          9303584468 / 19642 / sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29\nZ contract                          docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json\nZ contract sha256                   {contract_sha}\nZ exact contexts / multiplicities   18 / 47\nZ membership                        exact_tuple_only / no R3.18P inheritance\n```\n\nR3.18AA may compose exactly one post-W following header under the Z contract and must stop at `payload_start`. Following payload, another control, loops/cursors and all later semantic/runtime boundaries remain closed.\n'''
+          (ROOT/'docs/continuity/MIMIR_CURRENT_STATE.md').write_text(current_state, encoding='utf-8')
+
+          handoff = f'''# MIMIR — Next Chat Handoff\n\nCanonical production remains **R3.18W** at `58872e94f00ef094807f21ab2ff984ac66b97d91` / `d6965d77903ea99dad0465bb350b6a673ee7dd00`. R3.18Y is CLOSED Outcome A on 47/47 frozen rows with 18 seven-field contexts, multiplicity sum 47, ActiveActor=39 / Int=7 / UniqueId=1, mismatch 0 and payload/control consumption 0/0. Immutable artifact `9303584468` is `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29`; manifest payloads verify 9/9.\n\nR3.18Z is **CLOSED Outcome A / CONTRACT-ONLY**. Its exact-tuple artifact is `docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json`, SHA-256 `{contract_sha}`. It contains exactly 18 full seven-field tuples and 47 evidence multiplicities. Tag/component/Cartesian/versionless/nineteenth and R3.18P-cross-boundary widening are rejected. Production is unchanged.\n\nThe active pass is **R3.18AA**, bounded production composition for exactly one post-W following header. Require a valid R3.18W true control plus exact R3.18Z membership, reuse the stateless existing-actor header primitive, and stop exactly at `payload_start`. Do not decode the payload or another control. Mandatory first reads are `MIMIR_CONTINUE_HERE.md`, `MIMIR_KNOWLEDGE_GRAPH.md`, `docs/continuity/MIMIR_CONTINUITY_STATE.json`, `docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json`, `docs/continuity/MIMIR_R3_18Z_DECISION.md`, and `docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md`.\n'''
+          (ROOT/'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md').write_text(handoff, encoding='utf-8')
+
+          # Boundary locks: prepend newest override and demote previous current header.
+          bl = ROOT/'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+          text = bl.read_text(encoding='utf-8')
+          text = text.replace('# 0. Current override — R3.18Y admitted / R3.18Z active', '# 0H. Superseded override — R3.18Y admitted / R3.18Z active', 1)
+          newest = f'''# 0. Current override — R3.18Z admitted / R3.18AA active\n\nThis current override supersedes older status wording later in this historical lock file.\n\n## PRODUCTION\n- R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`: exact R3.18T payload-end validation, one true-only property control bit, false fail-closed, stop +1.\n\n## ADMITTED CONTRACT — R3.18Z Outcome A\n- exact 18 seven-field post-W following-header contexts / multiplicity sum 47;\n- contract `sha256:{contract_sha}`; membership is exact tuple only;\n- R3.18P cross-boundary inheritance is false; tag/component/Cartesian/versionless/nineteenth widening rejected.\n\n## ACTIVE PRODUCTION GATE — R3.18AA\n- may compose exactly one post-W following header after valid R3.18W true control;\n- exact R3.18Z membership required; stop at `payload_start`.\n\n## CLOSED\n- following payload; another property control; generic/repeated property cursor/loop;\n- next actor/frame/lifecycle; raw state/events/slices/skills/counterfactual/runtime/export widening.\n\n---\n\n'''
+          anchor = '# 0H. Superseded override — R3.18Y admitted / R3.18Z active'
+          pos = text.find(anchor)
+          assert pos >= 0
+          text = text[:pos] + newest + text[pos:]
+          bl.write_text(text, encoding='utf-8')
+
+          # Progress ledger is append-only.
+          ledger = ROOT/'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+          text = ledger.read_text(encoding='utf-8').rstrip()
+          entry = f'''\n\n## 2026-08-18 — R3.18Z Outcome A admitted; R3.18AA opened\n\n- Production unchanged: R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91` / tree `d6965d77903ea99dad0465bb350b6a673ee7dd00`.\n- Fresh admission base main: `ff69da3ce17d3632cfa544190a515a227f6e65f2`.\n- Immutable Y artifact `9303584468` / `19642` bytes / `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29` reverified; source-summary/header-rows/aggregate hashes exact; manifest payloads 9/9.\n- Contract artifact: `docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json` / `sha256:{contract_sha}`.\n- Exact tuple equality 18/18; multiplicity equality 18/18; sum 47; ActiveActor=39 / Int=7 / UniqueId=1.\n- Exact-tuple-only membership; tag/component/Cartesian/versionless/nineteenth and R3.18P-valid/Z-absent candidates fail closed.\n- Production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.\n- Opened R3.18AA only: bounded one-header production composition after valid R3.18W true control, exact Z membership, stop at payload_start. Following payload and another control remain closed.\n'''
+          if '## 2026-08-18 — R3.18Z Outcome A admitted; R3.18AA opened' not in text:
+              text += entry
+          ledger.write_text(text + '\n', encoding='utf-8')
+
+          # Machine-readable state, with mandatory reading order deduplicated from the graph itself.
+          state_path = ROOT/'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+          state = json.loads(state_path.read_text(encoding='utf-8'))
+          state['updated_date'] = '2026-08-18'
+          state['last_completed_read_only_audit'] = 'R3.18Y'
+          state['last_completed_evidence_pass'] = 'R3.18Y'
+          state['last_completed_evidence_outcome'] = 'A — one post-W following header exact on 47/47; 18 exact contexts; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0.'
+          state['last_completed_contract_pass'] = 'R3.18Z'
+          state['current_pass'] = 'R3.18AA'
+          state['current_pass_kind'] = 'production / bounded composition of exactly one post-W following header under exact R3.18Z tuple membership'
+          state['current_pass_goal'] = 'Compose exactly one following header after a valid R3.18W true control, require exact R3.18Z full-tuple membership, and stop at payload_start.'
+          state['current_pass_stop_boundary'] = 'Stop exactly at the one post-W following header payload_start. No following payload, another control, generalized loop/cursor, next actor/frame or semantic/runtime/export widening.'
+          state['r3_18z'] = {
+              'outcome': 'A — admitted / contract-only',
+              'production_source_changed': False,
+              'base_main_sha': 'ff69da3ce17d3632cfa544190a515a227f6e65f2',
+              'production_sha': '58872e94f00ef094807f21ab2ff984ac66b97d91',
+              'contract_path': 'docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json',
+              'contract_sha256': contract_sha,
+              'exact_contexts': 18,
+              'multiplicity_sum': 47,
+              'tag_counts': {'ActiveActor': 39, 'Int': 7, 'UniqueId': 1},
+              'membership_policy': 'exact_tuple_only',
+              'r3_18p_inheritance_assumed': False,
+              'anti_widening': ['tag_only','component_only','cartesian_product','versionless','nineteenth_tuple','r3_18p_cross_boundary'],
+              'production_cargo_fixture_corpus_support_mutation': '0/0/0/0/0'
+          }
+          # Parse the freshly updated graph's canonical mandatory list.
+          kglines = kg.read_text(encoding='utf-8').splitlines()
+          paths = []
+          started = False
+          for line in kglines:
+              m = re.match(r'^(\d+)\. `([^`]+)`$', line.strip())
+              if m and m.group(2) == 'MIMIR_CONTINUE_HERE.md':
+                  started = True
+              if started and m:
+                  paths.append(m.group(2))
+              elif started and paths and not m:
+                  break
+          assert len(paths) >= 96 and len(paths) == len(set(paths)), (len(paths), len(set(paths)))
+          state['next_files_to_read'] = paths
+          state_path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+          print('R3.18Z contract sha256:', contract_sha)
+          print('Mandatory reading files:', len(paths))
+          PY
+
+      - name: Contract and scope verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json >/dev/null
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+          c=json.loads(Path('docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json').read_text())
+          assert c['membership_policy']=='exact_tuple_only'
+          assert len(c['admitted_contexts'])==18
+          assert sum(x['observed_count'] for x in c['admitted_contexts'])==47
+          assert c['authority']['r3_18p_inheritance_assumed'] is False
+          assert all(v is False for v in c['anti_widening'].values())
+          s=json.loads(Path('docs/continuity/MIMIR_CONTINUITY_STATE.json').read_text())
+          assert s['last_completed_contract_pass']=='R3.18Z'
+          assert s['current_pass']=='R3.18AA'
+          assert len(s['next_files_to_read'])==len(set(s['next_files_to_read']))
+          assert 'docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json' in s['next_files_to_read']
+          assert 'docs/continuity/MIMIR_R3_18Z_DECISION.md' in s['next_files_to_read']
+          assert 'docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md' in s['next_files_to_read']
+          print('Contract/state verification PASS')
+          PY
+          changed="$(git diff --name-only origin/main | sort)"
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -E '^(crates/|Cargo\.toml$|Cargo\.lock$|external_fixtures/|corpus/|scripts/)' ; then
+            echo 'Forbidden production/Cargo/fixture/corpus/support mutation detected' >&2
+            exit 1
+          fi
+
+      - name: Knowledge archive verifier
+        shell: pwsh
+        run: |
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Reconstruct single clean docs-only commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "MIMIR Admission Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/_r318z_contract_admission.yml
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/
+          git reset --soft "$BASE_MAIN_SHA"
+          git reset
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json docs/continuity/MIMIR_R3_18Z_DECISION.md docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md
+          test ! -e .github/workflows/_r318z_contract_admission.yml
+          staged="$(git diff --cached --name-only | sort)"
+          printf '%s\n' "$staged"
+          if printf '%s\n' "$staged" | grep -E '^(\.github/|crates/|Cargo\.toml$|Cargo\.lock$|external_fixtures/|corpus/|scripts/)' ; then
+            echo 'Clean candidate contains forbidden mutation' >&2
+            exit 1
+          fi
+          git commit -m "Admit R3.18Z and open R3.18AA"
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN_SHA"
+          test "$(git rev-list --count "$BASE_MAIN_SHA"..HEAD)" = "1"
+          git diff --exit-code "$BASE_MAIN_SHA"..HEAD -- .github crates Cargo.toml Cargo.lock external_fixtures corpus scripts
+          git push --force-with-lease origin HEAD:agent/r318z-contract-admission
