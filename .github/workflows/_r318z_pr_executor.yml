@@ -1,0 +1,100 @@
+name: R3.18Z PR Executor
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  execute-builder:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_MAIN_SHA: ff69da3ce17d3632cfa544190a515a227f6e65f2
+      PRODUCTION_SHA: 58872e94f00ef094807f21ab2ff984ac66b97d91
+      PRODUCTION_TREE: d6965d77903ea99dad0465bb350b6a673ee7dd00
+      Y_ARTIFACT_ID: '9303584468'
+      Y_ARTIFACT_SHA256: 46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29
+      Y_SUMMARY_SHA256: 035e56fcdfb643aec00e7474fddfc378afb8f8e4e9ad531c532159f0111a591f
+      Y_ROWS_SHA256: 0bfb38ca10d329d7c8cb66cee57449c17108213c9588a64d0ed4b511afbe9d47
+      Y_AGGREGATE_SHA256: 618ac3901b46c04732d57469b583ba2187bfe1007c3ff210094039cfc2e63082
+      Y_MANIFEST_FILE_SHA256: 0de7e6cc92a748577f141108043a6db959ac281846de89a884b27619631bbbd2
+      Y_INSTRUMENT_SHA256: 2f219d67eaa49c3365386265784a7991534cb1ffc8e1ac69d9444cfdda73273a
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/r318z-contract-admission
+          fetch-depth: 0
+
+      - name: Guard base and execute embedded builder stages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main --no-tags
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA"
+          test "$(git merge-base HEAD origin/main)" = "$BASE_MAIN_SHA"
+          export GH_TOKEN
+          python - <<'PY'
+          from pathlib import Path
+          import os, subprocess
+
+          workflow = Path('.github/workflows/_r318z_contract_admission.yml').read_text().splitlines()
+
+          def extract(step_name):
+              start = None
+              for i, line in enumerate(workflow):
+                  if line.strip() == f'- name: {step_name}':
+                      start = i
+                      break
+              if start is None:
+                  raise SystemExit(f'missing step: {step_name}')
+              run_i = None
+              for i in range(start + 1, len(workflow)):
+                  stripped = workflow[i].strip()
+                  if stripped.startswith('- name:'):
+                      break
+                  if stripped == 'run: |':
+                      run_i = i + 1
+                      break
+              if run_i is None:
+                  raise SystemExit(f'missing run block: {step_name}')
+              block = []
+              for i in range(run_i, len(workflow)):
+                  line = workflow[i]
+                  if line.startswith('      - name:'):
+                      break
+                  if line.startswith('          '):
+                      block.append(line[10:])
+                  elif not line.strip():
+                      block.append('')
+                  else:
+                      break
+              return '\n'.join(block) + '\n'
+
+          stages = [
+              ('Download and verify immutable R3.18Y authority', 'bash'),
+              ('Generate exact R3.18Z contract and continuity', 'bash'),
+              ('Contract and scope verification', 'bash'),
+          ]
+          for name, shell in stages:
+              print(f'=== {name} ===')
+              subprocess.run([shell, '-lc', extract(name)], check=True, env=os.environ.copy())
+
+          print('=== Knowledge archive verifier ===')
+          subprocess.run(['pwsh','-NoProfile','-File','scripts/verify_mimir_knowledge_archive.ps1'], check=True, env=os.environ.copy())
+
+          print('=== Reconstruct single clean docs-only commit ===')
+          script = extract('Reconstruct single clean docs-only commit')
+          # The PR executor itself is a temporary workflow too. Remove it before the reset/commit stage.
+          script = script.replace('git rm .github/workflows/_r318z_contract_admission.yml',
+                                  'git rm .github/workflows/_r318z_contract_admission.yml .github/workflows/_r318z_pr_executor.yml')
+          subprocess.run(['bash','-lc', script], check=True, env=os.environ.copy())
+          PY
