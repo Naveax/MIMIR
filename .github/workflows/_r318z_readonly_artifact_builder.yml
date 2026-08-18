@@ -1,0 +1,165 @@
+name: R3.18Z Read-Only Artifact Builder
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-artifact:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      BASE_MAIN_SHA: ff69da3ce17d3632cfa544190a515a227f6e65f2
+      Y_ARTIFACT_ID: '9303584468'
+      Y_ARTIFACT_SHA256: 46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29
+      Y_SUMMARY_SHA256: 035e56fcdfb643aec00e7474fddfc378afb8f8e4e9ad531c532159f0111a591f
+      Y_ROWS_SHA256: 0bfb38ca10d329d7c8cb66cee57449c17108213c9588a64d0ed4b511afbe9d47
+      Y_AGGREGATE_SHA256: 618ac3901b46c04732d57469b583ba2187bfe1007c3ff210094039cfc2e63082
+      Y_MANIFEST_FILE_SHA256: 0de7e6cc92a748577f141108043a6db959ac281846de89a884b27619631bbbd2
+      Y_INSTRUMENT_SHA256: 2f219d67eaa49c3365386265784a7991534cb1ffc8e1ac69d9444cfdda73273a
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v6
+        with:
+          ref: agent/r318z-contract-admission
+          fetch-depth: 0
+
+      - name: Fresh-main guard
+        shell: pwsh
+        run: |
+          git fetch origin main --no-tags
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $main = (git rev-parse origin/main).Trim()
+          $mergeBase = (git merge-base HEAD origin/main).Trim()
+          if ($main -ne $env:BASE_MAIN_SHA) { throw "main drift: $main" }
+          if ($mergeBase -ne $env:BASE_MAIN_SHA) { throw "merge-base drift: $mergeBase" }
+
+      - name: Download and verify immutable Y artifact
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          @'
+          import hashlib, os, pathlib, urllib.request, zipfile
+          token=os.environ['GH_TOKEN']
+          artifact_id=os.environ['Y_ARTIFACT_ID']
+          url=f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/artifacts/{artifact_id}/zip"
+          req=urllib.request.Request(url, headers={
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'User-Agent': 'MIMIR-R3.18Z'
+          })
+          data=urllib.request.urlopen(req, timeout=60).read()
+          got=hashlib.sha256(data).hexdigest()
+          assert got==os.environ['Y_ARTIFACT_SHA256'], (got, os.environ['Y_ARTIFACT_SHA256'])
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'r318y'
+          root.mkdir(parents=True, exist_ok=True)
+          zpath=root/'artifact.zip'; zpath.write_bytes(data)
+          with zipfile.ZipFile(zpath) as z: z.extractall(root)
+          checks={
+              'r3_18y_header_summary.json': os.environ['Y_SUMMARY_SHA256'],
+              'r3_18y_header_rows.json': os.environ['Y_ROWS_SHA256'],
+              'r3_18y_aggregate.txt': os.environ['Y_AGGREGATE_SHA256'],
+              'r3_18y_artifact_sha256.txt': os.environ['Y_MANIFEST_FILE_SHA256'],
+          }
+          for name, expected in checks.items():
+              h=hashlib.sha256((root/name).read_bytes()).hexdigest(); assert h==expected,(name,h,expected)
+          manifest=(root/'r3_18y_artifact_sha256.txt').read_text().splitlines()
+          verified=0
+          for line in manifest:
+              if not line.strip(): continue
+              expected,name=line.split(None,1); p=root/name.strip()
+              if p.exists():
+                  h=hashlib.sha256(p.read_bytes()).hexdigest(); assert h==expected,(name,h,expected); verified+=1
+          assert verified==9, verified
+          patch=[x for x in manifest if 'r3_18y_boxcars_header_instrumentation.patch' in x]
+          assert len(patch)==1 and patch[0].split()[0]==os.environ['Y_INSTRUMENT_SHA256']
+          print('immutable Y artifact PASS; manifest payloads 9/9')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Execute embedded generation and verification stages
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          import os, subprocess
+          workflow=Path('.github/workflows/_r318z_contract_admission.yml').read_text().splitlines()
+          def extract(step_name):
+              start=next(i for i,l in enumerate(workflow) if l.strip()==f'- name: {step_name}')
+              run_i=None
+              for i in range(start+1,len(workflow)):
+                  s=workflow[i].strip()
+                  if s.startswith('- name:'): break
+                  if s=='run: |': run_i=i+1; break
+              assert run_i is not None
+              block=[]
+              for i in range(run_i,len(workflow)):
+                  line=workflow[i]
+                  if line.startswith('      - name:'): break
+                  if line.startswith('          '): block.append(line[10:])
+                  elif not line.strip(): block.append('')
+                  else: break
+              return '\n'.join(block)+'\n'
+          # Generation expects /tmp/r318y. On Git Bash /tmp is available; copy verified files there.
+          tmp=Path(os.environ['RUNNER_TEMP'])/'r318y'
+          subprocess.run(['bash','-lc','mkdir -p /tmp/r318y'],check=True)
+          for p in tmp.iterdir():
+              if p.is_file() and p.name!='artifact.zip':
+                  target='/tmp/r318y/'+p.name.replace("'","'\\''")
+                  subprocess.run(['bash','-lc',f"cp '{str(p).replace(chr(39), chr(39)+'\\'+chr(39)+chr(39))}' '{target}'"],check=True)
+          for name in ['Generate exact R3.18Z contract and continuity','Contract and scope verification']:
+              print('===',name,'===')
+              subprocess.run(['bash','-lc',extract(name)],check=True,env=os.environ.copy())
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Knowledge archive verifier
+        shell: pwsh
+        run: |
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Collect docs-only candidate
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'r318z-candidate'
+          New-Item -ItemType Directory -Path $out -Force | Out-Null
+          $files = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md',
+            'docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json',
+            'docs/continuity/MIMIR_R3_18Z_DECISION.md',
+            'docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md'
+          )
+          foreach ($f in $files) {
+            if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { throw "missing candidate file $f" }
+            $dest = Join-Path $out $f
+            New-Item -ItemType Directory -Path (Split-Path $dest -Parent) -Force | Out-Null
+            Copy-Item -LiteralPath $f -Destination $dest -Force
+          }
+          $changed = git diff --name-only origin/main
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $forbidden = $changed | Where-Object { $_ -match '^(crates/|Cargo\.toml$|Cargo\.lock$|external_fixtures/|corpus/|scripts/)' }
+          if ($forbidden) { throw "forbidden mutation: $($forbidden -join ', ')" }
+          Write-Host 'candidate docs-only scope PASS'
+
+      - name: Upload candidate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318z-docs-only-candidate
+          path: ${{ runner.temp }}/r318z-candidate
+          if-no-files-found: error
+          retention-days: 3
