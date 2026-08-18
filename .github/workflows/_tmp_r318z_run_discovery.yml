@@ -1,0 +1,33 @@
+name: R3.18Z Run Discovery
+
+on:
+  push:
+    branches:
+      - ops/r318z-run-discovery-v1
+    paths-ignore:
+      - r318z_run_discovery.json
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Read authority runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=ops/r318z-contract-aa-open-v1&per_page=20" \
+            --jq '{workflow_runs: [.workflow_runs[] | {id,name,status,conclusion,head_sha,event,path,created_at,updated_at}]}' \
+            > r318z_run_discovery.json
+          cat r318z_run_discovery.json
+          git config user.name 'MIMIR Discovery Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add r318z_run_discovery.json
+          git commit -m 'ops(r318z): record authority run discovery'
+          git push origin HEAD:refs/heads/ops/r318z-run-discovery-v1
