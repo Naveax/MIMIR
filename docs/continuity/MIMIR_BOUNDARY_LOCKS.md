@@ -6,7 +6,7 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18Y admitted / R3.18Z active
+# 0. Current override — R3.18Z admitted / R3.18AA active
 
 This current override supersedes older status wording later in this historical lock file.
 
@@ -14,18 +14,22 @@ This current override supersedes older status wording later in this historical l
 - R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`: exact R3.18T payload-end validation, one true-only property control bit, false fail-closed, stop +1.
 
 ## CLOSED EVIDENCE — R3.18Y Outcome A
-- exactly one post-W following header matched pinned Boxcars on 47/47 rows through `payload_start`;
-- 18 exact seven-field contexts / multiplicity sum 47 / ActiveActor=39 / Int=7 / UniqueId=1;
-- native/oracle mismatch 0; reselection 0; payload/another-control consumption 0/0;
-- R3.18P inheritance assumed 0; artifact `9303584468` / `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29`.
+- one post-W following header exact on 47/47 rows through `payload_start`;
+- 18 complete seven-field contexts / multiplicity sum 47 / ActiveActor=39 / Int=7 / UniqueId=1;
+- payload/another-control consumption 0/0; R3.18P inheritance assumed 0.
 
-## ACTIVE CONTRACT GATE — R3.18Z
-- admit only exact tuple membership for the 18 Y contexts;
-- preserve multiplicities as evidence provenance;
-- reject tag/component/Cartesian/versionless/R3.18P cross-boundary widening.
+## CLOSED CONTRACT — R3.18Z Outcome A
+- contract `81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`; `exact_tuple_only`; 18 contexts / 47 multiplicities;
+- tag/component/Cartesian/versionless/outside-set membership false;
+- R3.18P cross-boundary inheritance false.
+
+## ACTIVE PRODUCTION GATE — R3.18AA
+- exactly one post-W following header only;
+- require full R3.18Z tuple membership;
+- stop exactly at `payload_start`.
 
 ## CLOSED
-- post-W header production composition; following payload; another property control; generic/repeated property cursor/loop;
+- following payload; another property control; generic/repeated property cursor/loop;
 - next actor/frame/lifecycle; raw state/events/slices/skills/counterfactual/runtime/export widening.
 
 ---

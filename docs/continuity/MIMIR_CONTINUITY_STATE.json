@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.18W",
   "last_production_milestone_name": "bounded true-only after-following-payload control composition",
   "last_completed_read_only_audit": "R3.18Y",
-  "current_pass": "R3.18Z",
-  "current_pass_kind": "contract-only / exact structural context admission for one following header after R3.18W",
-  "current_pass_goal": "Crystallize the exact 18 R3.18Y seven-field tuples and 47 multiplicities without R3.18P inheritance or any structural widening.",
-  "current_pass_stop_boundary": "Contract only. No production header composition, payload, another control, loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "current_pass": "R3.18AA",
+  "current_pass_kind": "production implementation / exactly one post-R3.18W following header under exact R3.18Z membership",
+  "current_pass_goal": "Compose exactly one following header after a valid R3.18W true control, require exact R3.18Z tuple membership, and stop at payload_start.",
+  "current_pass_stop_boundary": "Stop exactly at the one Z-admitted following header payload_start. No following payload, another control, loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -74,7 +74,10 @@
     "false success semantics after the published R3.18W control boundary",
     "next stream/header/payload after published R3.18W",
     "second later property control bit after published R3.18W",
-    "repeated/generalized property loop or generic cursor after R3.18W"
+    "repeated/generalized property loop or generic cursor after R3.18W",
+    "post-W following payload after R3.18AA header",
+    "another property control after the R3.18AA header payload_start",
+    "repeated/generalized property loop or generic cursor after R3.18AA"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -165,6 +168,9 @@
     "docs/continuity/MIMIR_R3_18X_DECISION.md",
     "docs/continuity/MIMIR_R3_18Y_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18Z_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json",
+    "docs/continuity/MIMIR_R3_18Z_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18Y_DECISION.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
@@ -186,7 +192,7 @@
   ],
   "last_completed_evidence_pass": "R3.18Y",
   "last_completed_evidence_outcome": "A — one post-W following header exact on 47/47; 18 exact contexts; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0.",
-  "last_completed_contract_pass": "R3.18P",
+  "last_completed_contract_pass": "R3.18Z",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -693,7 +699,7 @@
     "receipt_manifest_sha256": "400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc",
     "next_pass": "R3.17F"
   },
-  "last_completed_contract_outcome": "A — 161/161 byte-identical K4 structural/context groups; zero cross-product widening; atomic failure and exact one-value end admitted",
+  "last_completed_contract_outcome": "A — exact_tuple_only post-W following-header contract / 18 complete seven-field tuples / multiplicity sum 47 / R3.18P inheritance false.",
   "r3_17f": {
     "outcome": "A — admitted / contract complete",
     "production_source_changed": false,
@@ -2006,5 +2012,38 @@
     "r3_18p_inheritance_assumed": false,
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
     "privacy": "PASS"
+  },
+  "r3_18z": {
+    "outcome": "A — admitted / boundary-specific exact-tuple contract",
+    "production_source_changed": false,
+    "production_sha": "58872e94f00ef094807f21ab2ff984ac66b97d91",
+    "production_tree": "d6965d77903ea99dad0465bb350b6a673ee7dd00",
+    "contract_path": "docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json",
+    "contract_sha256": "81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9",
+    "membership_policy": "exact_tuple_only",
+    "tuple_fields": [
+      "stream_id_bound",
+      "prop_id_bits",
+      "property_object_index",
+      "attribute_tag",
+      "version_major",
+      "version_minor",
+      "net_version"
+    ],
+    "exact_contexts": 18,
+    "observed_rows": 47,
+    "multiplicity_sum": 47,
+    "tag_counts": {
+      "ActiveActor": 39,
+      "Int": 7,
+      "UniqueId": 1
+    },
+    "r3_18p_cross_boundary_inherited": false,
+    "y_evidence_head": "413d6c24f8f390a57c21ed345f3f868c263f413c",
+    "y_authority_run": 32076198677,
+    "y_authority_job": 95529856476,
+    "y_artifact_id": 9303584468,
+    "anti_widening_negatives": "PASS",
+    "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0"
   }
 }

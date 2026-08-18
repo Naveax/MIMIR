@@ -55,16 +55,16 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18Y — one post-W following header evidence / Outcome A / 47/47 / 18 exact contexts / mismatch 0 / payload-control 0/0
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.18P — following-property header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / zero cross-product widening
+  R3.18Z — post-W following-header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
   R3.18Y — post-W following header / Outcome A / 47 rows / 18 exact tuples / ActiveActor=39 Int=7 UniqueId=1 / R3.18P inheritance 0
 
 CURRENT_PASS:
-  R3.18Z — after-R3.18W following-header exact-context contract
+  R3.18AA — bounded post-R3.18W following-header production composition
 
 CURRENT_PASS_TYPE:
-  contract-only / admit exact seven-field tuple membership from R3.18Y; no R3.18P inheritance; production frozen
+  production implementation / compose exactly one post-W following header under exact R3.18Z tuple membership; stop at payload_start
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -103,8 +103,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18W PRODUCTION at 58872e94f00ef094807f21ab2ff984ac66b97d91: validates exact R3.18T payload end, consumes exactly one following property_present bit, admits true only, false fails closed, stops one bit later
   R3.18X CLOSED Outcome A: published W exact 47/47; true=47 false=0; mismatch 0; all negatives 47/47; adjacent stream/header/payload/second-control 0/0/0/0; artifact 9299790869
   R3.18Y CLOSED Outcome A: one post-W header exact 47/47; 18 contexts; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0; artifact 9303584468
-  R3.18Z ACTIVE exact-context contract-only admission for this later boundary; R3.18P is not inherited
-  NO post-W header production, following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18Z CLOSED Outcome A: exact_tuple_only 18 complete seven-field contexts / multiplicity sum 47 / contract 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9 / R3.18P inheritance false
+  R3.18AA ACTIVE bounded production composition for exactly one post-W following header; exact Z membership; stop at payload_start
+  NO following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -143,6 +144,15 @@ R3_18Q_PRODUCTION_CLOSURE:
   Q/R3.18M control equality: 47/47; Q/stateless-header equality: 47/47
   following payload / another-control bits consumed: 0/0
   clean scope: lib.rs + r3_18q_following_header.rs only; Cargo/fixture/corpus/docs/workflow/support mutation 0
+R3_18Z_CONTRACT_CLOSURE:
+  Outcome A / contract-only / production unchanged at 58872e94f00ef094807f21ab2ff984ac66b97d91
+  contract: docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json / sha256 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9
+  membership: exact_tuple_only / exact contexts 18 / multiplicity sum 47
+  tags: ActiveActor=39 / Int=7 / UniqueId=1
+  Y authority: 413d6c24f8f390a57c21ed345f3f868c263f413c / 32076198677/95529856476 SUCCESS / artifact 9303584468 / sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29
+  R3.18P historical sha256: 0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b / cross-boundary inheritance false
+  tag/component/Cartesian/versionless/nineteenth/P-only tuple negatives: PASS
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
 R3_18Y_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 58872e94f00ef094807f21ab2ff984ac66b97d91
   authority head/tree: 413d6c24f8f390a57c21ed345f3f868c263f413c / c48630bf89c23a8348936f2adbb8f0c9ad0c977b
@@ -2933,7 +2943,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR production is now R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`. It validates one exact R3.18T following-payload end, consumes exactly one true-only property control bit, and stops one bit later. R3.18X is the active read-only published-API differential; next stream/header/payload, second control, generalized loop/cursor, actor/frame and semantic/runtime widening remain closed.**
+> **MIMIR production remains R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`. R3.18Z is now a closed exact-tuple contract for the post-W following-header boundary (`81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`); R3.18AA is the active bounded one-header production pass. Following payload, another control, loops/cursors, actor/frame and semantic/runtime widening remain closed.**
 
 ---
 
@@ -3553,7 +3563,7 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18Z
+# HISTORICAL PASS CHECKLIST — R3.18Z (ADMITTED OUTCOME A)
 
 **Goal:** admit an exact-tuple-only structural contract for the one post-W following header characterized by R3.18Y. Production stays frozen at `58872e94f00ef094807f21ab2ff984ac66b97d91`.
 
@@ -3567,4 +3577,26 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 [ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 [ ] Run knowledge archive verifier, exact clean-head CI + Knowledge Archive, PR CI + Knowledge Archive, then force=false publication.
 [ ] Outcome A opens only R3.18AA bounded one-header production composition; payload and another control stay closed.
+```
+
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18AA
+
+**Goal:** publish exactly one post-W following header under exact R3.18Z membership and stop at `payload_start`.
+
+```text
+[ ] Fetch fresh main; require Z contract 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9 and production 58872e94f00ef094807f21ab2ff984ac66b97d91 / d6965d77903ea99dad0465bb350b6a673ee7dd00.
+[ ] Verify Y authority 32076198677/95529856476, same-head CI 32076881407/95531867271, artifact 9303584468/sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29.
+[ ] Verify Z membership exact_tuple_only, 18 contexts, multiplicity sum 47, R3.18P inheritance false.
+[ ] Implement a deliberately non-generic post-W one-header composition using the existing header primitive.
+[ ] Require exact full seven-field R3.18Z tuple membership.
+[ ] Stop exactly at payload_start; following-payload bits and another-control bits must remain 0/0.
+[ ] Reject truncation, wrong actor/lookup/version, Cartesian/outside-set and R3.18P-only Z-absent tuples.
+[ ] Add focused ActiveActor/Int/UniqueId, repeatability, poison and source-scope tests.
+[ ] Run Rust 1.85 focused/full/workspace/clippy/repository verification.
+[ ] Publish only an exact clean lib.rs + focused-test production commit after clean-head CI.
+[ ] Require PR exact-head CI, fresh-main force=false fast-forward and published-main CI.
+[ ] After publication, sync continuity and open a separate published-AA differential.
 ```

@@ -750,3 +750,15 @@ Next exact pass:
 - Exact result: 47/47 rows; 18 complete seven-field contexts; multiplicity sum 47; ActiveActor=39, Int=7, UniqueId=1; native/oracle mismatch 0; witness reselection 0.
 - All structural negatives 47/47; following payload bits 0; another-control bits 0; R3.18P inheritance assumed 0; privacy PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 - Production remains R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`. R3.18Z is contract-only and may admit only exact tuple membership.
+
+
+## 2026-08-18 — R3.18Z Outcome A admitted; R3.18AA opened
+
+- Production unchanged: `58872e94f00ef094807f21ab2ff984ac66b97d91` / `d6965d77903ea99dad0465bb350b6a673ee7dd00`.
+- Boundary-specific contract: `MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json` / `sha256:81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`.
+- Exact membership: 18 complete seven-field tuples; multiplicity sum 47; ActiveActor=39 / Int=7 / UniqueId=1.
+- Frozen Y authority `413d6c24f8f390a57c21ed345f3f868c263f413c` / `32076198677/95529856476` SUCCESS; same-head CI `32076881407/95531867271`; artifact `9303584468` / `sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29`.
+- R3.18P historical contract `0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b` was not inherited; P-valid/Z-absent tuple `(60,5,102,Boolean,868,32,10)` is rejected.
+- Tag-only, component-only, Cartesian, versionless, nineteenth-tuple and cross-boundary negatives PASS.
+- Production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+- Opened R3.18AA for exactly one Z-admitted post-W header through payload_start only.

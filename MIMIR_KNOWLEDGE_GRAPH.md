@@ -56,7 +56,8 @@ R3.18V next property-control bit evidence decision / Outcome A CLOSED           
 R3.18W bounded true-only after-following-payload control production decision / CLOSED                        |
 R3.18X published R3.18W control differential decision / Outcome A CLOSED                            |
 R3.18Y one-following-property-header evidence decision / Outcome A CLOSED                         |
-R3.18Z active post-W following-header exact-context contract spec                                  |
+R3.18Z post-W following-header exact-context contract decision / Outcome A CLOSED                 |
+R3.18AA active bounded post-W following-header production spec                                      |
         |                               |
         +---------------+---------------+
                         |
@@ -161,13 +162,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 84. `docs/continuity/MIMIR_R3_18Y_EXECUTION_SPEC.md`
 85. `docs/continuity/MIMIR_R3_18Y_DECISION.md`
 86. `docs/continuity/MIMIR_R3_18Z_EXECUTION_SPEC.md`
-87. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-88. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-89. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-90. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-91. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-92. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-93. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+87. `docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json`
+88. `docs/continuity/MIMIR_R3_18Z_DECISION.md`
+89. `docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md`
+90. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+91. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+92. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+93. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+94. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+95. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+96. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -812,3 +816,14 @@ next                        R3.18M true-only one-bit production composition
 ### R3.18Z post-W following-header exact-context contract: ACTIVE
 - admit full seven-field exact tuple membership only from Y; no R3.18P inheritance or cross-product widening
 - production remains `58872e94f00ef094807f21ab2ff984ac66b97d91`; no payload/control/loop/cursor widening
+
+
+### R3.18Z post-W exact-context contract: OUTCOME A / CLOSED
+- contract `docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json` / `sha256:81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`
+- membership exact_tuple_only; 18 complete seven-field contexts; multiplicity sum 47; ActiveActor=39 / Int=7 / UniqueId=1
+- R3.18P cross-boundary inheritance false; tag/component/Cartesian/versionless/nineteenth/P-only negatives PASS
+- production unchanged at `58872e94f00ef094807f21ab2ff984ac66b97d91`; next exact pass R3.18AA bounded one-header production
+
+### R3.18AA bounded post-W following header: ACTIVE
+- use existing stateless header primitive after valid W; require exact Z membership; stop at payload_start
+- no following payload, another control, loop/cursor, actor/frame or semantic/runtime widening
