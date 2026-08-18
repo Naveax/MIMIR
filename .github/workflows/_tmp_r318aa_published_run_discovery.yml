@@ -1,0 +1,53 @@
+name: R3.18AA Published Main Run Discovery
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  discover:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'ops/r318aa-published-run-discovery-v1'
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ops/r318aa-published-run-discovery-v1
+      - name: Discover exact published-main runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISHED_SHA: 9392240c49f95766c214afee9865fed4155a87a4
+        shell: pwsh
+        run: |
+          $json = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs?branch=main&head_sha=$env:PUBLISHED_SHA&event=push&per_page=20"
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Actions run query failed" }
+          $runs = $json | ConvertFrom-Json
+          $selected = @($runs.workflow_runs | ForEach-Object {
+            [ordered]@{
+              id = $_.id
+              name = $_.name
+              status = $_.status
+              conclusion = $_.conclusion
+              head_sha = $_.head_sha
+              event = $_.event
+              path = $_.path
+              created_at = $_.created_at
+              updated_at = $_.updated_at
+            }
+          })
+          $out = [ordered]@{ published_sha = $env:PUBLISHED_SHA; workflow_runs = $selected }
+          $out | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 r318aa_published_runs.json
+          Get-Content r318aa_published_runs.json
+          if ($selected.Count -eq 0) { throw "no exact published-main push runs found" }
+      - name: Upload published-main receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318aa-published-main-runs
+          path: r318aa_published_runs.json
+          if-no-files-found: error
+          retention-days: 3
