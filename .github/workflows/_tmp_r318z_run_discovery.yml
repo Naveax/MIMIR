@@ -6,6 +6,9 @@ on:
       - ops/r318z-run-discovery-v1
     paths-ignore:
       - r318z_run_discovery.json
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -13,9 +16,12 @@ permissions:
 
 jobs:
   discover:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ops/r318z-run-discovery-v1
       - name: Read published-main runs
         env:
           GH_TOKEN: ${{ github.token }}
