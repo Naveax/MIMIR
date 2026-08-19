@@ -1,0 +1,140 @@
+name: R3.18AE Published R3.18AD Differential Evidence v2
+
+on:
+  push:
+    branches:
+      - evidence/r318ae-published-ad-v2
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      R318AE_CANONICAL_MAIN: 03c2e431d9e5a31ccfbb0f6bbda8d767be192df2
+      R318AE_CANONICAL_TREE: 62efc09d2474b35feed5e5ed7f436914010b3f0e
+      R318AE_AD_DECISION_BLOB: cb9e2d97ee4652f6f61804250c98e7e2853aab83
+      R318AE_AE_SPEC_BLOB: 179874f2e1a8ec2b4ed83d7ab6020dd9920dc374
+      R318AE_DRIVER_BLOB: 00cfef5b5831b2dc43ae3b8f0b7e14473c91f4da
+      R318AE_PROBE_BLOB: be3cbabbe753c1533528983189586ebbcd04063f
+      R318AE_RUN_SOURCE_BLOB: 041ade96256897e715cbcf2226ca88d0f9724060
+      R318AE_OLD_LIB: 1254d5a3b0299677f6661712c371aacf27cdb45d
+      R318AE_NEW_LIB: 1254d5a3d16e7b97b1dee87a8b459514d25749ef
+      R318AE_OLD_TEST: 013ad6da300cd88f7821b18634736e016af63276
+      R318AE_NEW_TEST: 013ad6da94b866ecaca94cd6420e7568d9b4b5ee
+    steps:
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=pending -f context='r318ae/evidence' \
+            -f description='R3.18AE corrected published AD differential running' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+
+      - name: Freeze temporary evidence scope and helper provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$R318AE_CANONICAL_MAIN"
+          test "$(git rev-parse "$R318AE_CANONICAL_MAIN^{tree}")" = "$R318AE_CANONICAL_TREE"
+          test "$(git rev-parse HEAD:tools/_tmp_r318ae_driver.py)" = "$R318AE_DRIVER_BLOB"
+          test "$(git rev-parse HEAD:tools/_tmp_r318ae_probe.rs)" = "$R318AE_PROBE_BLOB"
+          test "$(git rev-parse HEAD:tools/_tmp_r318ae_run.sh)" = "$R318AE_RUN_SOURCE_BLOB"
+          mapfile -t changed < <(git diff --name-only "$R318AE_CANONICAL_MAIN" HEAD | sort)
+          expected=(
+            '.github/workflows/_tmp_r318ae_evidence_v2.yml'
+            'tools/_tmp_r318ae_driver.py'
+            'tools/_tmp_r318ae_probe.rs'
+            'tools/_tmp_r318ae_run.sh'
+          )
+          mapfile -t wanted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 4
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${wanted[@]}")"
+          git diff --exit-code "$R318AE_CANONICAL_MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs AGENTS.md MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+          echo 'R3_18AE_TEMP_SCOPE=PASS files=4 production_mutation=0'
+
+      - name: Materialize corrected runtime harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          src = Path('tools/_tmp_r318ae_run.sh')
+          dst = Path('/tmp/_tmp_r318ae_run_v2.sh')
+          s = src.read_text(encoding='utf-8')
+          pairs = [
+              (os.environ['R318AE_OLD_LIB'], os.environ['R318AE_NEW_LIB'], 'lib'),
+              (os.environ['R318AE_OLD_TEST'], os.environ['R318AE_NEW_TEST'], 'test'),
+          ]
+          for old, new, label in pairs:
+              if s.count(old) != 1:
+                  raise SystemExit(f'{label}: expected exactly one stale source receipt')
+              if new in s:
+                  raise SystemExit(f'{label}: corrected receipt unexpectedly already present in pinned source')
+              s = s.replace(old, new)
+          for old, new, label in pairs:
+              if old in s or s.count(new) != 1:
+                  raise SystemExit(f'{label}: runtime receipt replacement failed')
+          dst.write_text(s, encoding='utf-8', newline='\n')
+          print('R3_18AE_RUNTIME_RECEIPT_CORRECTION=PASS replacements=2 source_blob_pinned=1')
+          PY
+          chmod +x /tmp/_tmp_r318ae_run_v2.sh
+
+      - name: Execute R3.18AE evidence
+        shell: bash
+        run: bash /tmp/_tmp_r318ae_run_v2.sh
+
+      - name: Upload immutable evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ae-published-ad-differential-evidence-v2
+          path: |
+            r3_18ae_source_scope.txt
+            r3_18ae_replay_identity.tsv
+            r3_18ae_frozen_ac_rows.json
+            r3_18ae_published_rows.json
+            r3_18ae_payload_summary.json
+            r3_18ae_negative_controls.txt
+            r3_18ae_aggregate.txt
+            r3_18ae_upstream_receipts.txt
+            r3_18ae_artifact_sha256.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Mark evidence success
+        if: success()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=success -f context='r318ae/evidence' \
+            -f description='R3.18AE evidence PASS 47/47' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=failure -f context='r318ae/evidence' \
+            -f description='R3.18AE corrected evidence failed' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
