@@ -1,0 +1,119 @@
+name: R3.18AC Immutable Receipt
+
+on:
+  push:
+    branches:
+      - ops/r318ac-receipt-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  receipt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      AC_HEAD: 62bc43dd12dbde48fb503cccd4da46dfcf6ae252
+      AC_BRANCH: evidence/r318ac-payload-v1
+      AC_WORKFLOW: R3.18AC Ordinal-3 Payload Evidence
+      AC_ARTIFACT_NAME: r318ac-post-aa-ordinal3-payload-evidence
+      BASE_MAIN: f34413e00518b73cf3768cd1914eda8c728306df
+    steps:
+      - name: Mark receipt pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=pending -f context='r318ac/receipt' \
+            -f description='R3.18AC immutable receipt running' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+
+      - name: Resolve exact successful AC authority
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_MAIN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$AC_HEAD/status" --jq '[.statuses[] | select(.context=="r318ac/evidence" and .state=="success")] | length')" -ge 1
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$AC_BRANCH&event=push&per_page=100" > /tmp/runs.json
+          AC_RUN="$(jq -r --arg sha "$AC_HEAD" --arg name "$AC_WORKFLOW" '[.workflow_runs[] | select(.head_sha==$sha and .name==$name and .conclusion=="success")] | if length==1 then .[0].id else error("expected exactly one successful exact-head AC run") end' /tmp/runs.json)"
+          test -n "$AC_RUN" && test "$AC_RUN" != null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AC_RUN/jobs?per_page=100" > /tmp/jobs.json
+          AC_JOB="$(jq -r '[.jobs[] | select(.name=="evidence" and .conclusion=="success")] | if length==1 then .[0].id else error("expected exactly one successful evidence job") end' /tmp/jobs.json)"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AC_RUN/artifacts?per_page=100" > /tmp/artifacts.json
+          AC_ART="$(jq -r --arg name "$AC_ARTIFACT_NAME" '[.artifacts[] | select(.name==$name and .expired==false)] | if length==1 then .[0].id else error("expected exactly one live AC artifact") end' /tmp/artifacts.json)"
+          AC_SIZE="$(jq -r --arg name "$AC_ARTIFACT_NAME" '.artifacts[] | select(.name==$name) | .size_in_bytes' /tmp/artifacts.json)"
+          AC_DIGEST="$(jq -r --arg name "$AC_ARTIFACT_NAME" '.artifacts[] | select(.name==$name) | .digest' /tmp/artifacts.json)"
+          test -n "$AC_DIGEST" && test "$AC_DIGEST" != null
+          echo "AC_RUN=$AC_RUN" >> "$GITHUB_OUTPUT"
+          echo "AC_JOB=$AC_JOB" >> "$GITHUB_OUTPUT"
+          echo "AC_ART=$AC_ART" >> "$GITHUB_OUTPUT"
+          echo "AC_SIZE=$AC_SIZE" >> "$GITHUB_OUTPUT"
+          echo "AC_DIGEST=$AC_DIGEST" >> "$GITHUB_OUTPUT"
+          echo "R3_18AC_AUTHORITY_RUN=$AC_RUN"
+          echo "R3_18AC_AUTHORITY_JOB=$AC_JOB"
+          echo "R3_18AC_ARTIFACT_ID=$AC_ART"
+          echo "R3_18AC_ARTIFACT_SIZE=$AC_SIZE"
+          echo "R3_18AC_ARTIFACT_DIGEST=$AC_DIGEST"
+
+      - name: Verify immutable AC artifact
+        shell: bash
+        env:
+          AC_RUN: ${{ steps.resolve.outputs.AC_RUN }}
+        run: |
+          set -euo pipefail
+          d="$RUNNER_TEMP/ac"
+          rm -rf "$d"; mkdir -p "$d"
+          gh run download "$AC_RUN" -n "$AC_ARTIFACT_NAME" -D "$d"
+          test "$(wc -l < "$d/r3_18ac_artifact_sha256.txt")" -eq 10
+          (cd "$d" && sha256sum -c r3_18ac_artifact_sha256.txt)
+          grep -Fqx 'R3_18AC_OUTCOME=A' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_EVIDENCE=PASS' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_FROZEN_ROWS=47/47' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_ORACLE_NATIVE_MISMATCH=0' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_TAGS=ActiveActor:39,Int:7,UniqueId:1' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_WITNESS_RESELECTION=0' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_ANOTHER_CONTROL_BITS_CONSUMED=0' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_PRIVACY=PASS' "$d/r3_18ac_aggregate.txt"
+          echo '--- R3.18AC aggregate ---'
+          cat "$d/r3_18ac_aggregate.txt"
+          echo '--- R3.18AC payload summary ---'
+          cat "$d/r3_18ac_payload_summary.json"
+          echo '--- R3.18AC unique id layout ---'
+          cat "$d/r3_18ac_unique_id_layout.json"
+          echo '--- R3.18AC source scope ---'
+          cat "$d/r3_18ac_source_scope.txt"
+          echo '--- R3.18AC upstream receipts ---'
+          cat "$d/r3_18ac_upstream_receipts.txt"
+          echo 'R3_18AC_INNER_MANIFEST=PASS 10/10'
+
+      - name: Mark receipt success
+        shell: bash
+        env:
+          AC_RUN: ${{ steps.resolve.outputs.AC_RUN }}
+          AC_JOB: ${{ steps.resolve.outputs.AC_JOB }}
+          AC_ART: ${{ steps.resolve.outputs.AC_ART }}
+        run: |
+          set -euo pipefail
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=success -f context='r318ac/receipt' \
+            -f description="AC run=$AC_RUN job=$AC_JOB art=$AC_ART" \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+          echo "R3_18AC_RECEIPT=PASS helper_run=$GITHUB_RUN_ID ac_run=$AC_RUN ac_job=$AC_JOB ac_artifact=$AC_ART"
+
+      - name: Mark receipt failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=failure -f context='r318ac/receipt' \
+            -f description='R3.18AC immutable receipt failed' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
