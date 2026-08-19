@@ -1,0 +1,420 @@
+name: R3.18AB Published AA Differential Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318ab-aa-audit-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 713298a04bbb5491286e7f4ee5bf47a5d201b28c
+      BASE_TREE: 5cca2c6c15013895e01ab4acf083fed59f8023da
+      PROD_SHA: 9392240c49f95766c214afee9865fed4155a87a4
+      PROD_TREE: 968520d480f78c528086e4e31b2ce307f4f8d232
+      LIB_BLOB: 46523f47f94231362b60f8aee038e943e41c7972
+      TEST_BLOB: 7df8f84af37d771b12da1334bd195634e4cc6a54
+      AA_DECISION_BLOB: 10778cb9ca7f23929aef9617563eaeabf887da3b
+      AB_SPEC_BLOB: 4cfe6f8df61610565e081ae1383fccaf19e4ef13
+      Z_SHA256: 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9
+      Y_HEAD: 413d6c24f8f390a57c21ed345f3f868c263f413c
+      Y_RUN: "32076198677"
+      Y_JOB: "95529856476"
+      Y_SAME_HEAD_CI: "32076881407"
+      Y_SAME_HEAD_CI_JOB: "95531867271"
+      Y_ART: "9303584468"
+      Y_ART_NAME: r318y-following-property-header-evidence
+      Y_ART_SIZE: "19642"
+      Y_ART_DIGEST: sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29
+      Y_ROWS_SHA256: 0bfb38ca10d329d7c8cb66cee57449c17108213c9588a64d0ed4b511afbe9d47
+      Y_SUMMARY_SHA256: 035e56fcdfb643aec00e7474fddfc378afb8f8e4e9ad531c532159f0111a591f
+      Y_AGG_SHA256: 618ac3901b46c04732d57469b583ba2187bfe1007c3ff210094039cfc2e63082
+      Y_MANIFEST_SHA256: 0de7e6cc92a748577f141108043a6db959ac281846de89a884b27619631bbbd2
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Freeze authority and existing validation runs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(git merge-base "$BASE_SHA" HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18aa_post_w_following_header.rs")" = "$TEST_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18AA_DECISION.md")" = "$AA_DECISION_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18AB_EXECUTION_SPEC.md")" = "$AB_SPEC_BLOB"
+          test "$(sha256sum docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$Z_SHA256"
+
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          expected=(
+            '.github/workflows/_tmp_r318ab_evidence.yml'
+            'tools/_tmp_r318ab_driver.py'
+            'tools/_tmp_r318ab_probe.rs'
+          )
+          mapfile -t wanted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 3
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${wanted[@]}")"
+          git diff --exit-code "$BASE_SHA" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md AGENTS.md
+          git diff --exit-code "$PROD_SHA" "$BASE_SHA" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts tools
+
+          for run in 32142503228 32143161309 32143631391 "$Y_RUN" "$Y_SAME_HEAD_CI" 32228490191 32228490168; do
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" = success
+          done
+          for job in 95728286216 95730448274 95731995111 "$Y_JOB" "$Y_SAME_HEAD_CI_JOB" 95993099989 95993099677; do
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .conclusion)" = success
+          done
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/32228490191" --jq .head_sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/32228490168" --jq .head_sha)" = "$BASE_SHA"
+
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$BASE_SHA&event=push&per_page=100" > /tmp/base_runs.json
+          python3 - <<'PY'
+          import json, os
+          d=json.load(open('/tmp/base_runs.json'))
+          sha=os.environ['BASE_SHA']
+          def one(name):
+              xs=[r for r in d.get('workflow_runs',[]) if r.get('head_sha')==sha and r.get('event')=='push' and r.get('head_branch')=='main' and r.get('name')==name]
+              assert len(xs)==1,(name,[(r.get('id'),r.get('status'),r.get('conclusion')) for r in xs])
+              return xs[0]['id']
+          with open('/tmp/base_validation.env','w') as f:
+              f.write(f"BASE_PUSH_CI_RUN={one('CI')}\n")
+              f.write(f"BASE_PUSH_KA_RUN={one('Knowledge Archive')}\n")
+          PY
+          source /tmp/base_validation.env
+          wait_run() {
+            local id="$1"
+            for _ in $(seq 1 180); do
+              local status conclusion
+              status="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq .status)"
+              conclusion="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '.conclusion // ""')"
+              if [ "$status" = completed ]; then
+                test "$conclusion" = success
+                return 0
+              fi
+              sleep 10
+            done
+            echo "run $id did not complete in bounded poll window" >&2
+            return 1
+          }
+          wait_run "$BASE_PUSH_CI_RUN"
+          wait_run "$BASE_PUSH_KA_RUN"
+          BASE_PUSH_CI_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BASE_PUSH_CI_RUN/jobs" --jq '.jobs[] | select(.name=="rust") | .id')"
+          BASE_PUSH_KA_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BASE_PUSH_KA_RUN/jobs" --jq '.jobs[] | select(.name=="verify") | .id')"
+          test -n "$BASE_PUSH_CI_JOB"
+          test -n "$BASE_PUSH_KA_JOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BASE_PUSH_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BASE_PUSH_KA_JOB" --jq .conclusion)" = success
+          printf 'BASE_PUSH_CI_JOB=%s\nBASE_PUSH_KA_JOB=%s\n' "$BASE_PUSH_CI_JOB" "$BASE_PUSH_KA_JOB" >> /tmp/base_validation.env
+          echo "R3_18AB_AUTHORITY_FREEZE=PASS base_ci=$BASE_PUSH_CI_RUN/$BASE_PUSH_CI_JOB base_ka=$BASE_PUSH_KA_RUN/$BASE_PUSH_KA_JOB"
+
+      - name: Verify immutable R3.18Y lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          Y_DIR="$RUNNER_TEMP/r318y"
+          rm -rf "$Y_DIR"
+          mkdir -p "$Y_DIR"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$Y_ART" --jq .workflow_run.id)" = "$Y_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$Y_ART" --jq .workflow_run.head_sha)" = "$Y_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$Y_ART" --jq .name)" = "$Y_ART_NAME"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$Y_ART" --jq .size_in_bytes)" = "$Y_ART_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$Y_ART" --jq .digest)" = "$Y_ART_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$Y_ART" --jq .expired)" = false
+          for attempt in 1 2 3; do
+            rm -rf "$Y_DIR"; mkdir -p "$Y_DIR"
+            if gh run download "$Y_RUN" -n "$Y_ART_NAME" -D "$Y_DIR"; then
+              echo "R3_18AB_Y_DOWNLOAD_ATTEMPT=$attempt"
+              break
+            fi
+            test "$attempt" -lt 3
+            sleep $((attempt*10))
+          done
+          test "$(sha256sum "$Y_DIR/r3_18y_header_rows.json" | awk '{print $1}')" = "$Y_ROWS_SHA256"
+          test "$(sha256sum "$Y_DIR/r3_18y_header_summary.json" | awk '{print $1}')" = "$Y_SUMMARY_SHA256"
+          test "$(sha256sum "$Y_DIR/r3_18y_aggregate.txt" | awk '{print $1}')" = "$Y_AGG_SHA256"
+          test "$(sha256sum "$Y_DIR/r3_18y_artifact_sha256.txt" | awk '{print $1}')" = "$Y_MANIFEST_SHA256"
+          (cd "$Y_DIR" && test "$(wc -l < r3_18y_artifact_sha256.txt)" -eq 9 && sha256sum -c r3_18y_artifact_sha256.txt)
+          grep -Fqx 'R3_18Y_OUTCOME=A' "$Y_DIR/r3_18y_aggregate.txt"
+          grep -Fqx 'R3_18Y_FROZEN_ROWS=47/47' "$Y_DIR/r3_18y_aggregate.txt"
+          grep -Fqx 'R3_18Y_UNIQUE_EXACT_CONTEXTS=18' "$Y_DIR/r3_18y_aggregate.txt"
+          grep -Fqx 'R3_18Y_NATIVE_ORACLE_MISMATCH=0' "$Y_DIR/r3_18y_aggregate.txt"
+          grep -Fqx 'R3_18Y_WITNESS_RESELECTION=0' "$Y_DIR/r3_18y_aggregate.txt"
+          echo "Y_DIR=$Y_DIR" >> "$GITHUB_ENV"
+          echo 'R3_18AB_IMMUTABLE_Y=PASS'
+
+      - name: Build exact frozen targets and temporary published-AA probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p crates/mimir-replay/examples
+          cp tools/_tmp_r318ab_probe.rs crates/mimir-replay/examples/_tmp_r318ab_probe.rs
+          python3 tools/_tmp_r318ab_driver.py prepare "$Y_DIR" docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json /tmp/r318ab_targets.tsv
+          test "$(wc -l < /tmp/r318ab_targets.tsv)" -eq 47
+          git diff --exit-code
+          test -f crates/mimir-replay/examples/_tmp_r318ab_probe.rs
+          echo 'R3_18AB_TARGETS=PASS rows=47'
+
+      - name: Published AA frozen-Y direct-native differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          cleanup() { rm -f crates/mimir-replay/examples/_tmp_r318ab_probe.rs; }
+          trap cleanup EXIT
+          cargo +1.85.0 run -q -p mimir-replay --example _tmp_r318ab_probe -- /tmp/r318ab_targets.tsv > /tmp/r318ab_run1.log
+          cargo +1.85.0 run -q -p mimir-replay --example _tmp_r318ab_probe -- /tmp/r318ab_targets.tsv > /tmp/r318ab_run2.log
+          cmp /tmp/r318ab_run1.log /tmp/r318ab_run2.log
+          test "$(grep -c $'^R3_18AB_PUBLISHED\t' /tmp/r318ab_run1.log)" -eq 47
+          grep -Fqx $'R3_18AB_PUBLISHED_AGG\trows=47\tpublished_exact=47\tdirect_equal=47\trepeatability=47\ttruncation=47\twrong_actor_negative=47\tunresolved_lookup_negative=47\twrong_version_negative=47\tpost_payload_poison=47\tfollowing_payload_bits_consumed=0\tanother_control_bits_consumed=0' /tmp/r318ab_run1.log
+          python3 tools/_tmp_r318ab_driver.py analyze "$Y_DIR" docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json /tmp/r318ab_run1.log
+          cleanup
+          trap - EXIT
+          test ! -e crates/mimir-replay/examples/_tmp_r318ab_probe.rs
+          git diff --exit-code
+          echo 'R3_18AB_DIFFERENTIAL=PASS rows=47 mismatch=0'
+
+      - name: Permanent focused R3.18AA boundary tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18aa_post_w_following_header -- --nocapture | tee r3_18ab_focused_test.txt
+          grep -F 'test result: ok. 5 passed; 0 failed' r3_18ab_focused_test.txt
+          echo 'R3_18AB_FOCUSED_AA=PASS 5/5'
+
+      - name: Require existing same-head CI and Knowledge Archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&event=push&per_page=100" > /tmp/head_runs.json
+          python3 - <<'PY'
+          import json, os
+          d=json.load(open('/tmp/head_runs.json'))
+          sha=os.environ['GITHUB_SHA']
+          branch='evidence/r318ab-aa-audit-v1'
+          def one(name):
+              xs=[r for r in d.get('workflow_runs',[]) if r.get('head_sha')==sha and r.get('event')=='push' and r.get('head_branch')==branch and r.get('name')==name]
+              assert len(xs)==1,(name,[(r.get('id'),r.get('status'),r.get('conclusion')) for r in xs])
+              return xs[0]['id']
+          with open('/tmp/head_validation.env','w') as f:
+              f.write(f"HEAD_CI_RUN={one('CI')}\n")
+              f.write(f"HEAD_KA_RUN={one('Knowledge Archive')}\n")
+          PY
+          source /tmp/head_validation.env
+          wait_run() {
+            local id="$1"
+            for _ in $(seq 1 180); do
+              local status conclusion
+              status="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq .status)"
+              conclusion="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '.conclusion // ""')"
+              if [ "$status" = completed ]; then
+                test "$conclusion" = success
+                return 0
+              fi
+              sleep 10
+            done
+            echo "run $id did not complete in bounded poll window" >&2
+            return 1
+          }
+          wait_run "$HEAD_CI_RUN"
+          wait_run "$HEAD_KA_RUN"
+          HEAD_CI_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$HEAD_CI_RUN/jobs" --jq '.jobs[] | select(.name=="rust") | .id')"
+          HEAD_KA_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$HEAD_KA_RUN/jobs" --jq '.jobs[] | select(.name=="verify") | .id')"
+          test -n "$HEAD_CI_JOB"
+          test -n "$HEAD_KA_JOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$HEAD_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$HEAD_KA_JOB" --jq .conclusion)" = success
+          printf 'HEAD_CI_JOB=%s\nHEAD_KA_JOB=%s\n' "$HEAD_CI_JOB" "$HEAD_KA_JOB" >> /tmp/head_validation.env
+          echo "R3_18AB_SAME_HEAD_VALIDATION=PASS ci=$HEAD_CI_RUN/$HEAD_CI_JOB ka=$HEAD_KA_RUN/$HEAD_KA_JOB"
+
+      - name: Final source scope privacy and immutable evidence files
+        shell: bash
+        run: |
+          set -euo pipefail
+          source /tmp/base_validation.env
+          source /tmp/head_validation.env
+          cat > r3_18ab_upstream_receipts.txt <<EOF
+          R3_18AB_BASE_MAIN=$BASE_SHA
+          R3_18AB_BASE_TREE=$BASE_TREE
+          R3_18AB_PRODUCTION=$PROD_SHA
+          R3_18AB_PRODUCTION_TREE=$PROD_TREE
+          R3_18AB_AA_BUILDER=32142503228/95728286216
+          R3_18AB_AA_CANDIDATE_CI=32143161309/95730448274
+          R3_18AB_AA_PUBLISHED_CI=32143631391/95731995111
+          R3_18AB_CONTINUITY_CANDIDATE_CI=32228490191/95993099989
+          R3_18AB_CONTINUITY_CANDIDATE_KA=32228490168/95993099677
+          R3_18AB_CONTINUITY_PUBLISHED_CI=$BASE_PUSH_CI_RUN/$BASE_PUSH_CI_JOB
+          R3_18AB_CONTINUITY_PUBLISHED_KA=$BASE_PUSH_KA_RUN/$BASE_PUSH_KA_JOB
+          R3_18AB_Y_AUTHORITY=$Y_RUN/$Y_JOB
+          R3_18AB_Y_SAME_HEAD_CI=$Y_SAME_HEAD_CI/$Y_SAME_HEAD_CI_JOB
+          R3_18AB_Y_ARTIFACT=$Y_ART/$Y_ART_SIZE/$Y_ART_DIGEST
+          R3_18AB_EVIDENCE_HEAD_CI=$HEAD_CI_RUN/$HEAD_CI_JOB
+          R3_18AB_EVIDENCE_HEAD_KA=$HEAD_KA_RUN/$HEAD_KA_JOB
+          EOF
+          cat > r3_18ab_source_scope.txt <<EOF
+          R3_18AB_BASE_MAIN=$BASE_SHA
+          R3_18AB_BASE_TREE=$BASE_TREE
+          R3_18AB_EVIDENCE_HEAD=$GITHUB_SHA
+          R3_18AB_PRODUCTION_SHA=$PROD_SHA
+          R3_18AB_PRODUCTION_TREE=$PROD_TREE
+          R3_18AB_LIB_BLOB=$LIB_BLOB
+          R3_18AB_AA_TEST_BLOB=$TEST_BLOB
+          R3_18AB_AA_DECISION_BLOB=$AA_DECISION_BLOB
+          R3_18AB_AB_SPEC_BLOB=$AB_SPEC_BLOB
+          R3_18AB_Z_CONTRACT_SHA256=$Z_SHA256
+          R3_18AB_Y_HEAD=$Y_HEAD
+          R3_18AB_Y_ROWS_SHA256=$Y_ROWS_SHA256
+          R3_18AB_Y_SUMMARY_SHA256=$Y_SUMMARY_SHA256
+          R3_18AB_CHANGED_TEMP_FILES=3
+          R3_18AB_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0
+          R3_18AB_WITNESS_RESELECTION=0
+          R3_18AB_FOLLOWING_PAYLOAD_BITS_CONSUMED=0
+          R3_18AB_ANOTHER_CONTROL_BITS_CONSUMED=0
+          EOF
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          files=[
+            'r3_18ab_source_scope.txt','r3_18ab_replay_identity.tsv','r3_18ab_frozen_y_rows.json',
+            'r3_18ab_published_rows.json','r3_18ab_context_summary.json',
+            'r3_18ab_negative_controls.txt','r3_18ab_aggregate.txt',
+            'r3_18ab_upstream_receipts.txt','r3_18ab_focused_test.txt'
+          ]
+          patterns=[
+            re.compile(r'(?i)authorization\s*:\s*bearer'),
+            re.compile(r'(?i)gh[pousr]_[A-Za-z0-9]{20,}'),
+            re.compile(r'(?i)github_pat_[A-Za-z0-9_]+'),
+            re.compile(r'C:\\Users\\'),
+            re.compile(r'/home/runner/'),
+            re.compile(r'(?i)BEGIN [A-Z ]*PRIVATE KEY'),
+          ]
+          for f in files:
+              text=Path(f).read_text(encoding='utf-8',errors='replace')
+              for p in patterns:
+                  assert not p.search(text),(f,p.pattern)
+          print('R3_18AB_PRIVACY=PASS')
+          PY
+          files=(
+            r3_18ab_source_scope.txt
+            r3_18ab_replay_identity.tsv
+            r3_18ab_frozen_y_rows.json
+            r3_18ab_published_rows.json
+            r3_18ab_context_summary.json
+            r3_18ab_negative_controls.txt
+            r3_18ab_aggregate.txt
+            r3_18ab_upstream_receipts.txt
+            r3_18ab_focused_test.txt
+          )
+          sha256sum "${files[@]}" > r3_18ab_artifact_sha256.txt
+          test "$(wc -l < r3_18ab_artifact_sha256.txt)" -eq 9
+          sha256sum -c r3_18ab_artifact_sha256.txt
+          git diff --exit-code "$BASE_SHA" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md AGENTS.md
+          echo 'R3_18AB_FINAL_SCOPE=PASS'
+
+      - name: Upload immutable R3.18AB evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ab-published-aa-following-header-differential-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            r3_18ab_source_scope.txt
+            r3_18ab_replay_identity.tsv
+            r3_18ab_frozen_y_rows.json
+            r3_18ab_published_rows.json
+            r3_18ab_context_summary.json
+            r3_18ab_negative_controls.txt
+            r3_18ab_aggregate.txt
+            r3_18ab_upstream_receipts.txt
+            r3_18ab_focused_test.txt
+            r3_18ab_artifact_sha256.txt
+
+      - name: Emit immutable receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" > /tmp/artifacts.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > /tmp/run.json
+          python3 - <<'PY'
+          import json, os
+          def norm(v):
+              if v is None: return None
+              v=v.strip().lower()
+              return v[7:] if v.startswith('sha256:') else v
+          aid=int(os.environ['ARTIFACT_ID'])
+          data=json.load(open('/tmp/artifacts.json'))
+          run=json.load(open('/tmp/run.json'))
+          matches=[a for a in data.get('artifacts',[]) if a.get('id')==aid]
+          assert len(matches)==1,matches
+          a=matches[0]
+          checks={
+              'name':a.get('name')=='r318ab-published-aa-following-header-differential-evidence',
+              'expired':a.get('expired') is False,
+              'digest':a.get('digest') is None or norm(a.get('digest'))==norm(os.environ['ARTIFACT_DIGEST']),
+              'run':str(run.get('id'))==os.environ['GITHUB_RUN_ID'],
+              'head':run.get('head_sha')==os.environ['GITHUB_SHA'],
+              'branch':run.get('head_branch')=='evidence/r318ab-aa-audit-v1',
+              'event':run.get('event')=='push',
+              'repo':run.get('repository',{}).get('full_name')==os.environ['GITHUB_REPOSITORY'],
+          }
+          print(json.dumps({'artifact_id':aid,'size':a.get('size_in_bytes'),'rest_digest':a.get('digest'),'upload_digest':os.environ['ARTIFACT_DIGEST'],'checks':checks},sort_keys=True))
+          assert all(checks.values()),checks
+          print('R3_18AB_RECEIPT=PASS')
+          PY
+          echo "R3_18AB_EVIDENCE_HEAD=$GITHUB_SHA"
+          echo "R3_18AB_EVIDENCE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18AB_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18AB_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18AB_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          cat r3_18ab_aggregate.txt
+          cat r3_18ab_artifact_sha256.txt
+          echo 'R3_18AB_IMMUTABLE_RECEIPT=PASS'
+
+      - name: Publish discoverable authority status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+        run: |
+          set -euo pipefail
+          case "$JOB_STATUS" in
+            success) STATE=success ;;
+            failure) STATE=failure ;;
+            cancelled) STATE=error ;;
+            *) STATE=error ;;
+          esac
+          AID="${ARTIFACT_ID:-none}"
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state="$STATE" \
+            -f context='r318ab-authority-receipt' \
+            -f description="run=$GITHUB_RUN_ID status=$JOB_STATUS artifact=$AID" \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+          echo "R3_18AB_DISCOVERABLE_STATUS=PASS run=$GITHUB_RUN_ID state=$STATE artifact=$AID"
