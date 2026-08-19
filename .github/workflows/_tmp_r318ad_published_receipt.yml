@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -23,7 +23,7 @@ jobs:
       PROD_SHA: ccadbf148381c007890d13d5fe8120866a0f40f9
       PROD_TREE: 0882601060d0bb6d37fcc03ae7273dcf50dd0be3
       PROD_PARENT: 671cd19a7d034b1377de5bed1dfd36600f45c8d7
-      CANDIDATE_BRANCH: ops/r318ad-production-v1
+      CANDIDATE_BRANCH: validate/r318ad-clean-push-v1
       MAIN_BRANCH: main
       PR_CI_RUN: "32242293315"
       PR_CI_JOB: "96035296746"
@@ -53,6 +53,7 @@ jobs:
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PR_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILDER_RUN" --jq .conclusion)" = success
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BUILDER_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/$CANDIDATE_BRANCH" --jq .commit.sha)" = "$PROD_SHA"
           echo 'R3_18AD_PUBLISHED_FREEZE=PASS'
 
       - name: Resolve existing exact-head push CI receipts
