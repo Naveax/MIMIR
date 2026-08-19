@@ -1,4 +1,5 @@
 name: R3.18AD Continuity Sync Builder
+# One-shot bootstrap commit. The builder rewrites this branch to a clean docs-only candidate.
 
 on:
   push:
