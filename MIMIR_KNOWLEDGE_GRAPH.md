@@ -58,7 +58,8 @@ R3.18X published R3.18W control differential decision / Outcome A CLOSED        
 R3.18Y one-following-property-header evidence decision / Outcome A CLOSED                         |
 R3.18Z post-W following-header exact-context contract decision / Outcome A CLOSED                 |
 R3.18AA bounded post-W following-header production decision / CLOSED                         |
-R3.18AB active published-AA following-header differential spec                                  |
+R3.18AB published-AA following-header differential / Outcome A CLOSED                        |
+R3.18AC active post-AA ordinal-3 following-payload evidence                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -168,13 +169,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 89. `docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md`
 90. `docs/continuity/MIMIR_R3_18AA_DECISION.md`
 91. `docs/continuity/MIMIR_R3_18AB_EXECUTION_SPEC.md`
-92. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-93. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-94. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-95. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-96. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-97. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-98. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+92. `docs/continuity/MIMIR_R3_18AB_DECISION.md`
+93. `docs/continuity/MIMIR_R3_18AC_EXECUTION_SPEC.md`
+94. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+95. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+96. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+97. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+98. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+99. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+100. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -838,3 +841,13 @@ next                        R3.18M true-only one-bit production composition
 - read-only exact 47-row R3.18Y lane; witness reselection 0 required
 - published-AA vs frozen-Y/direct-native equality through payload_start; exact Z membership preserved
 - following payload / another control consumption must remain 0/0; production mutation forbidden
+
+
+## CURRENT OVERRIDE — R3.18AB CLOSED / R3.18AC ACTIVE
+
+- Production remains R3.18AA `9392240c49f95766c214afee9865fed4155a87a4` / `968520d480f78c528086e4e31b2ce307f4f8d232`.
+- R3.18AB Outcome A authority `b2f4b73600165b2d83389b6ce43709b64beba52a` / tree `8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1` / `32230919566/96000311036` SUCCESS; same-head CI `32230919652/96000311479` SUCCESS.
+- Artifact `9357559410` / `12607` bytes / `sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99`; ZIP digest exact and internal 9-entry manifest PASS.
+- Published AA / frozen Y / direct stateless header exact 47/47; R3.18Z contexts 18/18, multiplicities 47/47; ActiveActor=39 / Int=7 / UniqueId=1; mismatch 0; witness reselection 0; payload/control 0/0; privacy PASS.
+- Superseded `f2f79e47fefbe7ee95ea5df84c78a86868f57bb3` / `32229955227/95997443235` was harness-only truncation 39/47; positive/equality checks were already 47/47 and production was unchanged.
+- R3.18AC is active read-only payload evidence at Boxcars property ordinal 3 on the same 47 rows. No payload production composition, another control, loop/cursor or semantic/runtime widening is admitted.

@@ -6,30 +6,33 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AA production / R3.18AB active
+# 0. Current override — R3.18AB closed / R3.18AC active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION
 - R3.18AA `9392240c49f95766c214afee9865fed4155a87a4` / `968520d480f78c528086e4e31b2ce307f4f8d232`: validates one published R3.18W true-control boundary, decodes exactly one following existing-actor header with the stateless primitive, requires exact R3.18Z seven-field membership, and stops at `payload_start`.
 
-## CLOSED EVIDENCE — R3.18Y Outcome A
-- one post-W following header exact on 47/47 rows through `payload_start`;
-- 18 complete seven-field contexts / multiplicity sum 47 / ActiveActor=39 / Int=7 / UniqueId=1;
-- payload/another-control consumption 0/0; R3.18P inheritance assumed 0.
+## CLOSED EVIDENCE — R3.18AB Outcome A
+- exact immutable R3.18Y 47-row lane; witness reselection 0;
+- published R3.18AA / frozen Y / direct stateless header exact 47/47;
+- exact R3.18Z contexts 18/18 and multiplicities 47/47; ActiveActor=39 / Int=7 / UniqueId=1;
+- mismatch 0; following-payload/another-control consumption 0/0; privacy PASS;
+- authority `32230919566/96000311036` and same-head CI `32230919652/96000311479` SUCCESS; artifact `9357559410` / `sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99`.
 
 ## CLOSED CONTRACT — R3.18Z Outcome A
 - contract `81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`; `exact_tuple_only`; 18 contexts / 47 multiplicities;
 - tag/component/Cartesian/versionless/outside-set membership false;
 - R3.18P cross-boundary inheritance false.
 
-## ACTIVE READ-ONLY GATE — R3.18AB
-- exact immutable R3.18Y 47-row lane only; witness reselection forbidden;
-- published R3.18AA vs frozen-Y/direct-native equality through `payload_start`;
-- production mutation forbidden; following payload and another control remain unopened.
+## ACTIVE READ-ONLY GATE — R3.18AC
+- exactly the same frozen 47 AB/Y rows; witness reselection forbidden;
+- start at AA `payload_start`, compare pinned Boxcars ordinal-3 payload facts to the narrow existing native primitive;
+- observed header classes are ActiveActor=39 / Int=7 / UniqueId=1, but payload widths/layouts must be proven rather than inferred;
+- stop at exactly one payload end; another control remains unopened; production mutation forbidden.
 
 ## CLOSED
-- following payload; another property control; generic/repeated property cursor/loop;
+- post-AA payload production composition; another property control; generic/repeated property cursor/loop;
 - next actor/frame/lifecycle; raw state/events/slices/skills/counterfactual/runtime/export widening.
 
 ---

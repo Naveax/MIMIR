@@ -774,3 +774,32 @@ Next exact pass:
 - Real ActiveActor/Int/UniqueId representatives PASS; truncation/wrong actor/wrong version/Cartesian/P-only-Z-absent/repeatability/post-payload-poison negatives PASS.
 - Following payload / another-control consumption 0/0; no loop/cursor; Cargo/docs/workflow/fixture/corpus/support mutation outside clean production scope 0.
 - Opened R3.18AB as a separate read-only published-AA differential on the exact immutable 47-row Y lane.
+
+---
+
+## 2026-08-19 — R3.18AB — Published R3.18AA post-W following-header differential
+
+Production SHA: `9392240c49f95766c214afee9865fed4155a87a4` / tree `968520d480f78c528086e4e31b2ce307f4f8d232`
+Pass type: read-only published-production differential
+Outcome: **A — ADMITTED / CLOSED**
+
+Evidence:
+- exact frozen R3.18Y lane 47/47, witness reselection 0;
+- authority head/tree `b2f4b73600165b2d83389b6ce43709b64beba52a` / `8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1`;
+- authority run/job `32230919566/96000311036` SUCCESS; same-head CI `32230919652/96000311479` SUCCESS;
+- artifact `9357559410` / `12607` bytes / `sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99`; downloaded ZIP digest exact and inner manifest 9/9 PASS;
+- published-AA/frozen-Y/direct-native mismatch 0; Z contexts 18/18; multiplicities 47/47; ActiveActor=39 / Int=7 / UniqueId=1;
+- repeatability, truncation, wrong actor, unresolved lookup, wrong version and post-payload poison 47/47; Cartesian and R3.18P-valid/Z-absent negatives retained by focused suite;
+- following-payload/another-control bits 0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Superseded attempt:
+- `f2f79e47fefbe7ee95ea5df84c78a86868f57bb3` / `32229955227/95997443235` failed only because a byte-prefix truncation harness cut at `payload_start / 8`, leaving complete header bytes on 8 unaligned rows; positive/equality checks were already 47/47. Corrected authority uses a prefix before the post-W control/header byte. Production was never changed.
+
+Boundaries opened:
+- R3.18AC read-only ordinal-3 following-property payload evidence only.
+
+Boundaries still closed:
+- post-AA payload production composition; another property control; loops/cursors; next actor/frame; semantic/runtime/export widening.
+
+Next exact pass:
+- `R3.18AC — post-AA following-property payload real-replay evidence`.

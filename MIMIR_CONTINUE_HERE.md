@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AA — bounded post-W following-header composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18Y — one post-W following header evidence / Outcome A / 47/47 / 18 exact contexts / mismatch 0 / payload-control 0/0
+  R3.18AB — published AA differential / Outcome A / 47/47 / 18 exact Z contexts / mismatch 0 / payload-control 0/0 / artifact 9357559410
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18Z — post-W following-header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18Y — post-W following header / Outcome A / 47 rows / 18 exact tuples / ActiveActor=39 Int=7 UniqueId=1 / R3.18P inheritance 0
+  R3.18AB — published AA/frozen-Y/direct-header differential / Outcome A / 47 rows / 18 exact Z tuples / ActiveActor=39 Int=7 UniqueId=1 / mismatch 0
 
 CURRENT_PASS:
-  R3.18AB — published R3.18AA post-W following-header differential
+  R3.18AC — post-AA ordinal-3 following-property payload evidence
 
 CURRENT_PASS_TYPE:
-  read-only evidence / differentially validate published R3.18AA on the exact immutable R3.18Y 47-row lane
+  read-only evidence / characterize exactly one ordinal-3 payload after published R3.18AA on the exact immutable 47-row AB/Y lane
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -105,8 +105,19 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18Y CLOSED Outcome A: one post-W header exact 47/47; 18 contexts; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0; artifact 9303584468
   R3.18Z CLOSED Outcome A: exact_tuple_only 18 complete seven-field contexts / multiplicity sum 47 / contract 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9 / R3.18P inheritance false
   R3.18AA PRODUCTION at 9392240c49f95766c214afee9865fed4155a87a4: validates one R3.18W true-control boundary, decodes exactly one following header with the stateless primitive, requires exact R3.18Z membership, and stops at payload_start
-  R3.18AB ACTIVE read-only published-AA differential on the exact immutable R3.18Y 47-row lane; witness reselection forbidden; payload/control consumption must remain 0/0
-  NO following payload, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AB CLOSED Outcome A: published-AA/frozen-Y/direct-header exact 47/47; Z contexts 18/18; multiplicities 47/47; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0; artifact 9357559410
+  R3.18AC ACTIVE read-only ordinal-3 payload evidence on the same frozen 47 rows; prove exact payload end/value/layout against pinned Boxcars and stop before another control
+  NO post-AA payload production composition, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+R3_18AB_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
+  authority head/tree: b2f4b73600165b2d83389b6ce43709b64beba52a / 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
+  authority run/job: 32230919566 / 96000311036 SUCCESS
+  exact-head normal CI: 32230919652 / 96000311479 SUCCESS
+  artifact: 9357559410 / 12607 bytes / sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99; downloaded ZIP digest exact / inner manifest 9/9 PASS
+  frozen rows 47/47 / published-AA-frozen-Y-direct mismatch 0 / Z contexts 18/18 / multiplicities 47/47 / tags 39/7/1
+  repeatability/truncation/wrong-actor/unresolved/wrong-version/post-payload-poison 47/47; Cartesian + P-only-Z-absent PASS
+  witness reselection 0 / following payload + another-control bits 0/0 / privacy PASS / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
+  superseded attempt f2f79e47fefbe7ee95ea5df84c78a86868f57bb3 / 32229955227/95997443235: harness-only truncation 39/47; positive/equality checks 47/47; production unchanged
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -3616,21 +3627,40 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18AB
+# HISTORICAL PASS CHECKLIST — R3.18AB (ADMITTED OUTCOME A)
 
 **Goal:** differentially validate published R3.18AA over the exact immutable R3.18Y 47-row lane through `payload_start`, with zero production mutation.
 
 ```text
-[ ] Fetch fresh main; require production 9392240c49f95766c214afee9865fed4155a87a4 / 968520d480f78c528086e4e31b2ce307f4f8d232, lib/test blobs 46523f47f94231362b60f8aee038e943e41c7972 / 7df8f84af37d771b12da1334bd195634e4cc6a54.
-[ ] Verify Z contract 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9 byte-for-byte and Y artifact 9303584468/sha256:46f3253cd50c95cfc05a39f2b45ed647b3d45d3951b0af78da3cf03803fcfd29 with zero witness reselection.
-[ ] Reuse exactly the frozen 47 Y rows; do not reselect actors/replays/coordinates.
-[ ] Invoke the published R3.18AA API on all 47 rows.
-[ ] Require embedded W control equality, frozen-Y header equality and direct-stateless-header equality 47/47.
-[ ] Require exact seven-field R3.18Z tuple membership and reconstruct 18 contexts / multiplicity 47.
-[ ] Require returned stop_bit == payload_start exactly on 47/47.
-[ ] Run truncation, wrong actor/lookup/version, Cartesian, P-only-Z-absent, repeatability and post-payload-poison negatives.
-[ ] Require following-payload / another-control consumption 0/0 and production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
-[ ] Produce privacy-safe immutable evidence artifact with internal hashes; double-run deterministic equality and privacy PASS.
-[ ] Require exact evidence-head normal CI plus full repository/workspace/clippy validation.
-[ ] Outcome A may open only a separate R3.18AC following-payload evidence pass; AB itself admits no payload.
+[x] Freeze production/tree/lib/test, Y authority/artifact and exact Z contract.
+[x] Reuse exactly the 47 frozen Y rows with witness reselection 0.
+[x] Compare published AA to frozen Y and direct stateless native header on 47/47.
+[x] Reconstruct exact Z membership 18/18 and multiplicities 47/47; tags ActiveActor=39 Int=7 UniqueId=1.
+[x] Require returned stop_bit == payload_start exactly on 47/47.
+[x] Run truncation, wrong actor/lookup/version, Cartesian, P-only-Z-absent, repeatability and post-payload-poison negatives.
+[x] Require following-payload / another-control consumption 0/0 and production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+[x] Produce privacy-safe artifact 9357559410 / sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99; ZIP digest exact, inner manifest 9/9, privacy PASS.
+[x] Exact evidence-head normal CI 32230919652/96000311479 SUCCESS; authority 32230919566/96000311036 SUCCESS.
+[x] Outcome A opens only separate R3.18AC read-only following-payload evidence; AB admits no payload production.
+```
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18AC
+
+**Goal:** characterize exactly one payload beginning at published R3.18AA `payload_start` on the exact immutable 47-row AB/Y lane, compare pinned Boxcars ordinal 3 to the narrow existing native primitive for ActiveActor/Int/UniqueId, and stop before another control.
+
+```text
+[ ] Fetch fresh main; require production 9392240c49f95766c214afee9865fed4155a87a4 / 968520d480f78c528086e4e31b2ce307f4f8d232, AB authority b2f4b73600165b2d83389b6ce43709b64beba52a / 32230919566/96000311036, same-head CI 32230919652/96000311479, artifact 9357559410/sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99.
+[ ] Verify AB ZIP digest + inner manifest, frozen 47-row identity, witness reselection 0 and Z contract 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9.
+[ ] Instrument pinned Boxcars c70e77df7af81b436cb545d070bb90c82f562d0b only at exact zero-based property ordinal 3.
+[ ] Reconstruct published AA exactly on every row and require start == frozen payload_start.
+[ ] Compare native/oracle payload start/end/width/semantic value on ActiveActor=39, Int=7 and UniqueId=1.
+[ ] For UniqueId, independently prove actual system id/layout/width; do not inherit a generic UniqueId width.
+[ ] Report exact width/subshape distributions; do not normalize or fabricate cross-product contexts.
+[ ] Run truncation, wrong-tag/context, repeatability, post-payload-poison and unsupported-UniqueId-layout controls.
+[ ] Require another-property-control bits consumed 0 and production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+[ ] Produce privacy-safe immutable artifact with deterministic double-run equality and internal hashes.
+[ ] Require permanent AA + relevant K1/K2 focused tests and exact evidence-head normal CI/full repository verifier PASS.
+[ ] Outcome A may open only a later separate exact payload contract/production gate justified by observed facts; AC itself is evidence only.
 ```
