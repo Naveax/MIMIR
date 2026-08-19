@@ -1,0 +1,134 @@
+name: R3.18AD Published Production Receipt
+
+on:
+  push:
+    branches:
+      - ops/r318ad-published-receipt-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  receipt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PROD_SHA: ccadbf148381c007890d13d5fe8120866a0f40f9
+      PROD_TREE: 0882601060d0bb6d37fcc03ae7273dcf50dd0be3
+      PROD_PARENT: 671cd19a7d034b1377de5bed1dfd36600f45c8d7
+      CANDIDATE_BRANCH: ops/r318ad-production-v1
+      MAIN_BRANCH: main
+      PR_CI_RUN: "32242293315"
+      PR_CI_JOB: "96035296746"
+      BUILDER_RUN: "32241956973"
+      BUILDER_JOB: "96034261394"
+    steps:
+      - name: Mark receipt pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=pending -f context='r318ad/published-receipt' \
+            -f description='R3.18AD published CI receipt running' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+
+      - name: Freeze exact production and prior receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$PROD_SHA"
+          commit="$(gh api "repos/$GITHUB_REPOSITORY/commits/$PROD_SHA")"
+          test "$(jq -r .commit.tree.sha <<<"$commit")" = "$PROD_TREE"
+          test "$(jq -r .parents[0].sha <<<"$commit")" = "$PROD_PARENT"
+          test "$(jq -r .commit.message <<<"$commit")" = 'Implement bounded R3.18AD post-AA payload'
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PR_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$PR_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PR_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILDER_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BUILDER_JOB" --jq .conclusion)" = success
+          echo 'R3_18AD_PUBLISHED_FREEZE=PASS'
+
+      - name: Resolve existing exact-head push CI receipts
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          resolve_one() {
+            local branch="$1"
+            local label="$2"
+            local selected=''
+            for _ in $(seq 1 150); do
+              data="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$branch&event=push&per_page=100")"
+              selected="$(jq -r --arg sha "$PROD_SHA" '[.workflow_runs[] | select(.head_sha==$sha and .name=="CI")] | sort_by(.created_at) | last // empty | .id' <<<"$data")"
+              if [ -n "$selected" ]; then
+                status="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$selected" --jq .status)"
+                conclusion="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$selected" --jq '.conclusion // ""')"
+                if [ "$status" = completed ]; then
+                  test "$conclusion" = success
+                  printf '%s' "$selected"
+                  return 0
+                fi
+              fi
+              sleep 10
+            done
+            echo "$label exact-head CI did not complete successfully" >&2
+            return 1
+          }
+          CANDIDATE_CI="$(resolve_one "$CANDIDATE_BRANCH" candidate)"
+          MAIN_CI="$(resolve_one "$MAIN_BRANCH" published-main)"
+          test "$CANDIDATE_CI" != "$MAIN_CI"
+          for run in "$CANDIDATE_CI" "$MAIN_CI"; do
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_sha)" = "$PROD_SHA"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .event)" = push
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" = success
+          done
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_CI" --jq .head_branch)" = "$CANDIDATE_BRANCH"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$MAIN_CI" --jq .head_branch)" = "$MAIN_BRANCH"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CANDIDATE_CI/jobs?per_page=100" > /tmp/candidate_jobs.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$MAIN_CI/jobs?per_page=100" > /tmp/main_jobs.json
+          CANDIDATE_JOB="$(jq -r '[.jobs[] | select(.name=="rust" and .conclusion=="success")] | if length==1 then .[0].id else error("expected one candidate rust job") end' /tmp/candidate_jobs.json)"
+          MAIN_JOB="$(jq -r '[.jobs[] | select(.name=="rust" and .conclusion=="success")] | if length==1 then .[0].id else error("expected one main rust job") end' /tmp/main_jobs.json)"
+          echo "CANDIDATE_CI=$CANDIDATE_CI" >> "$GITHUB_OUTPUT"
+          echo "CANDIDATE_JOB=$CANDIDATE_JOB" >> "$GITHUB_OUTPUT"
+          echo "MAIN_CI=$MAIN_CI" >> "$GITHUB_OUTPUT"
+          echo "MAIN_JOB=$MAIN_JOB" >> "$GITHUB_OUTPUT"
+          echo "R3_18AD_CANDIDATE_PUSH_CI=$CANDIDATE_CI/$CANDIDATE_JOB"
+          echo "R3_18AD_PUBLISHED_MAIN_CI=$MAIN_CI/$MAIN_JOB"
+
+      - name: Emit exact receipt
+        shell: bash
+        env:
+          CANDIDATE_CI: ${{ steps.resolve.outputs.CANDIDATE_CI }}
+          CANDIDATE_JOB: ${{ steps.resolve.outputs.CANDIDATE_JOB }}
+          MAIN_CI: ${{ steps.resolve.outputs.MAIN_CI }}
+          MAIN_JOB: ${{ steps.resolve.outputs.MAIN_JOB }}
+        run: |
+          set -euo pipefail
+          echo "R3_18AD_PRODUCTION_SHA=$PROD_SHA"
+          echo "R3_18AD_PRODUCTION_TREE=$PROD_TREE"
+          echo "R3_18AD_PRODUCTION_PARENT=$PROD_PARENT"
+          echo "R3_18AD_BUILDER=$BUILDER_RUN/$BUILDER_JOB"
+          echo "R3_18AD_PR_CI=$PR_CI_RUN/$PR_CI_JOB"
+          echo "R3_18AD_CANDIDATE_PUSH_CI=$CANDIDATE_CI/$CANDIDATE_JOB"
+          echo "R3_18AD_PUBLISHED_MAIN_CI=$MAIN_CI/$MAIN_JOB"
+          echo 'R3_18AD_PUBLISHED_RECEIPT=PASS'
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=success -f context='r318ad/published-receipt' \
+            -f description="candidate=$CANDIDATE_CI main=$MAIN_CI" \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+
+      - name: Mark receipt failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=failure -f context='r318ad/published-receipt' \
+            -f description='R3.18AD published CI receipt failed' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
