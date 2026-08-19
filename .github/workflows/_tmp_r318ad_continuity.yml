@@ -1,0 +1,105 @@
+name: R3.18AD Continuity Sync Builder
+
+on:
+  push:
+    branches:
+      - ops/r318ad-continuity-ae-open-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-clean-continuity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: ccadbf148381c007890d13d5fe8120866a0f40f9
+      BASE_TREE: 0882601060d0bb6d37fcc03ae7273dcf50dd0be3
+      AD_CANDIDATE_CI: "32242994502"
+      AD_CANDIDATE_JOB: "96038355071"
+      AD_MAIN_CI: "32242742010"
+      AD_MAIN_JOB: "96036666443"
+      AD_RECEIPT_RUN: "32243135866"
+      AD_RECEIPT_JOB: "96037860121"
+      BRANCH: ops/r318ad-continuity-ae-open-v1
+    steps:
+      - name: Checkout exact temporary head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze production and validation authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/32241956973" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/96034261394" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/32242293315" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/96035296746" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AD_CANDIDATE_CI" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AD_CANDIDATE_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AD_MAIN_CI" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AD_MAIN_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AD_RECEIPT_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AD_RECEIPT_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AD_CANDIDATE_CI" --jq .head_sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AD_MAIN_CI" --jq .head_sha)" = "$BASE_SHA"
+          echo 'R3_18AD_CONTINUITY_AUTHORITY=PASS'
+
+      - name: Generate canonical continuity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318ad_continuity.py /tmp/r318ad_continuity.py
+          cp tools/_tmp_r318ad_decision.template.md /tmp/MIMIR_R3_18AD_DECISION.template.md
+          cp tools/_tmp_r318ae_spec.template.md /tmp/MIMIR_R3_18AE_EXECUTION_SPEC.template.md
+          git reset --hard "$BASE_SHA"
+          git clean -fd
+          python3 /tmp/r318ad_continuity.py
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git diff --check
+          mapfile -t changed < <(git status --porcelain | cut -c4- | sort)
+          expected=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+            'docs/continuity/MIMIR_R3_18AD_DECISION.md'
+            'docs/continuity/MIMIR_R3_18AE_EXECUTION_SPEC.md'
+          )
+          mapfile -t wanted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 9
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${wanted[@]}")"
+          git diff --exit-code "$BASE_SHA" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts tools .github AGENTS.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+          echo 'R3_18AD_CONTINUITY_SCOPE=PASS files=9'
+
+      - name: Publish one clean docs-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AD_DECISION.md \
+            docs/continuity/MIMIR_R3_18AE_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18AD and open R3.18AE'
+          clean="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          git push --force-with-lease origin "HEAD:refs/heads/$BRANCH"
+          echo "R3_18AD_CONTINUITY_SHA=$clean"
+          echo "R3_18AD_CONTINUITY_TREE=$tree"
