@@ -6,33 +6,34 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AB closed / R3.18AC active
+# 0. Current override — R3.18AC closed / R3.18AD active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION
-- R3.18AA `9392240c49f95766c214afee9865fed4155a87a4` / `968520d480f78c528086e4e31b2ce307f4f8d232`: validates one published R3.18W true-control boundary, decodes exactly one following existing-actor header with the stateless primitive, requires exact R3.18Z seven-field membership, and stops at `payload_start`.
+- R3.18AA `9392240c49f95766c214afee9865fed4155a87a4` / `968520d480f78c528086e4e31b2ce307f4f8d232` remains canonical: one post-W following header after a valid W true control, exact R3.18Z membership, stop at `payload_start`.
 
-## CLOSED EVIDENCE — R3.18AB Outcome A
-- exact immutable R3.18Y 47-row lane; witness reselection 0;
-- published R3.18AA / frozen Y / direct stateless header exact 47/47;
-- exact R3.18Z contexts 18/18 and multiplicities 47/47; ActiveActor=39 / Int=7 / UniqueId=1;
-- mismatch 0; following-payload/another-control consumption 0/0; privacy PASS;
-- authority `32230919566/96000311036` and same-head CI `32230919652/96000311479` SUCCESS; artifact `9357559410` / `sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99`.
+## CLOSED EVIDENCE — R3.18AC Outcome A
+- exact frozen AB/Y lane 47/47; witness reselection 0;
+- pinned Boxcars ordinal 3 / native payload mismatch 0;
+- ActiveActor 39×33 bits; Int 7×32 bits; UniqueId 1×80 bits;
+- the one UniqueId row is exactly system_id=1 / Steam; alternate systems/layouts are not inherited;
+- repeatability/truncation/wrong-tag/wrong-context-or-N/A/post-payload-poison all 47/47;
+- another-control bits 0; privacy PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0;
+- authority `32237834815/96021661994`, same-head CI `32237834813/96021661894`, artifact `9359697636` / `sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`.
 
-## CLOSED CONTRACT — R3.18Z Outcome A
-- contract `81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`; `exact_tuple_only`; 18 contexts / 47 multiplicities;
-- tag/component/Cartesian/versionless/outside-set membership false;
-- R3.18P cross-boundary inheritance false.
+## CLOSED HEADER CONTRACT — R3.18Z
+- `81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`; `exact_tuple_only`; 18 contexts / 47 multiplicities; cross-boundary R3.18P inheritance false.
 
-## ACTIVE READ-ONLY GATE — R3.18AC
-- exactly the same frozen 47 AB/Y rows; witness reselection forbidden;
-- start at AA `payload_start`, compare pinned Boxcars ordinal-3 payload facts to the narrow existing native primitive;
-- observed header classes are ActiveActor=39 / Int=7 / UniqueId=1, but payload widths/layouts must be proven rather than inferred;
-- stop at exactly one payload end; another control remains unopened; production mutation forbidden.
+## ACTIVE PRODUCTION GATE — R3.18AD
+- start only from a valid published R3.18AA result whose full header context remains R3.18Z-admitted;
+- decode exactly one payload using existing primitives;
+- admit only ActiveActor/33, Int/32, UniqueId system1-Steam/80;
+- stop exactly at payload end; another property-control bit remains unopened.
 
 ## CLOSED
-- post-AA payload production composition; another property control; generic/repeated property cursor/loop;
+- alternate UniqueId systems/layouts or widths;
+- another property control; generic/repeated property cursor/loop;
 - next actor/frame/lifecycle; raw state/events/slices/skills/counterfactual/runtime/export widening.
 
 ---

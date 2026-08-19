@@ -803,3 +803,30 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18AC — post-AA following-property payload real-replay evidence`.
+
+---
+
+## 2026-08-19 — R3.18AC — Post-AA ordinal-3 following-property payload evidence
+
+Production SHA: `9392240c49f95766c214afee9865fed4155a87a4` / tree `968520d480f78c528086e4e31b2ce307f4f8d232`
+Pass type: read-only real-replay payload differential
+Outcome: **A — ADMITTED / CLOSED**
+
+Evidence:
+- exact frozen AB/Y lane 47/47; witness reselection 0;
+- authority head/tree `62bc43dd12dbde48fb503cccd4da46dfcf6ae252` / `9d5b550b4bb93688db9f3a67583067adb32425f6`;
+- authority run/job `32237834815/96021661994` SUCCESS; same-head normal CI `32237834813/96021661894` SUCCESS;
+- artifact `9359697636` / `12010` bytes / `sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`; ZIP digest exact, inner manifest 10/10 PASS;
+- pinned Boxcars ordinal-3/native mismatch 0;
+- ActiveActor 39×33 bits, Int 7×32 bits, UniqueId 1×80 bits; exact UniqueId system_id=1 / Steam;
+- repeatability, truncation, wrong-tag, wrong-context-or-N/A, post-payload-poison 47/47;
+- another-control bits 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Superseded harness:
+- `4207ffdcbc9a032dfd3c6f36cc05703861c2067f` was not admitted; its temporary probe had an Int ownership error and treated context-insensitive ActiveActor as requiring a wrong-context rejection. Corrected evidence changed only the disposable probe; production remained unchanged.
+
+Boundaries opened:
+- R3.18AD bounded production implementation for only ActiveActor/33, Int/32 and UniqueId system1-Steam/80.
+
+Boundaries still closed:
+- alternate UniqueId layouts/systems, another property-control bit, generalized property loop/cursor, next actor/frame and semantic/runtime/export widening.

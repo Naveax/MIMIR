@@ -6,11 +6,11 @@
   "last_production_code_sha": "9392240c49f95766c214afee9865fed4155a87a4",
   "last_production_milestone": "R3.18AA",
   "last_production_milestone_name": "bounded post-W following-header composition",
-  "last_completed_read_only_audit": "R3.18AB",
-  "current_pass": "R3.18AC",
-  "current_pass_kind": "read-only evidence / post-AA ordinal-3 following-property payload discovery",
-  "current_pass_goal": "Characterize exactly one payload beginning at published R3.18AA payload_start on the exact immutable 47-row AB/Y lane against pinned Boxcars ordinal 3.",
-  "current_pass_stop_boundary": "Stop exactly at the one ordinal-3 payload end. No another control, loop/cursor, production payload composition, next actor/frame or semantic/runtime/export widening.",
+  "last_completed_read_only_audit": "R3.18AC",
+  "current_pass": "R3.18AD",
+  "current_pass_kind": "production implementation / bounded post-AA ordinal-3 following-property payload composition",
+  "current_pass_goal": "Compose exactly one AC-admitted payload after a valid published R3.18AA result and stop at payload end.",
+  "current_pass_stop_boundary": "Stop exactly at the ordinal-3 payload end. No another control, alternate UniqueId layout, generic property loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -77,7 +77,10 @@
     "repeated/generalized property loop or generic cursor after R3.18W",
     "post-W following payload after R3.18AA header",
     "another property control after the R3.18AA header payload_start",
-    "repeated/generalized property loop or generic cursor after R3.18AA"
+    "repeated/generalized property loop or generic cursor after R3.18AA",
+    "post-AA payload production composition",
+    "alternate UniqueId systems/layouts after R3.18AA",
+    "another property control after the ordinal-3 payload end"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -185,6 +188,8 @@
     "docs/continuity/MIMIR_R3_18AB_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AB_DECISION.md",
     "docs/continuity/MIMIR_R3_18AC_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AC_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AD_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -193,8 +198,8 @@
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
     "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
   ],
-  "last_completed_evidence_pass": "R3.18AB",
-  "last_completed_evidence_outcome": "A — published R3.18AA/frozen-Y/direct-header exact 47/47; 18/18 Z contexts and 47/47 multiplicities; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0.",
+  "last_completed_evidence_pass": "R3.18AC",
+  "last_completed_evidence_outcome": "A — ordinal-3 payload exact 47/47; ActiveActor 39x33, Int 7x32, UniqueId system1/Steam 1x80; oracle/native mismatch 0; another-control 0.",
   "last_completed_contract_pass": "R3.18Z",
   "r3_14a": {
     "outcome": "A",

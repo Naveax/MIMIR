@@ -5,24 +5,25 @@
 **Canonical production SHA:** `9392240c49f95766c214afee9865fed4155a87a4`
 **Production tree:** `968520d480f78c528086e4e31b2ce307f4f8d232`
 **Production milestone:** `R3.18AA — bounded post-W following-header composition`
-**Last read-only evidence:** `R3.18AB — Outcome A / 47/47 / 18 exact Z contexts / ActiveActor=39 Int=7 UniqueId=1 / mismatch 0 / payload-control 0/0`
+**Last read-only evidence:** `R3.18AC — Outcome A / 47/47 / ActiveActor 39×33 / Int 7×32 / UniqueId system1 Steam 1×80 / mismatch 0 / another-control 0`
 **Last structural contract:** `R3.18Z — exact_tuple_only / 18 complete seven-field tuples / 47 multiplicities / R3.18P inheritance false`
-**Current exact pass:** `R3.18AC — read-only post-AA following-property payload evidence`
+**Current exact pass:** `R3.18AD — bounded post-AA ordinal-3 payload production`
 
 ## Truthful boundary
 
-Production remains R3.18AA. Starting only from a valid published R3.18W true control, it decodes exactly one following existing-actor property header with the existing stateless primitive, requires complete R3.18Z exact-tuple membership and stops exactly at `payload_start`.
+Production remains R3.18AA at `9392240c49f95766c214afee9865fed4155a87a4`. It validates one R3.18W true-control boundary, decodes exactly one following existing-actor property header, requires complete R3.18Z exact-tuple membership, and stops at that header's `payload_start`.
 
-R3.18AB closed Outcome A on the exact immutable 47-row Y lane: published AA, frozen Y and the direct stateless native header matched 47/47; exact Z contexts reconstructed 18/18 with multiplicities 47/47; ActiveActor/Int/UniqueId were 39/7/1; mismatch, witness reselection, following-payload consumption and another-control consumption were all zero.
+R3.18AC closed Outcome A on the exact immutable 47-row AB/Y lane. Pinned Boxcars ordinal 3 and the existing native payload primitives matched 47/47 with mismatch 0 and witness reselection 0. The exact observed shapes are ActiveActor 39×33 bits, Int 7×32 bits, and UniqueId 1×80 bits with actual system 1 / Steam layout. Another-control consumption was zero and production/Cargo/fixture/corpus/support mutation was 0/0/0/0/0.
 
 ```text
 production SHA/tree                 9392240c49f95766c214afee9865fed4155a87a4 / 968520d480f78c528086e4e31b2ce307f4f8d232
 production lib / focused-test blobs 46523f47f94231362b60f8aee038e943e41c7972 / 7df8f84af37d771b12da1334bd195634e4cc6a54
 Z contract SHA-256                  81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9
-AB evidence head/tree               b2f4b73600165b2d83389b6ce43709b64beba52a / 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
-AB authority run/job                32230919566/96000311036
-AB same-head CI                     32230919652/96000311479
-AB artifact                         9357559410 / 12607 bytes / sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99
+AC evidence head/tree               62bc43dd12dbde48fb503cccd4da46dfcf6ae252 / 9d5b550b4bb93688db9f3a67583067adb32425f6
+AC authority run/job                32237834815/96021661994
+AC same-head CI                     32237834813/96021661894
+AC artifact                         9359697636 / 12010 bytes / sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df
+AC receipt helper                   32238679393/96024251802
 ```
 
-R3.18AC is read-only and may characterize exactly one payload beginning at the published AA `payload_start` on those same 47 rows. It must use pinned Boxcars ordinal 3 as oracle, independently prove ActiveActor/Int/UniqueId payload end/value/layout facts, and stop before another property-control bit. Production payload composition, another control and generalized property iteration remain closed.
+R3.18AD is the only active production gate. It may compose exactly one payload after a valid AA result and only for the AC-observed shapes: ActiveActor width 33, Int width 32, or UniqueId system 1 / Steam width 80. It must stop at payload end. Another property-control bit, alternate UniqueId layouts and generalized property iteration remain closed.

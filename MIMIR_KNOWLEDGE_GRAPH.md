@@ -59,7 +59,8 @@ R3.18Y one-following-property-header evidence decision / Outcome A CLOSED       
 R3.18Z post-W following-header exact-context contract decision / Outcome A CLOSED                 |
 R3.18AA bounded post-W following-header production decision / CLOSED                         |
 R3.18AB published-AA following-header differential / Outcome A CLOSED                        |
-R3.18AC active post-AA ordinal-3 following-payload evidence                                  |
+R3.18AC post-AA ordinal-3 payload evidence / Outcome A CLOSED                              |
+R3.18AD active bounded post-AA ordinal-3 payload production                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -171,13 +172,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 91. `docs/continuity/MIMIR_R3_18AB_EXECUTION_SPEC.md`
 92. `docs/continuity/MIMIR_R3_18AB_DECISION.md`
 93. `docs/continuity/MIMIR_R3_18AC_EXECUTION_SPEC.md`
-94. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-95. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-96. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-97. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-98. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-99. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-100. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+94. `docs/continuity/MIMIR_R3_18AC_DECISION.md`
+95. `docs/continuity/MIMIR_R3_18AD_EXECUTION_SPEC.md`
+96. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+97. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+98. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+99. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+100. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+101. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+102. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -851,3 +854,12 @@ next                        R3.18M true-only one-bit production composition
 - Published AA / frozen Y / direct stateless header exact 47/47; R3.18Z contexts 18/18, multiplicities 47/47; ActiveActor=39 / Int=7 / UniqueId=1; mismatch 0; witness reselection 0; payload/control 0/0; privacy PASS.
 - Superseded `f2f79e47fefbe7ee95ea5df84c78a86868f57bb3` / `32229955227/95997443235` was harness-only truncation 39/47; positive/equality checks were already 47/47 and production was unchanged.
 - R3.18AC is active read-only payload evidence at Boxcars property ordinal 3 on the same 47 rows. No payload production composition, another control, loop/cursor or semantic/runtime widening is admitted.
+
+
+## CURRENT OVERRIDE — R3.18AC CLOSED / R3.18AD ACTIVE
+
+- Production remains R3.18AA `9392240c49f95766c214afee9865fed4155a87a4` / `968520d480f78c528086e4e31b2ce307f4f8d232`.
+- R3.18AC Outcome A authority `62bc43dd12dbde48fb503cccd4da46dfcf6ae252` / tree `9d5b550b4bb93688db9f3a67583067adb32425f6` / `32237834815/96021661994` SUCCESS; same-head CI `32237834813/96021661894` SUCCESS.
+- Artifact `9359697636` / `12010` bytes / `sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`; ZIP digest exact and inner manifest 10/10 PASS; receipt helper `32238679393/96024251802` SUCCESS.
+- Exact payload facts: ActiveActor 39×33; Int 7×32; UniqueId 1×80 with system1/Steam; mismatch 0; witness reselection 0; another-control 0; privacy PASS.
+- R3.18AD is active bounded production composition of exactly those payload shapes after a valid AA result. No alternate UniqueId layout, next control, loop/cursor or semantic/runtime widening is admitted.

@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AA — bounded post-W following-header composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AB — published AA differential / Outcome A / 47/47 / 18 exact Z contexts / mismatch 0 / payload-control 0/0 / artifact 9357559410
+  R3.18AC — ordinal-3 payload differential / Outcome A / 47/47 / mismatch 0 / ActiveActor 39×33 / Int 7×32 / UniqueId system1-Steam 1×80 / artifact 9359697636
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18Z — post-W following-header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AB — published AA/frozen-Y/direct-header differential / Outcome A / 47 rows / 18 exact Z tuples / ActiveActor=39 Int=7 UniqueId=1 / mismatch 0
+  R3.18AC — post-AA ordinal-3 payload / Outcome A / 47 rows / ActiveActor=39×33 Int=7×32 UniqueId=1×80 system1-Steam / mismatch 0 / another-control 0
 
 CURRENT_PASS:
-  R3.18AC — post-AA ordinal-3 following-property payload evidence
+  R3.18AD — bounded post-AA ordinal-3 following-property payload production
 
 CURRENT_PASS_TYPE:
-  read-only evidence / characterize exactly one ordinal-3 payload after published R3.18AA on the exact immutable 47-row AB/Y lane
+  production implementation / compose exactly one AC-admitted ordinal-3 payload after valid R3.18AA
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -106,8 +106,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18Z CLOSED Outcome A: exact_tuple_only 18 complete seven-field contexts / multiplicity sum 47 / contract 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9 / R3.18P inheritance false
   R3.18AA PRODUCTION at 9392240c49f95766c214afee9865fed4155a87a4: validates one R3.18W true-control boundary, decodes exactly one following header with the stateless primitive, requires exact R3.18Z membership, and stops at payload_start
   R3.18AB CLOSED Outcome A: published-AA/frozen-Y/direct-header exact 47/47; Z contexts 18/18; multiplicities 47/47; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0; artifact 9357559410
-  R3.18AC ACTIVE read-only ordinal-3 payload evidence on the same frozen 47 rows; prove exact payload end/value/layout against pinned Boxcars and stop before another control
-  NO post-AA payload production composition, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AC CLOSED Outcome A: ordinal-3 payload exact 47/47; ActiveActor 39×33; Int 7×32; UniqueId 1×80 system1-Steam; mismatch 0; another-control 0; artifact 9359697636
+  R3.18AD ACTIVE production: after valid AA, compose exactly one AC-admitted payload and stop at payload end
+  NO alternate UniqueId layout, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18AB_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
   authority head/tree: b2f4b73600165b2d83389b6ce43709b64beba52a / 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
@@ -118,6 +119,18 @@ R3_18AB_EVIDENCE_CLOSURE:
   repeatability/truncation/wrong-actor/unresolved/wrong-version/post-payload-poison 47/47; Cartesian + P-only-Z-absent PASS
   witness reselection 0 / following payload + another-control bits 0/0 / privacy PASS / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
   superseded attempt f2f79e47fefbe7ee95ea5df84c78a86868f57bb3 / 32229955227/95997443235: harness-only truncation 39/47; positive/equality checks 47/47; production unchanged
+R3_18AC_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
+  authority head/tree: 62bc43dd12dbde48fb503cccd4da46dfcf6ae252 / 9d5b550b4bb93688db9f3a67583067adb32425f6
+  authority run/job: 32237834815 / 96021661994 SUCCESS
+  exact-head normal CI: 32237834813 / 96021661894 SUCCESS
+  artifact: 9359697636 / 12010 bytes / sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df; downloaded ZIP digest exact / inner manifest 10/10 PASS
+  receipt helper: 32238679393 / 96024251802 SUCCESS
+  frozen rows 47/47 / oracle-native mismatch 0 / witness reselection 0 / privacy PASS
+  payload shapes: ActiveActor 39×33 / Int 7×32 / UniqueId 1×80 system_id=1 Steam
+  repeatability/truncation/wrong-tag/wrong-context-or-N-A/post-payload-poison 47/47
+  another-control bits 0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
+  superseded evidence head 4207ffdcbc9a032dfd3c6f36cc05703861c2067f: temporary probe ownership/context-negative harness defect only; production unchanged
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -3646,21 +3659,43 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18AC
+# HISTORICAL PASS CHECKLIST — R3.18AC (ADMITTED OUTCOME A)
 
-**Goal:** characterize exactly one payload beginning at published R3.18AA `payload_start` on the exact immutable 47-row AB/Y lane, compare pinned Boxcars ordinal 3 to the narrow existing native primitive for ActiveActor/Int/UniqueId, and stop before another control.
+**Goal:** characterize exactly one payload beginning at published R3.18AA `payload_start` on the exact immutable 47-row AB/Y lane and stop before another control.
 
 ```text
-[ ] Fetch fresh main; require production 9392240c49f95766c214afee9865fed4155a87a4 / 968520d480f78c528086e4e31b2ce307f4f8d232, AB authority b2f4b73600165b2d83389b6ce43709b64beba52a / 32230919566/96000311036, same-head CI 32230919652/96000311479, artifact 9357559410/sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99.
-[ ] Verify AB ZIP digest + inner manifest, frozen 47-row identity, witness reselection 0 and Z contract 81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9.
-[ ] Instrument pinned Boxcars c70e77df7af81b436cb545d070bb90c82f562d0b only at exact zero-based property ordinal 3.
-[ ] Reconstruct published AA exactly on every row and require start == frozen payload_start.
-[ ] Compare native/oracle payload start/end/width/semantic value on ActiveActor=39, Int=7 and UniqueId=1.
-[ ] For UniqueId, independently prove actual system id/layout/width; do not inherit a generic UniqueId width.
-[ ] Report exact width/subshape distributions; do not normalize or fabricate cross-product contexts.
-[ ] Run truncation, wrong-tag/context, repeatability, post-payload-poison and unsupported-UniqueId-layout controls.
-[ ] Require another-property-control bits consumed 0 and production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
-[ ] Produce privacy-safe immutable artifact with deterministic double-run equality and internal hashes.
-[ ] Require permanent AA + relevant K1/K2 focused tests and exact evidence-head normal CI/full repository verifier PASS.
-[ ] Outcome A may open only a later separate exact payload contract/production gate justified by observed facts; AC itself is evidence only.
+[x] Freeze exact production/AB/Z authority and immutable 47-row lane.
+[x] Verify artifact lineage and witness reselection 0.
+[x] Instrument pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b` at exact zero-based property ordinal 3.
+[x] Reconstruct published AA exactly on all 47 rows.
+[x] Match native/oracle payload start/end/width/semantic value 47/47 with mismatch 0.
+[x] Prove exact widths ActiveActor=39×33, Int=7×32, UniqueId=1×80.
+[x] Prove actual UniqueId layout system_id=1 / Steam / width 80; no generic width inherited.
+[x] Repeatability/truncation/wrong-tag/wrong-context-or-N/A/post-payload-poison 47/47 PASS.
+[x] Another property-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+[x] Immutable artifact `9359697636` / `sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`; ZIP digest exact, inner manifest 10/10, privacy PASS.
+[x] Authority `32237834815/96021661994` and exact-head normal CI `32237834813/96021661894` SUCCESS.
+[x] Outcome A opens only separate R3.18AD bounded production composition; AC itself changes no production.
+```
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18AD
+
+**Goal:** compose exactly one AC-admitted ordinal-3 payload after a valid published R3.18AA result and stop exactly at payload end.
+
+```text
+[ ] Fetch fresh main and require the exact AC admission, unchanged AA production SHA/tree/lib/test, Z contract `81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`, AC authority `62bc43dd12dbde48fb503cccd4da46dfcf6ae252` / `32237834815/96021661994`, CI `32237834813/96021661894`, artifact `9359697636/sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`.
+[ ] Start only from a valid published R3.18AA result with full R3.18Z exact-tuple membership.
+[ ] Reuse existing primitives only: K2 for ActiveActor/UniqueId and primitive-scalar for Int.
+[ ] Admit ActiveActor only at exact width 33.
+[ ] Admit Int only at exact width 32.
+[ ] Admit UniqueId only at exact width 80 with system_id=1 and Steam remote kind; reject all other lower-level-supported layouts.
+[ ] Stop exactly at decoded payload end and inspect zero bits of another property-control boundary.
+[ ] Add one focused production test file using frozen AC representatives for ActiveActor, Int and the single UniqueId row.
+[ ] Require truncation, unsupported-shape/layout, repeatability and post-payload-poison fail-closed/invariance coverage.
+[ ] Keep clean production scope to lib.rs + one focused R3.18AD test; Cargo/docs/workflow/fixture/corpus/support mutation zero.
+[ ] Run Rust 1.85 focused/full/workspace/clippy/repository verification and exact clean-candidate CI.
+[ ] Validate exact clean SHA, publish only by fresh-main force=false fast-forward, then require published-main CI.
+[ ] Do not widen to another control, generic loop/cursor, next actor/frame or semantic/runtime/export behavior.
 ```
