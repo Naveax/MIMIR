@@ -10414,6 +10414,253 @@ pub fn decode_replay_network_existing_actor_after_first_primitive_second_propert
     })
 }
 
+/// Exactly one R3.18AC-admitted ordinal-3 payload after a valid published R3.18AA header.
+///
+/// This enum is deliberately closed to the three payload shapes proven on the immutable
+/// R3.18AC lane. It is not a generic attribute-payload carrier.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1
+{
+    ActiveActor(ReplayNetworkK2DecodeV1),
+    Int(ReplayNetworkPrimitiveScalarDecodeV1),
+    UniqueId(ReplayNetworkK2DecodeV1),
+}
+
+/// Bounded composition of a valid published R3.18AA post-W following header plus exactly one
+/// R3.18AC-admitted ordinal-3 payload.
+///
+/// `stop_bit` is exactly the first bit after that payload. No later `property_present` control
+/// bit, stream/header/payload, actor, frame, or repeatable cursor is read or exposed.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1 {
+    pub header_composition:
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderV1,
+    pub following_payload:
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1,
+    pub payload_start_bit: u64,
+    pub payload_width: u64,
+    pub stop_bit: u64,
+}
+
+fn network_existing_actor_post_aa_following_payload_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-AA following-payload error: {category}: {}",
+        detail.into()
+    ))
+}
+
+/// Compose exactly one R3.18AC-admitted ordinal-3 payload after the published R3.18AA boundary.
+///
+/// R3.18AA is recomputed from the supplied R3.18T prior, so the complete R3.18Z header contract
+/// remains authoritative. Only the exact R3.18AC shapes are admitted: ActiveActor/33,
+/// Int/32, and UniqueId system 1 / Steam / 80. The function stops at payload end and consumes
+/// zero bits of another property-control boundary.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1>{
+    if context.version_major != 868
+        || context.version_minor != 32
+        || context.net_version != 10
+        || context.is_rl_223
+    {
+        return Err(network_existing_actor_post_aa_following_payload_error(
+            "unadmitted-context",
+            format!(
+                "R3.18AC/AD admits only 868.32/net10/non-RL223, got {}.{}/net{}/is_rl_223={}",
+                context.version_major,
+                context.version_minor,
+                context.net_version,
+                context.is_rl_223,
+            ),
+        ));
+    }
+
+    let header_composition = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_v1(
+        network_bytes,
+        prior,
+        lookup_plan,
+        context,
+    )?;
+    let following_header = &header_composition.following_header;
+    let payload_start_bit = following_header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_post_aa_following_payload_error(
+            "missing-payload-start",
+            "valid R3.18AA result has no following-header payload_start",
+        )
+    })?;
+    if header_composition.stop_bit != payload_start_bit
+        || following_header.stop_bit != payload_start_bit
+    {
+        return Err(network_existing_actor_post_aa_following_payload_error(
+            "header-stop-mismatch",
+            format!(
+                "AA stop={}, header stop={}, payload start={payload_start_bit}",
+                header_composition.stop_bit, following_header.stop_bit,
+            ),
+        ));
+    }
+    let tag = following_header.resolved_attribute_tag.ok_or_else(|| {
+        network_existing_actor_post_aa_following_payload_error(
+            "missing-attribute-tag",
+            "valid R3.18AA result has no resolved following-header tag",
+        )
+    })?;
+    let k2_context = ReplayNetworkK2DecodeContextV1 {
+        net_version: context.net_version,
+        is_rl_223: context.is_rl_223,
+    };
+
+    let (following_payload, payload_width, stop_bit) = match tag {
+        ReplayNetworkAttributeTagV1::ActiveActor => {
+            let decoded = decode_replay_network_k2_v1(
+                network_bytes,
+                payload_start_bit,
+                ReplayNetworkAttributeTagV1::ActiveActor,
+                k2_context,
+            )?;
+            let expected_end = payload_start_bit.checked_add(33).ok_or_else(|| {
+                network_existing_actor_post_aa_following_payload_error(
+                    "invalid-active-actor-end",
+                    "ActiveActor payload end overflows u64",
+                )
+            })?;
+            if decoded.attribute_tag != ReplayNetworkAttributeTagV1::ActiveActor
+                || decoded.payload_start_bit != payload_start_bit
+                || decoded.payload_width != 33
+                || decoded.payload_end_bit != expected_end
+                || !matches!(&decoded.value, ReplayNetworkK2ValueV1::ActiveActor { .. })
+            {
+                return Err(network_existing_actor_post_aa_following_payload_error(
+                    "active-actor-boundary-mismatch",
+                    format!(
+                        "tag={:?}, start={}, end={}, width={}, expected_start={payload_start_bit}, expected_end={expected_end}",
+                        decoded.attribute_tag,
+                        decoded.payload_start_bit,
+                        decoded.payload_end_bit,
+                        decoded.payload_width,
+                    ),
+                ));
+            }
+            (
+                ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1::ActiveActor(decoded),
+                33,
+                expected_end,
+            )
+        }
+        ReplayNetworkAttributeTagV1::Int => {
+            let decoded = decode_replay_network_primitive_scalar_v1(
+                network_bytes,
+                payload_start_bit,
+                ReplayNetworkAttributeTagV1::Int,
+            )?;
+            let expected_end = payload_start_bit.checked_add(32).ok_or_else(|| {
+                network_existing_actor_post_aa_following_payload_error(
+                    "invalid-int-end",
+                    "Int payload end overflows u64",
+                )
+            })?;
+            if decoded.attribute_tag != ReplayNetworkAttributeTagV1::Int
+                || decoded.payload_start_bit != payload_start_bit
+                || decoded.payload_width != 32
+                || decoded.payload_end_bit != expected_end
+                || decoded.stop_bit != expected_end
+                || !matches!(&decoded.value, ReplayNetworkPrimitiveScalarValueV1::Int(_))
+            {
+                return Err(network_existing_actor_post_aa_following_payload_error(
+                    "int-boundary-mismatch",
+                    format!(
+                        "tag={:?}, start={}, end={}, width={}, stop={}, expected_start={payload_start_bit}, expected_end={expected_end}",
+                        decoded.attribute_tag,
+                        decoded.payload_start_bit,
+                        decoded.payload_end_bit,
+                        decoded.payload_width,
+                        decoded.stop_bit,
+                    ),
+                ));
+            }
+            (
+                ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1::Int(decoded),
+                32,
+                expected_end,
+            )
+        }
+        ReplayNetworkAttributeTagV1::UniqueId => {
+            let decoded = decode_replay_network_k2_v1(
+                network_bytes,
+                payload_start_bit,
+                ReplayNetworkAttributeTagV1::UniqueId,
+                k2_context,
+            )?;
+            let expected_end = payload_start_bit.checked_add(80).ok_or_else(|| {
+                network_existing_actor_post_aa_following_payload_error(
+                    "invalid-unique-id-end",
+                    "UniqueId payload end overflows u64",
+                )
+            })?;
+            let admitted_identity = match &decoded.value {
+                ReplayNetworkK2ValueV1::UniqueId(unique) => {
+                    unique.system_id == 1
+                        && matches!(
+                            &unique.remote_id,
+                            ReplayNetworkUniqueIdRemoteV1::Steam { .. }
+                        )
+                }
+                _ => false,
+            };
+            if decoded.attribute_tag != ReplayNetworkAttributeTagV1::UniqueId
+                || decoded.payload_start_bit != payload_start_bit
+                || decoded.payload_width != 80
+                || decoded.payload_end_bit != expected_end
+                || !admitted_identity
+            {
+                return Err(network_existing_actor_post_aa_following_payload_error(
+                    "unadmitted-unique-id-shape",
+                    format!(
+                        "tag={:?}, start={}, end={}, width={}, value={:?}; R3.18AD admits only system1/Steam/80",
+                        decoded.attribute_tag,
+                        decoded.payload_start_bit,
+                        decoded.payload_end_bit,
+                        decoded.payload_width,
+                        decoded.value,
+                    ),
+                ));
+            }
+            (
+                ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1::UniqueId(decoded),
+                80,
+                expected_end,
+            )
+        }
+        other => {
+            return Err(network_existing_actor_post_aa_following_payload_error(
+                "unsupported-payload-tag",
+                format!("R3.18AC/AD admits only ActiveActor/Int/UniqueId, got {other:?}"),
+            ));
+        }
+    };
+
+    if stop_bit < payload_start_bit {
+        return Err(network_existing_actor_post_aa_following_payload_error(
+            "invalid-stop",
+            format!("payload start {payload_start_bit} exceeds stop {stop_bit}"),
+        ));
+    }
+
+    Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1 {
+        header_composition,
+        following_payload,
+        payload_start_bit,
+        payload_width,
+        stop_bit,
+    })
+}
+
 /// R3.18V observed exactly one next `property_present` bit on the immutable 47-row lane:
 /// true=47, false=0. This result is deliberately non-generic and stops exactly one bit
 /// after that admitted true control. It does not resolve a stream/header/payload, read a
