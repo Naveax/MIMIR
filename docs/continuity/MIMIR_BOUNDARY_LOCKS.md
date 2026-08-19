@@ -6,12 +6,12 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18Z admitted / R3.18AA active
+# 0. Current override — R3.18AA production / R3.18AB active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION
-- R3.18W `58872e94f00ef094807f21ab2ff984ac66b97d91`: exact R3.18T payload-end validation, one true-only property control bit, false fail-closed, stop +1.
+- R3.18AA `9392240c49f95766c214afee9865fed4155a87a4` / `968520d480f78c528086e4e31b2ce307f4f8d232`: validates one published R3.18W true-control boundary, decodes exactly one following existing-actor header with the stateless primitive, requires exact R3.18Z seven-field membership, and stops at `payload_start`.
 
 ## CLOSED EVIDENCE — R3.18Y Outcome A
 - one post-W following header exact on 47/47 rows through `payload_start`;
@@ -23,10 +23,10 @@ This current override supersedes older status wording later in this historical l
 - tag/component/Cartesian/versionless/outside-set membership false;
 - R3.18P cross-boundary inheritance false.
 
-## ACTIVE PRODUCTION GATE — R3.18AA
-- exactly one post-W following header only;
-- require full R3.18Z tuple membership;
-- stop exactly at `payload_start`.
+## ACTIVE READ-ONLY GATE — R3.18AB
+- exact immutable R3.18Y 47-row lane only; witness reselection forbidden;
+- published R3.18AA vs frozen-Y/direct-native equality through `payload_start`;
+- production mutation forbidden; following payload and another control remain unopened.
 
 ## CLOSED
 - following payload; another property control; generic/repeated property cursor/loop;

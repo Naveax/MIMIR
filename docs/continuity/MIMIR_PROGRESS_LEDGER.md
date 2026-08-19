@@ -762,3 +762,15 @@ Next exact pass:
 - Tag-only, component-only, Cartesian, versionless, nineteenth-tuple and cross-boundary negatives PASS.
 - Production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 - Opened R3.18AA for exactly one Z-admitted post-W header through payload_start only.
+
+## 2026-08-18 — R3.18AA production published; R3.18AB opened
+
+- Outcome A production: `9392240c49f95766c214afee9865fed4155a87a4` / tree `968520d480f78c528086e4e31b2ce307f4f8d232`; parent `ac24d29edeacd04152afe318e25ae296385159c3`.
+- Clean production scope: `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18aa_post_w_following_header.rs`; blobs `46523f47f94231362b60f8aee038e943e41c7972` / `7df8f84af37d771b12da1334bd195634e4cc6a54`.
+- R3.18Z authority: `sha256:81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`; exact_tuple_only 18 contexts / multiplicity 47; R3.18P inheritance false.
+- Builder `32142503228/95728286216`, clean candidate CI `32143161309/95730448274`, published-main CI `32143631391/95731995111` all SUCCESS.
+- Focused R3.18AA tests 5/5 PASS; full repository/workspace/clippy verification PASS.
+- Production behavior: one valid W true control -> exactly one stateless following header -> exact Z tuple gate -> stop at payload_start.
+- Real ActiveActor/Int/UniqueId representatives PASS; truncation/wrong actor/wrong version/Cartesian/P-only-Z-absent/repeatability/post-payload-poison negatives PASS.
+- Following payload / another-control consumption 0/0; no loop/cursor; Cargo/docs/workflow/fixture/corpus/support mutation outside clean production scope 0.
+- Opened R3.18AB as a separate read-only published-AA differential on the exact immutable 47-row Y lane.

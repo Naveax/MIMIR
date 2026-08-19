@@ -57,7 +57,8 @@ R3.18W bounded true-only after-following-payload control production decision / C
 R3.18X published R3.18W control differential decision / Outcome A CLOSED                            |
 R3.18Y one-following-property-header evidence decision / Outcome A CLOSED                         |
 R3.18Z post-W following-header exact-context contract decision / Outcome A CLOSED                 |
-R3.18AA active bounded post-W following-header production spec                                      |
+R3.18AA bounded post-W following-header production decision / CLOSED                         |
+R3.18AB active published-AA following-header differential spec                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -165,13 +166,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 87. `docs/continuity/MIMIR_R3_18Z_ADMITTED_HEADER_CONTEXTS.json`
 88. `docs/continuity/MIMIR_R3_18Z_DECISION.md`
 89. `docs/continuity/MIMIR_R3_18AA_EXECUTION_SPEC.md`
-90. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-91. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-92. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-93. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-94. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-95. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-96. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+90. `docs/continuity/MIMIR_R3_18AA_DECISION.md`
+91. `docs/continuity/MIMIR_R3_18AB_EXECUTION_SPEC.md`
+92. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+93. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+94. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+95. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+96. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+97. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+98. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -824,6 +827,14 @@ next                        R3.18M true-only one-bit production composition
 - R3.18P cross-boundary inheritance false; tag/component/Cartesian/versionless/nineteenth/P-only negatives PASS
 - production unchanged at `58872e94f00ef094807f21ab2ff984ac66b97d91`; next exact pass R3.18AA bounded one-header production
 
-### R3.18AA bounded post-W following header: ACTIVE
-- use existing stateless header primitive after valid W; require exact Z membership; stop at payload_start
-- no following payload, another control, loop/cursor, actor/frame or semantic/runtime widening
+### R3.18AA bounded post-W following header: PRODUCTION / CLOSED
+- production `9392240c49f95766c214afee9865fed4155a87a4` / tree `968520d480f78c528086e4e31b2ce307f4f8d232`; parent `ac24d29edeacd04152afe318e25ae296385159c3`
+- clean scope `lib.rs` + `r3_18aa_post_w_following_header.rs`; blobs `46523f47f94231362b60f8aee038e943e41c7972` / `7df8f84af37d771b12da1334bd195634e4cc6a54`
+- exactly one post-W following header; existing stateless header primitive; exact R3.18Z membership; stop at payload_start
+- focused 5/5 PASS; builder `32142503228/95728286216`, clean CI `32143161309/95730448274`, published CI `32143631391/95731995111` SUCCESS
+- following payload / another control / loop-cursor widening remain closed
+
+### R3.18AB published-AA differential: ACTIVE
+- read-only exact 47-row R3.18Y lane; witness reselection 0 required
+- published-AA vs frozen-Y/direct-native equality through payload_start; exact Z membership preserved
+- following payload / another control consumption must remain 0/0; production mutation forbidden
