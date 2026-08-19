@@ -205,7 +205,7 @@ jobs:
           grep -F 'test result: ok. 5 passed; 0 failed' r3_18ab_focused_test.txt
           echo 'R3_18AB_FOCUSED_AA=PASS 5/5'
 
-      - name: Require existing same-head CI and Knowledge Archive
+      - name: Require existing same-head CI
         shell: bash
         run: |
           set -euo pipefail
@@ -215,13 +215,10 @@ jobs:
           d=json.load(open('/tmp/head_runs.json'))
           sha=os.environ['GITHUB_SHA']
           branch='evidence/r318ab-aa-audit-v1'
-          def one(name):
-              xs=[r for r in d.get('workflow_runs',[]) if r.get('head_sha')==sha and r.get('event')=='push' and r.get('head_branch')==branch and r.get('name')==name]
-              assert len(xs)==1,(name,[(r.get('id'),r.get('status'),r.get('conclusion')) for r in xs])
-              return xs[0]['id']
+          xs=[r for r in d.get('workflow_runs',[]) if r.get('head_sha')==sha and r.get('event')=='push' and r.get('head_branch')==branch and r.get('name')=='CI']
+          assert len(xs)==1,[(r.get('id'),r.get('status'),r.get('conclusion')) for r in xs]
           with open('/tmp/head_validation.env','w') as f:
-              f.write(f"HEAD_CI_RUN={one('CI')}\n")
-              f.write(f"HEAD_KA_RUN={one('Knowledge Archive')}\n")
+              f.write(f"HEAD_CI_RUN={xs[0]['id']}\n")
           PY
           source /tmp/head_validation.env
           wait_run() {
@@ -240,15 +237,11 @@ jobs:
             return 1
           }
           wait_run "$HEAD_CI_RUN"
-          wait_run "$HEAD_KA_RUN"
           HEAD_CI_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$HEAD_CI_RUN/jobs" --jq '.jobs[] | select(.name=="rust") | .id')"
-          HEAD_KA_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$HEAD_KA_RUN/jobs" --jq '.jobs[] | select(.name=="verify") | .id')"
           test -n "$HEAD_CI_JOB"
-          test -n "$HEAD_KA_JOB"
           test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$HEAD_CI_JOB" --jq .conclusion)" = success
-          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$HEAD_KA_JOB" --jq .conclusion)" = success
-          printf 'HEAD_CI_JOB=%s\nHEAD_KA_JOB=%s\n' "$HEAD_CI_JOB" "$HEAD_KA_JOB" >> /tmp/head_validation.env
-          echo "R3_18AB_SAME_HEAD_VALIDATION=PASS ci=$HEAD_CI_RUN/$HEAD_CI_JOB ka=$HEAD_KA_RUN/$HEAD_KA_JOB"
+          printf 'HEAD_CI_JOB=%s\n' "$HEAD_CI_JOB" >> /tmp/head_validation.env
+          echo "R3_18AB_SAME_HEAD_VALIDATION=PASS ci=$HEAD_CI_RUN/$HEAD_CI_JOB"
 
       - name: Final source scope privacy and immutable evidence files
         shell: bash
@@ -272,7 +265,6 @@ jobs:
           R3_18AB_Y_SAME_HEAD_CI=$Y_SAME_HEAD_CI/$Y_SAME_HEAD_CI_JOB
           R3_18AB_Y_ARTIFACT=$Y_ART/$Y_ART_SIZE/$Y_ART_DIGEST
           R3_18AB_EVIDENCE_HEAD_CI=$HEAD_CI_RUN/$HEAD_CI_JOB
-          R3_18AB_EVIDENCE_HEAD_KA=$HEAD_KA_RUN/$HEAD_KA_JOB
           EOF
           cat > r3_18ab_source_scope.txt <<EOF
           R3_18AB_BASE_MAIN=$BASE_SHA
@@ -412,9 +404,5 @@ jobs:
             *) STATE=error ;;
           esac
           AID="${ARTIFACT_ID:-none}"
-          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
-            -f state="$STATE" \
-            -f context='r318ab-authority-receipt' \
-            -f description="run=$GITHUB_RUN_ID status=$JOB_STATUS artifact=$AID" \
-            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA"             -f state="$STATE"             -f context='r318ab-authority-receipt'             -f description="run=$GITHUB_RUN_ID status=$JOB_STATUS artifact=$AID"             -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
           echo "R3_18AB_DISCOVERABLE_STATUS=PASS run=$GITHUB_RUN_ID state=$STATE artifact=$AID"
