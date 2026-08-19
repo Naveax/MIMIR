@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - ops/r318ab-continuity-ac-open-v1
+  pull_request:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,6 +18,7 @@ permissions:
 
 jobs:
   build-clean-continuity:
+    if: github.event_name == 'push' || github.event.pull_request.head.ref == 'ops/r318ab-continuity-ac-open-v1'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -92,12 +96,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp tools/_tmp_r318ab_continuity.py /tmp/r318ab_continuity.py
+          cp tools/_tmp_r318ab_continuity_state.py /tmp/r318ab_continuity_state.py
+          cp tools/_tmp_r318ab_continuity_root.py /tmp/r318ab_continuity_root.py
           cp tools/_tmp_r318ab_decision.template.md /tmp/MIMIR_R3_18AB_DECISION.template.md
           cp tools/_tmp_r318ac_spec.template.md /tmp/MIMIR_R3_18AC_EXECUTION_SPEC.template.md
           git reset --hard "$BASE_SHA"
           git clean -fd
-          python3 /tmp/r318ab_continuity.py
+          python3 /tmp/r318ab_continuity_state.py
+          python3 /tmp/r318ab_continuity_root.py
           python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
           pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
           git diff --check
