@@ -169,7 +169,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             repeat_n += 1;
         }
 
-        let trunc_len = usize::try_from(payload_start / 8)?.min(network.len());
+        let trunc_len = usize::try_from(control_start / 8)?.min(network.len());
         let truncation = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_v1(
             &network[..trunc_len],
             &prior,
