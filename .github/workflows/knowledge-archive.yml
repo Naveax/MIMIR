@@ -21,6 +21,10 @@ on:
       - 'scripts/verify_mimir_knowledge_archive.ps1'
       - '.github/workflows/knowledge-archive.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   verify:
     runs-on: windows-latest
