@@ -6,35 +6,34 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AC closed / R3.18AD active
+# 0. Current override — R3.18AD production / R3.18AE active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION
-- R3.18AA `9392240c49f95766c214afee9865fed4155a87a4` / `968520d480f78c528086e4e31b2ce307f4f8d232` remains canonical: one post-W following header after a valid W true control, exact R3.18Z membership, stop at `payload_start`.
+## PRODUCTION — R3.18AD
+- `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`, parent `671cd19a7d034b1377de5bed1dfd36600f45c8d7`;
+- valid R3.18AA boundary and full R3.18Z exact header membership remain mandatory;
+- exactly one ordinal-3 payload only: ActiveActor/33, Int/32, or UniqueId system1-Steam/80;
+- stop exactly at payload end; another property-control bits consumed 0;
+- clean scope exactly lib.rs + one focused AD test.
 
-## CLOSED EVIDENCE — R3.18AC Outcome A
-- exact frozen AB/Y lane 47/47; witness reselection 0;
-- pinned Boxcars ordinal 3 / native payload mismatch 0;
-- ActiveActor 39×33 bits; Int 7×32 bits; UniqueId 1×80 bits;
-- the one UniqueId row is exactly system_id=1 / Steam; alternate systems/layouts are not inherited;
-- repeatability/truncation/wrong-tag/wrong-context-or-N/A/post-payload-poison all 47/47;
-- another-control bits 0; privacy PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0;
-- authority `32237834815/96021661994`, same-head CI `32237834813/96021661894`, artifact `9359697636` / `sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`.
+## VALIDATION
+- builder `32241956973/96034261394` SUCCESS;
+- validation PR CI `32242293315/96035296746` SUCCESS;
+- exact clean push CI `32242994502/96038355071` SUCCESS;
+- published-main CI `32242742010/96036666443` SUCCESS;
+- receipt helper `32243135866/96037860121` SUCCESS.
 
-## CLOSED HEADER CONTRACT — R3.18Z
-- `81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`; `exact_tuple_only`; 18 contexts / 47 multiplicities; cross-boundary R3.18P inheritance false.
-
-## ACTIVE PRODUCTION GATE — R3.18AD
-- start only from a valid published R3.18AA result whose full header context remains R3.18Z-admitted;
-- decode exactly one payload using existing primitives;
-- admit only ActiveActor/33, Int/32, UniqueId system1-Steam/80;
-- stop exactly at payload end; another property-control bit remains unopened.
+## ACTIVE READ-ONLY GATE — R3.18AE
+- exact immutable AC 47-row lane only; witness reselection forbidden;
+- published AD vs frozen AC / pinned oracle / direct native must match through payload end;
+- no production mutation and no another-control inspection.
 
 ## CLOSED
 - alternate UniqueId systems/layouts or widths;
-- another property control; generic/repeated property cursor/loop;
-- next actor/frame/lifecycle; raw state/events/slices/skills/counterfactual/runtime/export widening.
+- another property control after AD payload end;
+- repeated/generalized property loop or generic cursor;
+- next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---
 

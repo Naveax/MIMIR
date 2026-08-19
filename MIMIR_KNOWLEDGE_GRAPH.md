@@ -60,7 +60,8 @@ R3.18Z post-W following-header exact-context contract decision / Outcome A CLOSE
 R3.18AA bounded post-W following-header production decision / CLOSED                         |
 R3.18AB published-AA following-header differential / Outcome A CLOSED                        |
 R3.18AC post-AA ordinal-3 payload evidence / Outcome A CLOSED                              |
-R3.18AD active bounded post-AA ordinal-3 payload production                                  |
+R3.18AD bounded post-AA ordinal-3 payload production / Outcome A CLOSED                  |
+R3.18AE active published R3.18AD ordinal-3 payload differential                              |
         |                               |
         +---------------+---------------+
                         |
@@ -174,13 +175,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 93. `docs/continuity/MIMIR_R3_18AC_EXECUTION_SPEC.md`
 94. `docs/continuity/MIMIR_R3_18AC_DECISION.md`
 95. `docs/continuity/MIMIR_R3_18AD_EXECUTION_SPEC.md`
-96. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-97. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-98. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-99. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-100. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-101. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-102. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+96. `docs/continuity/MIMIR_R3_18AD_DECISION.md`
+97. `docs/continuity/MIMIR_R3_18AE_EXECUTION_SPEC.md`
+98. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+99. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+100. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+101. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+102. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+103. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+104. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -863,3 +866,11 @@ next                        R3.18M true-only one-bit production composition
 - Artifact `9359697636` / `12010` bytes / `sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`; ZIP digest exact and inner manifest 10/10 PASS; receipt helper `32238679393/96024251802` SUCCESS.
 - Exact payload facts: ActiveActor 39×33; Int 7×32; UniqueId 1×80 with system1/Steam; mismatch 0; witness reselection 0; another-control 0; privacy PASS.
 - R3.18AD is active bounded production composition of exactly those payload shapes after a valid AA result. No alternate UniqueId layout, next control, loop/cursor or semantic/runtime widening is admitted.
+
+
+## CURRENT OVERRIDE — R3.18AD PRODUCTION / R3.18AE ACTIVE
+
+- Production `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`, parent `671cd19a7d034b1377de5bed1dfd36600f45c8d7`.
+- R3.18AD admits exactly ActiveActor/33, Int/32, UniqueId system1-Steam/80 after valid AA/Z authority; stop at payload end; another-control 0.
+- Builder `32241956973/96034261394`, PR CI `32242293315/96035296746`, clean push CI `32242994502/96038355071`, main CI `32242742010/96036666443`, receipt `32243135866/96037860121` all SUCCESS.
+- R3.18AE is active read-only published-AD differential on the exact immutable AC 47-row lane. Alternate layouts, another control, generic loops/cursors and semantic/runtime widening remain closed.

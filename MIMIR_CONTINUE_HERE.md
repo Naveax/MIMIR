@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  9392240c49f95766c214afee9865fed4155a87a4
+  ccadbf148381c007890d13d5fe8120866a0f40f9
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18AA — bounded post-W following-header composition
+  R3.18AD — bounded post-AA ordinal-3 payload composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18AC — ordinal-3 payload differential / Outcome A / 47/47 / mismatch 0 / ActiveActor 39×33 / Int 7×32 / UniqueId system1-Steam 1×80 / artifact 9359697636
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18AC — post-AA ordinal-3 payload / Outcome A / 47 rows / ActiveActor=39×33 Int=7×32 UniqueId=1×80 system1-Steam / mismatch 0 / another-control 0
 
 CURRENT_PASS:
-  R3.18AD — bounded post-AA ordinal-3 following-property payload production
+  R3.18AE — published R3.18AD ordinal-3 payload differential
 
 CURRENT_PASS_TYPE:
-  production implementation / compose exactly one AC-admitted ordinal-3 payload after valid R3.18AA
+  read-only evidence / validate published R3.18AD on the exact immutable R3.18AC 47-row lane
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -107,7 +107,8 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AA PRODUCTION at 9392240c49f95766c214afee9865fed4155a87a4: validates one R3.18W true-control boundary, decodes exactly one following header with the stateless primitive, requires exact R3.18Z membership, and stops at payload_start
   R3.18AB CLOSED Outcome A: published-AA/frozen-Y/direct-header exact 47/47; Z contexts 18/18; multiplicities 47/47; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0; artifact 9357559410
   R3.18AC CLOSED Outcome A: ordinal-3 payload exact 47/47; ActiveActor 39×33; Int 7×32; UniqueId 1×80 system1-Steam; mismatch 0; another-control 0; artifact 9359697636
-  R3.18AD ACTIVE production: after valid AA, compose exactly one AC-admitted payload and stop at payload end
+  R3.18AD PRODUCTION at ccadbf148381c007890d13d5fe8120866a0f40f9: after valid AA/Z authority, compose exactly one ActiveActor/33, Int/32 or UniqueId system1-Steam/80 payload and stop at payload end
+  R3.18AE ACTIVE read-only: published AD differential on exact AC 47-row lane; another-control consumption must remain 0
   NO alternate UniqueId layout, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18AB_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
@@ -119,6 +120,17 @@ R3_18AB_EVIDENCE_CLOSURE:
   repeatability/truncation/wrong-actor/unresolved/wrong-version/post-payload-poison 47/47; Cartesian + P-only-Z-absent PASS
   witness reselection 0 / following payload + another-control bits 0/0 / privacy PASS / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
   superseded attempt f2f79e47fefbe7ee95ea5df84c78a86868f57bb3 / 32229955227/95997443235: harness-only truncation 39/47; positive/equality checks 47/47; production unchanged
+R3_18AD_PRODUCTION_CLOSURE:
+  Outcome A / production ccadbf148381c007890d13d5fe8120866a0f40f9 / tree 0882601060d0bb6d37fcc03ae7273dcf50dd0be3 / parent 671cd19a7d034b1377de5bed1dfd36600f45c8d7
+  lib/test blobs: 1254d5a3b0299677f6661712c371aacf27cdb45d / 013ad6da300cd88f7821b18634736e016af63276
+  builder: 32241956973/96034261394 SUCCESS
+  validation PR CI: 32242293315/96035296746 SUCCESS
+  exact clean push CI: 32242994502/96038355071 SUCCESS
+  published-main CI: 32242742010/96036666443 SUCCESS
+  receipt helper: 32243135866/96037860121 SUCCESS
+  clean files: lib.rs + r3_18ad_post_aa_payload.rs only
+  admitted payloads: ActiveActor/33, Int/32, UniqueId system1-Steam/80 only
+  another-control bits 0 / alternate UniqueId layouts rejected / generic loop-cursor 0
 R3_18AC_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
   authority head/tree: 62bc43dd12dbde48fb503cccd4da46dfcf6ae252 / 9d5b550b4bb93688db9f3a67583067adb32425f6
@@ -3680,22 +3692,37 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18AD
-
-**Goal:** compose exactly one AC-admitted ordinal-3 payload after a valid published R3.18AA result and stop exactly at payload end.
+# HISTORICAL PASS CHECKLIST — R3.18AD (ADMITTED OUTCOME A)
 
 ```text
-[ ] Fetch fresh main and require the exact AC admission, unchanged AA production SHA/tree/lib/test, Z contract `81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9`, AC authority `62bc43dd12dbde48fb503cccd4da46dfcf6ae252` / `32237834815/96021661994`, CI `32237834813/96021661894`, artifact `9359697636/sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df`.
-[ ] Start only from a valid published R3.18AA result with full R3.18Z exact-tuple membership.
-[ ] Reuse existing primitives only: K2 for ActiveActor/UniqueId and primitive-scalar for Int.
-[ ] Admit ActiveActor only at exact width 33.
-[ ] Admit Int only at exact width 32.
-[ ] Admit UniqueId only at exact width 80 with system_id=1 and Steam remote kind; reject all other lower-level-supported layouts.
-[ ] Stop exactly at decoded payload end and inspect zero bits of another property-control boundary.
-[ ] Add one focused production test file using frozen AC representatives for ActiveActor, Int and the single UniqueId row.
-[ ] Require truncation, unsupported-shape/layout, repeatability and post-payload-poison fail-closed/invariance coverage.
-[ ] Keep clean production scope to lib.rs + one focused R3.18AD test; Cargo/docs/workflow/fixture/corpus/support mutation zero.
-[ ] Run Rust 1.85 focused/full/workspace/clippy/repository verification and exact clean-candidate CI.
-[ ] Validate exact clean SHA, publish only by fresh-main force=false fast-forward, then require published-main CI.
-[ ] Do not widen to another control, generic loop/cursor, next actor/frame or semantic/runtime/export behavior.
+[x] Freeze exact AC/Z/AA authority and fresh main.
+[x] Compose exactly one payload after valid AA using existing K2/scalar primitives.
+[x] Admit ActiveActor only at 33 bits; Int only at 32 bits; UniqueId only system1-Steam at 80 bits.
+[x] Reject lower-level-valid Epic 312-bit UniqueId at the AD boundary.
+[x] Stop exactly at payload end and consume no another property-control bit.
+[x] Focused AD tests 5/5 plus AA/K2/scalar suites PASS.
+[x] Full mimir-replay/workspace/clippy/repository verification PASS.
+[x] Clean production scope exactly two files.
+[x] Builder 32241956973/96034261394, PR CI 32242293315/96035296746, clean push CI 32242994502/96038355071, main CI 32242742010/96036666443 SUCCESS.
+[x] Published by fresh-main force=false fast-forward; receipt 32243135866/96037860121 SUCCESS.
+```
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18AE
+
+**Goal:** differentially validate published R3.18AD over the exact immutable R3.18AC 47-row lane through one payload end, with zero production mutation and zero another-control access.
+
+```text
+[ ] Fetch fresh main and require published AD ccadbf148381c007890d13d5fe8120866a0f40f9 / 0882601060d0bb6d37fcc03ae7273dcf50dd0be3, lib/test 1254d5a3b0299677f6661712c371aacf27cdb45d / 013ad6da300cd88f7821b18634736e016af63276.
+[ ] Verify builder/PR/clean-push/main CI receipts and immutable AC artifact 9359697636/sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df.
+[ ] Reuse exactly the frozen AC 47 rows; witness reselection 0.
+[ ] Invoke published AD on every row and require embedded AA/header equality plus R3.18Z exact membership.
+[ ] Require published/frozen/oracle/direct-native payload start/end/width/value equality 47/47.
+[ ] Reconstruct ActiveActor 39×33, Int 7×32, UniqueId 1×80 system1-Steam exactly.
+[ ] Run truncation, wrong-context/tag, Epic-312 rejection, repeatability and post-payload-poison negatives.
+[ ] Require another-control bits consumed 0 and production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+[ ] Produce privacy-safe immutable evidence artifact with full internal hashes and deterministic double-run equality.
+[ ] Require exact evidence-head normal CI plus full focused/workspace/clippy/repository validation.
+[ ] Do not widen to another control, alternate UniqueId layout, generic loop/cursor, next actor/frame or semantic/runtime behavior.
 ```

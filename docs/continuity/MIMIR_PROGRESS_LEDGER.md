@@ -830,3 +830,24 @@ Boundaries opened:
 
 Boundaries still closed:
 - alternate UniqueId layouts/systems, another property-control bit, generalized property loop/cursor, next actor/frame and semantic/runtime/export widening.
+
+---
+
+## 2026-08-19 — R3.18AD — Bounded post-AA ordinal-3 payload production
+
+Production SHA/tree: `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`
+Parent: `671cd19a7d034b1377de5bed1dfd36600f45c8d7`
+Outcome: **A — ADMITTED / PRODUCTION**
+
+- exact clean scope: `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18ad_post_aa_payload.rs`;
+- lib/test blobs `1254d5a3b0299677f6661712c371aacf27cdb45d` / `013ad6da300cd88f7821b18634736e016af63276`;
+- preserves R3.18AA + R3.18Z exact header authority;
+- admits ActiveActor/33, Int/32, UniqueId system1-Steam/80 only;
+- lower-level-valid Epic 312-bit UniqueId explicitly rejected;
+- focused AD tests 5/5 plus AA/K2/scalar focused suites PASS;
+- full mimir-replay/workspace/clippy/repository verification PASS;
+- builder `32241956973/96034261394`, PR CI `32242293315/96035296746`, clean push CI `32242994502/96038355071`, published-main CI `32242742010/96036666443` SUCCESS;
+- publication fresh-main `force=false`; receipt `32243135866/96037860121` SUCCESS;
+- another-control bits consumed 0; no generic loop/cursor or capability widening.
+
+Next exact gate: R3.18AE read-only published-AD differential on the frozen AC 47-row lane.
