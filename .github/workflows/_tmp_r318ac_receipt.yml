@@ -35,7 +35,12 @@ jobs:
             -f description='R3.18AC immutable receipt running' \
             -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
 
-      - name: Resolve exact successful AC authority
+      - name: Checkout helper repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Resolve exact successful AC authority and CI
         id: resolve
         shell: bash
         run: |
@@ -44,9 +49,13 @@ jobs:
           test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$AC_HEAD/status" --jq '[.statuses[] | select(.context=="r318ac/evidence" and .state=="success")] | length')" -ge 1
           gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$AC_BRANCH&event=push&per_page=100" > /tmp/runs.json
           AC_RUN="$(jq -r --arg sha "$AC_HEAD" --arg name "$AC_WORKFLOW" '[.workflow_runs[] | select(.head_sha==$sha and .name==$name and .conclusion=="success")] | if length==1 then .[0].id else error("expected exactly one successful exact-head AC run") end' /tmp/runs.json)"
+          CI_RUN="$(jq -r --arg sha "$AC_HEAD" '[.workflow_runs[] | select(.head_sha==$sha and .name=="CI" and .conclusion=="success")] | if length==1 then .[0].id else error("expected exactly one successful exact-head CI run") end' /tmp/runs.json)"
           test -n "$AC_RUN" && test "$AC_RUN" != null
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AC_RUN/jobs?per_page=100" > /tmp/jobs.json
-          AC_JOB="$(jq -r '[.jobs[] | select(.name=="evidence" and .conclusion=="success")] | if length==1 then .[0].id else error("expected exactly one successful evidence job") end' /tmp/jobs.json)"
+          test -n "$CI_RUN" && test "$CI_RUN" != null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AC_RUN/jobs?per_page=100" > /tmp/ac_jobs.json
+          AC_JOB="$(jq -r '[.jobs[] | select(.name=="evidence" and .conclusion=="success")] | if length==1 then .[0].id else error("expected exactly one successful evidence job") end' /tmp/ac_jobs.json)"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN/jobs?per_page=100" > /tmp/ci_jobs.json
+          CI_JOB="$(jq -r '[.jobs[] | select(.name=="rust" and .conclusion=="success")] | if length==1 then .[0].id else error("expected exactly one successful CI rust job") end' /tmp/ci_jobs.json)"
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AC_RUN/artifacts?per_page=100" > /tmp/artifacts.json
           AC_ART="$(jq -r --arg name "$AC_ARTIFACT_NAME" '[.artifacts[] | select(.name==$name and .expired==false)] | if length==1 then .[0].id else error("expected exactly one live AC artifact") end' /tmp/artifacts.json)"
           AC_SIZE="$(jq -r --arg name "$AC_ARTIFACT_NAME" '.artifacts[] | select(.name==$name) | .size_in_bytes' /tmp/artifacts.json)"
@@ -54,11 +63,15 @@ jobs:
           test -n "$AC_DIGEST" && test "$AC_DIGEST" != null
           echo "AC_RUN=$AC_RUN" >> "$GITHUB_OUTPUT"
           echo "AC_JOB=$AC_JOB" >> "$GITHUB_OUTPUT"
+          echo "CI_RUN=$CI_RUN" >> "$GITHUB_OUTPUT"
+          echo "CI_JOB=$CI_JOB" >> "$GITHUB_OUTPUT"
           echo "AC_ART=$AC_ART" >> "$GITHUB_OUTPUT"
           echo "AC_SIZE=$AC_SIZE" >> "$GITHUB_OUTPUT"
           echo "AC_DIGEST=$AC_DIGEST" >> "$GITHUB_OUTPUT"
           echo "R3_18AC_AUTHORITY_RUN=$AC_RUN"
           echo "R3_18AC_AUTHORITY_JOB=$AC_JOB"
+          echo "R3_18AC_EXACT_HEAD_CI_RUN=$CI_RUN"
+          echo "R3_18AC_EXACT_HEAD_CI_JOB=$CI_JOB"
           echo "R3_18AC_ARTIFACT_ID=$AC_ART"
           echo "R3_18AC_ARTIFACT_SIZE=$AC_SIZE"
           echo "R3_18AC_ARTIFACT_DIGEST=$AC_DIGEST"
@@ -79,8 +92,11 @@ jobs:
           grep -Fqx 'R3_18AC_FROZEN_ROWS=47/47' "$d/r3_18ac_aggregate.txt"
           grep -Fqx 'R3_18AC_ORACLE_NATIVE_MISMATCH=0' "$d/r3_18ac_aggregate.txt"
           grep -Fqx 'R3_18AC_TAGS=ActiveActor:39,Int:7,UniqueId:1' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_WIDTHS=ActiveActor:33x39;Int:32x7;UniqueId:80x1' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_UNIQUE_ID=system:1,remote:Steam,width:80,count:1' "$d/r3_18ac_aggregate.txt"
           grep -Fqx 'R3_18AC_WITNESS_RESELECTION=0' "$d/r3_18ac_aggregate.txt"
           grep -Fqx 'R3_18AC_ANOTHER_CONTROL_BITS_CONSUMED=0' "$d/r3_18ac_aggregate.txt"
+          grep -Fqx 'R3_18AC_NEGATIVES=PASS 47/47' "$d/r3_18ac_aggregate.txt"
           grep -Fqx 'R3_18AC_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' "$d/r3_18ac_aggregate.txt"
           grep -Fqx 'R3_18AC_PRIVACY=PASS' "$d/r3_18ac_aggregate.txt"
           echo '--- R3.18AC aggregate ---'
@@ -100,14 +116,15 @@ jobs:
         env:
           AC_RUN: ${{ steps.resolve.outputs.AC_RUN }}
           AC_JOB: ${{ steps.resolve.outputs.AC_JOB }}
+          CI_RUN: ${{ steps.resolve.outputs.CI_RUN }}
           AC_ART: ${{ steps.resolve.outputs.AC_ART }}
         run: |
           set -euo pipefail
           gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
             -f state=success -f context='r318ac/receipt' \
-            -f description="AC run=$AC_RUN job=$AC_JOB art=$AC_ART" \
+            -f description="AC=$AC_RUN/$AC_JOB CI=$CI_RUN art=$AC_ART" \
             -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
-          echo "R3_18AC_RECEIPT=PASS helper_run=$GITHUB_RUN_ID ac_run=$AC_RUN ac_job=$AC_JOB ac_artifact=$AC_ART"
+          echo "R3_18AC_RECEIPT=PASS helper_run=$GITHUB_RUN_ID ac_run=$AC_RUN ac_job=$AC_JOB ci_run=$CI_RUN ac_artifact=$AC_ART"
 
       - name: Mark receipt failure
         if: failure()
