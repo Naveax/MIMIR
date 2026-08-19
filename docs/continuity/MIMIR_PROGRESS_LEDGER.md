@@ -840,7 +840,7 @@ Parent: `671cd19a7d034b1377de5bed1dfd36600f45c8d7`
 Outcome: **A — ADMITTED / PRODUCTION**
 
 - exact clean scope: `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18ad_post_aa_payload.rs`;
-- lib/test blobs `1254d5a3b0299677f6661712c371aacf27cdb45d` / `013ad6da300cd88f7821b18634736e016af63276`;
+- lib/test blobs `1254d5a3d16e7b97b1dee87a8b459514d25749ef` / `013ad6da94b866ecaca94cd6420e7568d9b4b5ee`;
 - preserves R3.18AA + R3.18Z exact header authority;
 - admits ActiveActor/33, Int/32, UniqueId system1-Steam/80 only;
 - lower-level-valid Epic 312-bit UniqueId explicitly rejected;

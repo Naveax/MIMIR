@@ -18,7 +18,7 @@ R3.18AE must preserve the full R3.18AA/R3.18Z header boundary, the exact R3.18AC
 ```text
 production SHA/tree                  ccadbf148381c007890d13d5fe8120866a0f40f9 / 0882601060d0bb6d37fcc03ae7273dcf50dd0be3
 production parent                    671cd19a7d034b1377de5bed1dfd36600f45c8d7
-production lib/test blobs            1254d5a3b0299677f6661712c371aacf27cdb45d / 013ad6da300cd88f7821b18634736e016af63276
+production lib/test blobs            1254d5a3d16e7b97b1dee87a8b459514d25749ef / 013ad6da94b866ecaca94cd6420e7568d9b4b5ee
 R3.18Z contract SHA256               81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9
 R3.18AC evidence head/tree           62bc43dd12dbde48fb503cccd4da46dfcf6ae252 / 9d5b550b4bb93688db9f3a67583067adb32425f6
 R3.18AC authority run/job            32237834815 / 96021661994 SUCCESS

@@ -122,7 +122,7 @@ R3_18AB_EVIDENCE_CLOSURE:
   superseded attempt f2f79e47fefbe7ee95ea5df84c78a86868f57bb3 / 32229955227/95997443235: harness-only truncation 39/47; positive/equality checks 47/47; production unchanged
 R3_18AD_PRODUCTION_CLOSURE:
   Outcome A / production ccadbf148381c007890d13d5fe8120866a0f40f9 / tree 0882601060d0bb6d37fcc03ae7273dcf50dd0be3 / parent 671cd19a7d034b1377de5bed1dfd36600f45c8d7
-  lib/test blobs: 1254d5a3b0299677f6661712c371aacf27cdb45d / 013ad6da300cd88f7821b18634736e016af63276
+  lib/test blobs: 1254d5a3d16e7b97b1dee87a8b459514d25749ef / 013ad6da94b866ecaca94cd6420e7568d9b4b5ee
   builder: 32241956973/96034261394 SUCCESS
   validation PR CI: 32242293315/96035296746 SUCCESS
   exact clean push CI: 32242994502/96038355071 SUCCESS
@@ -3714,7 +3714,7 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 **Goal:** differentially validate published R3.18AD over the exact immutable R3.18AC 47-row lane through one payload end, with zero production mutation and zero another-control access.
 
 ```text
-[ ] Fetch fresh main and require published AD ccadbf148381c007890d13d5fe8120866a0f40f9 / 0882601060d0bb6d37fcc03ae7273dcf50dd0be3, lib/test 1254d5a3b0299677f6661712c371aacf27cdb45d / 013ad6da300cd88f7821b18634736e016af63276.
+[ ] Fetch fresh main and require published AD ccadbf148381c007890d13d5fe8120866a0f40f9 / 0882601060d0bb6d37fcc03ae7273dcf50dd0be3, lib/test 1254d5a3d16e7b97b1dee87a8b459514d25749ef / 013ad6da94b866ecaca94cd6420e7568d9b4b5ee.
 [ ] Verify builder/PR/clean-push/main CI receipts and immutable AC artifact 9359697636/sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df.
 [ ] Reuse exactly the frozen AC 47 rows; witness reselection 0.
 [ ] Invoke published AD on every row and require embedded AA/header equality plus R3.18Z exact membership.
