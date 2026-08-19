@@ -1,0 +1,101 @@
+name: R3.18AE Published R3.18AD Differential Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318ae-published-ad-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      R318AE_CANONICAL_MAIN: bfda3dc2a46eace4ad0b00a2730d6919f2074c2b
+      R318AE_CANONICAL_TREE: d37a370ee3f260eb0bf4dc8f7c08295411acc240
+      R318AE_AD_DECISION_BLOB: bcd35a98d8a435654957233132c516e6d1cdec65
+      R318AE_AE_SPEC_BLOB: 6b2e35392ac529b62986e47ed3095dc288eb4a33
+    steps:
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=pending -f context='r318ae/evidence' \
+            -f description='R3.18AE published AD differential running' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+
+      - name: Freeze temporary evidence scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$R318AE_CANONICAL_MAIN"
+          mapfile -t changed < <(git diff --name-only "$R318AE_CANONICAL_MAIN" HEAD | sort)
+          expected=(
+            '.github/workflows/_tmp_r318ae_evidence.yml'
+            'tools/_tmp_r318ae_driver.py'
+            'tools/_tmp_r318ae_probe.rs'
+            'tools/_tmp_r318ae_run.sh'
+          )
+          mapfile -t wanted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 4
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${wanted[@]}")"
+          git diff --exit-code "$R318AE_CANONICAL_MAIN" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs AGENTS.md MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+          echo 'R3_18AE_TEMP_SCOPE=PASS files=4 production_mutation=0'
+
+      - name: Execute R3.18AE evidence
+        shell: bash
+        run: bash tools/_tmp_r318ae_run.sh
+
+      - name: Upload immutable evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ae-published-ad-differential-evidence
+          path: |
+            r3_18ae_source_scope.txt
+            r3_18ae_replay_identity.tsv
+            r3_18ae_frozen_ac_rows.json
+            r3_18ae_published_rows.json
+            r3_18ae_payload_summary.json
+            r3_18ae_negative_controls.txt
+            r3_18ae_aggregate.txt
+            r3_18ae_upstream_receipts.txt
+            r3_18ae_artifact_sha256.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Mark evidence success
+        if: success()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=success -f context='r318ae/evidence' \
+            -f description='R3.18AE evidence PASS 47/47' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=failure -f context='r318ae/evidence' \
+            -f description='R3.18AE evidence failed' \
+            -f target_url="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
