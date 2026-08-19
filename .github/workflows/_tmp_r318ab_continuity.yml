@@ -1,0 +1,138 @@
+name: R3.18AB Continuity Sync Builder
+
+on:
+  push:
+    branches:
+      - ops/r318ab-continuity-ac-open-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-clean-continuity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 713298a04bbb5491286e7f4ee5bf47a5d201b28c
+      BASE_TREE: 5cca2c6c15013895e01ab4acf083fed59f8023da
+      PROD_SHA: 9392240c49f95766c214afee9865fed4155a87a4
+      AB_HEAD: b2f4b73600165b2d83389b6ce43709b64beba52a
+      AB_TREE: 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
+      AB_RUN: "32230919566"
+      AB_JOB: "96000311036"
+      AB_CI_RUN: "32230919652"
+      AB_CI_JOB: "96000311479"
+      AB_ART: "9357559410"
+      AB_ART_NAME: r318ab-published-aa-following-header-differential-evidence
+      AB_ART_SIZE: "12607"
+      AB_ART_DIGEST: sha256:4b6d72b154440ee2b819f5a5ecb6fa3768e086b7ec4ba0d0c53d0e8e3ad23d99
+      BRANCH: ops/r318ab-continuity-ac-open-v1
+    steps:
+      - name: Checkout exact temporary head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze AB authority and fresh main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = '968520d480f78c528086e4e31b2ce307f4f8d232'
+          test "$(git rev-parse "$AB_HEAD^{tree}")" = "$AB_TREE"
+          test "$(git merge-base "$PROD_SHA" "$BASE_SHA")" = "$PROD_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AB_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AB_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AB_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AB_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AB_RUN" --jq .head_sha)" = "$AB_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AB_CI_RUN" --jq .head_sha)" = "$AB_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AB_ART" --jq .name)" = "$AB_ART_NAME"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AB_ART" --jq .size_in_bytes)" = "$AB_ART_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AB_ART" --jq .digest)" = "$AB_ART_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AB_ART" --jq .workflow_run.id)" = "$AB_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AB_ART" --jq .workflow_run.head_sha)" = "$AB_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AB_ART" --jq .expired)" = false
+
+      - name: Verify immutable AB artifact payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          d="$RUNNER_TEMP/ab"
+          rm -rf "$d"; mkdir -p "$d"
+          for attempt in 1 2 3; do
+            rm -rf "$d"; mkdir -p "$d"
+            if gh run download "$AB_RUN" -n "$AB_ART_NAME" -D "$d"; then break; fi
+            test "$attempt" -lt 3
+            sleep $((attempt*10))
+          done
+          test "$(wc -l < "$d/r3_18ab_artifact_sha256.txt")" -eq 9
+          (cd "$d" && sha256sum -c r3_18ab_artifact_sha256.txt)
+          grep -Fqx 'R3_18AB_OUTCOME=A' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_FROZEN_ROWS=47/47' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_PUBLISHED_AA_FROZEN_Y_DIRECT_MISMATCH=0' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_EXACT_Z_CONTEXTS=18/18' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_EXACT_Z_MULTIPLICITY=47/47' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_TAGS=ActiveActor:39,Int:7,UniqueId:1' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_WITNESS_RESELECTION=0' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_ANOTHER_CONTROL_BITS_CONSUMED=0' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' "$d/r3_18ab_aggregate.txt"
+          grep -Fqx 'R3_18AB_PRIVACY=PASS' "$d/r3_18ab_aggregate.txt"
+
+      - name: Generate canonical continuity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318ab_continuity.py /tmp/r318ab_continuity.py
+          cp tools/_tmp_r318ab_decision.template.md /tmp/MIMIR_R3_18AB_DECISION.template.md
+          cp tools/_tmp_r318ac_spec.template.md /tmp/MIMIR_R3_18AC_EXECUTION_SPEC.template.md
+          git reset --hard "$BASE_SHA"
+          git clean -fd
+          python3 /tmp/r318ab_continuity.py
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git diff --check
+          mapfile -t changed < <(git status --porcelain | cut -c4- | sort)
+          expected=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+            'docs/continuity/MIMIR_R3_18AB_DECISION.md'
+            'docs/continuity/MIMIR_R3_18AC_EXECUTION_SPEC.md'
+          )
+          mapfile -t wanted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 9
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${wanted[@]}")"
+          git diff --exit-code "$BASE_SHA" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts tools .github AGENTS.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+          echo 'R3_18AB_CONTINUITY_SCOPE=PASS files=9'
+
+      - name: Publish one clean docs-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AB_DECISION.md \
+            docs/continuity/MIMIR_R3_18AC_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18AB and open R3.18AC'
+          clean="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          git push --force-with-lease origin "HEAD:refs/heads/$BRANCH"
+          echo "R3_18AB_CONTINUITY_SHA=$clean"
+          echo "R3_18AB_CONTINUITY_TREE=$tree"
