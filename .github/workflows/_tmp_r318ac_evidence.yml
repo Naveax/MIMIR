@@ -1,0 +1,70 @@
+name: R3.18AC Ordinal-3 Payload Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318ac-payload-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=pending -f context='r318ac/evidence' \
+            -f description='R3.18AC ordinal-3 payload evidence running' >/dev/null
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+      - name: Stable Rust for pinned Boxcars
+        run: rustup toolchain install stable --profile minimal
+      - name: Execute R3.18AC evidence
+        shell: bash
+        run: bash tools/_tmp_r318ac_run.sh
+      - name: Upload immutable evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ac-post-aa-ordinal3-payload-evidence
+          path: |
+            r3_18ac_source_scope.txt
+            r3_18ac_replay_identity.tsv
+            r3_18ac_frozen_ab_rows.json
+            r3_18ac_boxcars_instrumentation_sha256.txt
+            r3_18ac_payload_rows.json
+            r3_18ac_payload_summary.json
+            r3_18ac_unique_id_layout.json
+            r3_18ac_negative_controls.txt
+            r3_18ac_aggregate.txt
+            r3_18ac_upstream_receipts.txt
+            r3_18ac_artifact_sha256.txt
+          if-no-files-found: error
+          retention-days: 90
+      - name: Mark evidence success
+        if: success()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=success -f context='r318ac/evidence' -f description='R3.18AC evidence PASS' >/dev/null
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state=failure -f context='r318ac/evidence' -f description='R3.18AC evidence failed' >/dev/null
