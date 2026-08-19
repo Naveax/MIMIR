@@ -79,9 +79,10 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import os
-          src = Path('tools/_tmp_r318ae_run.sh')
-          dst = Path('/tmp/_tmp_r318ae_run_v2.sh')
-          s = src.read_text(encoding='utf-8')
+
+          run_src = Path('tools/_tmp_r318ae_run.sh')
+          run_dst = Path('/tmp/_tmp_r318ae_run_v2.sh')
+          s = run_src.read_text(encoding='utf-8')
           pairs = [
               (os.environ['R318AE_OLD_LIB'], os.environ['R318AE_NEW_LIB'], 'lib'),
               (os.environ['R318AE_OLD_TEST'], os.environ['R318AE_NEW_TEST'], 'test'),
@@ -95,8 +96,119 @@ jobs:
           for old, new, label in pairs:
               if old in s or s.count(new) != 1:
                   raise SystemExit(f'{label}: runtime receipt replacement failed')
-          dst.write_text(s, encoding='utf-8', newline='\n')
+          run_dst.write_text(s, encoding='utf-8', newline='\n')
+
+          probe_path = Path('tools/_tmp_r318ae_probe.rs')
+          probe = probe_path.read_text(encoding='utf-8')
+          old_parse = '''        if f.len() != 22 {
+              return Err(format!("expected 22 fields, got {}", f.len()).into());
+          }
+          let label = f[0];
+          let frame_index: usize = f[1].parse()?;
+          let actor_ordinal: usize = f[2].parse()?;
+          let actor_object: u32 = f[3].parse()?;
+          let first_start: u64 = f[4].parse()?;
+          let property_start: u64 = f[5].parse()?;
+          let stream_start: u64 = f[6].parse()?;
+          let stream_end: u64 = f[7].parse()?;
+          let tag_name = f[8];
+          let frozen_payload_start: u64 = f[9].parse()?;
+          let frozen_payload_end: u64 = f[10].parse()?;
+          let frozen_width: u64 = f[11].parse()?;
+          let version_major: i32 = f[19].parse()?;
+          let version_minor: i32 = f[20].parse()?;
+          let net_version: i32 = f[21].parse()?;
+          '''
+          new_parse = '''        if f.len() != 25 {
+              return Err(format!("expected 25 fields, got {}", f.len()).into());
+          }
+          let label = f[0];
+          let frame_index: usize = f[1].parse()?;
+          let actor_ordinal: usize = f[2].parse()?;
+          let actor_object: u32 = f[3].parse()?;
+          let first_start: u64 = f[4].parse()?;
+          let property_start: u64 = f[5].parse()?;
+          let property_end: u64 = f[6].parse()?;
+          let tag_name = f[11];
+          let frozen_payload_start: u64 = f[12].parse()?;
+          let frozen_payload_end: u64 = f[13].parse()?;
+          let frozen_width: u64 = f[14].parse()?;
+          let version_major: i32 = f[22].parse()?;
+          let version_minor: i32 = f[23].parse()?;
+          let net_version: i32 = f[24].parse()?;
+          '''
+          if probe.count(old_parse) != 1:
+              raise SystemExit('probe parser schema block mismatch')
+          probe = probe.replace(old_parse, new_parse)
+
+          old_header = '''        let published_tag = published
+              .header_composition
+              .following_header
+              .resolved_attribute_tag
+              .ok_or("missing published tag")?;
+          if format!("{published_tag:?}") != tag_name {
+              return Err(format!("{label}: published tag drift").into());
+          }
+          '''
+          new_header = '''        let header = &published.header_composition.following_header;
+          let published_tag = header
+              .resolved_attribute_tag
+              .ok_or("missing published tag")?;
+          let header_stream_id = header.stream_id.ok_or("missing header stream id")?;
+          let header_stream_id_bound = header
+              .stream_id_bound
+              .ok_or("missing header stream id bound")?;
+          let header_prop_id_bits = header.prop_id_bits.ok_or("missing header prop id bits")?;
+          let header_property_object_index = header
+              .resolved_property_object_index
+              .ok_or("missing header property object index")?;
+          let header_payload_start = header
+              .payload_start_bit
+              .ok_or("missing header payload start")?;
+          if format!("{published_tag:?}") != tag_name {
+              return Err(format!("{label}: published tag drift").into());
+          }
+          '''
+          if probe.count(old_header) != 1:
+              raise SystemExit('probe published-header block mismatch')
+          probe = probe.replace(old_header, new_header)
+
+          old_range = '            for bit in stream_start..stream_end {'
+          new_range = '            for bit in property_end..frozen_payload_start {'
+          if probe.count(old_range) != 1:
+              raise SystemExit('probe non-Z mutation range mismatch')
+          probe = probe.replace(old_range, new_range)
+
+          old_row = '''            "R3_18AE_ROW\\tlabel={label}\\tframe_index={frame_index}\\tactor_ordinal={actor_ordinal}\\tactor_context_object_id={actor_object}\\tproperty_present_start_bit={property_start}\\ttag={tag_name}\\theader_stop_bit={}\\tpublished_payload_start_bit={}\\tpublished_payload_end_bit={}\\tpublished_payload_width={}\\tpublished_stop_bit={}\\tdirect_payload_start_bit={direct_start}\\tdirect_payload_end_bit={direct_end}\\tdirect_payload_width={direct_width}\\tpublished_active={}\\tpublished_actor={}\\tpublished_int={}\\tpublished_uid_system={}\\tpublished_uid_local={}\\tpublished_uid_remote={}\\tpublished_uid_fp={}\\tdirect_active={}\\tdirect_actor={}\\tdirect_int={}\\tdirect_uid_system={}\\tdirect_uid_local={}\\tdirect_uid_remote={}\\tdirect_uid_fp={}\\trepeatability={}\\ttruncation={}\\twrong_context={}\\tpost_payload_poison={}\\tanother_control_bits_consumed=0",
+              published.header_composition.stop_bit,
+          '''
+          new_row = '''            "R3_18AE_ROW\\tlabel={label}\\tframe_index={frame_index}\\tactor_ordinal={actor_ordinal}\\tactor_context_object_id={actor_object}\\tproperty_present_start_bit={property_start}\\ttag={tag_name}\\theader_property_present_start_bit={}\\theader_property_present_end_bit={}\\theader_stream_id={}\\theader_stream_id_bound={}\\theader_prop_id_bits={}\\theader_property_object_index={}\\theader_tag={published_tag:?}\\theader_payload_start_bit={header_payload_start}\\theader_version_major={version_major}\\theader_version_minor={version_minor}\\theader_net_version={net_version}\\theader_stop_bit={}\\tpublished_payload_start_bit={}\\tpublished_payload_end_bit={}\\tpublished_payload_width={}\\tpublished_stop_bit={}\\tdirect_payload_start_bit={direct_start}\\tdirect_payload_end_bit={direct_end}\\tdirect_payload_width={direct_width}\\tpublished_active={}\\tpublished_actor={}\\tpublished_int={}\\tpublished_uid_system={}\\tpublished_uid_local={}\\tpublished_uid_remote={}\\tpublished_uid_fp={}\\tdirect_active={}\\tdirect_actor={}\\tdirect_int={}\\tdirect_uid_system={}\\tdirect_uid_local={}\\tdirect_uid_remote={}\\tdirect_uid_fp={}\\trepeatability={}\\ttruncation={}\\twrong_context={}\\tpost_payload_poison={}\\tanother_control_bits_consumed=0",
+              header.property_present_start_bit,
+              header.property_present_end_bit,
+              header_stream_id,
+              header_stream_id_bound,
+              header_prop_id_bits,
+              header_property_object_index,
+              published.header_composition.stop_bit,
+          '''
+          if probe.count(old_row) != 1:
+              raise SystemExit('probe row receipt block mismatch')
+          probe = probe.replace(old_row, new_row)
+
+          if 'expected 22 fields' in probe or 'stream_start..stream_end' in probe:
+              raise SystemExit('probe stale schema survived runtime patch')
+          required = [
+              'expected 25 fields',
+              'header_property_present_start_bit',
+              'header_stream_id_bound',
+              'header_property_object_index',
+              'header_payload_start_bit',
+          ]
+          if not all(marker in probe for marker in required):
+              raise SystemExit('probe corrected schema markers missing')
+          probe_path.write_text(probe, encoding='utf-8', newline='\n')
           print('R3_18AE_RUNTIME_RECEIPT_CORRECTION=PASS replacements=2 source_blob_pinned=1')
+          print('R3_18AE_RUNTIME_PROBE_SCHEMA=PASS fields=25 full_header_receipts=1 non_z_header_range=1')
           PY
           chmod +x /tmp/_tmp_r318ae_run_v2.sh
 
