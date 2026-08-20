@@ -117,10 +117,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             set_bit(&mut poisoned, control_end + offset, offset % 2 == 0);
         }
         let poison_ok = observe_after_exact_stop(&poisoned, published.stop_bit, expected_payload_end, bit_limit)? == control;
+        let safe_label = label.replace('\t', "_").replace('\r', "_").replace('\n', "_");
 
         println!(
             "R3_18AF_NATIVE\tlabel={}\tframe_index={}\tactor_ordinal={}\tactor_context_object_id={}\tprior_ad_stop={}\tcontrol_start={}\tcontrol_end={}\tcontrol_value={}\tpublished_ad_exact=1\trepeatability={}\ttruncation={}\tprior_stop_mismatch_negative={}\tpost_control_poison={}\tnext_stream_bits_consumed=0\tnext_header_bits_consumed=0\tnext_payload_bits_consumed=0\tsecond_later_control_bits_consumed=0",
-            label.replace(['\t','\r','\n'], "_"), frame_index, actor_ordinal, actor_object,
+            safe_label, frame_index, actor_ordinal, actor_object,
             published.stop_bit, published.stop_bit, control_end, if control { 1 } else { 0 },
             if repeated { 1 } else { 0 }, if truncation { 1 } else { 0 },
             if prior_stop_negative { 1 } else { 0 }, if poison_ok { 1 } else { 0 },
