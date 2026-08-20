@@ -1,0 +1,138 @@
+name: R3.18AI One Following Header Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318ai-following-header-v1
+    paths:
+      - .github/workflows/_tmp_r318ai_trigger.txt
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318ai-following-header-evidence
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      BASE_SHA: b419503b5ceb8c44af207f645232570b1c9f2e6d
+      BASE_TREE: 8bcdedf47233b0e6db605c6c532677d0f8166801
+      PROBE_BLOB: af39661af1215899b98dd6a4658cf7921dab3110
+      RUNNER_BLOB: fd263c15ea092476d2a54f8d93928177603d3c23
+      ANALYZER_BLOB: 93fca35a1e7bf5d6428a60f8b86675e100399aec
+      EXTENDER_BLOB: 467283224dfa51404f0819208149f963f24d8810
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318ai/evidence' \
+            -f description='R3.18AI one-following-header evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Freeze exact authority and helpers
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | awk '{print $1}')" = "$BASE_SHA"
+          git fetch --no-tags origin "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(git rev-parse HEAD:tools/_tmp_r318ai_native_probe.rs)" = "$PROBE_BLOB"
+          test "$(git rev-parse HEAD:tools/_tmp_r318ai_run.sh)" = "$RUNNER_BLOB"
+          test "$(git rev-parse HEAD:tools/_tmp_r318ai_analyze.py)" = "$ANALYZER_BLOB"
+          test "$(git rev-parse HEAD:tools/_tmp_r318ai_extend_boxcars.py)" = "$EXTENDER_BLOB"
+          echo 'R3_18AI_AUTHORITY_FREEZE=PASS'
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Execute deterministic R3.18AI evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/_tmp_r318ai_run.sh
+
+      - name: Upload immutable R3.18AI evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ai-following-property-header-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            r3_18ai_source_scope.txt
+            r3_18ai_replay_identity.tsv
+            r3_18ai_frozen_witnesses.json
+            r3_18ai_boxcars_instrumentation_sha256.txt
+            r3_18ai_header_rows.json
+            r3_18ai_header_summary.json
+            r3_18ai_negative_controls.txt
+            r3_18ai_aggregate.txt
+            r3_18ai_upstream_receipts.txt
+            r3_18ai_artifact_sha256.txt
+
+      - name: Verify immutable receipt and mark success
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r '.workflow_run.id' <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r '.workflow_run.head_sha' <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r '.expired' <<<"$meta")" = false
+          rest_digest="$(jq -r '.digest' <<<"$meta")"
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$rest_digest")" = "$(norm "$ARTIFACT_DIGEST")"
+          grep -Fx 'R3_18AI_OUTCOME=A' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_EVIDENCE=PASS' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_FROZEN_ROWS=47/47' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_PUBLISHED_AG_EXACT=47/47' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_NATIVE_ORACLE_MISMATCH=0' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_WITNESS_RESELECTION=0' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_SECOND_LATER_CONTROL_BITS_CONSUMED=0' r3_18ai_aggregate.txt
+          grep -Fx 'R3_18AI_PRIVACY_SCAN=PASS' r3_18ai_aggregate.txt
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318ai/evidence' \
+            -f description='R3.18AI Outcome A one-header evidence PASS' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          echo "R3_18AI_EVIDENCE_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18AI_EVIDENCE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18AI_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18AI_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18AI_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          cat r3_18ai_aggregate.txt
+
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318ai/evidence' \
+            -f description='R3.18AI evidence failed; inspect exact run' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" || true
