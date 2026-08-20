@@ -1,0 +1,1 @@
+Single controlled trigger to discover and verify the natural published-main push CI and Knowledge Archive runs for canonical R3.18AI admission SHA a048ba25f2ef023d07bab17716838f1c4777fe27. Fail on duplicate matching runs or any non-success conclusion.
