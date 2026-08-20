@@ -64,7 +64,8 @@ R3.18AD bounded post-AA ordinal-3 payload production / Outcome A CLOSED         
 R3.18AE published R3.18AD ordinal-3 payload differential / Outcome A CLOSED              |
 R3.18AF next property-control bit evidence after published AD payload / Outcome A CLOSED             |
 R3.18AG bounded true-only property-control production after published AD payload / CLOSED                |
-R3.18AH active published R3.18AG post-AD true-control differential                                  |
+R3.18AH published R3.18AG post-AD true-control differential / Outcome A CLOSED                        |
+R3.18AI active one-following-property-header evidence after published AG control                         |
         |                               |
         +---------------+---------------+
                         |
@@ -186,13 +187,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 101. `docs/continuity/MIMIR_R3_18AG_EXECUTION_SPEC.md`
 102. `docs/continuity/MIMIR_R3_18AG_DECISION.md`
 103. `docs/continuity/MIMIR_R3_18AH_EXECUTION_SPEC.md`
-104. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-105. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-106. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-107. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-108. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-109. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-110. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+104. `docs/continuity/MIMIR_R3_18AH_DECISION.md`
+105. `docs/continuity/MIMIR_R3_18AI_EXECUTION_SPEC.md`
+106. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+107. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+108. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+109. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+110. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+111. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+112. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
@@ -203,10 +206,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 - exactly one true property-control bit; false fails closed; stop one bit later; adjacent stream/header/payload/second-control 0/0/0/0
 - next exact pass: R3.18AH published R3.18AG API differential on frozen R3.18AF 47-row lane
 
-### R3.18AH published post-AD true control differential: ACTIVE
-- production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` frozen; reuse exact R3.18AF 47 witnesses / artifact `9397743505`
-- require start/value/end/stop equality 47/47, false=0 true=47, mismatch 0, witness reselection 0
-- no next stream/header/payload/second control, production mutation, loop/cursor or semantic/runtime widening
+### R3.18AH published post-AD true control differential: OUTCOME A / CLOSED
+- evidence `7389831c626c078d60178c94461ac39e5f427bd5` / tree `6121bd7d0fab5a5a338a75343d92f11876f71c8b`; run/job `32405516670/96543562860` SUCCESS
+- artifact `9420166543` / `sha256:b7b9100489a7ae20a959450d0d80fbcda281aee288a00d0c7edd18930cc60df1`; exact-head CI `32406901661/96547992406` SUCCESS; PR #57 closed unmerged
+- published AG exact 47/47; false=0 true=47; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0
+- production unchanged at `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`
+
+### R3.18AI one-following-property-header evidence: ACTIVE
+- begin exactly at the published R3.18AG stop on the same frozen 47 witnesses
+- decode one following property header only and stop exactly at that header payload_start
+- following payload, another control, generalized property loop/cursor and semantic/runtime widening remain closed
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS

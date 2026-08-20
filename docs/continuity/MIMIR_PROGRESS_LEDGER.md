@@ -917,3 +917,48 @@ Boundaries still closed:
 - Frozen authority remains R3.18AF `30286c07727539d68f551140838fb2ef6802a26e` / `32344981062/96351720877` / artifact `9397743505` `sha256:d7edeab657928c94c35c852ae302fd614cab92a52b7e44f671310200af4b268f`; false=0 true=47; mismatch 0; adjacent consumption 0/0/0/0.
 - R3.18AH opened as read-only published-AG differential. The following header remains closed until AH Outcome A.
 - Continuity builder authority `32404006084/96538654038`.
+---
+
+## 2026-08-20 — R3.18AH — Published R3.18AG post-AD true-control differential
+
+Production base SHA: `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`
+Production commit SHA: unchanged; read-only evidence pass
+Pass type: published-API differential
+Outcome: **A — ADMITTED / CLOSED**
+
+What changed:
+- no production Rust/Cargo/fixture/corpus/support source changed;
+- published R3.18AG was checked against exactly the frozen R3.18AF 47-row one-bit lane;
+- a separate R3.18AI read-only one-header evidence gate is now allowed.
+
+Evidence:
+- evidence head/tree `7389831c626c078d60178c94461ac39e5f427bd5` / `6121bd7d0fab5a5a338a75343d92f11876f71c8b`;
+- authority `32405516670/96543562860` SUCCESS;
+- artifact `9420166543` / `11686` bytes / `sha256:b7b9100489a7ae20a959450d0d80fbcda281aee288a00d0c7edd18930cc60df1`;
+- downloaded ZIP digest exact; inner manifest 9/9 PASS;
+- rows 47/47; published AG exact 47/47; false=0 / true=47; mismatch 0; witness reselection 0;
+- repeatability/false/truncation/post-stop-poison/prior-stop/wrong-context negatives 47/47;
+- adjacent stream/header/payload/second-control consumption 0/0/0/0;
+- privacy PASS.
+
+Validation:
+- validation PR #57 closed unmerged;
+- exact-head normal CI `32406901661/96547992406` SUCCESS;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+Boundaries opened:
+- read-only R3.18AI investigation of exactly one following property header beginning at the R3.18AG stop and ending at header `payload_start`.
+
+Boundaries still closed:
+- following payload;
+- second later control;
+- generalized/repeated property loop or public cursor;
+- next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Important negative facts / anti-regressions:
+- `32404962614` is superseded harness-only: science/regressions passed but temporary probe rustfmt check failed;
+- `ffea098d178de21c2542afef05b3535cb99b688e` / `32405211961` is superseded pre-science stale probe receipt freeze;
+- neither superseded attempt is scientific authority.
+
+Next exact pass:
+- `R3.18AI — exactly one following property-header evidence pass; stop at payload_start`.

@@ -6,11 +6,11 @@
   "last_production_code_sha": "2d351e8ceb601e2fbe515d2977b2103a4b2c7976",
   "last_production_milestone": "R3.18AG",
   "last_production_milestone_name": "bounded true-only property-control production after published R3.18AD payload",
-  "last_completed_read_only_audit": "R3.18AF",
-  "current_pass": "R3.18AH",
-  "current_pass_kind": "read-only published-API differential / published R3.18AG versus immutable R3.18AF 47-row lane",
-  "current_pass_goal": "Validate published R3.18AG start/value/end/stop exactly against the frozen R3.18AF one-bit evidence on all 47 witnesses with false=0, true=47, mismatch 0 and no adjacent consumption.",
-  "current_pass_stop_boundary": "Stop exactly at the R3.18AG one-bit control end. No next stream/header/payload, second later control, property loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "last_completed_read_only_audit": "R3.18AH",
+  "current_pass": "R3.18AI",
+  "current_pass_kind": "read-only structural evidence / exactly one following property header after published R3.18AG control",
+  "current_pass_goal": "On exactly the frozen 47 AH/AF witnesses, begin at published R3.18AG stop_bit, decode one following property header, record its exact structural context and stop at payload_start without consuming payload or another control.",
+  "current_pass_stop_boundary": "Stop exactly at the one following header payload_start. No following payload, second later control, generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -92,7 +92,10 @@
     "next stream/header/payload after published R3.18AG",
     "second later property control bit after published R3.18AG",
     "false success semantics after published R3.18AG",
-    "repeated/generalized property loop or generic cursor after published R3.18AG"
+    "repeated/generalized property loop or generic cursor after published R3.18AG",
+    "following payload after the R3.18AI one-header evidence boundary",
+    "second later property control bit after the R3.18AI header",
+    "repeated/generalized property loop or generic cursor after R3.18AI"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -210,6 +213,8 @@
     "docs/continuity/MIMIR_R3_18AG_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AG_DECISION.md",
     "docs/continuity/MIMIR_R3_18AH_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AH_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AI_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -218,8 +223,8 @@
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
     "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
   ],
-  "last_completed_evidence_pass": "R3.18AF",
-  "last_completed_evidence_outcome": "A — exact one next property_present bit after published R3.18AD on 47/47 immutable rows; false=0 true=47; native-oracle mismatch 0; next stream/header/payload/second-control consumption 0/0/0/0.",
+  "last_completed_evidence_pass": "R3.18AH",
+  "last_completed_evidence_outcome": "A — published R3.18AG exact 47/47 on frozen R3.18AF lane; false=0 true=47; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0; artifact 9420166543.",
   "last_completed_contract_pass": "R3.18Z",
   "r3_14a": {
     "outcome": "A",
