@@ -78,11 +78,13 @@ jobs:
           git reset --hard "$BASE_MAIN"
           git clean -fdx
           git switch -C "$OPS_BRANCH" "$BASE_MAIN"
+          mkdir -p tools
           cp "$RUNNER_TEMP/r318ai_continuity_generate.py" tools/_tmp_r318ai_continuity_generate.py
           R318AI_BUILDER_RUN="$GITHUB_RUN_ID" \
           R318AI_BUILDER_JOB="$R318AI_BUILDER_JOB" \
           python tools/_tmp_r318ai_continuity_generate.py
           rm -f tools/_tmp_r318ai_continuity_generate.py
+          rmdir tools 2>/dev/null || true
 
           expected="$RUNNER_TEMP/expected.txt"
           actual="$RUNNER_TEMP/actual.txt"
