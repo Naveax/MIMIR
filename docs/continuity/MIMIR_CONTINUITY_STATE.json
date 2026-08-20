@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-08-20",
+  "updated_date": "2026-08-21",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "2d351e8ceb601e2fbe515d2977b2103a4b2c7976",
   "last_production_milestone": "R3.18AG",
   "last_production_milestone_name": "bounded true-only property-control production after published R3.18AD payload",
-  "last_completed_read_only_audit": "R3.18AH",
-  "current_pass": "R3.18AI",
-  "current_pass_kind": "read-only structural evidence / exactly one following property header after published R3.18AG control",
-  "current_pass_goal": "On exactly the frozen 47 AH/AF witnesses, begin at published R3.18AG stop_bit, decode one following property header, record its exact structural context and stop at payload_start without consuming payload or another control.",
-  "current_pass_stop_boundary": "Stop exactly at the one following header payload_start. No following payload, second later control, generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "last_completed_read_only_audit": "R3.18AI",
+  "current_pass": "R3.18AJ",
+  "current_pass_kind": "contract-only exact-context admission / post-AG following-header boundary",
+  "current_pass_goal": "Admit exactly the 17 complete seven-field header contexts and exact multiplicities observed by R3.18AI using exact_tuple_only membership, without inheriting earlier header contracts.",
+  "current_pass_stop_boundary": "Contract docs only. No production header composition, following payload, second later control, generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -95,7 +95,9 @@
     "repeated/generalized property loop or generic cursor after published R3.18AG",
     "following payload after the R3.18AI one-header evidence boundary",
     "second later property control bit after the R3.18AI header",
-    "repeated/generalized property loop or generic cursor after R3.18AI"
+    "repeated/generalized property loop or generic cursor after R3.18AI",
+    "post-AG following-header production composition before R3.18AJ exact-context admission",
+    "R3.18Z or R3.18P context inheritance at the R3.18AI/R3.18AJ boundary"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -215,6 +217,8 @@
     "docs/continuity/MIMIR_R3_18AH_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AH_DECISION.md",
     "docs/continuity/MIMIR_R3_18AI_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AI_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AJ_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -223,8 +227,8 @@
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
     "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
   ],
-  "last_completed_evidence_pass": "R3.18AH",
-  "last_completed_evidence_outcome": "A — published R3.18AG exact 47/47 on frozen R3.18AF lane; false=0 true=47; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0; artifact 9420166543.",
+  "last_completed_evidence_pass": "R3.18AI",
+  "last_completed_evidence_outcome": "A — one post-AG following header exact 47/47; 17 exact complete contexts; Int=47; native-oracle mismatch 0; witness reselection 0; following payload/second-control 0/0; artifact 9424764320.",
   "last_completed_contract_pass": "R3.18Z",
   "r3_14a": {
     "outcome": "A",
@@ -2207,5 +2211,44 @@
       "crates/mimir-replay/src/lib.rs",
       "crates/mimir-replay/tests/r3_18ag_post_ad_payload_control.rs"
     ]
+  },
+  "r3_18ai": {
+    "outcome": "A",
+    "production_source_changed": false,
+    "production_code_sha": "2d351e8ceb601e2fbe515d2977b2103a4b2c7976",
+    "base_main_sha": "b419503b5ceb8c44af207f645232570b1c9f2e6d",
+    "base_tree_sha": "8bcdedf47233b0e6db605c6c532677d0f8166801",
+    "evidence_head_sha": "9d424dae2ed8cc7a0a6868111805a48763131196",
+    "evidence_tree_sha": "b2fa45cff46c81e0458423d6aa3d9f630e2182a3",
+    "authority_run_id": 32418184036,
+    "authority_job_id": 96584056481,
+    "validation_pr": 59,
+    "validation_ci_run_id": 32420217393,
+    "validation_ci_job_id": 96590396395,
+    "artifact_id": 9424764320,
+    "artifact_size_bytes": 12054,
+    "artifact_sha256": "ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5",
+    "rows": 47,
+    "published_ag_exact": 47,
+    "following_header_exact": 47,
+    "unique_exact_contexts": 17,
+    "observed_tags": {
+      "Int": 47
+    },
+    "native_oracle_mismatch": 0,
+    "witness_reselection": 0,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0,
+    "earlier_header_contract_inheritance_assumed": false,
+    "production_cargo_fixture_corpus_support_mutation": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "privacy_scan": "PASS",
+    "continuity_builder_run_id": 32423737353,
+    "continuity_builder_job_id": 96601143838
   }
 }

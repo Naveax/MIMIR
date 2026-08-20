@@ -962,3 +962,27 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - `R3.18AI — exactly one following property-header evidence pass; stop at payload_start`.
+
+---
+
+## R3.18AI one-following-property-header evidence — Outcome A / CLOSED
+
+- Production unchanged: `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`.
+- Canonical parent: `b419503b5ceb8c44af207f645232570b1c9f2e6d` / `8bcdedf47233b0e6db605c6c532677d0f8166801`.
+- Evidence head/tree: `9d424dae2ed8cc7a0a6868111805a48763131196` / `b2fa45cff46c81e0458423d6aa3d9f630e2182a3`.
+- Authority run/job: `32418184036` / `96584056481` SUCCESS.
+- Validation PR #59: closed unmerged; exact-head normal CI `32420217393` / `96590396395` SUCCESS.
+- Immutable artifact: `9424764320` / 12054 bytes / `sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5`; downloaded ZIP exact; manifest 9/9 PASS.
+- Frozen rows 47/47; published AG exact 47/47; following header exact 47/47; native-oracle mismatch 0; witness reselection 0.
+- Exact contexts 17; tags Int=47; earlier-header contract inheritance assumed 0.
+- Repeatability, truncation, corrupt-AG, wrong-actor, unresolved lookup, wrong-context and post-payload-start poison negatives PASS 47/47.
+- Following payload/second later control bits 0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+- Continuity builder: `32423737353` / `96601143838`.
+- Admitted scope: structural evidence only. No production header composition, payload, later control, loop/cursor or semantic/runtime widening.
+
+## NEXT — R3.18AJ exact-context contract
+
+- Contract-only pass over the immutable R3.18AI header summary.
+- Admit exactly 17 complete seven-field tuples and exact multiplicities summing to 47.
+- Membership `exact_tuple_only`; no tag/component/Cartesian/versionless matching and no R3.18Z/R3.18P inheritance.
+- Production remains R3.18AG. Following payload and later control remain closed.

@@ -65,7 +65,8 @@ R3.18AE published R3.18AD ordinal-3 payload differential / Outcome A CLOSED     
 R3.18AF next property-control bit evidence after published AD payload / Outcome A CLOSED             |
 R3.18AG bounded true-only property-control production after published AD payload / CLOSED                |
 R3.18AH published R3.18AG post-AD true-control differential / Outcome A CLOSED                        |
-R3.18AI active one-following-property-header evidence after published AG control                         |
+R3.18AI one-following-property-header evidence after published AG control / Outcome A CLOSED               |
+R3.18AJ active post-AG following-header exact-context contract                                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -189,13 +190,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 103. `docs/continuity/MIMIR_R3_18AH_EXECUTION_SPEC.md`
 104. `docs/continuity/MIMIR_R3_18AH_DECISION.md`
 105. `docs/continuity/MIMIR_R3_18AI_EXECUTION_SPEC.md`
-106. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-107. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-108. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-109. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-110. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-111. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-112. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+106. `docs/continuity/MIMIR_R3_18AI_DECISION.md`
+107. `docs/continuity/MIMIR_R3_18AJ_EXECUTION_SPEC.md`
+108. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+109. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+110. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+111. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+112. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+113. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+114. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
@@ -212,10 +215,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 - published AG exact 47/47; false=0 true=47; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0
 - production unchanged at `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`
 
-### R3.18AI one-following-property-header evidence: ACTIVE
-- begin exactly at the published R3.18AG stop on the same frozen 47 witnesses
-- decode one following property header only and stop exactly at that header payload_start
-- following payload, another control, generalized property loop/cursor and semantic/runtime widening remain closed
+### R3.18AI one-following-property-header evidence: OUTCOME A / CLOSED
+- evidence `9d424dae2ed8cc7a0a6868111805a48763131196` / tree `b2fa45cff46c81e0458423d6aa3d9f630e2182a3`; run/job `32418184036/96584056481` SUCCESS
+- artifact `9424764320` / `sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5`; exact-head CI `32420217393/96590396395` SUCCESS; PR #59 closed unmerged
+- published AG exact 47/47; following header exact 47/47; 17 exact contexts; Int=47; native-oracle mismatch 0; witness reselection 0
+- following payload/second later control 0/0; earlier-header contract inheritance 0; production unchanged at `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`
+
+### R3.18AJ post-AG following-header exact-context contract: ACTIVE
+- contract-only; membership must be complete seven-field `exact_tuple_only`
+- preserve exactly 17 R3.18AI tuples and exact multiplicities summing to 47
+- no R3.18Z/R3.18P inheritance, production composition, following payload or later control
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS

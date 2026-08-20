@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AG — bounded true-only property-control production after published R3.18AD payload
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AH — published R3.18AG post-AD true-control differential / Outcome A / 47/47 / false=0 true=47 / mismatch 0 / artifact 9420166543
+  R3.18AI — one following property-header evidence after published R3.18AG / Outcome A / 47/47 / 17 exact contexts / Int=47 / mismatch 0 / artifact 9424764320
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18Z — post-W following-header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AH — published AG exact one-bit differential / 47 rows / false=0 true=47 / mismatch 0 / next stream-header-payload-second-control 0/0/0/0 / artifact 9420166543
+  R3.18AI — one post-AG following header exact / 47 rows / 17 exact contexts / Int=47 / native-oracle mismatch 0 / following-payload-second-control 0/0 / artifact 9424764320
 
 CURRENT_PASS:
-  R3.18AI — one following property-header evidence after published R3.18AG control
+  R3.18AJ — post-AG following-header exact-context contract
 
 CURRENT_PASS_TYPE:
-  read-only structural evidence / from the exact published R3.18AG stop decode exactly one following property header and stop at that header payload_start; no payload or second later control
+  contract-only admission / admit exactly the 17 complete seven-field contexts observed by R3.18AI with exact_tuple_only membership; no production, payload or later control
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -112,8 +112,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AF CLOSED Outcome A: exactly one next property_present bit matched 47/47; false=0 true=47; mismatch 0; next stream/header/payload/second-control 0/0/0/0; artifact 9397743505
   R3.18AG PRODUCTION at 2d351e8ceb601e2fbe515d2977b2103a4b2c7976: validates exact 868.32/net10/non-RL223 context plus one valid R3.18AD ActiveActor/33, Int/32 or UniqueId system1-Steam/80 prior, consumes exactly one following property_present bit, admits true only, false fails closed, and stops one bit later
   R3.18AH CLOSED Outcome A: published AG exact 47/47; true=47 false=0; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0; artifact 9420166543
-  R3.18AI ACTIVE read-only: begin exactly at the published R3.18AG stop, decode one following property header only, and stop exactly at that header payload_start; following payload and another control remain closed
-  NO following payload after the R3.18AI header, second later control, false success semantics, alternate UniqueId layout, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AI CLOSED Outcome A: one post-AG following header exact 47/47; 17 exact seven-field contexts; Int=47; native-oracle mismatch 0; witness reselection 0; following payload/second-control 0/0; artifact 9424764320
+  R3.18AJ ACTIVE contract-only: admit only exact complete seven-field tuple equality and exact R3.18AI multiplicities; no earlier-header contract inheritance, production composition, payload or later control
+  NO following-header production before R3.18AJ admission, following payload, second later control, false success semantics, alternate UniqueId layout, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18AB_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
   authority head/tree: b2f4b73600165b2d83389b6ce43709b64beba52a / 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
@@ -193,6 +194,18 @@ R3_18AH_EVIDENCE_CLOSURE:
   superseded 32404962614: scientific lane/regressions passed; temporary probe rustfmt-only failure
   superseded ffea098d178de21c2542afef05b3535cb99b688e / 32405211961: pre-science stale probe-blob receipt freeze; no scientific authority
   continuity authority: 32407844469/96551057302
+R3_18AI_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at 2d351e8ceb601e2fbe515d2977b2103a4b2c7976
+  canonical main before admission: b419503b5ceb8c44af207f645232570b1c9f2e6d / tree 8bcdedf47233b0e6db605c6c532677d0f8166801
+  authority head/tree: 9d424dae2ed8cc7a0a6868111805a48763131196 / b2fa45cff46c81e0458423d6aa3d9f630e2182a3
+  authority run/job: 32418184036 / 96584056481 SUCCESS
+  validation PR: #59 closed unmerged / exact-head normal CI 32420217393 / 96590396395 SUCCESS
+  artifact: 9424764320 / 12054 bytes / sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5; downloaded ZIP digest exact / inner manifest 9/9 PASS
+  frozen rows 47/47 / published AG exact 47/47 / one following header exact 47/47 / native-oracle mismatch 0 / witness reselection 0
+  exact structural contexts 17 / observed tags Int=47 / earlier-header contract inheritance assumed 0
+  repeatability/header-truncation/corrupt-AG/wrong-actor/unresolved-lookup/wrong-context/post-payload-start-poison 47/47
+  following payload + second later control bits 0/0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0 / privacy PASS
+  continuity authority: 32423737353/96601143838
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -3043,7 +3056,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR production remains R3.18AG `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`. R3.18AH is now closed Outcome A: published AG matched the frozen 47-row one-bit lane exactly with true=47, false=0, mismatch 0 and no adjacent consumption. R3.18AI is the active read-only one-following-header evidence pass and must stop at that header's `payload_start`; following payload, another control, loops/cursors, actor/frame and semantic/runtime widening remain closed.**
+> **MIMIR production remains R3.18AG `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`. R3.18AI is closed Outcome A: the post-AG following header matched 47/47 with 17 exact contexts, Int=47, native-oracle mismatch 0 and zero payload/later-control consumption. R3.18AJ is the active contract-only exact-tuple admission; production header composition, following payload, another control, loops/cursors, actor/frame and semantic/runtime widening remain closed.**
 
 ---
 
@@ -3794,21 +3807,38 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18AI
+# HISTORICAL PASS CHECKLIST — R3.18AI (OUTCOME A / CLOSED)
 
-**Goal:** investigate exactly one following property header beginning at the published R3.18AG stop and stop at that header's `payload_start`. Production remains frozen.
+**Goal:** investigate exactly one following property header beginning at the published R3.18AG stop and stop at that header's `payload_start` without production mutation.
 
 ```text
-[ ] Fetch fresh main and require this R3.18AH admission parent exactly; production remains 2d351e8ceb601e2fbe515d2977b2103a4b2c7976 / 4123820ce6537f2d4942cd0b5f72b52e43b96c1d.
-[ ] Freeze R3.18AH evidence 7389831c626c078d60178c94461ac39e5f427bd5/6121bd7d0fab5a5a338a75343d92f11876f71c8b, authority 32405516670/96543562860, same-head CI 32406901661/96547992406, artifact 9420166543/sha256:b7b9100489a7ae20a959450d0d80fbcda281aee288a00d0c7edd18930cc60df1.
-[ ] Reuse exactly the 47 AH/AF witness identities; witness reselection must remain 0.
-[ ] Reconstruct the exact valid published R3.18AD prior and published R3.18AG true-control result for each row.
-[ ] Require following-header start == AG stop. Decode exactly one property header using the existing stateless header primitive and frozen lookup authority.
-[ ] Record exact stream/object/resolved-tag structural context plus header start/payload_start/stop for every row.
-[ ] Stop exactly at payload_start. Consume zero following payload bits and zero second-later-control bits.
-[ ] Require deterministic double-run equality and an independent read-only structural/oracle comparison with mismatch 0.
-[ ] Run header truncation, wrong context, corrupted AG stop/control, unresolved stream/property, wrong actor/lookup context and post-payload-start poison negatives.
-[ ] Produce one privacy-safe immutable artifact with exact replay/witness identities, per-row comparisons, aggregate counters and full SHA-256 manifest.
-[ ] Run focused relevant suites, full mimir-replay, workspace fmt/check/test/clippy, repository verifier and same exact evidence-head normal CI.
-[ ] Outcome A may admit only the observed one-header facts on the frozen lane. Following payload, another control and generalized property iteration remain separate future gates.
+[x] Canonical base main b419503b5ceb8c44af207f645232570b1c9f2e6d / 8bcdedf47233b0e6db605c6c532677d0f8166801; production frozen at 2d351e8ceb601e2fbe515d2977b2103a4b2c7976 / 4123820ce6537f2d4942cd0b5f72b52e43b96c1d.
+[x] Reused exactly the 47 immutable AH/AF witnesses; witness reselection 0.
+[x] Evidence head/tree 9d424dae2ed8cc7a0a6868111805a48763131196 / b2fa45cff46c81e0458423d6aa3d9f630e2182a3; authority 32418184036/96584056481 SUCCESS.
+[x] Immutable artifact 9424764320 / 12054 bytes / sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5; downloaded ZIP digest exact; inner manifest 9/9 PASS.
+[x] Published AG reconstruction exact 47/47 and exactly one following header exact 47/47; native-oracle mismatch 0.
+[x] Observed 17 exact complete seven-field contexts; tags Int=47; earlier-header contract inheritance assumed 0.
+[x] Repeatability, header truncation, corrupt-AG, wrong-actor, unresolved-lookup, wrong-context and post-payload-start poison negatives PASS 47/47.
+[x] Following payload/second later control consumption 0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+[x] Validation PR #59 exact-head CI 32420217393/96590396395 SUCCESS; PR closed unmerged.
+[x] Outcome A admits only the observed one-header structural facts. Production composition, payload and another control remain closed.
+```
+
+---
+
+# CURRENT PASS CHECKLIST — R3.18AJ
+
+**Goal:** admit the narrowest exact-context contract for the 17 complete seven-field post-AG following-header contexts observed by R3.18AI. Production remains frozen.
+
+```text
+[ ] Fetch fresh main and require the R3.18AI admission parent exactly; production remains 2d351e8ceb601e2fbe515d2977b2103a4b2c7976 / 4123820ce6537f2d4942cd0b5f72b52e43b96c1d.
+[ ] Freeze R3.18AI evidence 9d424dae2ed8cc7a0a6868111805a48763131196/b2fa45cff46c81e0458423d6aa3d9f630e2182a3, authority 32418184036/96584056481, same-head CI 32420217393/96590396395, artifact 9424764320/sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5.
+[ ] Read immutable R3.18AI header summary 70ffb419d294d4e02bdd2ef843c84bcda466022d627d7dec0b736e8d19228dd1; require rows=47, unique exact contexts=17, tags Int=47, witness reselection=0.
+[ ] Create `docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json` with membership_policy=`exact_tuple_only` and the complete seven-field tuple schema.
+[ ] Preserve all 17 tuple identities and exact multiplicities; require multiplicity sum 47.
+[ ] Reject tag-only, component-only, Cartesian-product, version-drop and fabricated eighteenth-tuple candidates.
+[ ] Prove at least one R3.18Z/R3.18P-valid but AJ-absent tuple is rejected; earlier-header inheritance must remain false.
+[ ] Change continuity/contract docs only; production/Cargo/fixture/corpus/support mutation must remain 0/0/0/0/0.
+[ ] Run JSON/contract self-checks, knowledge archive verifier and normal CI on the exact clean candidate.
+[ ] Outcome A may open only a separate R3.18AK bounded one-header production composition requiring exact AJ membership and stopping at payload_start.
 ```

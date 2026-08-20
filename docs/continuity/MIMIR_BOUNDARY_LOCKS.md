@@ -6,29 +6,31 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AH closed / R3.18AI active
+# 0. Current override — R3.18AI closed / R3.18AJ active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AG
-- `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`; production remains unchanged by R3.18AH;
+- `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`; production remains unchanged by R3.18AI;
 - input must already be one valid published R3.18AD result under exact `868.32 / net10 / non-RL223` context;
 - prior payload allowlist remains exactly ActiveActor/33, Int/32, UniqueId system1-Steam/80;
 - read exactly one bit at prior `stop_bit`; admit **true only**; false fails closed; stop exactly one bit later.
 
-## CLOSED EVIDENCE — R3.18AH Outcome A
-- exact immutable 47-row lane; published AG exact 47/47; false=0 / true=47; mismatch 0; witness reselection 0;
-- repeatability/false/truncation/post-stop-poison/prior-stop/wrong-context negatives 47/47;
-- next stream/header/payload/second-control consumption 0/0/0/0;
-- artifact `9420166543` / `sha256:b7b9100489a7ae20a959450d0d80fbcda281aee288a00d0c7edd18930cc60df1`; same-head CI `32406901661/96547992406` SUCCESS.
+## CLOSED EVIDENCE — R3.18AI Outcome A
+- exact immutable 47-row lane; published AG exact 47/47; one following header exact 47/47; native-oracle mismatch 0; witness reselection 0;
+- 17 complete observed seven-field contexts; all tags Int=47; earlier-header contract inheritance assumed 0;
+- repeatability/header-truncation/corrupt-AG/wrong-actor/unresolved-lookup/wrong-context/post-payload-start-poison negatives 47/47;
+- following payload/second later control consumption 0/0;
+- artifact `9424764320` / `sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5`; same-head CI `32420217393/96590396395` SUCCESS.
 
-## ACTIVE READ-ONLY GATE — R3.18AI
-- begin exactly at each valid published R3.18AG `stop_bit` on the same frozen 47 witnesses;
-- investigate exactly one following property header and stop exactly at that header `payload_start`;
-- production mutation and witness reselection are forbidden;
-- no following payload bit or second later control bit may be consumed.
+## ACTIVE CONTRACT-ONLY GATE — R3.18AJ
+- admit only the exact 17 complete R3.18AI seven-field tuples and exact multiplicities;
+- membership policy must be `exact_tuple_only`;
+- R3.18Z/R3.18P inheritance, component unions, Cartesian products and versionless matching are forbidden;
+- production mutation, payload decode and another control bit are forbidden.
 
 ## CLOSED
+- post-AG following-header production composition until R3.18AJ is admitted;
 - following payload after the R3.18AI header; second later control; false success semantics; alternate UniqueId systems/layouts; repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
