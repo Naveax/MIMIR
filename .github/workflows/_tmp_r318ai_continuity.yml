@@ -83,6 +83,12 @@ jobs:
           R318AI_BUILDER_RUN="$GITHUB_RUN_ID" \
           R318AI_BUILDER_JOB="$R318AI_BUILDER_JOB" \
           python tools/_tmp_r318ai_continuity_generate.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("docs/continuity/MIMIR_PROGRESS_LEDGER.md")
+          text = path.read_text(encoding="utf-8")
+          path.write_text(text.rstrip() + "\n", encoding="utf-8", newline="\n")
+          PY
           rm -f tools/_tmp_r318ai_continuity_generate.py
           rmdir tools 2>/dev/null || true
 
