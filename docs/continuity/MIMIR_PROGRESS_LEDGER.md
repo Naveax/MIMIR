@@ -879,3 +879,29 @@ Boundaries opened:
 
 Boundaries still closed:
 - production composition of that control, next stream/header/payload, second later control, alternate UniqueId layouts, generalized property loop/cursor, next actor/frame and semantic/runtime/export widening.
+
+
+---
+
+## 2026-08-20 — R3.18AF — Next property-control bit after published R3.18AD payload
+
+Production SHA/tree: `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`
+Pass type: read-only one-bit boundary differential
+Outcome: **A — ADMITTED / CLOSED**
+
+Evidence:
+- exact frozen lane 47/47; witness reselection 0; published R3.18AD reconstruction 47/47;
+- authority head/tree `30286c07727539d68f551140838fb2ef6802a26e` / `be808ad1ea757a095e37ccfe8f25b03e074dd732`; run/job `32344981062/96351720877` SUCCESS; exact-head CI `32345376481/96352906609` SUCCESS;
+- artifact `9397743505` / `12204` bytes / `sha256:d7edeab657928c94c35c852ae302fd614cab92a52b7e44f671310200af4b268f`; downloaded ZIP digest exact and inner manifest 10/10 PASS;
+- evidence-derived control distribution false=0 / true=47; pinned Boxcars vs independent one-bit mismatch 0;
+- truncation/repeatability/prior-stop-mismatch/post-control-poison PASS 47/47;
+- next stream/header/payload/second-control bits 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Superseded attempt:
+- `b821eb048f038758206144373713a9754bc1561a` / `32344721157/96350927162` failed only because the temporary Rust examples directory was missing after Boxcars oracle 47/47 had passed. It is harness-only and is not scientific authority.
+
+Boundary opened:
+- R3.18AG production may consume exactly one following bit after one valid published AD result and admit true only.
+
+Boundaries still closed:
+- false success semantics; next stream/header/payload; second later control; alternate UniqueId layouts; generalized property loop/cursor; next actor/frame and semantic/runtime/export widening.

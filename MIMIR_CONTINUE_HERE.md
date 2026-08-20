@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AD — bounded post-AA ordinal-3 payload composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AE — published R3.18AD ordinal-3 payload differential / Outcome A / 47/47 / header mismatch 0 / payload mismatch 0 / another-control 0 / artifact 9376466530
+  R3.18AF — one post-AD property-control bit / Outcome A / 47/47 / false=0 true=47 / mismatch 0 / artifact 9397743505
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18Z — post-W following-header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AE — published AD exact on frozen AC lane / 47 rows / ActiveActor 39×33 / Int 7×32 / UniqueId system1-Steam 1×80 / mismatch 0 / another-control 0
+  R3.18AF — exact one-bit boundary after published AD / 47 rows / false=0 true=47 / native-oracle mismatch 0 / next stream-header-payload-second-control 0/0/0/0
 
 CURRENT_PASS:
-  R3.18AF — exactly one next property-control bit evidence after published R3.18AD payload
+  R3.18AG — bounded true-only property-control production after published R3.18AD payload
 
 CURRENT_PASS_TYPE:
-  read-only evidence / observe exactly one next property_present bit at published R3.18AD stop; discover false/true distribution; no next header/payload
+  bounded production / from one valid published R3.18AD result validate exact payload-end boundary, read exactly one following property_present bit, admit true only, stop one bit later
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -109,8 +109,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AC CLOSED Outcome A: ordinal-3 payload exact 47/47; ActiveActor 39×33; Int 7×32; UniqueId 1×80 system1-Steam; mismatch 0; another-control 0; artifact 9359697636
   R3.18AD PRODUCTION at ccadbf148381c007890d13d5fe8120866a0f40f9: after valid AA/Z authority, compose exactly one ActiveActor/33, Int/32 or UniqueId system1-Steam/80 payload and stop at payload end
   R3.18AE CLOSED Outcome A: published AD matched frozen AB header + frozen AC/direct-native payload on 47/47; mismatch 0; another-control 0; artifact 9376466530
-  R3.18AF ACTIVE read-only evidence for exactly one next property_present bit at the published AD payload-end stop
-  NO next stream/header/payload, second later control, alternate UniqueId layout, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AF CLOSED Outcome A: exactly one next property_present bit matched 47/47; false=0 true=47; mismatch 0; next stream/header/payload/second-control 0/0/0/0; artifact 9397743505
+  R3.18AG ACTIVE bounded production: from one valid published AD result read exactly one following property_present bit; admit true only; false fails closed; stop one bit later
+  NO next stream/header/payload, second later control, false success semantics, alternate UniqueId layout, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18AB_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
   authority head/tree: b2f4b73600165b2d83389b6ce43709b64beba52a / 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
@@ -154,6 +155,17 @@ R3_18AE_EVIDENCE_CLOSURE:
   payload shapes: ActiveActor 39×33 / Int 7×32 / UniqueId 1×80 system_id=1 Steam
   repeatability/truncation/wrong-context/post-payload-poison 47/47; non-Z header + Epic-312 negatives PASS
   another-control bits 0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
+R3_18AF_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at ccadbf148381c007890d13d5fe8120866a0f40f9
+  authority head/tree: 30286c07727539d68f551140838fb2ef6802a26e / be808ad1ea757a095e37ccfe8f25b03e074dd732
+  authority run/job: 32344981062 / 96351720877 SUCCESS
+  exact-head normal CI: 32345376481 / 96352906609 SUCCESS
+  artifact: 9397743505 / 12204 bytes / sha256:d7edeab657928c94c35c852ae302fd614cab92a52b7e44f671310200af4b268f; downloaded ZIP digest exact / inner manifest 10/10 PASS
+  frozen rows 47/47 / false=0 true=47 / published AD exact 47/47 / native-oracle mismatch 0 / witness reselection 0
+  Boxcars c70e77df7af81b436cb545d070bb90c82f562d0b / observation patch sha256 de5fecb234e4a53798ce8e59b728078c7719ae04ef5fa2966b2c3b67072e7adf
+  truncation/repeatability/prior-stop-mismatch/post-control-poison 47/47; privacy PASS
+  next stream/header/payload/second-control bits 0/0/0/0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
+  superseded b821eb048f038758206144373713a9754bc1561a / 32344721157/96350927162: harness-only missing temporary examples directory after Boxcars 47/47 oracle PASS; no scientific authority
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -3720,22 +3732,22 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18AF
+# CURRENT PASS CHECKLIST — R3.18AG
 
-**Goal:** characterize exactly one next `property_present` bit after the published R3.18AD payload end on the immutable 47-row R3.18AE authority lane. Production remains frozen.
+**Goal:** implement exactly one true-only following `property_present` control after one already-valid published R3.18AD payload result. Production must stop exactly one bit later.
 
 ```text
-[ ] Fetch fresh main; require production ccadbf148381c007890d13d5fe8120866a0f40f9 / tree 0882601060d0bb6d37fcc03ae7273dcf50dd0be3 and lib/test blobs 1254d5a3d16e7b97b1dee87a8b459514d25749ef / 013ad6da94b866ecaca94cd6420e7568d9b4b5ee.
-[ ] Freeze R3.18AE head/tree d72b20275f55c44b97d9ec516f2dffbff84a2d6a / a24b6360bf8cace5dfc6fb0ecec4e31f12c986b8.
-[ ] Freeze R3.18AE authority 32282584789/96164550815, same-head CI 32342929705/96345500068, artifact 9376466530/sha256:0eacd0b43929699145a961825de2dbeb6b31342d1cacfa1c68c71cbdd9fc43f4.
-[ ] Verify artifact ZIP digest + 8/8 manifest and exact 47 replay/witness identities; witness reselection must remain 0.
-[ ] Reconstruct published R3.18AD exactly on all 47 rows; require stop_bit == frozen payload end before observing anything later.
-[ ] Instrument pinned Boxcars observation-only at exactly that bit offset.
-[ ] Independently read exactly one LSB-first property_present bit at the same offset.
-[ ] Require oracle/evidence start/value/end equality for 47/47 and report the full false/true distribution without filtering.
-[ ] Stop exactly one bit later; next stream/header/payload and second later control consumption must remain 0/0/0/0.
-[ ] Run truncation, prior-stop mismatch, repeatability and post-control poison negatives.
-[ ] Run focused R3.18AD tests, full mimir-replay, workspace check/test/clippy and repository verifier.
-[ ] Require same exact evidence-head normal CI SUCCESS and privacy scan PASS.
-[ ] If Outcome A, admit only the one-bit evidence and define a separate bounded production pass restricted to evidence-observed forms.
+[ ] Fetch fresh main and require this continuity admission parent exactly.
+[ ] Freeze production ccadbf148381c007890d13d5fe8120866a0f40f9 / tree 0882601060d0bb6d37fcc03ae7273dcf50dd0be3 and lib/test blobs 1254d5a3d16e7b97b1dee87a8b459514d25749ef / 013ad6da94b866ecaca94cd6420e7568d9b4b5ee.
+[ ] Freeze R3.18AF 30286c07727539d68f551140838fb2ef6802a26e/be808ad1ea757a095e37ccfe8f25b03e074dd732, authority 32344981062/96351720877, CI 32345376481/96352906609, artifact 9397743505/sha256:d7edeab657928c94c35c852ae302fd614cab92a52b7e44f671310200af4b268f.
+[ ] Add one production result type carrying following_property_present=true plus start/end/stop only.
+[ ] Accept only an already-valid published R3.18AD result whose payload/header stop invariants are exact.
+[ ] Read exactly one bit at prior.stop_bit; require true; false returns explicit fail-closed error.
+[ ] Require property_present_start_bit == prior.stop_bit, end == start+1, stop == end.
+[ ] Do not resolve/decode next stream/header/payload and do not read a second later control bit.
+[ ] Add representative ActiveActor/Int/UniqueId real-row positives, false mutation, truncation, prior-boundary mutation, repeatability and post-control poison tests.
+[ ] Add source-scope test proving exactly one read_bit and no loop/lookup/following decoder call.
+[ ] Run focused AD + AG tests, full mimir-replay, workspace fmt/check/test/clippy and repository verifier.
+[ ] Reconstruct a clean production candidate from source + focused test only; validate exact clean SHA; publish force=false after fresh-main check.
+[ ] After publication, run a separate differential audit before opening any next header/payload boundary.
 ```

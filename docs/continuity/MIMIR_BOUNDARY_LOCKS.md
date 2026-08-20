@@ -6,7 +6,7 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AE closed / R3.18AF active
+# 0. Current override — R3.18AF closed / R3.18AG active
 
 This current override supersedes older status wording later in this historical lock file.
 
@@ -15,19 +15,18 @@ This current override supersedes older status wording later in this historical l
 - exactly one ordinal-3 payload only: ActiveActor/33, Int/32, UniqueId system1-Steam/80;
 - stop exactly at payload end; no later control consumed.
 
-## CLOSED EVIDENCE — R3.18AE Outcome A
-- published AD matched the frozen AB header and frozen AC/direct-native payload on 47/47 rows;
-- ActiveActor=39×33 / Int=7×32 / UniqueId=1×80 system1-Steam; mismatch 0;
-- witness reselection 0; another-control bits 0; artifact `9376466530` / `sha256:0eacd0b43929699145a961825de2dbeb6b31342d1cacfa1c68c71cbdd9fc43f4`.
+## CLOSED EVIDENCE — R3.18AF Outcome A
+- on the immutable 47-row lane the exact next `property_present` distribution is false=0 / true=47;
+- published AD reconstruction 47/47; native-vs-pinned-Boxcars mismatch 0; witness reselection 0;
+- next stream/header/payload/second-control bits 0/0/0/0; artifact `9397743505` / `sha256:d7edeab657928c94c35c852ae302fd614cab92a52b7e44f671310200af4b268f`.
 
-## ACTIVE READ-ONLY GATE — R3.18AF
-- observe exactly one next `property_present` bit beginning at published AD `stop_bit`;
-- same immutable 47 witnesses, no reselection; false/true distribution must be discovered;
-- stop one bit later; no next stream/header/payload or second later control.
+## ACTIVE PRODUCTION GATE — R3.18AG
+- input must already be one valid published R3.18AD result with exact payload-end invariants;
+- read exactly one bit at prior `stop_bit`; admit **true only** because AF observed true=47/false=0;
+- false fails closed; stop exactly one bit later; no lookup or following decoder.
 
 ## CLOSED
-- production composition of this next control until AF evidence is admitted;
-- next stream/header/payload; second later control; alternate UniqueId systems/layouts; repeated/generalized property loop or generic cursor;
+- false success semantics at this boundary; next stream/header/payload; second later control; alternate UniqueId systems/layouts; repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---
