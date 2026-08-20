@@ -24,7 +24,7 @@ jobs:
       BASE_SHA: 0e48eebffbd7f54238835e23c177e732cbeb7978
       BASE_TREE: 627d02ca39ff732e9dd7137d061432c6a67fafd8
       PROBE_BLOB: a1f7235c2010997a5ef79c0b26d633e74db2ce33
-      RUNNER_BLOB: d7dc338415e1a981149fa34cd065671217f26937
+      RUNNER_BLOB: 0f10d5e874adbc5f7f0fa3799653d5c309ee0537
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout exact evidence head
