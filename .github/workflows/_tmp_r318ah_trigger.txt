@@ -1,1 +1,1 @@
-Single corrective trigger for R3.18AH after completed run 32404962614 proved the scientific lane and regressions but failed only cargo fmt --check on the temporary probe. Probe is now exact rustfmt form; authority main and frozen R3.18AF witness set are unchanged.
+Single corrective trigger after completed run 32405211961 failed before science because the runner still froze the pre-rustfmt probe blob. Runner and workflow now agree on probe a1f7235c2010997a5ef79c0b26d633e74db2ce33; authority main and exact R3.18AF witness lane remain unchanged.
