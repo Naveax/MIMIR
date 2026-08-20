@@ -1,0 +1,130 @@
+name: R3.18AI Published Main Run Discovery
+
+on:
+  push:
+    branches:
+      - ops/r318ai-published-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318ai_published_run_discovery_trigger.txt
+
+concurrency:
+  group: r318ai-published-run-discovery
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PUBLISHED_SHA: a048ba25f2ef023d07bab17716838f1c4777fe27
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Mark discovery pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318ai/published-run-discovery' \
+            -f description='Discovering published-main validation runs' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Discover and verify published-main runs
+        id: receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          receipt="$RUNNER_TEMP/r318ai_published_main_runs.json"
+          ci_id=""
+          ka_id=""
+
+          for _ in $(seq 1 80); do
+            runs_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&head_sha=$PUBLISHED_SHA&event=push&per_page=50")"
+            ci_count="$(jq '[.workflow_runs[] | select(.name == "CI")] | length' <<<"$runs_json")"
+            ka_count="$(jq '[.workflow_runs[] | select(.name == "Knowledge Archive")] | length' <<<"$runs_json")"
+            if [ "$ci_count" -gt 1 ] || [ "$ka_count" -gt 1 ]; then
+              echo "duplicate published-main workflow runs detected: CI=$ci_count KnowledgeArchive=$ka_count" >&2
+              exit 1
+            fi
+            if [ "$ci_count" -eq 1 ] && [ "$ka_count" -eq 1 ]; then
+              ci_id="$(jq -r '.workflow_runs[] | select(.name == "CI") | .id' <<<"$runs_json")"
+              ka_id="$(jq -r '.workflow_runs[] | select(.name == "Knowledge Archive") | .id' <<<"$runs_json")"
+              break
+            fi
+            sleep 5
+          done
+          test -n "$ci_id"
+          test -n "$ka_id"
+
+          for _ in $(seq 1 180); do
+            ci_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ci_id")"
+            ka_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ka_id")"
+            ci_status="$(jq -r '.status' <<<"$ci_json")"
+            ka_status="$(jq -r '.status' <<<"$ka_json")"
+            if [ "$ci_status" = completed ] && [ "$ka_status" = completed ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          ci_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ci_id")"
+          ka_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ka_id")"
+          test "$(jq -r '.head_sha' <<<"$ci_json")" = "$PUBLISHED_SHA"
+          test "$(jq -r '.head_sha' <<<"$ka_json")" = "$PUBLISHED_SHA"
+          test "$(jq -r '.event' <<<"$ci_json")" = push
+          test "$(jq -r '.event' <<<"$ka_json")" = push
+          test "$(jq -r '.status' <<<"$ci_json")" = completed
+          test "$(jq -r '.status' <<<"$ka_json")" = completed
+          test "$(jq -r '.conclusion' <<<"$ci_json")" = success
+          test "$(jq -r '.conclusion' <<<"$ka_json")" = success
+
+          ci_jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ci_id/jobs")"
+          ka_jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ka_id/jobs")"
+          ci_job_id="$(jq -r '.jobs[] | select(.name == "rust") | .id' <<<"$ci_jobs" | head -n 1)"
+          ka_job_id="$(jq -r '.jobs[] | select(.name == "verify") | .id' <<<"$ka_jobs" | head -n 1)"
+          test -n "$ci_job_id"
+          test -n "$ka_job_id"
+
+          jq -n \
+            --arg published_sha "$PUBLISHED_SHA" \
+            --argjson ci_id "$ci_id" \
+            --argjson ci_job_id "$ci_job_id" \
+            --argjson ka_id "$ka_id" \
+            --argjson ka_job_id "$ka_job_id" \
+            '{published_sha:$published_sha, duplicate_guard:"PASS", ci:{run_id:$ci_id,job_id:$ci_job_id,status:"completed",conclusion:"success",event:"push"}, knowledge_archive:{run_id:$ka_id,job_id:$ka_job_id,status:"completed",conclusion:"success",event:"push"}}' \
+            | tee "$receipt"
+          cp "$receipt" r318ai_published_main_runs.json
+
+      - name: Upload published-main receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ai-published-main-runs
+          path: r318ai_published_main_runs.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Report discovery status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure
+          description='Published-main validation discovery failed'
+          if [ "$JOB_STATUS" = success ]; then
+            state=success
+            description='Published-main CI and Knowledge Archive succeeded'
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context='r318ai/published-run-discovery' \
+            -f description="$description" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
