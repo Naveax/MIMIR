@@ -2,8 +2,8 @@ use mimir_replay::{
     MinimalReplayContentScaffoldReader, MinimalReplayNetworkLookupPlanReader,
     ReplayContentScaffoldReader, ReplayInput,
     ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
-    ReplayNetworkK2DecodeContextV1, ReplayNetworkK3DecodeContextV1,
-    ReplayNetworkLookupPlanReader, ReplayNetworkLookupPlanV1,
+    ReplayNetworkK2DecodeContextV1, ReplayNetworkK3DecodeContextV1, ReplayNetworkLookupPlanReader,
+    ReplayNetworkLookupPlanV1,
     decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_v1,
     decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_v1,
     decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_v1,
@@ -51,7 +51,7 @@ fn ad_prior(
     plan: &ReplayNetworkLookupPlanV1,
     first_start: u64,
     actor_object: u32,
-) -> ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1 {
+) -> ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1{
     let first = decode_replay_network_existing_actor_single_primitive_property_v1(
         network,
         first_start,
@@ -59,13 +59,14 @@ fn ad_prior(
         plan,
     )
     .expect("R3.18B first");
-    let second = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_v1(
-        network,
-        &first,
-        plan,
-        k2_context(),
-    )
-    .expect("R3.18J second");
+    let second =
+        decode_replay_network_existing_actor_after_first_primitive_second_property_payload_v1(
+            network,
+            &first,
+            plan,
+            k2_context(),
+        )
+        .expect("R3.18J second");
     let t = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_v1(
         network,
         &second,
@@ -101,7 +102,9 @@ fn set_bit(bytes: &mut [u8], bit: u64, value: bool) {
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 5 {
-        eprintln!("usage: r318ah_probe <root-relative replay> <first_start> <actor_object> <frozen_start>");
+        eprintln!(
+            "usage: r318ah_probe <root-relative replay> <first_start> <actor_object> <frozen_start>"
+        );
         std::process::exit(2);
     }
     let label = &args[1];
