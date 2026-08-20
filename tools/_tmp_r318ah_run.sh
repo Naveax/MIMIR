@@ -7,7 +7,7 @@ TREE="4123820ce6537f2d4942cd0b5f72b52e43b96c1d"
 LIB="db923ebcb419d278f4ab0144fe7ed15b298b60fa"
 TEST="3f3e1c8f3f6deb7f2558862a1032f8a102131443"
 AH_SPEC="94aec628115f43db549ffec2d52338372a6a7459"
-PROBE="0f652f043a1d8d3ae68d86be6f72dd9f88300847"
+PROBE="a1f7235c2010997a5ef79c0b26d633e74db2ce33"
 AF_HEAD="30286c07727539d68f551140838fb2ef6802a26e"
 AF_RUN="32344981062"
 AF_JOB="96351720877"
@@ -81,7 +81,7 @@ run_probe() {
   done < /tmp/r318af_authority/r3_18af_targets.tsv
 
   python3 - "$out" <<'PY'
-import hashlib, json, pathlib, sys
+import json, pathlib, sys
 out = pathlib.Path(sys.argv[1])
 af = pathlib.Path('/tmp/r318af_authority')
 frozen = json.loads((af/'r3_18af_comparison.json').read_text())
@@ -95,7 +95,7 @@ for line in (out/'probe.tsv').read_text().splitlines():
       'label':p[0], 'first_start':int(p[1]), 'actor_context_object_id':int(p[2]),
       'frozen_start_arg':int(p[3]), 'prior_stop':int(p[4]), 'published_value':bool(int(p[5])),
       'published_start':int(p[6]), 'published_end':int(p[7]), 'published_stop':int(p[8]),
-      'native_value':bool(int(p[9]),), 'repeat_equal':bool(int(p[10])),
+      'native_value':bool(int(p[9])), 'repeat_equal':bool(int(p[10])),
       'false_reject':bool(int(p[11])), 'trunc_reject':bool(int(p[12])),
       'poison_same':bool(int(p[13])), 'prior_stop_reject':bool(int(p[14])),
       'wrong_context_reject':bool(int(p[15])),
