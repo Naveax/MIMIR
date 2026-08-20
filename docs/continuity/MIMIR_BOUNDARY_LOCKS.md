@@ -6,33 +6,28 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AD production / R3.18AE active
+# 0. Current override — R3.18AE closed / R3.18AF active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AD
-- `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`, parent `671cd19a7d034b1377de5bed1dfd36600f45c8d7`;
-- valid R3.18AA boundary and full R3.18Z exact header membership remain mandatory;
-- exactly one ordinal-3 payload only: ActiveActor/33, Int/32, or UniqueId system1-Steam/80;
-- stop exactly at payload end; another property-control bits consumed 0;
-- clean scope exactly lib.rs + one focused AD test.
+- `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`; exact R3.18AA + R3.18Z authority remains mandatory;
+- exactly one ordinal-3 payload only: ActiveActor/33, Int/32, UniqueId system1-Steam/80;
+- stop exactly at payload end; no later control consumed.
 
-## VALIDATION
-- builder `32241956973/96034261394` SUCCESS;
-- validation PR CI `32242293315/96035296746` SUCCESS;
-- exact clean push CI `32242994502/96038355071` SUCCESS;
-- published-main CI `32242742010/96036666443` SUCCESS;
-- receipt helper `32243135866/96037860121` SUCCESS.
+## CLOSED EVIDENCE — R3.18AE Outcome A
+- published AD matched the frozen AB header and frozen AC/direct-native payload on 47/47 rows;
+- ActiveActor=39×33 / Int=7×32 / UniqueId=1×80 system1-Steam; mismatch 0;
+- witness reselection 0; another-control bits 0; artifact `9376466530` / `sha256:0eacd0b43929699145a961825de2dbeb6b31342d1cacfa1c68c71cbdd9fc43f4`.
 
-## ACTIVE READ-ONLY GATE — R3.18AE
-- exact immutable AC 47-row lane only; witness reselection forbidden;
-- published AD vs frozen AC / pinned oracle / direct native must match through payload end;
-- no production mutation and no another-control inspection.
+## ACTIVE READ-ONLY GATE — R3.18AF
+- observe exactly one next `property_present` bit beginning at published AD `stop_bit`;
+- same immutable 47 witnesses, no reselection; false/true distribution must be discovered;
+- stop one bit later; no next stream/header/payload or second later control.
 
 ## CLOSED
-- alternate UniqueId systems/layouts or widths;
-- another property control after AD payload end;
-- repeated/generalized property loop or generic cursor;
+- production composition of this next control until AF evidence is admitted;
+- next stream/header/payload; second later control; alternate UniqueId systems/layouts; repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AD — bounded post-AA ordinal-3 payload composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AC — ordinal-3 payload differential / Outcome A / 47/47 / mismatch 0 / ActiveActor 39×33 / Int 7×32 / UniqueId system1-Steam 1×80 / artifact 9359697636
+  R3.18AE — published R3.18AD ordinal-3 payload differential / Outcome A / 47/47 / header mismatch 0 / payload mismatch 0 / another-control 0 / artifact 9376466530
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18Z — post-W following-header exact-context contract / Outcome A / 18 exact tuples / 47 multiplicities / R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AC — post-AA ordinal-3 payload / Outcome A / 47 rows / ActiveActor=39×33 Int=7×32 UniqueId=1×80 system1-Steam / mismatch 0 / another-control 0
+  R3.18AE — published AD exact on frozen AC lane / 47 rows / ActiveActor 39×33 / Int 7×32 / UniqueId system1-Steam 1×80 / mismatch 0 / another-control 0
 
 CURRENT_PASS:
-  R3.18AE — published R3.18AD ordinal-3 payload differential
+  R3.18AF — exactly one next property-control bit evidence after published R3.18AD payload
 
 CURRENT_PASS_TYPE:
-  read-only evidence / validate published R3.18AD on the exact immutable R3.18AC 47-row lane
+  read-only evidence / observe exactly one next property_present bit at published R3.18AD stop; discover false/true distribution; no next header/payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -108,8 +108,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AB CLOSED Outcome A: published-AA/frozen-Y/direct-header exact 47/47; Z contexts 18/18; multiplicities 47/47; ActiveActor=39 Int=7 UniqueId=1; mismatch 0; payload/control 0/0; artifact 9357559410
   R3.18AC CLOSED Outcome A: ordinal-3 payload exact 47/47; ActiveActor 39×33; Int 7×32; UniqueId 1×80 system1-Steam; mismatch 0; another-control 0; artifact 9359697636
   R3.18AD PRODUCTION at ccadbf148381c007890d13d5fe8120866a0f40f9: after valid AA/Z authority, compose exactly one ActiveActor/33, Int/32 or UniqueId system1-Steam/80 payload and stop at payload end
-  R3.18AE ACTIVE read-only: published AD differential on exact AC 47-row lane; another-control consumption must remain 0
-  NO alternate UniqueId layout, another control, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AE CLOSED Outcome A: published AD matched frozen AB header + frozen AC/direct-native payload on 47/47; mismatch 0; another-control 0; artifact 9376466530
+  R3.18AF ACTIVE read-only evidence for exactly one next property_present bit at the published AD payload-end stop
+  NO next stream/header/payload, second later control, alternate UniqueId layout, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 R3_18AB_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
   authority head/tree: b2f4b73600165b2d83389b6ce43709b64beba52a / 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
@@ -143,6 +144,16 @@ R3_18AC_EVIDENCE_CLOSURE:
   repeatability/truncation/wrong-tag/wrong-context-or-N-A/post-payload-poison 47/47
   another-control bits 0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
   superseded evidence head 4207ffdcbc9a032dfd3c6f36cc05703861c2067f: temporary probe ownership/context-negative harness defect only; production unchanged
+R3_18AE_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at ccadbf148381c007890d13d5fe8120866a0f40f9
+  authority head/tree: d72b20275f55c44b97d9ec516f2dffbff84a2d6a / a24b6360bf8cace5dfc6fb0ecec4e31f12c986b8
+  authority run/job: 32282584789 / 96164550815 SUCCESS
+  exact-head normal CI: 32342929705 / 96345500068 SUCCESS
+  artifact: 9376466530 / 11057 bytes / sha256:0eacd0b43929699145a961825de2dbeb6b31342d1cacfa1c68c71cbdd9fc43f4; downloaded ZIP digest exact / inner manifest 8/8 PASS
+  frozen rows 47/47 / published-frozen AB header mismatch 0 / published-frozen AC-direct mismatch 0 / witness reselection 0 / privacy PASS
+  payload shapes: ActiveActor 39×33 / Int 7×32 / UniqueId 1×80 system_id=1 Steam
+  repeatability/truncation/wrong-context/post-payload-poison 47/47; non-Z header + Epic-312 negatives PASS
+  another-control bits 0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
 R3_18M_PRODUCTION_CLOSURE:
   Outcome A / production fd74ba8c520ab83b808730572c41e45d6dc616e6 / tree 6285928b3ca724c77b761e70c54f7bd0763f11f0
   lib/test blobs: 029c48e38ea0257f8cdb3fa8715bde5a789213e7 / a9bd2d0a8007c8cae76a0d14ad0c11ed387fe5a6
@@ -3709,20 +3720,22 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18AE
+# CURRENT PASS CHECKLIST — R3.18AF
 
-**Goal:** differentially validate published R3.18AD over the exact immutable R3.18AC 47-row lane through one payload end, with zero production mutation and zero another-control access.
+**Goal:** characterize exactly one next `property_present` bit after the published R3.18AD payload end on the immutable 47-row R3.18AE authority lane. Production remains frozen.
 
 ```text
-[ ] Fetch fresh main and require published AD ccadbf148381c007890d13d5fe8120866a0f40f9 / 0882601060d0bb6d37fcc03ae7273dcf50dd0be3, lib/test 1254d5a3d16e7b97b1dee87a8b459514d25749ef / 013ad6da94b866ecaca94cd6420e7568d9b4b5ee.
-[ ] Verify builder/PR/clean-push/main CI receipts and immutable AC artifact 9359697636/sha256:a6914044dfd8991d74b95caeb3507fb2469175c4458c5b50b55395b8ea67b9df.
-[ ] Reuse exactly the frozen AC 47 rows; witness reselection 0.
-[ ] Invoke published AD on every row and require embedded AA/header equality plus R3.18Z exact membership.
-[ ] Require published/frozen/oracle/direct-native payload start/end/width/value equality 47/47.
-[ ] Reconstruct ActiveActor 39×33, Int 7×32, UniqueId 1×80 system1-Steam exactly.
-[ ] Run truncation, wrong-context/tag, Epic-312 rejection, repeatability and post-payload-poison negatives.
-[ ] Require another-control bits consumed 0 and production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
-[ ] Produce privacy-safe immutable evidence artifact with full internal hashes and deterministic double-run equality.
-[ ] Require exact evidence-head normal CI plus full focused/workspace/clippy/repository validation.
-[ ] Do not widen to another control, alternate UniqueId layout, generic loop/cursor, next actor/frame or semantic/runtime behavior.
+[ ] Fetch fresh main; require production ccadbf148381c007890d13d5fe8120866a0f40f9 / tree 0882601060d0bb6d37fcc03ae7273dcf50dd0be3 and lib/test blobs 1254d5a3d16e7b97b1dee87a8b459514d25749ef / 013ad6da94b866ecaca94cd6420e7568d9b4b5ee.
+[ ] Freeze R3.18AE head/tree d72b20275f55c44b97d9ec516f2dffbff84a2d6a / a24b6360bf8cace5dfc6fb0ecec4e31f12c986b8.
+[ ] Freeze R3.18AE authority 32282584789/96164550815, same-head CI 32342929705/96345500068, artifact 9376466530/sha256:0eacd0b43929699145a961825de2dbeb6b31342d1cacfa1c68c71cbdd9fc43f4.
+[ ] Verify artifact ZIP digest + 8/8 manifest and exact 47 replay/witness identities; witness reselection must remain 0.
+[ ] Reconstruct published R3.18AD exactly on all 47 rows; require stop_bit == frozen payload end before observing anything later.
+[ ] Instrument pinned Boxcars observation-only at exactly that bit offset.
+[ ] Independently read exactly one LSB-first property_present bit at the same offset.
+[ ] Require oracle/evidence start/value/end equality for 47/47 and report the full false/true distribution without filtering.
+[ ] Stop exactly one bit later; next stream/header/payload and second later control consumption must remain 0/0/0/0.
+[ ] Run truncation, prior-stop mismatch, repeatability and post-control poison negatives.
+[ ] Run focused R3.18AD tests, full mimir-replay, workspace check/test/clippy and repository verifier.
+[ ] Require same exact evidence-head normal CI SUCCESS and privacy scan PASS.
+[ ] If Outcome A, admit only the one-bit evidence and define a separate bounded production pass restricted to evidence-observed forms.
 ```

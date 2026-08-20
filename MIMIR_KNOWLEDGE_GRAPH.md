@@ -61,7 +61,8 @@ R3.18AA bounded post-W following-header production decision / CLOSED            
 R3.18AB published-AA following-header differential / Outcome A CLOSED                        |
 R3.18AC post-AA ordinal-3 payload evidence / Outcome A CLOSED                              |
 R3.18AD bounded post-AA ordinal-3 payload production / Outcome A CLOSED                  |
-R3.18AE active published R3.18AD ordinal-3 payload differential                              |
+R3.18AE published R3.18AD ordinal-3 payload differential / Outcome A CLOSED              |
+R3.18AF active next property-control bit evidence after published AD payload                      |
         |                               |
         +---------------+---------------+
                         |
@@ -177,13 +178,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 95. `docs/continuity/MIMIR_R3_18AD_EXECUTION_SPEC.md`
 96. `docs/continuity/MIMIR_R3_18AD_DECISION.md`
 97. `docs/continuity/MIMIR_R3_18AE_EXECUTION_SPEC.md`
-98. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-99. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-100. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-101. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-102. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-103. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-104. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+98. `docs/continuity/MIMIR_R3_18AE_DECISION.md`
+99. `docs/continuity/MIMIR_R3_18AF_EXECUTION_SPEC.md`
+100. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+101. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+102. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+103. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+104. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+105. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+106. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
@@ -874,3 +877,12 @@ next                        R3.18M true-only one-bit production composition
 - R3.18AD admits exactly ActiveActor/33, Int/32, UniqueId system1-Steam/80 after valid AA/Z authority; stop at payload end; another-control 0.
 - Builder `32241956973/96034261394`, PR CI `32242293315/96035296746`, clean push CI `32242994502/96038355071`, main CI `32242742010/96036666443`, receipt `32243135866/96037860121` all SUCCESS.
 - R3.18AE is active read-only published-AD differential on the exact immutable AC 47-row lane. Alternate layouts, another control, generic loops/cursors and semantic/runtime widening remain closed.
+
+
+### R3.18AE published AD ordinal-3 payload differential: OUTCOME A / CLOSED
+- production unchanged at `ccadbf148381c007890d13d5fe8120866a0f40f9` / tree `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`; lib/test `1254d5a3d16e7b97b1dee87a8b459514d25749ef` / `013ad6da94b866ecaca94cd6420e7568d9b4b5ee`
+- evidence `d72b20275f55c44b97d9ec516f2dffbff84a2d6a` / tree `a24b6360bf8cace5dfc6fb0ecec4e31f12c986b8` / `32282584789/96164550815` SUCCESS; exact-head CI `32342929705/96345500068` SUCCESS
+- artifact `9376466530` / `11057` bytes / `sha256:0eacd0b43929699145a961825de2dbeb6b31342d1cacfa1c68c71cbdd9fc43f4`; ZIP digest exact and manifest 8/8 PASS
+- 47/47 frozen rows; published-vs-frozen AB header mismatch 0; published-vs-frozen AC/direct-native payload mismatch 0; witness reselection 0
+- ActiveActor=39×33 / Int=7×32 / UniqueId=1×80 system1-Steam; negatives PASS; another-control bits 0; privacy PASS
+- next exact pass: R3.18AF read-only evidence for exactly one next property-control bit at published AD stop; no next header/payload

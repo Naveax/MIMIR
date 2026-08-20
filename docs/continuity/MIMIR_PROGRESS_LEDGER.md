@@ -851,3 +851,31 @@ Outcome: **A — ADMITTED / PRODUCTION**
 - another-control bits consumed 0; no generic loop/cursor or capability widening.
 
 Next exact gate: R3.18AE read-only published-AD differential on the frozen AC 47-row lane.
+
+
+---
+
+## 2026-08-20 — R3.18AE — Published R3.18AD ordinal-3 payload differential
+
+Production SHA/tree: `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`
+Pass type: read-only published-production differential
+Outcome: **A — ADMITTED / CLOSED**
+
+Evidence:
+- exact frozen AC lane 47/47; witness reselection 0;
+- authority head/tree `d72b20275f55c44b97d9ec516f2dffbff84a2d6a` / `a24b6360bf8cace5dfc6fb0ecec4e31f12c986b8`;
+- authority run/job `32282584789/96164550815` SUCCESS; same-head normal CI `32342929705/96345500068` SUCCESS;
+- artifact `9376466530` / `11057` bytes / `sha256:0eacd0b43929699145a961825de2dbeb6b31342d1cacfa1c68c71cbdd9fc43f4`; downloaded ZIP digest exact and inner manifest 8/8 PASS;
+- published/frozen AB header mismatch 0; published/frozen AC/direct-native payload mismatch 0;
+- ActiveActor 39×33 bits, Int 7×32 bits, UniqueId 1×80 bits system_id=1 / Steam;
+- repeatability/truncation/wrong-context/post-payload-poison 47/47; non-Z header and lower-level-valid Epic 312-bit UniqueId rejection PASS;
+- another-control bits 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Superseded attempts:
+- earlier R3.18AE v1/v2 attempts were harness-only receipt/schema/materialization failures before a valid scientific authority; production remained unchanged. Final authority is the run above.
+
+Boundaries opened:
+- R3.18AF read-only exactly-one-next-property-control-bit evidence only.
+
+Boundaries still closed:
+- production composition of that control, next stream/header/payload, second later control, alternate UniqueId layouts, generalized property loop/cursor, next actor/frame and semantic/runtime/export widening.
