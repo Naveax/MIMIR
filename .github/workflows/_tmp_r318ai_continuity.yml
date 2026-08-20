@@ -53,27 +53,6 @@ jobs:
           test "$(git hash-object tools/_tmp_r318ai_continuity_generate.py)" = "$GENERATOR_BLOB"
           python -m py_compile tools/_tmp_r318ai_continuity_generate.py
           cp tools/_tmp_r318ai_continuity_generate.py "$RUNNER_TEMP/r318ai_continuity_generate.py"
-          python - "$RUNNER_TEMP/r318ai_continuity_generate.py" <<'PY'
-          from pathlib import Path
-          import sys
-
-          path = Path(sys.argv[1])
-          text = path.read_text(encoding="utf-8")
-          fixes = (
-              (
-                  '# 0\\\\. Current override — R3\\\\.18AH closed / R3\\\\.18AI active',
-                  '# 0\\. Current override — R3\\.18AH closed / R3\\.18AI active',
-              ),
-              ('# 1\\\\. Status vocabulary', '# 1\\. Status vocabulary'),
-          )
-          for old, new in fixes:
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f"corrective regex marker expected once, found {count}: {old}")
-              text = text.replace(old, new, 1)
-          path.write_text(text, encoding="utf-8", newline="\n")
-          PY
-          python -m py_compile "$RUNNER_TEMP/r318ai_continuity_generate.py"
 
       - name: Resolve immutable builder job receipt
         id: receipt
