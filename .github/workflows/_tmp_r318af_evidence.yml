@@ -48,6 +48,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p crates/mimir-replay/examples
           bash tools/_tmp_r318af_run.sh
 
       - name: Upload immutable R3.18AF evidence
