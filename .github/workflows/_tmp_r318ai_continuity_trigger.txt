@@ -1,0 +1,1 @@
+Single controlled trigger for the R3.18AI Outcome A continuity admission candidate. Base main is b419503b5ceb8c44af207f645232570b1c9f2e6d. Produce exactly one clean docs-only commit that admits R3.18AI and opens R3.18AJ; no production, Cargo, fixture, corpus, workflow or support mutation may enter the candidate.
