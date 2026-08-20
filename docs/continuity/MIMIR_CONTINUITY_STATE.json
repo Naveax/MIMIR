@@ -3,14 +3,14 @@
   "updated_date": "2026-08-20",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "ccadbf148381c007890d13d5fe8120866a0f40f9",
-  "last_production_milestone": "R3.18AD",
-  "last_production_milestone_name": "bounded post-AA ordinal-3 payload composition",
+  "last_production_code_sha": "2d351e8ceb601e2fbe515d2977b2103a4b2c7976",
+  "last_production_milestone": "R3.18AG",
+  "last_production_milestone_name": "bounded true-only property-control production after published R3.18AD payload",
   "last_completed_read_only_audit": "R3.18AF",
-  "current_pass": "R3.18AG",
-  "current_pass_kind": "bounded production / true-only one following property-control bit after valid published R3.18AD payload",
-  "current_pass_goal": "From exactly one already-valid published R3.18AD result, validate the payload-end boundary, consume exactly one following property_present bit, admit true only, reject false, and stop one bit later.",
-  "current_pass_stop_boundary": "Stop exactly one bit after the admitted true control. No next stream/header/payload, second later control, loop/cursor, alternate UniqueId widening, next actor/frame or semantic/runtime/export widening.",
+  "current_pass": "R3.18AH",
+  "current_pass_kind": "read-only published-API differential / published R3.18AG versus immutable R3.18AF 47-row lane",
+  "current_pass_goal": "Validate published R3.18AG start/value/end/stop exactly against the frozen R3.18AF one-bit evidence on all 47 witnesses with false=0, true=47, mismatch 0 and no adjacent consumption.",
+  "current_pass_stop_boundary": "Stop exactly at the R3.18AG one-bit control end. No next stream/header/payload, second later control, property loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -83,13 +83,16 @@
     "another property control after the ordinal-3 payload end",
     "alternate UniqueId systems/layouts in R3.18AD production",
     "generic/repeated property cursor after R3.18AD",
-    "production composition of the next property control after published R3.18AD payload end",
     "next stream/header/payload after the one R3.18AF control observation",
     "second later property control bit after R3.18AF",
     "false following property control after published R3.18AD payload (R3.18AF observed false=0)",
     "next stream/header/payload after R3.18AG control",
     "second later property control bit after R3.18AG",
-    "repeated/generalized property loop or generic cursor after R3.18AG"
+    "repeated/generalized property loop or generic cursor after R3.18AG",
+    "next stream/header/payload after published R3.18AG",
+    "second later property control bit after published R3.18AG",
+    "false success semantics after published R3.18AG",
+    "repeated/generalized property loop or generic cursor after published R3.18AG"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -205,6 +208,8 @@
     "docs/continuity/MIMIR_R3_18AF_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AF_DECISION.md",
     "docs/continuity/MIMIR_R3_18AG_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AG_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AH_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -2166,5 +2171,36 @@
       "job": 96350927162,
       "classification": "harness-only missing temporary examples directory; no scientific authority"
     }
+  },
+  "r3_18ag": {
+    "outcome": "A",
+    "production_sha": "2d351e8ceb601e2fbe515d2977b2103a4b2c7976",
+    "production_tree": "4123820ce6537f2d4942cd0b5f72b52e43b96c1d",
+    "parent_sha": "037a10a41848ca2621e1b64567c3c1bd7b2f6808",
+    "lib_blob": "db923ebcb419d278f4ab0144fe7ed15b298b60fa",
+    "test_blob": "3f3e1c8f3f6deb7f2558862a1032f8a102131443",
+    "execution_spec_blob": "90180dcaddd30ed9a187a0d4332a105d153488d7",
+    "builder_run": 32401660279,
+    "builder_job": 96531043622,
+    "validation_pr": 55,
+    "validation_pr_ci": 32402596061,
+    "validation_pr_ci_job": 96534073576,
+    "published_main_ci": 32402933798,
+    "published_main_ci_job": 96535174390,
+    "continuity_builder": 32404006084,
+    "continuity_builder_job": 96538654038,
+    "frozen_rows": 47,
+    "false_count": 0,
+    "true_count": 47,
+    "adjacent_consumption": {
+      "stream": 0,
+      "header": 0,
+      "payload": 0,
+      "second_control": 0
+    },
+    "clean_scope": [
+      "crates/mimir-replay/src/lib.rs",
+      "crates/mimir-replay/tests/r3_18ag_post_ad_payload_control.rs"
+    ]
   }
 }

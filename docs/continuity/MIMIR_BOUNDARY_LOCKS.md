@@ -6,27 +6,28 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AF closed / R3.18AG active
+# 0. Current override — R3.18AG production / R3.18AH active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18AD
-- `ccadbf148381c007890d13d5fe8120866a0f40f9` / `0882601060d0bb6d37fcc03ae7273dcf50dd0be3`; exact R3.18AA + R3.18Z authority remains mandatory;
-- exactly one ordinal-3 payload only: ActiveActor/33, Int/32, UniqueId system1-Steam/80;
-- stop exactly at payload end; no later control consumed.
+## PRODUCTION — R3.18AG
+- `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`; parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`;
+- input must already be one valid published R3.18AD result under exact `868.32 / net10 / non-RL223` context;
+- prior payload allowlist remains exactly ActiveActor/33, Int/32, UniqueId system1-Steam/80;
+- read exactly one bit at prior `stop_bit`; admit **true only**; false fails closed; stop exactly one bit later;
+- no lookup or following stream/header/payload decoder and no second later control.
 
 ## CLOSED EVIDENCE — R3.18AF Outcome A
-- on the immutable 47-row lane the exact next `property_present` distribution is false=0 / true=47;
-- published AD reconstruction 47/47; native-vs-pinned-Boxcars mismatch 0; witness reselection 0;
+- exact immutable 47-row lane; false=0 / true=47; published AD reconstruction 47/47; native-oracle mismatch 0; witness reselection 0;
 - next stream/header/payload/second-control bits 0/0/0/0; artifact `9397743505` / `sha256:d7edeab657928c94c35c852ae302fd614cab92a52b7e44f671310200af4b268f`.
 
-## ACTIVE PRODUCTION GATE — R3.18AG
-- input must already be one valid published R3.18AD result with exact payload-end invariants;
-- read exactly one bit at prior `stop_bit`; admit **true only** because AF observed true=47/false=0;
-- false fails closed; stop exactly one bit later; no lookup or following decoder.
+## ACTIVE READ-ONLY GATE — R3.18AH
+- validate the published R3.18AG API on exactly the frozen R3.18AF 47 witnesses;
+- require control start/value/end/stop equality 47/47, false=0 / true=47, mismatch 0, deterministic repeatability and adjacent consumption 0/0/0/0;
+- production mutation and witness reselection are forbidden.
 
 ## CLOSED
-- false success semantics at this boundary; next stream/header/payload; second later control; alternate UniqueId systems/layouts; repeated/generalized property loop or generic cursor;
+- next stream/header/payload after R3.18AG; second later control; false success semantics; alternate UniqueId systems/layouts; repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

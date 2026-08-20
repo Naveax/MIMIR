@@ -905,3 +905,15 @@ Boundary opened:
 
 Boundaries still closed:
 - false success semantics; next stream/header/payload; second later control; alternate UniqueId layouts; generalized property loop/cursor; next actor/frame and semantic/runtime/export widening.
+
+---
+
+## 2026-08-20 — R3.18AG published / R3.18AH opened
+
+- R3.18AG production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808` published by fresh-main `force=false` fast-forward.
+- Clean production scope: `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18ag_post_ad_payload_control.rs`; blobs `db923ebcb419d278f4ab0144fe7ed15b298b60fa` / `3f3e1c8f3f6deb7f2558862a1032f8a102131443`.
+- Builder `32401660279/96531043622` SUCCESS; validation PR #55 CI `32402596061/96534073576` SUCCESS; PR closed unmerged; published-main CI `32402933798/96535174390` SUCCESS.
+- Exact production contract: 868.32/net10/non-RL223; valid published R3.18AD prior only; ActiveActor/33, Int/32, UniqueId system1-Steam/80; exactly one following true control bit; false fail-closed; stop at +1 bit.
+- Frozen authority remains R3.18AF `30286c07727539d68f551140838fb2ef6802a26e` / `32344981062/96351720877` / artifact `9397743505` `sha256:d7edeab657928c94c35c852ae302fd614cab92a52b7e44f671310200af4b268f`; false=0 true=47; mismatch 0; adjacent consumption 0/0/0/0.
+- R3.18AH opened as read-only published-AG differential. The following header remains closed until AH Outcome A.
+- Continuity builder authority `32404006084/96538654038`.

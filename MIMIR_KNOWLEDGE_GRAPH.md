@@ -63,7 +63,8 @@ R3.18AC post-AA ordinal-3 payload evidence / Outcome A CLOSED                   
 R3.18AD bounded post-AA ordinal-3 payload production / Outcome A CLOSED                  |
 R3.18AE published R3.18AD ordinal-3 payload differential / Outcome A CLOSED              |
 R3.18AF next property-control bit evidence after published AD payload / Outcome A CLOSED             |
-R3.18AG active bounded true-only property-control production after published AD payload                |
+R3.18AG bounded true-only property-control production after published AD payload / CLOSED                |
+R3.18AH active published R3.18AG post-AD true-control differential                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -183,13 +184,29 @@ scripts/verify_mimir_knowledge_archive.ps1
 99. `docs/continuity/MIMIR_R3_18AF_EXECUTION_SPEC.md`
 100. `docs/continuity/MIMIR_R3_18AF_DECISION.md`
 101. `docs/continuity/MIMIR_R3_18AG_EXECUTION_SPEC.md`
-102. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-103. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-104. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-105. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-106. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-107. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-108. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+102. `docs/continuity/MIMIR_R3_18AG_DECISION.md`
+103. `docs/continuity/MIMIR_R3_18AH_EXECUTION_SPEC.md`
+104. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+105. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+106. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+107. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+108. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+109. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+110. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+
+
+### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
+- production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`
+- lib/test blobs `db923ebcb419d278f4ab0144fe7ed15b298b60fa` / `3f3e1c8f3f6deb7f2558862a1032f8a102131443`; spec `90180dcaddd30ed9a187a0d4332a105d153488d7`
+- builder `32401660279/96531043622`, PR #55 CI `32402596061/96534073576`, published-main CI `32402933798/96535174390` SUCCESS
+- exact prior allowlist: 868.32/net10/non-RL223 + ActiveActor/33, Int/32, UniqueId system1-Steam/80
+- exactly one true property-control bit; false fails closed; stop one bit later; adjacent stream/header/payload/second-control 0/0/0/0
+- next exact pass: R3.18AH published R3.18AG API differential on frozen R3.18AF 47-row lane
+
+### R3.18AH published post-AD true control differential: ACTIVE
+- production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` frozen; reuse exact R3.18AF 47 witnesses / artifact `9397743505`
+- require start/value/end/stop equality 47/47, false=0 true=47, mismatch 0, witness reselection 0
+- no next stream/header/payload/second control, production mutation, loop/cursor or semantic/runtime widening
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS
