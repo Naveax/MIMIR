@@ -10282,6 +10282,196 @@ fn r3_18z_post_w_following_header_context_admitted_v1(
 
 /// Compose exactly one post-R3.18W following header under the R3.18Z exact-tuple contract.
 ///
+/// Exactly one R3.18AF-admitted `property_present` bit after a valid published R3.18AD payload.
+///
+/// R3.18AF observed true=47 and false=0 on the immutable lane. This result therefore admits
+/// `true` only and stops exactly one bit later. It does not resolve a following stream/header/
+/// payload, read a second later control bit, or expose a repeatable property cursor.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1
+{
+    pub following_property_present: bool,
+    pub property_present_start_bit: u64,
+    pub property_present_end_bit: u64,
+    pub stop_bit: u64,
+}
+
+fn network_existing_actor_post_ad_following_payload_control_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-AD following payload control error: {category}: {}",
+        detail.into()
+    ))
+}
+
+fn validate_network_existing_actor_post_ad_payload_prior(
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+) -> Result<()> {
+    let header_stop = prior.header_composition.stop_bit;
+    let following_header = &prior.header_composition.following_header;
+    if !following_header.property_present
+        || following_header.payload_start_bit != Some(header_stop)
+        || following_header.stop_bit != header_stop
+        || prior.payload_start_bit != header_stop
+    {
+        return Err(
+            network_existing_actor_post_ad_following_payload_control_error(
+                "invalid-prior-header",
+                format!(
+                    "header property_present={}, payload_start={:?}, header stop={}, composition stop={}, payload start={}",
+                    following_header.property_present,
+                    following_header.payload_start_bit,
+                    following_header.stop_bit,
+                    header_stop,
+                    prior.payload_start_bit,
+                ),
+            ),
+        );
+    }
+
+    let expected_end = prior
+        .payload_start_bit
+        .checked_add(prior.payload_width)
+        .ok_or_else(|| {
+            network_existing_actor_post_ad_following_payload_control_error(
+                "invalid-prior-payload",
+                "payload end overflows u64",
+            )
+        })?;
+    if prior.stop_bit != expected_end {
+        return Err(
+            network_existing_actor_post_ad_following_payload_control_error(
+                "invalid-prior-stop",
+                format!(
+                    "prior stop {} does not equal payload start {} + width {} = {expected_end}",
+                    prior.stop_bit, prior.payload_start_bit, prior.payload_width
+                ),
+            ),
+        );
+    }
+
+    let valid_shape = match &prior.following_payload {
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1::ActiveActor(decoded) => {
+            following_header.resolved_attribute_tag == Some(ReplayNetworkAttributeTagV1::ActiveActor)
+                && prior.payload_width == 33
+                && decoded.attribute_tag == ReplayNetworkAttributeTagV1::ActiveActor
+                && decoded.payload_start_bit == prior.payload_start_bit
+                && decoded.payload_width == 33
+                && decoded.payload_end_bit == expected_end
+                && matches!(&decoded.value, ReplayNetworkK2ValueV1::ActiveActor { .. })
+        }
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1::Int(decoded) => {
+            following_header.resolved_attribute_tag == Some(ReplayNetworkAttributeTagV1::Int)
+                && prior.payload_width == 32
+                && decoded.attribute_tag == ReplayNetworkAttributeTagV1::Int
+                && decoded.payload_start_bit == prior.payload_start_bit
+                && decoded.payload_width == 32
+                && decoded.payload_end_bit == expected_end
+                && decoded.stop_bit == expected_end
+                && matches!(&decoded.value, ReplayNetworkPrimitiveScalarValueV1::Int(_))
+        }
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadValueV1::UniqueId(decoded) => {
+            let admitted_unique_id = match &decoded.value {
+                ReplayNetworkK2ValueV1::UniqueId(value) => {
+                    value.system_id == 1
+                        && matches!(&value.remote_id, ReplayNetworkUniqueIdRemoteV1::Steam { .. })
+                }
+                _ => false,
+            };
+            following_header.resolved_attribute_tag == Some(ReplayNetworkAttributeTagV1::UniqueId)
+                && prior.payload_width == 80
+                && decoded.attribute_tag == ReplayNetworkAttributeTagV1::UniqueId
+                && decoded.payload_start_bit == prior.payload_start_bit
+                && decoded.payload_width == 80
+                && decoded.payload_end_bit == expected_end
+                && admitted_unique_id
+        }
+    };
+    if !valid_shape {
+        return Err(
+            network_existing_actor_post_ad_following_payload_control_error(
+                "invalid-prior-payload",
+                "prior header/payload is outside the R3.18AD ActiveActor/33, Int/32, UniqueId system1-Steam/80 allowlist",
+            ),
+        );
+    }
+    Ok(())
+}
+
+/// Consume exactly one R3.18AF-admitted true control bit after one valid published R3.18AD payload.
+///
+/// False is not evidence-admitted and fails closed. No following stream/header/payload or second
+/// later control is read.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1>{
+    if context.version_major != 868
+        || context.version_minor != 32
+        || context.net_version != 10
+        || context.is_rl_223
+    {
+        return Err(
+            network_existing_actor_post_ad_following_payload_control_error(
+                "unadmitted-context",
+                format!(
+                    "R3.18AG requires 868.32 / net10 / non-RL223, got {}.{} / net{} / rl223={}",
+                    context.version_major,
+                    context.version_minor,
+                    context.net_version,
+                    context.is_rl_223,
+                ),
+            ),
+        );
+    }
+    validate_network_existing_actor_post_ad_payload_prior(prior)?;
+
+    let property_present_start_bit = prior.stop_bit;
+    let start = usize::try_from(property_present_start_bit).map_err(|_| {
+        network_existing_actor_post_ad_following_payload_control_error(
+            "invalid-position",
+            format!("control start {property_present_start_bit} does not fit usize"),
+        )
+    })?;
+    let mut cursor = NetworkBitCursor::new(network_bytes);
+    cursor.bit_position = start;
+    let following_property_present = cursor.read_bit()?;
+    if !following_property_present {
+        return Err(
+            network_existing_actor_post_ad_following_payload_control_error(
+                "unadmitted-false-control",
+                format!(
+                    "R3.18AF observed true=47 false=0 at exact control start {property_present_start_bit}"
+                ),
+            ),
+        );
+    }
+    let property_present_end_bit = property_present_start_bit.checked_add(1).ok_or_else(|| {
+        network_existing_actor_post_ad_following_payload_control_error(
+            "invalid-position",
+            "control end overflows u64",
+        )
+    })?;
+    if u64::try_from(cursor.position_bits()).ok() != Some(property_present_end_bit) {
+        return Err(
+            network_existing_actor_post_ad_following_payload_control_error(
+                "invalid-stop",
+                "one-bit control cursor did not stop at the exact admitted end",
+            ),
+        );
+    }
+
+    Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1 {
+        following_property_present,
+        property_present_start_bit,
+        property_present_end_bit,
+        stop_bit: property_present_end_bit,
+    })
+}
+
 /// The published R3.18W true-only control is recomputed from the supplied R3.18T prior and used
 /// as the sole boundary authority. The existing stateless property-header primitive is replayed
 /// from that exact present-bit coordinate. The complete seven-field structural tuple must belong
