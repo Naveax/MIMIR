@@ -11,8 +11,62 @@ param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+function Get-NormalizedPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    return [System.IO.Path]::TrimEndingDirectorySeparator(
+        [System.IO.Path]::GetFullPath($Path)
+    )
+}
+
+function Test-PathContains {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Parent,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Child
+    )
+
+    $Parent = Get-NormalizedPath $Parent
+    $Child = Get-NormalizedPath $Child
+
+    if ([string]::Equals($Parent, $Child, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $true
+    }
+
+    $Prefix = $Parent + [System.IO.Path]::DirectorySeparatorChar
+    return $Child.StartsWith($Prefix, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
+if ($Count -le 0) {
+    throw "Count must be greater than zero."
+}
+
+$ReplayRoot = Get-NormalizedPath $ReplayRoot
+$OutputRoot = Get-NormalizedPath $OutputRoot
+
 if (-not (Test-Path -LiteralPath $ReplayRoot -PathType Container)) {
     throw "Replay root not found: $ReplayRoot"
+}
+
+$OutputFilesystemRoot = Get-NormalizedPath ([System.IO.Path]::GetPathRoot($OutputRoot))
+if ([string]::Equals(
+    $OutputRoot,
+    $OutputFilesystemRoot,
+    [System.StringComparison]::OrdinalIgnoreCase
+)) {
+    throw "Refusing to use a filesystem root as OutputRoot: $OutputRoot"
+}
+
+if (
+    (Test-PathContains -Parent $ReplayRoot -Child $OutputRoot) -or
+    (Test-PathContains -Parent $OutputRoot -Child $ReplayRoot)
+) {
+    throw "ReplayRoot and OutputRoot must not overlap. ReplayRoot=$ReplayRoot OutputRoot=$OutputRoot"
 }
 
 if (Test-Path -LiteralPath $OutputRoot) {
@@ -30,7 +84,9 @@ $Files = @(
         -Recurse `
         -Force `
         -ErrorAction Stop |
-    Sort-Object Length -Descending
+    Sort-Object `
+        @{ Expression = "Length"; Descending = $true }, `
+        @{ Expression = "FullName"; Descending = $false }
 )
 
 if ($Files.Count -lt $Count) {
@@ -68,14 +124,14 @@ foreach ($File in $Files) {
         -Force
 
     $Record = [ordered]@{
-        rank             = $Rank
-        fixture_id       = "largest_{0:D3}" -f $Rank
-        filename         = $Name
+        rank              = $Rank
+        fixture_id        = "largest_{0:D3}" -f $Rank
+        filename          = $Name
         original_filename = $File.Name
-        bytes            = [int64]$File.Length
-        sha256           = $Hash
-        source           = "RLCS_REPLAYS_1V1"
-        selection_policy = "largest_sha256_unique_by_file_size"
+        bytes             = [int64]$File.Length
+        sha256            = $Hash
+        source            = "RLCS_REPLAYS_1V1"
+        selection_policy  = "largest_sha256_unique_by_file_size"
     }
 
     $Json = $Record | ConvertTo-Json -Compress
