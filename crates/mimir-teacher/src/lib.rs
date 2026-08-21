@@ -73,7 +73,7 @@ mod tests {
     use super::*;
     use mimir_types::{Metadata, TeacherLabelTarget};
 
-    fn label(id: &str, score: Option<f64>) -> TeacherLabelRecord {
+    fn label(id: &str, score: Option<f32>) -> TeacherLabelRecord {
         TeacherLabelRecord {
             id: TeacherLabelId::new(id),
             target: TeacherLabelTarget::Replay(mimir_types::ReplayId::new("replay-1")),
@@ -138,7 +138,7 @@ mod tests {
             StrictTeacherRequestVerifier
                 .verify_request(&TeacherSynthesisRequest {
                     namespace: "teacher".to_string(),
-                    labels: vec![label("label-1", Some(f64::NAN))],
+                    labels: vec![label("label-1", Some(f32::NAN))],
                 })
                 .is_err()
         );
