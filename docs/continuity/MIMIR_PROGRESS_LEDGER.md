@@ -1066,3 +1066,16 @@ Next exact pass:
 - Production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0.
 - Superseded harness-only failures were not rerun: runs 32473299304 and 32473502712.
 - Next pass opened: R3.18AN bounded post-AK `Int/32` one-payload production.
+## 2026-08-21 — R3.18AN — Bounded Post-AK One Following-Payload Production — Outcome A / CLOSED
+
+- Production: `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38` / tree `3efcc244bca55623b12bb21eb277753fc61144d4` / parent `6f92e817a88056ba303229541ae04a5d5e03239b`.
+- Clean production scope: exactly `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18an_post_ak_payload.rs`; blobs `9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822` / `8aa48b2b74d0956d1d2e965d056e1cf14a81f703`.
+- R3.18AM authority preserved: 47/47, `Int=47`, width32=47, semantic range 1..415, mismatch 0, witness reselection 0, next-control 0.
+- Corrective builder V6: `32517430779/96882095196` SUCCESS; artifact `9459403588` / `sha256:0c2e93e7e1eab13c2327d4fa9cabd743cc4e123965189360b21efdf1877a210a`.
+- Validation-only PR #192: exact-head CI `32517915620/96883593252` SUCCESS; closed unmerged.
+- Published-main CI: `32518304295/96884776442` SUCCESS.
+- Published-run discovery: `32519544607/96888554951` SUCCESS; artifact `9460031187` / `sha256:49a73a6d7bb2ac5bd9f69d32746037ee1cf67baa5d9649c53c5c8a07820d8194`; CI count 1; Knowledge Archive count 0; duplicate guard PASS.
+- Full workspace check/clippy/test/repository verification PASS; AN focused plus AK/W/AA/AG source-scope regressions PASS.
+- Admitted boundary: exact AK/AJ authority -> one `Int/32` payload -> exact payload end; next property-control bits consumed 0.
+- Cargo/fixture/corpus/docs/workflow/support mutation in clean production commit: 0/0/0/0/0/0.
+- Next pass opened: R3.18AO read-only published-AN one-following-payload differential.

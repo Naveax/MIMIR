@@ -3,14 +3,14 @@
   "updated_date": "2026-08-21",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "f20f529e3ada6e9a671ea91e5676a17a00770145",
-  "last_production_milestone": "R3.18AK",
-  "last_production_milestone_name": "bounded post-AG following-header production composition",
+  "last_production_code_sha": "3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38",
+  "last_production_milestone": "R3.18AN",
+  "last_production_milestone_name": "bounded post-AK one-following-payload production",
   "last_completed_read_only_audit": "R3.18AM",
-  "current_pass": "R3.18AN",
-  "current_pass_kind": "bounded production implementation / one post-AK Int/32 payload",
-  "current_pass_goal": "Validate/recompute the R3.18AK/AJ header boundary, begin exactly at payload_start, decode exactly one R3.18AM-admitted Int/32 payload, stop at payload end, and consume zero another-control bits.",
-  "current_pass_stop_boundary": "Exactly one R3.18AM-admitted Int/32 payload end after R3.18AK. No another property control, alternate payload layout, generalized loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "current_pass": "R3.18AO",
+  "current_pass_kind": "read-only published-production differential / published R3.18AN versus frozen R3.18AM one-payload authority",
+  "current_pass_goal": "On exactly the immutable 47-row R3.18AM lane, invoke published R3.18AN and require exact AK/AJ header plus Int/32 payload identity through payload end with zero next-control consumption and zero production mutation.",
+  "current_pass_stop_boundary": "Exactly one published R3.18AN payload end. No next property-control bit, alternate payload layout, generalized loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -239,6 +239,8 @@
     "docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AM_DECISION.md",
     "docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AN_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -2375,5 +2377,44 @@
     "another_control_bits_consumed": 0,
     "earlier_payload_contract_inheritance_assumed": false,
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0"
+  },
+  "r3_18an": {
+    "outcome": "A",
+    "closed": true,
+    "pass_kind": "bounded post-AK one-following-payload production",
+    "production_sha": "3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38",
+    "production_tree": "3efcc244bca55623b12bb21eb277753fc61144d4",
+    "parent_sha": "6f92e817a88056ba303229541ae04a5d5e03239b",
+    "lib_blob": "9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822",
+    "focused_test_blob": "8aa48b2b74d0956d1d2e965d056e1cf14a81f703",
+    "builder_run": 32517430779,
+    "builder_job": 96882095196,
+    "builder_artifact": 9459403588,
+    "builder_artifact_sha256": "0c2e93e7e1eab13c2327d4fa9cabd743cc4e123965189360b21efdf1877a210a",
+    "validation_pr": 192,
+    "validation_ci_run": 32517915620,
+    "validation_ci_job": 96883593252,
+    "published_main_ci_run": 32518304295,
+    "published_main_ci_job": 96884776442,
+    "published_discovery_run": 32519544607,
+    "published_discovery_job": 96888554951,
+    "published_discovery_artifact": 9460031187,
+    "published_discovery_sha256": "49a73a6d7bb2ac5bd9f69d32746037ee1cf67baa5d9649c53c5c8a07820d8194",
+    "published_ci_count": 1,
+    "published_knowledge_archive_count": 0,
+    "duplicate_guard_pass": true,
+    "rows": 47,
+    "admitted_tags": {
+      "Int": 47
+    },
+    "payload_widths": {
+      "32": 47
+    },
+    "next_control_bits_consumed": 0,
+    "clean_scope": [
+      "crates/mimir-replay/src/lib.rs",
+      "crates/mimir-replay/tests/r3_18an_post_ak_payload.rs"
+    ],
+    "cargo_fixture_corpus_docs_workflow_support_mutation": "0/0/0/0/0/0"
   }
 }

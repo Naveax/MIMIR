@@ -6,30 +6,27 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AM closed / R3.18AN active
+# 0. Current override — R3.18AN closed / R3.18AO active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18AK
-- `f20f529e3ada6e9a671ea91e5676a17a00770145` / `98c675811cca4e4d7f0122c762f371548c9266c2` remains canonical production;
-- exact R3.18AJ membership; exactly one following header; stop at `payload_start`;
-- post-AK payload production is not admitted until R3.18AN publishes.
+## PRODUCTION — R3.18AN
+- `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38` / `3efcc244bca55623b12bb21eb277753fc61144d4` is canonical production; parent `6f92e817a88056ba303229541ae04a5d5e03239b`;
+- validates/recomputes exact R3.18AK/R3.18AJ authority, decodes exactly one R3.18AM-admitted `Int/32` payload, and stops at payload end;
+- next property-control consumption is zero.
 
 ## CLOSED EVIDENCE — R3.18AM Outcome A
-- exact immutable 47-row lane; published-AK boundary exact 47/47;
-- `Int=47`; payload width `32` on 47/47; semantic Int range `1..415`; mismatch 0; witness reselection 0;
-- artifact `9443581172` / `sha256:2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8`; downloaded ZIP/internal manifest 11/11 PASS;
-- another-control consumption 0; earlier payload-contract inheritance rejected.
+- immutable 47-row lane; `Int=47`; width 32 on 47/47; semantic range 1..415; native/oracle mismatch 0; witness reselection 0;
+- artifact `9443581172`; another-control consumption 0.
 
-## ACTIVE PRODUCTION GATE — R3.18AN
-- validate/recompute a valid R3.18AK/AJ header boundary;
-- begin exactly at the validated `payload_start`;
-- decode exactly one R3.18AM-admitted `Int/32` payload;
-- stop exactly at payload end and consume zero another-control bits;
-- production candidate must contain only the minimum replay source plus one focused AN test.
+## ACTIVE DIFFERENTIAL GATE — R3.18AO
+- reuse exactly the frozen R3.18AM witnesses and published R3.18AN API;
+- prove published-AN equals AM/direct-native/oracle through one payload end on the entire lane;
+- production/Cargo/fixture/corpus/support mutation remains zero;
+- stop before the next property-control bit.
 
 ## CLOSED
-- another property-control bit after the R3.18AN payload end; alternate payload tags/layouts; repeated/generalized property loop or cursor;
+- next property-control bit after R3.18AN; alternate payload tags/layouts; repeated/generalized property loop or cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

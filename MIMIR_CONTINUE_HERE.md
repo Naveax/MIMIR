@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  f20f529e3ada6e9a671ea91e5676a17a00770145
+  3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18AK — bounded post-AG following-header production composition
+  R3.18AN — bounded post-AK one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18AM — post-AK one-following-payload evidence / Outcome A / 47/47 / Int=47 / width32=47 / mismatch 0 / artifact 9443581172
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18AM — one post-AK Int payload exact 47/47 / width32=47 / semantic range 1..415 / mismatch 0 / another-control 0 / artifact 9443581172
 
 CURRENT_PASS:
-  R3.18AN — bounded post-AK one-following-payload production
+  R3.18AO — published-R3.18AN one-following-payload differential
 
 CURRENT_PASS_TYPE:
-  production implementation / validate and recompute the R3.18AK/AJ header boundary, decode exactly the R3.18AM-admitted Int/32 payload, stop at payload end, consume zero another-control bits
+  read-only published-production differential / reuse exactly the frozen R3.18AM 47-row lane, invoke published R3.18AN, require exact payload identity through payload end, consume zero next-control bits
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -117,8 +117,22 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AK PRODUCTION at f20f529e3ada6e9a671ea91e5676a17a00770145: validates one published R3.18AG true-control result, reuses the stateless header primitive, requires exact R3.18AJ seven-field membership, and stops exactly at payload_start
   R3.18AL CLOSED Outcome A: published-AK/frozen-AI/direct-header exact 47/47; AJ contexts 17/17; multiplicity 47/47; Int=47; mismatch 0; witness reselection 0; payload/control 0/0; artifact 9442034802
   R3.18AM CLOSED Outcome A: one post-AK payload exact 47/47; Int=47; width=32 on 47/47; semantic Int range 1..415; native-oracle mismatch 0; witness reselection 0; another-control bits 0; artifact 9443581172
-  R3.18AN ACTIVE bounded production: validate/recompute the R3.18AK/AJ header boundary, decode exactly one AM-admitted Int/32 payload, stop at payload end, and consume zero another-control bits
-  NO another property control after the R3.18AN payload end, alternate payload tag/layout, repeated/generalized property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AN PRODUCTION at 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38: validates/recomputes the R3.18AK/AJ boundary, decodes exactly one R3.18AM-admitted Int/32 payload, stops exactly at payload end, and consumes zero next-control bits
+  R3.18AO ACTIVE read-only differential: published-R3.18AN versus frozen-R3.18AM exact 47-row validation through one payload end; production mutation 0; next-control consumption 0
+  NO next property-control bit after R3.18AN, alternate payload tag/layout, repeated/generalized property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AN_PRODUCTION_CLOSURE:
+  Outcome A / production 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38 / tree 3efcc244bca55623b12bb21eb277753fc61144d4
+  parent: 6f92e817a88056ba303229541ae04a5d5e03239b
+  lib/test blobs: 9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822 / 8aa48b2b74d0956d1d2e965d056e1cf14a81f703
+  R3.18AM evidence authority: 842b94ed4c4e57323433585fea48116ecf18989b / artifact 9443581172; Int=47 / width32=47 / semantic range 1..415 / mismatch 0 / next-control 0
+  corrective builder V6: 32517430779/96882095196 SUCCESS / artifact 9459403588 / sha256:0c2e93e7e1eab13c2327d4fa9cabd743cc4e123965189360b21efdf1877a210a
+  exact clean-candidate validation PR #192: 32517915620/96883593252 SUCCESS / closed unmerged
+  published-main CI: 32518304295/96884776442 SUCCESS
+  published-run discovery: 32519544607/96888554951 SUCCESS / artifact 9460031187 / sha256:49a73a6d7bb2ac5bd9f69d32746037ee1cf67baa5d9649c53c5c8a07820d8194 / CI count 1 / Knowledge Archive count 0 / duplicate guard PASS
+  focused AN + AK/W/AA/AG source-scope regressions PASS; full workspace check/clippy/test/repository verification PASS
+  clean scope: crates/mimir-replay/src/lib.rs + crates/mimir-replay/tests/r3_18an_post_ak_payload.rs only; additions 131+767; Cargo/fixture/corpus/docs/workflow/support mutation 0
+  admitted payload: Int exactly 32 bits after valid AK/AJ authority; stop exactly at payload end; next property-control bits consumed 0
 
 R3_18AM_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at f20f529e3ada6e9a671ea91e5676a17a00770145
