@@ -16,7 +16,7 @@ s = frame.read_text(encoding="utf-8")
 old = '''                        let r3_18ai_payload_end_bit =
                             r3_18ai_offset(bits, r3_18ai_total_bits);
 
-                        if false && r3_18ai_property_ordinal == 1 {
+                        if r3_18ai_property_ordinal == 0 {
 '''
 new = r'''                        let r3_18ai_payload_end_bit =
                             r3_18ai_offset(bits, r3_18ai_total_bits);
@@ -46,7 +46,7 @@ new = r'''                        let r3_18ai_payload_end_bit =
                             }
                         }
 
-                        if false && r3_18ai_property_ordinal == 1 {
+                        if r3_18ai_property_ordinal == 0 {
 '''
 s = rep(s, old, new, "ordinal-4 payload emission")
 frame.write_text(s, encoding="utf-8", newline="\n")
