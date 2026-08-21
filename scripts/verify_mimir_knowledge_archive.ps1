@@ -34,7 +34,11 @@ foreach ($rel in $Manifest.required_paths) {
     }
 
     $segments = @($relText -split '[\\/]')
-    if ($segments.Count -eq 0 -or $segments | Where-Object { $_ -eq '' -or $_ -eq '.' -or $_ -eq '..' }) {
+    $invalidSegments = @(
+        $segments |
+        Where-Object { $_ -eq '' -or $_ -eq '.' -or $_ -eq '..' }
+    )
+    if ($segments.Count -eq 0 -or $invalidSegments.Count -ne 0) {
         throw "Knowledge archive manifest required path must contain only normal path segments: $relText"
     }
 
