@@ -6,6 +6,11 @@ on:
       - validation/aux-ci-equivalent-run-guard-v1
     paths:
       - .github/workflows/_tmp_aux_ci_guard_selftest.yml
+  pull_request:
+    branches:
+      - aux/ci-equivalent-run-guard-v1
+    paths:
+      - .github/workflows/_tmp_aux_ci_guard_selftest.yml
 
 concurrency:
   group: aux-equivalent-run-guard-selftest
@@ -21,7 +26,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Checkout exact validation head
+      - name: Checkout validation head
         uses: actions/checkout@v6
 
       - name: Exercise equivalent-run guard against live Actions API
@@ -29,10 +34,17 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $repo = $env:GITHUB_REPOSITORY
-          $sha = $env:GITHUB_SHA
-          $branch = $env:GITHUB_REF_NAME
-          $workflow = 'Aux Equivalent Run Guard Self-Test'
           $script = 'scripts/find_equivalent_active_action_run.ps1'
+
+          $currentRaw = & gh api "repos/$repo/actions/runs/$env:GITHUB_RUN_ID"
+          if ($LASTEXITCODE -ne 0) {
+              throw 'failed to read current workflow-run metadata'
+          }
+          $current = $currentRaw | ConvertFrom-Json
+          $sha = ([string]$current.head_sha).ToLowerInvariant()
+          $branch = [string]$current.head_branch
+          $event = [string]$current.event
+          $workflow = [string]$current.workflow_id
 
           $foundSelf = $false
           for ($attempt = 1; $attempt -le 6; $attempt++) {
@@ -40,7 +52,7 @@ jobs:
                   -Repository $repo `
                   -HeadSha $sha `
                   -Workflow $workflow `
-                  -Event push `
+                  -Event $event `
                   -HeadBranch $branch `
                   -JsonOnly
               $code = $LASTEXITCODE
@@ -64,7 +76,7 @@ jobs:
               -Repository $repo `
               -HeadSha $sha `
               -Workflow $workflow `
-              -Event push `
+              -Event $event `
               -HeadBranch $branch `
               -ExcludeRunId ([long]$env:GITHUB_RUN_ID) `
               -JsonOnly
@@ -77,7 +89,7 @@ jobs:
               -Repository $repo `
               -HeadSha $missingSha `
               -Workflow $workflow `
-              -Event push `
+              -Event $event `
               -HeadBranch $branch `
               -JsonOnly
           if ($LASTEXITCODE -ne 0) {
