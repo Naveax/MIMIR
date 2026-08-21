@@ -5641,6 +5641,221 @@ fn mapping_error(detail: impl Into<String>) -> MimirError {
     MimirError::message(format!("replay header mapping error: {}", detail.into()))
 }
 
+// R3.18AK BEGIN bounded post-AG following-header composition
+const R3_18AJ_POST_AG_HEADER_CONTEXTS_V1: [(
+    u32,
+    u8,
+    u32,
+    ReplayNetworkAttributeTagV1,
+    i32,
+    i32,
+    i32,
+); 17] = [
+    (60, 5, 38, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 47, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 84, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 85, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 91, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 93, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 95, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 100, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 106, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 108, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 109, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 112, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (60, 5, 122, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (67, 6, 68, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (72, 6, 70, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (72, 6, 73, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+    (110, 6, 37, ReplayNetworkAttributeTagV1::Int, 868, 32, 10),
+];
+
+fn r3_18aj_post_ag_header_context_contains_v1(
+    stream_id_bound: u32,
+    prop_id_bits: u8,
+    property_object_index: u32,
+    attribute_tag: ReplayNetworkAttributeTagV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> bool {
+    R3_18AJ_POST_AG_HEADER_CONTEXTS_V1.contains(&(
+        stream_id_bound,
+        prop_id_bits,
+        property_object_index,
+        attribute_tag,
+        context.version_major,
+        context.version_minor,
+        context.net_version,
+    ))
+}
+
+/// Exactly one R3.18AJ-admitted property header after a valid published R3.18AG true control.
+///
+/// The supplied R3.18AG control is recomputed from the R3.18AD payload prior and must match
+/// exactly. The existing stateless property-header primitive is then replayed from the same
+/// property-present coordinate. This result stops at `payload_start` and consumes no payload or
+/// later property-control bit.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1 {
+    pub control: ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    pub following_header: ReplayNetworkExistingActorFirstPropertyHeaderV1,
+    pub stop_bit: u64,
+}
+
+fn network_existing_actor_post_ag_following_header_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-AG following-header error: {category}: {}",
+        detail.into()
+    ))
+}
+
+/// Compose exactly one R3.18AJ-admitted post-AG following header through `payload_start`.
+///
+/// This function is deliberately boundary-specific. It validates the supplied R3.18AG result by
+/// recomputing it from the exact R3.18AD prior, reuses the existing stateless header primitive,
+/// requires full seven-field R3.18AJ tuple membership, and exposes no payload decoder, later
+/// control bit, property iterator, or reusable cursor.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    control: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1>{
+    let expected_control = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+        network_bytes,
+        prior,
+        context,
+    )?;
+    if expected_control != *control {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "invalid-r3-18ag-control",
+            format!(
+                "supplied R3.18AG control {:?} differs from recomputed {:?}",
+                control, expected_control
+            ),
+        ));
+    }
+    if !control.following_property_present {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "invalid-r3-18ag-control",
+            "R3.18AK requires the published R3.18AG admitted true control",
+        ));
+    }
+    if control.property_present_start_bit != prior.stop_bit
+        || control.property_present_end_bit != control.stop_bit
+        || control.property_present_end_bit != control.property_present_start_bit + 1
+    {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "control-boundary-mismatch",
+            format!(
+                "prior stop {}, control [{}, {}) stop {}",
+                prior.stop_bit,
+                control.property_present_start_bit,
+                control.property_present_end_bit,
+                control.stop_bit,
+            ),
+        ));
+    }
+
+    let actor_object_index = prior.header_composition.following_header.actor_object_index;
+    let following_header = decode_replay_network_existing_actor_first_property_header_v1(
+        network_bytes,
+        control.property_present_start_bit,
+        actor_object_index,
+        lookup_plan,
+    )?;
+    if !following_header.property_present {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "control-header-mismatch",
+            "R3.18AG reported a present property but the post-AG header primitive did not",
+        ));
+    }
+    if following_header.property_present_start_bit != control.property_present_start_bit
+        || following_header.property_present_end_bit != control.property_present_end_bit
+        || control.stop_bit != following_header.property_present_end_bit
+    {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "control-header-boundary-mismatch",
+            format!(
+                "control bits [{}, {}) stop {}, header bits [{}, {})",
+                control.property_present_start_bit,
+                control.property_present_end_bit,
+                control.stop_bit,
+                following_header.property_present_start_bit,
+                following_header.property_present_end_bit,
+            ),
+        ));
+    }
+    if following_header.actor_object_index != actor_object_index {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "actor-mismatch",
+            format!(
+                "prior actor {actor_object_index} differs from post-AG header actor {}",
+                following_header.actor_object_index,
+            ),
+        ));
+    }
+
+    let payload_start_bit = following_header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_post_ag_following_header_error(
+            "missing-payload-start",
+            "present post-AG header has no payload start",
+        )
+    })?;
+    if following_header.stop_bit != payload_start_bit {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "payload-boundary-mismatch",
+            format!(
+                "post-AG header stop {} differs from payload start {payload_start_bit}",
+                following_header.stop_bit,
+            ),
+        ));
+    }
+
+    let (
+        Some(stream_id_bound),
+        Some(prop_id_bits),
+        Some(property_object_index),
+        Some(attribute_tag),
+    ) = (
+        following_header.stream_id_bound,
+        following_header.prop_id_bits,
+        following_header.resolved_property_object_index,
+        following_header.resolved_attribute_tag,
+    )
+    else {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "incomplete-r3-18aj-header-context",
+            "post-AG header is missing one or more R3.18AJ tuple fields",
+        ));
+    };
+    if !r3_18aj_post_ag_header_context_contains_v1(
+        stream_id_bound,
+        prop_id_bits,
+        property_object_index,
+        attribute_tag,
+        context,
+    ) {
+        return Err(network_existing_actor_post_ag_following_header_error(
+            "unadmitted-r3-18aj-header-context",
+            format!(
+                "R3.18AJ exact tuple rejected bound={stream_id_bound} bits={prop_id_bits} object={property_object_index} tag={attribute_tag:?} version={}.{} net{}",
+                context.version_major, context.version_minor, context.net_version,
+            ),
+        ));
+    }
+
+    Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1 {
+        control: control.clone(),
+        following_header,
+        stop_bit: payload_start_bit,
+    })
+}
+// R3.18AK END bounded post-AG following-header composition
+
 #[cfg(test)]
 mod tests {
     use super::*;
