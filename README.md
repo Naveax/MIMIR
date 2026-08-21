@@ -18,9 +18,9 @@ and orchestration wiring.
 
 ## Current replay boundary
 
-The replay lane has advanced beyond the original three-header-fixture stage. At the R3.13 production checkpoint, `mimir-replay` contains narrow production layers for admitted replay headers, body/content/footer structural boundaries, footer lookup materialization, conservative network attribute/spawn registries, timing/decoder prerequisites, and a static per-replay network lookup plan with inherited stream/property maps, `max_prop_id`, `prop_id_bits`, spawn trajectories, and channel/build-derived flags.
+The published replay production checkpoint is **R3.18AK**. `mimir-replay` contains the earlier admitted header/body/footer and static lookup-plan layers plus the later bounded network-bitstream primitives admitted through the R3.18 chain. The current production composition starts from a supplied published R3.18AG true-control result, validates that control by recomputation, requires complete exact R3.18AJ seven-field tuple membership, reuses the existing stateless property-header primitive, decodes exactly one following existing-actor property header, and stops exactly at that property's `payload_start` boundary.
 
-The R3.13 lookup plan **does not consume network payload actor/frame bits**. Native actor-envelope decoding, spawn/property payload decoding, full frame iteration, canonical raw-state extraction, and event extraction remain later boundaries. See `MIMIR_CONTINUE_HERE.md` for the exact current pass and hard stop boundary.
+R3.18AK **does not decode the following property payload, another property-control bit, or a generalized/repeated property loop**. Broader actor/frame lifecycle decoding, canonical raw-state extraction, event extraction, replay-slice mining, skill compilation, counterfactual generation, runtime behavior, and wider export behavior remain outside this replay boundary. The current canonical frontier, R3.18AL, is a read-only differential audit of the published R3.18AK API; production source remains frozen for that pass. See `MIMIR_CONTINUE_HERE.md` and `docs/continuity/MIMIR_CURRENT_STATE.md` for the exact current authority and hard stop.
 
 Additional high-level boundaries:
 
@@ -84,15 +84,13 @@ summaries, and final in-memory aggregates through explicit summary index query/l
 
 ## Quick validation
 
-From PowerShell:
+From PowerShell, run the canonical repository verification gate:
 
 ```powershell
-.\scripts\fmt.ps1
-.\scripts\check.ps1
-.\scripts\test.ps1
-.\scripts\clippy.ps1
-.\scripts\smoke.ps1
+pwsh -NoProfile -File scripts/verify_repo.ps1
 ```
+
+That gate covers formatting, locked workspace checking, replay and skill focused tests, the full workspace test suite, clippy, export test-surface enumeration, checked-in replay corpus integrity, and replay compatibility matrix/ranking validation.
 
 ## License
 
