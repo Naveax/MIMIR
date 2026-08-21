@@ -20,7 +20,11 @@ impl ConfigValidationError {
 
 impl fmt::Display for ConfigValidationError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "invalid config field {}: {}", self.field, self.detail)
+        write!(
+            formatter,
+            "invalid config field {}: {}",
+            self.field, self.detail
+        )
     }
 }
 
@@ -165,7 +169,11 @@ pub struct LoopConfig {
 
 impl ValidateConfig for LoopConfig {
     fn validate(&self) -> Result<(), ConfigValidationError> {
-        if self.command_labels.iter().any(|label| label.trim().is_empty()) {
+        if self
+            .command_labels
+            .iter()
+            .any(|label| label.trim().is_empty())
+        {
             return Err(ConfigValidationError::new(
                 "command_labels",
                 "entries must not be blank",
