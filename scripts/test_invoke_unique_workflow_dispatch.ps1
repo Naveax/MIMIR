@@ -16,7 +16,8 @@ $Ref = 'aux/example-branch'
 function Invoke-Wrapper {
     param(
         [switch]$DryRun,
-        [string[]]$Input = @()
+        [Alias('Input')]
+        [string[]]$WorkflowInput = @()
     )
 
     $Arguments = @(
@@ -28,11 +29,11 @@ function Invoke-Wrapper {
         '-HeadBranch', $Ref,
         '-HeadSha', $ExpectedSha
     )
-    if ($Input.Count -gt 1) {
+    if ($WorkflowInput.Count -gt 1) {
         throw 'Test harness accepts at most one CLI-style -Input value per child pwsh invocation.'
     }
-    if ($Input.Count -eq 1) {
-        $Arguments += @('-Input', $Input[0])
+    if ($WorkflowInput.Count -eq 1) {
+        $Arguments += @('-Input', $WorkflowInput[0])
     }
     if ($DryRun) {
         $Arguments += '-DryRun'
