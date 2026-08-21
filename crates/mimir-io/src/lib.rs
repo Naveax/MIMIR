@@ -151,6 +151,7 @@ pub fn write_scoreboard_artifact(
     format: ArtifactFormat,
     artifact: &PersistedScoreboardArtifact,
 ) -> Result<()> {
+    validate_scoreboard_payload(&artifact.payload)?;
     write_artifact(path, format, artifact)
 }
 
@@ -257,7 +258,32 @@ pub fn read_teacher_label_artifact(
 }
 
 pub fn read_scoreboard_artifact(path: impl AsRef<Path>) -> Result<PersistedScoreboardArtifact> {
-    read_artifact_auto(path, SCOREBOARD_ARTIFACT_SCHEMA)
+    let artifact: PersistedScoreboardArtifact =
+        read_artifact_auto(path, SCOREBOARD_ARTIFACT_SCHEMA)?;
+    validate_scoreboard_payload(&artifact.payload)?;
+    Ok(artifact)
+}
+
+fn validate_scoreboard_payload(scoreboard: &PersistedScoreboard) -> Result<()> {
+    for (row_index, row) in scoreboard.rows.iter().enumerate() {
+        match row.score.branch_id.as_ref() {
+            Some(score_branch_id) if score_branch_id == &row.branch_id => {}
+            Some(score_branch_id) => {
+                return Err(MimirError::message(format!(
+                    "scoreboard row {row_index} branch id mismatch: row has {}, score has {}",
+                    row.branch_id, score_branch_id
+                )));
+            }
+            None => {
+                return Err(MimirError::message(format!(
+                    "scoreboard row {row_index} score is missing branch id for {}",
+                    row.branch_id
+                )));
+            }
+        }
+    }
+
+    Ok(())
 }
 
 pub fn read_vertical_slice_input_artifact(
@@ -598,6 +624,73 @@ mod tests {
         let decoded = read_scoreboard_artifact(&path).expect("artifact should read");
 
         assert_eq!(decoded, artifact);
+    }
+
+    #[test]
+    fn scoreboard_wrapper_rejects_nested_branch_id_mismatch_before_write() {
+        let directory = tempdir().expect("tempdir should be created");
+        let path = scoreboard_artifact_path(directory.path());
+        let artifact = PersistedScoreboardArtifact::new(
+            ArtifactHeader::for_kind(ArtifactKind::Scoreboard, "mimir-io-tests"),
+            PersistedScoreboard {
+                rows: vec![PersistedScoreRow {
+                    branch_id: BranchId::new("branch-a"),
+                    branch_label: None,
+                    simulation_id: "sim-1".to_string(),
+                    simulation_backend: "deterministic_fake".to_string(),
+                    step_hashes: vec!["step-a".to_string()],
+                    score: PersistedScoreVector {
+                        branch_id: Some(BranchId::new("branch-b")),
+                        components: BTreeMap::new(),
+                        total: 0.0,
+                    },
+                }],
+            },
+        );
+
+        let error = write_scoreboard_artifact(&path, ArtifactFormat::Json, &artifact)
+            .expect_err("mismatched nested branch identity must fail before write");
+
+        assert!(
+            error
+                .to_string()
+                .contains("scoreboard row 0 branch id mismatch")
+        );
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn scoreboard_loader_rejects_missing_nested_branch_id_from_generic_write() {
+        let directory = tempdir().expect("tempdir should be created");
+        let path = scoreboard_artifact_path(directory.path());
+        let artifact = PersistedScoreboardArtifact::new(
+            ArtifactHeader::for_kind(ArtifactKind::Scoreboard, "mimir-io-tests"),
+            PersistedScoreboard {
+                rows: vec![PersistedScoreRow {
+                    branch_id: BranchId::new("branch-a"),
+                    branch_label: None,
+                    simulation_id: "sim-1".to_string(),
+                    simulation_backend: "deterministic_fake".to_string(),
+                    step_hashes: vec!["step-a".to_string()],
+                    score: PersistedScoreVector {
+                        branch_id: None,
+                        components: BTreeMap::new(),
+                        total: 0.0,
+                    },
+                }],
+            },
+        );
+
+        write_artifact(&path, ArtifactFormat::Json, &artifact)
+            .expect("generic artifact write should bypass scoreboard semantic validation");
+        let error = read_scoreboard_artifact(&path)
+            .expect_err("scoreboard loader must reject missing nested branch identity");
+
+        assert!(
+            error
+                .to_string()
+                .contains("scoreboard row 0 score is missing branch id for branch-a")
+        );
     }
 
     #[test]
