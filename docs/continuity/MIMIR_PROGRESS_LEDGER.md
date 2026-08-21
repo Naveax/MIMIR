@@ -1053,3 +1053,16 @@ Next exact pass:
 - Following payload / second later control consumed: 0/0.
 - Production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0.
 - Next pass opened: R3.18AM read-only one-following-payload evidence.
+
+## 2026-08-21 — R3.18AM — Post-AK One Following-Payload Evidence — Outcome A / CLOSED
+
+- Canonical production unchanged: `f20f529e3ada6e9a671ea91e5676a17a00770145` / `98c675811cca4e4d7f0122c762f371548c9266c2`.
+- Evidence authority: `842b94ed4c4e57323433585fea48116ecf18989b` / `486d0a0f3833dcb8872f062ae1927c9aefde87ba`; run/job `32473716883/96745647750` SUCCESS.
+- Same-head normal CI: `32474038136/96746590106` SUCCESS; validation PR #135 closed unmerged.
+- Immutable artifact: `9443581172` / 14827 bytes / `sha256:2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8`; downloaded ZIP digest exact and internal manifest 11/11 PASS.
+- Result: published-AK boundary exact 47/47; `Int=47`; width 32 on 47/47; semantic Int range 1..415; native/oracle mismatch 0; witness reselection 0.
+- Negative controls: repeatability, payload truncation, wrong tag, wrong payload start, wrong exact version/context, corrupt AG control, corrupt prior, post-payload-end poison all 47/47 PASS.
+- Earlier payload-contract inheritance: REJECTED. Another property-control bits consumed: 0.
+- Production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0.
+- Superseded harness-only failures were not rerun: runs 32473299304 and 32473502712.
+- Next pass opened: R3.18AN bounded post-AK `Int/32` one-payload production.

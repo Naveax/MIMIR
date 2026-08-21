@@ -69,7 +69,8 @@ R3.18AI one-following-property-header evidence after published AG control / Outc
 R3.18AJ post-AG following-header exact-context contract / Outcome A CLOSED                                         |
 R3.18AK bounded post-AG following-header production composition / CLOSED
 R3.18AL published-AK following-header differential / Outcome A CLOSED
-R3.18AM post-AK one-following-payload evidence / ACTIVE                                              |
+R3.18AM post-AK one-following-payload evidence / Outcome A CLOSED
+R3.18AN bounded post-AK one-following-payload production / ACTIVE                                      |
         |                               |
         +---------------+---------------+
                         |
@@ -202,13 +203,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 112. `docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md`
 113. `docs/continuity/MIMIR_R3_18AL_DECISION.md`
 114. `docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md`
-115. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-116. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-117. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-118. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-119. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-120. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-121. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+115. `docs/continuity/MIMIR_R3_18AM_DECISION.md`
+116. `docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md`
+117. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+118. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+119. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+120. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+121. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+122. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+123. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
@@ -224,10 +227,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 - artifact `9442034802` / `sha256:5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639`; downloaded ZIP/internal manifest PASS
 - published-AK/frozen-AI/direct-header exact 47/47; AJ contexts 17/17; multiplicity 47/47; Int=47; mismatch 0; payload/control 0/0
 
-### R3.18AM post-AK one-following-payload evidence: ACTIVE
-- read-only; production frozen at R3.18AK `f20f529e3ada6e9a671ea91e5676a17a00770145`
-- reuse exactly the immutable 47-row R3.18AI/R3.18AL lane; witness reselection 0
-- start at AK payload_start; prove exactly one payload independently; stop at payload end; another-control bits remain 0
+### R3.18AM post-AK one-following-payload evidence: OUTCOME A / CLOSED
+- evidence `842b94ed4c4e57323433585fea48116ecf18989b` / tree `486d0a0f3833dcb8872f062ae1927c9aefde87ba`; run/job `32473716883/96745647750` SUCCESS
+- same-head CI `32474038136/96746590106` SUCCESS; PR #135 closed unmerged
+- artifact `9443581172` / `sha256:2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8`; downloaded ZIP digest exact / internal manifest 11/11 PASS
+- 47/47 published-AK exact; Int=47; width 32 on 47/47; semantic range 1..415; mismatch 0; witness reselection 0; another-control bits 0
+
+### R3.18AN bounded post-AK one-following-payload production: ACTIVE
+- production remains frozen at R3.18AK `f20f529e3ada6e9a671ea91e5676a17a00770145` until a clean R3.18AN candidate is published
+- validate/recompute the R3.18AK/AJ boundary; admit only R3.18AM Int/32; stop exactly at payload end
+- another property-control bit, alternate payload tags/layouts and generalized cursor/loop remain closed
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
 - production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`

@@ -6,29 +6,30 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AL closed / R3.18AM active
+# 0. Current override — R3.18AM closed / R3.18AN active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AK
 - `f20f529e3ada6e9a671ea91e5676a17a00770145` / `98c675811cca4e4d7f0122c762f371548c9266c2` remains canonical production;
 - exact R3.18AJ membership; exactly one following header; stop at `payload_start`;
-- following payload and another control are not production capabilities.
+- post-AK payload production is not admitted until R3.18AN publishes.
 
-## CLOSED DIFFERENTIAL — R3.18AL Outcome A
-- exact immutable 47-row lane; published-AK/frozen-AI/direct-header exact 47/47;
-- 17 exact contexts; multiplicity 47; `Int=47`; mismatch 0; witness reselection 0;
-- artifact `9442034802` / `sha256:5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639`;
-- following-payload / second-later-control consumption 0/0.
+## CLOSED EVIDENCE — R3.18AM Outcome A
+- exact immutable 47-row lane; published-AK boundary exact 47/47;
+- `Int=47`; payload width `32` on 47/47; semantic Int range `1..415`; mismatch 0; witness reselection 0;
+- artifact `9443581172` / `sha256:2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8`; downloaded ZIP/internal manifest 11/11 PASS;
+- another-control consumption 0; earlier payload-contract inheritance rejected.
 
-## ACTIVE EVIDENCE GATE — R3.18AM
-- begin exactly at each validated R3.18AK `payload_start` on the same 47 rows;
-- prove exactly one payload against pinned Boxcars and native evidence;
-- stop at payload end; another-control consumption must remain 0;
-- production Rust remains frozen.
+## ACTIVE PRODUCTION GATE — R3.18AN
+- validate/recompute a valid R3.18AK/AJ header boundary;
+- begin exactly at the validated `payload_start`;
+- decode exactly one R3.18AM-admitted `Int/32` payload;
+- stop exactly at payload end and consume zero another-control bits;
+- production candidate must contain only the minimum replay source plus one focused AN test.
 
 ## CLOSED
-- post-AK payload production before R3.18AM closure; another property control; false/unproven success semantics; alternate unadmitted payload layouts; repeated/generalized property loop or cursor;
+- another property-control bit after the R3.18AN payload end; alternate payload tags/layouts; repeated/generalized property loop or cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

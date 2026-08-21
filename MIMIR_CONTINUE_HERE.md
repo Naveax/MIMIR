@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AK — bounded post-AG following-header production composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AL — published R3.18AK following-header differential / Outcome A / 47/47 / 17 exact contexts / Int=47 / mismatch 0 / artifact 9442034802
+  R3.18AM — post-AK one-following-payload evidence / Outcome A / 47/47 / Int=47 / width32=47 / mismatch 0 / artifact 9443581172
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AJ — post-AG following-header exact-context contract / Outcome A / 17 exact tuples / 47 multiplicities / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AL — published AK/frozen AI/direct header exact 47/47 / 17 contexts / Int=47 / mismatch 0 / payload-control 0/0 / artifact 9442034802
+  R3.18AM — one post-AK Int payload exact 47/47 / width32=47 / semantic range 1..415 / mismatch 0 / another-control 0 / artifact 9443581172
 
 CURRENT_PASS:
-  R3.18AM — post-AK one following-payload evidence
+  R3.18AN — bounded post-AK one-following-payload production
 
 CURRENT_PASS_TYPE:
-  read-only payload evidence / begin at validated R3.18AK payload_start, decode exactly one payload against pinned Boxcars/native evidence, stop at payload end, consume zero another-control bits
+  production implementation / validate and recompute the R3.18AK/AJ header boundary, decode exactly the R3.18AM-admitted Int/32 payload, stop at payload end, consume zero another-control bits
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -116,8 +116,20 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AJ CLOSED Outcome A: exact_tuple_only 17 complete seven-field contexts / multiplicity sum 47 / Int=47 / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
   R3.18AK PRODUCTION at f20f529e3ada6e9a671ea91e5676a17a00770145: validates one published R3.18AG true-control result, reuses the stateless header primitive, requires exact R3.18AJ seven-field membership, and stops exactly at payload_start
   R3.18AL CLOSED Outcome A: published-AK/frozen-AI/direct-header exact 47/47; AJ contexts 17/17; multiplicity 47/47; Int=47; mismatch 0; witness reselection 0; payload/control 0/0; artifact 9442034802
-  R3.18AM ACTIVE read-only payload evidence: start exactly at R3.18AK payload_start on the same 47 rows; prove one payload independently; another-control consumption must remain 0
-  NO post-AK payload production before R3.18AM evidence closure, another property control, alternate unadmitted payload layout, repeated/generalized property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AM CLOSED Outcome A: one post-AK payload exact 47/47; Int=47; width=32 on 47/47; semantic Int range 1..415; native-oracle mismatch 0; witness reselection 0; another-control bits 0; artifact 9443581172
+  R3.18AN ACTIVE bounded production: validate/recompute the R3.18AK/AJ header boundary, decode exactly one AM-admitted Int/32 payload, stop at payload end, and consume zero another-control bits
+  NO another property control after the R3.18AN payload end, alternate payload tag/layout, repeated/generalized property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AM_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at f20f529e3ada6e9a671ea91e5676a17a00770145
+  evidence head/tree: 842b94ed4c4e57323433585fea48116ecf18989b / 486d0a0f3833dcb8872f062ae1927c9aefde87ba
+  authority run/job: 32473716883/96745647750 SUCCESS
+  same-head normal CI: 32474038136/96746590106 SUCCESS / PR #135 closed unmerged
+  artifact: 9443581172 / 14827 bytes / sha256:2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8; downloaded ZIP digest exact / inner manifest 11/11 PASS
+  47/47 published-AK exact / Int=47 / payload width 32 on 47/47 / semantic Int range 1..415 / native-oracle mismatch 0
+  witness reselection 0 / another-control bits consumed 0 / earlier-payload-contract inheritance rejected
+  repeatability/truncation/wrong-tag/wrong-start/wrong-version/corrupt-control/corrupt-prior/post-stop-poison 47/47 PASS
+  production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
 
 R3_18AL_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at f20f529e3ada6e9a671ea91e5676a17a00770145
