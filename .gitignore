@@ -23,6 +23,19 @@
 .DS_Store
 Thumbs.db
 
+# Local secret-bearing files and credential stores.
+# Keep a deliberate non-secret example file available for documentation.
+.env
+.env.*
+!.env.example
+/.cargo/credentials
+/.cargo/credentials.toml
+/secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+
 # Local/full corpora and generated heavy data
 /data/
 /datasets/
