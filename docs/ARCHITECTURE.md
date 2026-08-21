@@ -26,6 +26,12 @@
   runtime, or general replay-body parsing behavior.
 - `mimir-anchor`, `mimir-branch`, `mimir-rollout`, and `mimir-teacher` define traits whose
   current implementations only transform explicit caller-provided data.
+- `mimir-io` owns raw persisted-artifact serialization, format selection, and artifact
+  schema/version validation. It intentionally does not own producer-coupled batch orchestration.
+- `mimir-export` owns persisted anchor/branch bundle orchestration, including staged artifact
+  writes, `manifest.json` / `index.json` metadata, bundle inspection/loading, and the current
+  deterministic candidate/execution-result plumbing. It does not add replay parsing, simulation,
+  or inferred game semantics.
 - `mimir-sim-bridge` isolates the future simulation boundary behind `SimBackend`.
 - `mimir-cache` centralizes cache keys and novelty bookkeeping.
 
