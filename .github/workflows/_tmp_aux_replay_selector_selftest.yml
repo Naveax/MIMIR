@@ -1,0 +1,92 @@
+name: Aux Replay Selector Self-Test
+
+on:
+  pull_request:
+    paths:
+      - "scripts/select_largest_replays.ps1"
+      - ".github/workflows/_tmp_aux_replay_selector_selftest.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  selector-selftest:
+    runs-on: windows-2025
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Exercise destructive boundaries and deterministic ties
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+
+          $Script = Join-Path $env:GITHUB_WORKSPACE 'scripts\select_largest_replays.ps1'
+          $Root = Join-Path $env:RUNNER_TEMP 'mimir-replay-selector-selftest'
+          $Source = Join-Path $Root 'source'
+          $Output = Join-Path $Root 'output'
+
+          if (Test-Path -LiteralPath $Root) {
+              Remove-Item -LiteralPath $Root -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $Source -Force | Out-Null
+
+          [System.IO.File]::WriteAllBytes((Join-Path $Source 'a.replay'), [byte[]](1, 1, 1, 1))
+          [System.IO.File]::WriteAllBytes((Join-Path $Source 'b.replay'), [byte[]](2, 2, 2, 2))
+
+          function Assert-Throws([scriptblock]$Action, [string]$Label) {
+              $Threw = $false
+              try {
+                  & $Action
+              }
+              catch {
+                  $Threw = $true
+              }
+              if (-not $Threw) {
+                  throw "Expected failure: $Label"
+              }
+          }
+
+          Assert-Throws {
+              & $Script -ReplayRoot $Source -OutputRoot $Output -Count 0
+          } 'zero Count'
+
+          Assert-Throws {
+              & $Script -ReplayRoot $Source -OutputRoot $Source -Count 1
+          } 'OutputRoot equals ReplayRoot'
+
+          if (-not (Test-Path -LiteralPath (Join-Path $Source 'a.replay') -PathType Leaf)) {
+              throw 'same-root rejection allowed source deletion'
+          }
+
+          Assert-Throws {
+              & $Script -ReplayRoot $Source -OutputRoot $Root -Count 1
+          } 'OutputRoot contains ReplayRoot'
+
+          if (-not (Test-Path -LiteralPath (Join-Path $Source 'b.replay') -PathType Leaf)) {
+              throw 'ancestor-root rejection allowed source deletion'
+          }
+
+          & $Script -ReplayRoot $Source -OutputRoot $Output -Count 2
+
+          $Rows = @(Get-Content -LiteralPath (Join-Path $Output 'manifest.jsonl') | ForEach-Object { $_ | ConvertFrom-Json })
+          if ($Rows.Count -ne 2) {
+              throw "Expected 2 manifest rows, found $($Rows.Count)"
+          }
+          if ($Rows[0].original_filename -cne 'a.replay' -or $Rows[1].original_filename -cne 'b.replay') {
+              throw "Equal-size tie order is not deterministic: $($Rows.original_filename -join ', ')"
+          }
+          if ($Rows[0].selection_policy -cne 'largest_sha256_unique_by_file_size_then_full_path') {
+              throw "Unexpected selection policy: $($Rows[0].selection_policy)"
+          }
+          if (-not (Test-Path -LiteralPath (Join-Path $Output '001_a.replay') -PathType Leaf)) {
+              throw 'Expected first selected replay was not emitted'
+          }
+          if (-not (Test-Path -LiteralPath (Join-Path $Output '002_b.replay') -PathType Leaf)) {
+              throw 'Expected second selected replay was not emitted'
+          }
+
+          Write-Host 'PASS: replay selector destructive boundaries and deterministic tie ordering are locked.'
