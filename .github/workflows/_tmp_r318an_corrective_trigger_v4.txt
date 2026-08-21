@@ -1,0 +1,6 @@
+R3.18AN corrective registered CI V4 trigger
+base=6f92e817a88056ba303229541ae04a5d5e03239b
+tree=607905f33c10c6d5cc9715a5d372354ff8960e0e
+relocation_blob=7b55e7b9f32bc80ac0a76de0160c82516058147a
+candidate=candidate/r318an-post-ak-payload-v4
+reason=move AN after internal test module and before R3.18J to preserve AK/W source-scope contracts
