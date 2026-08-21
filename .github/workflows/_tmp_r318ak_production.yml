@@ -1,0 +1,179 @@
+name: R3.18AK Production Builder
+
+on:
+  push:
+    branches:
+      - automation/r318ak-production-generator-v1
+    paths:
+      - .github/workflows/_tmp_r318ak_production_trigger.txt
+
+concurrency:
+  group: r318ak-production-builder
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  statuses: write
+
+jobs:
+  build-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_MAIN: 5e26e7d3ceceac9752c35dde9c5074a1cd15262d
+      BASE_TREE: 3aefb55498a89a73abe503f047066a92a49b9f7e
+      GENERATOR_BLOB: 58c63cd60a1b7196dd3c1a550a0f384066df3924
+      LIB_BLOB: db923ebcb419d278f4ab0144fe7ed15b298b60fa
+      AJ_CONTRACT_SHA256: cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c
+      CLEAN_BRANCH: ops/r318ak-production-v1
+    steps:
+      - name: Checkout exact automation head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark builder pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318ak/production-builder' \
+            -f description='R3.18AK production builder running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Freeze canonical authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_main="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          test "$actual_main" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test "$(git rev-parse "$BASE_MAIN:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git hash-object tools/_tmp_r318ak_generate.py)" = "$GENERATOR_BLOB"
+          test "$(sha256sum docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$AJ_CONTRACT_SHA256"
+          python -m py_compile tools/_tmp_r318ak_generate.py
+          cp tools/_tmp_r318ak_generate.py "$RUNNER_TEMP/r318ak_generate.py"
+
+      - name: Resolve immutable builder job receipt
+        id: receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          job_id=""
+          for _ in $(seq 1 20); do
+            job_id="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" --jq '.jobs[] | select(.name == "build-production") | .id' | head -n 1)"
+            if [ -n "$job_id" ]; then break; fi
+            sleep 1
+          done
+          test -n "$job_id"
+          echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
+          echo "builder=$GITHUB_RUN_ID/$job_id"
+
+      - name: Generate and validate exact clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_MAIN"
+          git clean -fdx
+          git switch -C "$CLEAN_BRANCH" "$BASE_MAIN"
+          mkdir -p tools
+          cp "$RUNNER_TEMP/r318ak_generate.py" tools/_tmp_r318ak_generate.py
+          python tools/_tmp_r318ak_generate.py
+          rm -f tools/_tmp_r318ak_generate.py
+          rmdir tools 2>/dev/null || true
+
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          cat > "$expected" <<'EOF'
+          crates/mimir-replay/src/lib.rs
+          crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs
+          EOF
+          sed -i 's/^          //' "$expected"
+          {
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          } | sed '/^$/d' | sort -u > "$actual"
+          sort -u -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+
+          cargo fmt --all
+          cargo fmt --all -- --check
+          cargo test -p mimir-replay --test r3_18ak_post_ag_following_header --locked
+          cargo test -p mimir-replay --locked
+          git diff --check
+
+          {
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          } | sed '/^$/d' | sort -u > "$actual"
+          diff -u "$expected" "$actual"
+
+          git add -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs
+          git diff --cached --check
+          git config user.name "MIMIR Admission Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "Implement bounded R3.18AK post-AG following header"
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          test "$(git diff --name-only "$BASE_MAIN" HEAD | sort | tr '\n' ' ')" = "$(sort "$expected" | tr '\n' ' ')"
+
+      - name: Publish clean candidate and receipt
+        shell: bash
+        env:
+          BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          clean_sha="$(git rev-parse HEAD)"
+          clean_tree="$(git rev-parse HEAD^{tree})"
+          receipt="$RUNNER_TEMP/r318ak_production_candidate_receipt.txt"
+          {
+            echo "R3_18AK_BUILDER=$GITHUB_RUN_ID/$BUILDER_JOB SUCCESS"
+            echo "R3_18AK_BASE_MAIN=$BASE_MAIN"
+            echo "R3_18AK_BASE_TREE=$BASE_TREE"
+            echo "R3_18AK_AJ_CONTRACT_SHA256=$AJ_CONTRACT_SHA256"
+            echo "R3_18AK_CLEAN_SHA=$clean_sha"
+            echo "R3_18AK_CLEAN_TREE=$clean_tree"
+            echo "R3_18AK_CLEAN_BRANCH=$CLEAN_BRANCH"
+            echo "R3_18AK_CLEAN_FILE_COUNT=2"
+            echo "R3_18AK_PRODUCTION_FILE_COUNT=2"
+            echo "R3_18AK_CARGO_MUTATION=0"
+            echo "R3_18AK_FIXTURE_MUTATION=0"
+            echo "R3_18AK_CORPUS_MUTATION=0"
+            echo "R3_18AK_WORKFLOW_MUTATION=0"
+            echo "R3_18AK_SUPPORT_MUTATION=0"
+            echo "R3_18AK_FOCUSED_TEST=PASS"
+            echo "R3_18AK_MIMIR_REPLAY_TESTS=PASS"
+            echo "--- sha256 ---"
+            sha256sum crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs
+          } | tee "$receipt"
+          git push origin "HEAD:refs/heads/$CLEAN_BRANCH"
+          cp "$receipt" r318ak_production_candidate_receipt.txt
+
+      - name: Upload candidate receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ak-production-candidate-receipt
+          path: r318ak_production_candidate_receipt.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Report builder status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure
+          description='R3.18AK production builder failed'
+          if [ "$JOB_STATUS" = success ]; then
+            state=success
+            description='R3.18AK production builder succeeded'
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context='r318ak/production-builder' \
+            -f description="$description" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
