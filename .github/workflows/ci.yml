@@ -10,6 +10,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   rust:
@@ -29,3 +30,51 @@ jobs:
       - name: Repository verification
         shell: pwsh
         run: pwsh -NoProfile -File scripts/verify_repo.ps1
+
+      - name: Discover primary R3.18AL exact-head receipts
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: 06b8570a25a989651fc800a4ded900ce5e2f3dbe
+          TARGET_BRANCH: evidence/r318al-published-ak-v1
+          TARGET_EVIDENCE_RUN: '32469442033'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = 'application/vnd.github+json'
+            'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $Base = "https://api.github.com/repos/$env:GITHUB_REPOSITORY"
+          $Runs = Invoke-RestMethod -Headers $Headers -Uri "$Base/actions/runs?head_sha=$env:TARGET_SHA&event=push&per_page=100"
+          $Ci = @($Runs.workflow_runs | Where-Object {
+            $_.head_sha -eq $env:TARGET_SHA -and
+            $_.head_branch -eq $env:TARGET_BRANCH -and
+            $_.event -eq 'push' -and
+            $_.name -eq 'CI'
+          })
+          $Evidence = @($Runs.workflow_runs | Where-Object {
+            $_.head_sha -eq $env:TARGET_SHA -and
+            $_.head_branch -eq $env:TARGET_BRANCH -and
+            $_.event -eq 'push' -and
+            $_.name -eq 'R3.18AL Published AK Differential Evidence'
+          })
+          if ($Ci.Count -ne 1) { throw "Expected exactly one target CI run, found $($Ci.Count)." }
+          if ($Evidence.Count -ne 1) { throw "Expected exactly one target evidence run, found $($Evidence.Count)." }
+          if ([string]$Evidence[0].id -cne $env:TARGET_EVIDENCE_RUN) { throw "Evidence run id drift: $($Evidence[0].id)" }
+          foreach ($Run in @($Ci[0], $Evidence[0])) {
+            if ($Run.status -ne 'completed' -or $Run.conclusion -ne 'success') {
+              throw "Target run $($Run.id) not successful: status=$($Run.status) conclusion=$($Run.conclusion)"
+            }
+          }
+          $CiJobs = Invoke-RestMethod -Headers $Headers -Uri "$Base/actions/runs/$($Ci[0].id)/jobs"
+          $EvJobs = Invoke-RestMethod -Headers $Headers -Uri "$Base/actions/runs/$($Evidence[0].id)/jobs"
+          $Rust = @($CiJobs.jobs | Where-Object { $_.name -eq 'rust' })
+          $EvJob = @($EvJobs.jobs | Where-Object { $_.name -eq 'evidence' })
+          if ($Rust.Count -ne 1 -or $Rust[0].conclusion -ne 'success') { throw 'Target rust job receipt invalid.' }
+          if ($EvJob.Count -ne 1 -or $EvJob[0].conclusion -ne 'success') { throw 'Target evidence job receipt invalid.' }
+          $Artifacts = Invoke-RestMethod -Headers $Headers -Uri "$Base/actions/runs/$($Evidence[0].id)/artifacts"
+          $Artifact = @($Artifacts.artifacts | Where-Object { $_.name -eq 'r318al-published-ak-differential-evidence' })
+          if ($Artifact.Count -ne 1) { throw "Expected one AL artifact, found $($Artifact.Count)." }
+          if ($Artifact[0].expired) { throw 'AL artifact is expired.' }
+          Write-Host "R3_18AL_RECEIPT=PASS ci=$($Ci[0].id)/$($Rust[0].id) evidence=$($Evidence[0].id)/$($EvJob[0].id) artifact=$($Artifact[0].id)/$($Artifact[0].size_in_bytes)/$($Artifact[0].digest)"
