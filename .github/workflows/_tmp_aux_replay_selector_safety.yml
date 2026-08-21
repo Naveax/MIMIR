@@ -1,0 +1,30 @@
+name: Aux Replay Selector Safety Validation
+
+on:
+  pull_request:
+    branches:
+      - aux/replay-selector-path-safety-v1
+    paths:
+      - scripts/select_largest_replays.ps1
+      - scripts/test_select_largest_replays_contracts.ps1
+      - .github/workflows/_tmp_aux_replay_selector_safety.yml
+
+concurrency:
+  group: aux-replay-selector-safety-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  selector-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout validation head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Run selector safety contracts
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/test_select_largest_replays_contracts.ps1
