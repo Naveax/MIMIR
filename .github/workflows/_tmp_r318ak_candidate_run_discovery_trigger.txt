@@ -1,1 +1,1 @@
-Single controlled read-only discovery for the existing R3.18AK continuity builder run created by trigger commit 5d20d021518c588bb13e403b319a633c9b34fc91. Require exactly one builder run. Do not dispatch or rerun the builder.
+Single controlled read-only discovery for the existing corrective R3.18AK continuity builder triggered by commit 489f3ad58545ff3fba914e2cd171af7cc8b540c1. Require exactly one corrective builder run. Do not dispatch or rerun the builder.
