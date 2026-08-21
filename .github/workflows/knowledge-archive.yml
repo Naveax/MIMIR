@@ -28,6 +28,7 @@ concurrency:
 jobs:
   verify:
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - name: Verify MIMIR knowledge archive
