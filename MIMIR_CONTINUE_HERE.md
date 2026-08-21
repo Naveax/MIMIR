@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  2d351e8ceb601e2fbe515d2977b2103a4b2c7976
+  f20f529e3ada6e9a671ea91e5676a17a00770145
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18AG — bounded true-only property-control production after published R3.18AD payload
+  R3.18AK — bounded post-AG following-header production composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18AI — one following property-header evidence after published R3.18AG / Outcome A / 47/47 / 17 exact contexts / Int=47 / mismatch 0 / artifact 9424764320
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18AI — one post-AG following header exact / 47 rows / 17 exact contexts / Int=47 / native-oracle mismatch 0 / following-payload-second-control 0/0 / artifact 9424764320
 
 CURRENT_PASS:
-  R3.18AK — bounded post-AG following-header production composition
+  R3.18AL — published R3.18AK post-AG following-header differential audit
 
 CURRENT_PASS_TYPE:
-  production implementation / after one valid published R3.18AG true-control result decode exactly one following existing-actor header, require exact R3.18AJ membership and stop at payload_start
+  read-only differential audit / validate published R3.18AK on the immutable R3.18AI 47-row lane through payload_start with zero production mutation
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -114,8 +114,24 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AH CLOSED Outcome A: published AG exact 47/47; true=47 false=0; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0; artifact 9420166543
   R3.18AI CLOSED Outcome A: one post-AG following header exact 47/47; 17 exact seven-field contexts; Int=47; native-oracle mismatch 0; witness reselection 0; following payload/second-control 0/0; artifact 9424764320
   R3.18AJ CLOSED Outcome A: exact_tuple_only 17 complete seven-field contexts / multiplicity sum 47 / Int=47 / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
-  R3.18AK ACTIVE production implementation: only after one valid published R3.18AG true control, decode exactly one following header with the existing stateless primitive, require exact R3.18AJ membership, stop at payload_start
+  R3.18AK PRODUCTION at f20f529e3ada6e9a671ea91e5676a17a00770145: validates one published R3.18AG true-control result, reuses the stateless header primitive, requires exact R3.18AJ seven-field membership, and stops exactly at payload_start
+  R3.18AL ACTIVE read-only differential: validate published AK on the exact immutable R3.18AI 47-row lane; production remains frozen at R3.18AK
   NO following payload, second later control, false success semantics, alternate unadmitted layout, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AK_PRODUCTION_CLOSURE:
+  Outcome A / production f20f529e3ada6e9a671ea91e5676a17a00770145 / tree 98c675811cca4e4d7f0122c762f371548c9266c2 / parent 5e26e7d3ceceac9752c35dde9c5074a1cd15262d
+  R3.18AJ contract: sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / exact_tuple_only / 17 contexts / multiplicity 47 / Int=47
+  corrected builder run/job: 32454544283/96689214219 SUCCESS
+  exact clean/validation PR CI: 32454918857/96690251188 SUCCESS / PR #62 closed unmerged
+  published-main CI: 32459617440/96703744791 SUCCESS / unique natural push CI count 1 / duplicate guard PASS
+  discovery receipt: run/job 32459835105/96704374410 SUCCESS / artifact 9438546068 / ZIP sha256:b952c9e8fd4deda3eb99a0b8c1b3f9d2e5c8938a2d45224e7120d7bf2df233ba
+  exact clean scope: crates/mimir-replay/src/lib.rs + crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs
+  focused AK tests: 5/5 PASS; full mimir-replay + repository verification PASS
+  exact behavior: recompute supplied AG control; one stateless header; exact AJ tuple membership; stop=payload_start
+  negative controls: Cartesian/fabricated/old-Z/wrong-version/wrong-actor/unresolved/truncation/repeatability/post-payload poison PASS
+  following payload / another control consumption: 0/0
+  Cargo/fixture/corpus/workflow/support mutation in clean production commit: 0/0/0/0/0
+
 R3_18AB_EVIDENCE_CLOSURE:
   Outcome A / read-only / production unchanged at 9392240c49f95766c214afee9865fed4155a87a4
   authority head/tree: b2f4b73600165b2d83389b6ce43709b64beba52a / 8d36c8c7118db8c6f0d28c4ae88e0400cf4a3cd1
@@ -2828,7 +2844,7 @@ Legend:
 [x] R3.15 NewActor branch through admitted spawn trajectory
 [x] R3.16 existing actor/property envelope header
 [x] R3.17 attribute decoder families K1/K2/K3/K4 through admitted contracts
-[>] R3.18 complete property loop — active R3.18L following-property control evidence
+[>] R3.18 complete property loop — active R3.18AL published-AK following-header differential
 [ ] R3.19 actor lifecycle table
 [ ] R3.20 complete frame
 [ ] R3.21 frame iteration / terminal / trailer
@@ -3069,7 +3085,7 @@ But a new chat must **not need them to understand how to build MIMIR**. This fil
 
 # 39. CURRENT ONE-LINE TRUTH
 
-> **MIMIR production remains R3.18AG `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`. R3.18AJ is closed Outcome A with 17 exact seven-field contexts, multiplicity sum 47, Int=47 and contract `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`. R3.18AK is the active bounded production pass for exactly one post-AG following header through `payload_start`; payload, another control, loops/cursors, actor/frame and semantic/runtime widening remain closed.**
+> **MIMIR production is R3.18AK `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2`. R3.18AK is CLOSED Outcome A: one post-AG following header, exact R3.18AJ 17-tuple membership, stop exactly at `payload_start`, published-main CI `32459617440/96703744791` SUCCESS. R3.18AL is active read-only published-AK differential on the immutable R3.18AI 47-row lane; payload, another control, loops/cursors and actor/frame/semantic/runtime widening remain closed.**
 
 ---
 
@@ -3857,20 +3873,22 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 
 ---
 
-# CURRENT PASS CHECKLIST — R3.18AK
+# CURRENT PASS CHECKLIST — R3.18AL
 
-**Goal:** publish exactly one post-AG following existing-actor property header through `payload_start`, gated by the exact R3.18AJ contract. No payload or later control.
+**Goal:** differentially validate published R3.18AK on exactly the immutable R3.18AI 47-row lane through `payload_start`. Production Rust remains frozen.
 
 ```text
-[ ] Fetch fresh main and require the published R3.18AJ admission parent; freeze production at 2d351e8ceb601e2fbe515d2977b2103a4b2c7976 / 4123820ce6537f2d4942cd0b5f72b52e43b96c1d.
-[ ] Verify `MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json` byte-for-byte at sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c; require 17 exact tuples / multiplicity sum 47 / Int=47.
-[ ] Inspect current `crates/mimir-replay/src/lib.rs` and existing stateless existing-actor property-header primitive; do not invent a second parser.
-[ ] Implement one boundary-specific post-AG composition only after a valid R3.18AG true-control result.
-[ ] Form the complete seven-field tuple and require exact R3.18AJ membership; outside tuples fail closed.
-[ ] Stop exactly at header `payload_start`; following payload bits consumed 0 and another-control bits consumed 0.
-[ ] Add one focused `r3_18ak_post_ag_following_header.rs` test file covering real Int contexts, repeatability, truncation, wrong actor/lookup/version, Cartesian/fabricated/old-Z negatives and post-payload poison.
-[ ] Prove no generic property `while`/`for` loop or public repeatable cursor was added.
-[ ] Clean production scope only: `lib.rs` + one focused AK test; no docs/workflow/temp/Cargo/fixture/corpus/support mutation.
-[ ] Run focused/full mimir-replay, workspace fmt/check/test/clippy, repo verifier, exact clean SHA CI, validation PR CI, fresh-main force=false publish and published-main CI.
-[ ] Outcome A may open only a separate R3.18AL published-AK differential on the immutable 47-row AI lane.
+[ ] Fetch fresh main; require production R3.18AK f20f529e3ada6e9a671ea91e5676a17a00770145 / tree 98c675811cca4e4d7f0122c762f371548c9266c2.
+[ ] Freeze AK builder 32454544283/96689214219, PR CI 32454918857/96690251188 and published-main CI 32459617440/96703744791.
+[ ] Freeze R3.18AI authority 9d424dae2ed8cc7a0a6868111805a48763131196, artifact 9424764320/sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5; witness reselection = 0.
+[ ] Verify R3.18AJ contract sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / 17 exact tuples / multiplicity 47 / Int=47.
+[ ] Reconstruct the exact valid published R3.18AG prior/control for all 47 frozen rows and invoke published R3.18AK exactly once per row.
+[ ] Require published-AK header equality through payload_start 47/47 and direct stateless-header equality 47/47; native-oracle mismatch = 0.
+[ ] Reconstruct all 17 AJ exact contexts and exact observed multiplicities; no R3.18Z/R3.18P inheritance.
+[ ] Run truncation, corrupt-AG/prior, wrong actor, unresolved lookup, wrong version, Cartesian, fabricated eighteenth, old-Z-only, repeatability and post-payload-start poison negatives.
+[ ] Prove following-payload / another-control consumption 0/0; no repeated/generalized property loop or generic cursor.
+[ ] Produce privacy-safe immutable evidence with internal manifest, SHA-256 receipts and mutation counters.
+[ ] Run focused AK regression, full mimir-replay/workspace/clippy/repository verifier and same-head normal CI; reuse existing equivalent runs if present.
+[ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+[ ] Outcome A may open only a separate post-AK following-payload evidence pass; R3.18AL itself changes no production Rust.
 ```

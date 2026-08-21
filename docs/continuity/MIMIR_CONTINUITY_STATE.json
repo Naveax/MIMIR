@@ -3,14 +3,14 @@
   "updated_date": "2026-08-21",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "2d351e8ceb601e2fbe515d2977b2103a4b2c7976",
-  "last_production_milestone": "R3.18AG",
-  "last_production_milestone_name": "bounded true-only property-control production after published R3.18AD payload",
+  "last_production_code_sha": "f20f529e3ada6e9a671ea91e5676a17a00770145",
+  "last_production_milestone": "R3.18AK",
+  "last_production_milestone_name": "bounded post-AG following-header production composition",
   "last_completed_read_only_audit": "R3.18AI",
-  "current_pass": "R3.18AK",
-  "current_pass_kind": "production implementation / bounded post-AG following-header composition",
-  "current_pass_goal": "After one valid published R3.18AG true-control result, decode exactly one following existing-actor property header with the existing stateless primitive, require exact R3.18AJ seven-field membership, and stop at payload_start.",
-  "current_pass_stop_boundary": "Exactly one header through payload_start. No following payload, another control, repeated/generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "current_pass": "R3.18AL",
+  "current_pass_kind": "read-only differential audit / published-R3.18AK following-header validation",
+  "current_pass_goal": "Validate published R3.18AK on exactly the immutable R3.18AI 47-row lane through payload_start with exact R3.18AJ membership and zero production mutation.",
+  "current_pass_stop_boundary": "Exactly one published AK header through payload_start. No following payload, another control, repeated/generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -99,7 +99,9 @@
     "R3.18Z or R3.18P context inheritance at the R3.18AI/R3.18AJ boundary",
     "following payload after the R3.18AK one-header production boundary",
     "second later property control bit after R3.18AK",
-    "repeated/generalized property loop or generic cursor after R3.18AK"
+    "repeated/generalized property loop or generic cursor after R3.18AK",
+    "post-R3.18AK following payload",
+    "another property control after R3.18AK"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -224,6 +226,8 @@
     "docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json",
     "docs/continuity/MIMIR_R3_18AJ_DECISION.md",
     "docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AK_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -2281,5 +2285,25 @@
     ],
     "admission_builder_run_id": 32452755935,
     "admission_builder_job_id": 96684134535
+  },
+  "r3_18ak_production": {
+    "outcome": "A",
+    "sha": "f20f529e3ada6e9a671ea91e5676a17a00770145",
+    "tree": "98c675811cca4e4d7f0122c762f371548c9266c2",
+    "parent": "5e26e7d3ceceac9752c35dde9c5074a1cd15262d",
+    "contract_sha256": "cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c",
+    "builder_run_job": "32454544283/96689214219",
+    "candidate_ci_run_job": "32454918857/96690251188",
+    "validation_pr": 62,
+    "published_main_ci_run_job": "32459617440/96703744791",
+    "published_main_ci_unique_count": 1,
+    "duplicate_guard": "PASS",
+    "focused_tests": "5/5 PASS",
+    "following_payload_bits_consumed": 0,
+    "another_control_bits_consumed": 0,
+    "clean_scope": [
+      "crates/mimir-replay/src/lib.rs",
+      "crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs"
+    ]
   }
 }

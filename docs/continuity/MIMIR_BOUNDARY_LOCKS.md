@@ -6,34 +6,31 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AJ closed / R3.18AK active
+# 0. Current override — R3.18AK production closed / R3.18AL active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18AG
-- `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`; production remains unchanged by R3.18AJ;
-- input must already be one valid published R3.18AD result under exact `868.32 / net10 / non-RL223` context;
-- prior payload allowlist remains exactly ActiveActor/33, Int/32, UniqueId system1-Steam/80;
-- read exactly one bit at prior `stop_bit`; admit **true only**; false fails closed; stop exactly one bit later.
+## PRODUCTION — R3.18AK
+- `f20f529e3ada6e9a671ea91e5676a17a00770145` / `98c675811cca4e4d7f0122c762f371548c9266c2`; parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`;
+- requires one valid published R3.18AG true-control result and exact R3.18AJ seven-field membership;
+- reuses the existing stateless existing-actor property-header primitive;
+- decodes exactly one following header and stops exactly at `payload_start`;
+- following payload and another control consumption remain 0/0.
 
 ## CLOSED EVIDENCE — R3.18AI Outcome A
-- exact immutable 47-row lane; published AG exact 47/47; one following header exact 47/47; native-oracle mismatch 0; witness reselection 0;
-- 17 complete observed seven-field contexts; all tags Int=47; following payload/second later control 0/0.
+- immutable 47-row lane; one following header exact 47/47; 17 complete contexts; Int=47; mismatch 0; witness reselection 0.
 
 ## CLOSED CONTRACT — R3.18AJ Outcome A
-- exact 17 complete seven-field tuples; observed multiplicity sum 47; `Int=47`;
-- membership `exact_tuple_only`; contract `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`;
-- tag/component/Cartesian/versionless/outside membership rejected; R3.18Z/R3.18P inheritance false;
-- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+- exact_tuple_only 17 complete seven-field tuples; multiplicity 47; contract `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`;
+- R3.18Z/R3.18P inheritance false.
 
-## ACTIVE PRODUCTION GATE — R3.18AK
-- only after one valid published R3.18AG true control, decode exactly one following existing-actor header;
-- reuse existing stateless header primitive and require exact R3.18AJ membership;
-- stop exactly at `payload_start`; payload decode and another control bit forbidden;
-- no repeated/generalized property loop or generic public cursor.
+## ACTIVE EVIDENCE GATE — R3.18AL
+- validate published R3.18AK on exactly the immutable R3.18AI 47-row lane;
+- production Rust frozen; no witness reselection;
+- compare through `payload_start` only and prove payload/control consumption 0/0.
 
 ## CLOSED
-- following payload after the post-AG header; second later control; false success semantics; alternate unadmitted layouts; repeated/generalized property loop or generic cursor;
+- post-AK following payload; another property control; false success semantics; alternate unadmitted layouts; repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---
