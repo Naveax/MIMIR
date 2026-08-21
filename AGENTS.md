@@ -13,4 +13,17 @@ Mandatory for all agents and automations in this repository.
 - After a failure, collect complete evidence, determine root cause, make one coherent patch, then start at most one validation run for the new commit.
 - When adding/editing workflows, preserve semantics and add top-level `concurrency` when absent. For ordinary branch-scoped validation prefer workflow + ref grouping with `cancel-in-progress: false` unless replacement behavior is explicitly intended.
 
-Goal: bounded CI concurrency, no duplicate validation for one logical target, and continuous useful progress while external jobs run.
+## Path and workstream ownership
+
+- Before mutating a path, inspect active branches/PRs/issues for an equivalent behavioral target and overlapping files. If an active workstream already owns the same behavior or path, reuse/adopt it instead of starting a competing implementation.
+- Deduplicate by **behavior**, not only branch name. Two branches that solve the same contract problem with different names are duplicates unless the coordinator explicitly records independent alternatives.
+- Canonical pass ownership outranks auxiliary work. An auxiliary lane must not mutate canonical replay/continuity/source paths currently owned by an active canonical pass unless that pass explicitly hands the path off.
+- Prefer atomic ownership: one candidate should own the smallest coherent file set needed for its contract. Do not casually combine unrelated hardening surfaces merely because they touch the same subsystem.
+- When two independent candidates must touch the same file, keep them separate and record their ordering/reconstruction requirement rather than silently stacking one stale candidate on the other.
+- A failed validation head is immutable evidence. Do not rewrite/force-move it or rerun it as polling. Fixes require a new commit/head so the failure remains attributable.
+- A validation-only clean candidate is not publication authority. Close it unmerged after exact-head validation when canonical work must remain isolated, retain the branch/receipt, and reconstruct from fresh `main` before any later admission.
+- Before reconstructing or publishing an old candidate, fetch fresh `main`, re-check current source/tests/continuity and overlapping active work. Do not cherry-pick stale capability claims merely because an earlier CI run was green.
+- Temporary builder/evidence workflows, patch helpers, triggers and generated inspection material must not leak into a clean production/admission candidate unless their permanent inclusion is explicitly part of the contract.
+- If a stronger parallel candidate appears while a weaker equivalent lane is active, freeze/supersede the weaker lane rather than racing both to publication.
+
+Goal: bounded CI concurrency, no duplicate validation for one logical target, collision-safe parallel execution, and continuous useful progress while external jobs run.
