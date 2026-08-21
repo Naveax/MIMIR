@@ -1,5 +1,7 @@
-R3.18AL evidence trigger
+R3.18AL evidence trigger v2
 base_main=02233c8125e658513dcb068370c48b1e8f15a01c
 production=f20f529e3ada6e9a671ea91e5676a17a00770145
 frozen_ai_artifact=9424764320
 witness_reselection=0
+corrective_reason=temporary_probe_prop_id_bits_u8
+supersedes_run=32469620264
