@@ -25,6 +25,7 @@ jobs:
       BASE_MAIN: 5e26e7d3ceceac9752c35dde9c5074a1cd15262d
       BASE_TREE: 3aefb55498a89a73abe503f047066a92a49b9f7e
       GENERATOR_BLOB: 58c63cd60a1b7196dd3c1a550a0f384066df3924
+      RELOCATE_BLOB: 2998df3b28d4ad42e12ae9beebb7667102f7c51c
       LIB_BLOB: db923ebcb419d278f4ab0144fe7ed15b298b60fa
       AJ_CONTRACT_SHA256: cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c
       CLEAN_BRANCH: ops/r318ak-production-v1
@@ -53,9 +54,11 @@ jobs:
           test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
           test "$(git rev-parse "$BASE_MAIN:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
           test "$(git hash-object tools/_tmp_r318ak_generate.py)" = "$GENERATOR_BLOB"
+          test "$(git hash-object tools/_tmp_r318ak_relocate.py)" = "$RELOCATE_BLOB"
           test "$(sha256sum docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$AJ_CONTRACT_SHA256"
-          python -m py_compile tools/_tmp_r318ak_generate.py
+          python -m py_compile tools/_tmp_r318ak_generate.py tools/_tmp_r318ak_relocate.py
           cp tools/_tmp_r318ak_generate.py "$RUNNER_TEMP/r318ak_generate.py"
+          cp tools/_tmp_r318ak_relocate.py "$RUNNER_TEMP/r318ak_relocate.py"
 
       - name: Resolve immutable builder job receipt
         id: receipt
@@ -81,8 +84,10 @@ jobs:
           git switch -C "$CLEAN_BRANCH" "$BASE_MAIN"
           mkdir -p tools
           cp "$RUNNER_TEMP/r318ak_generate.py" tools/_tmp_r318ak_generate.py
+          cp "$RUNNER_TEMP/r318ak_relocate.py" tools/_tmp_r318ak_relocate.py
           python tools/_tmp_r318ak_generate.py
-          rm -f tools/_tmp_r318ak_generate.py
+          python tools/_tmp_r318ak_relocate.py
+          rm -f tools/_tmp_r318ak_generate.py tools/_tmp_r318ak_relocate.py
           rmdir tools 2>/dev/null || true
 
           expected="$RUNNER_TEMP/expected.txt"
