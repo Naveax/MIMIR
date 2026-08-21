@@ -1,7 +1,17 @@
+param(
+    [string]$Root = ""
+)
+
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-$Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+if ([string]::IsNullOrWhiteSpace($Root)) {
+    $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+}
+else {
+    $Root = (Resolve-Path -LiteralPath $Root).Path
+}
+
 $ManifestPath = Join-Path $Root "docs\chatgpt-archive\MANIFEST.json"
 if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
     throw "Missing knowledge archive manifest: $ManifestPath"
@@ -12,11 +22,41 @@ if ($Manifest.schema -ne "mimir-knowledge-archive-v1") {
     throw "Unexpected archive schema: $($Manifest.schema)"
 }
 
+$RequiredPaths = @($Manifest.required_paths)
+if ($RequiredPaths.Count -eq 0) {
+    throw "Knowledge archive manifest required_paths must not be empty."
+}
+
+$RootFull = [System.IO.Path]::GetFullPath($Root)
+$RootPrefix = [System.IO.Path]::TrimEndingDirectorySeparator($RootFull) + [System.IO.Path]::DirectorySeparatorChar
+$SeenRequiredPaths = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase
+)
 $missing = @()
-foreach ($rel in $Manifest.required_paths) {
-    $p = Join-Path $Root ([string]$rel)
+
+foreach ($relValue in $RequiredPaths) {
+    $rel = [string]$relValue
+    if ([string]::IsNullOrWhiteSpace($rel)) {
+        throw "Knowledge archive manifest contains an empty required path."
+    }
+    if ([System.IO.Path]::IsPathRooted($rel)) {
+        throw "Knowledge archive manifest required path must be relative: $rel"
+    }
+
+    $Segments = @($rel -split '[\\/]')
+    if ($Segments.Count -eq 0 -or @($Segments | Where-Object { $_ -eq '' -or $_ -eq '.' -or $_ -eq '..' }).Count -ne 0) {
+        throw "Knowledge archive manifest required path is not normalized: $rel"
+    }
+
+    $p = [System.IO.Path]::GetFullPath((Join-Path $RootFull $rel))
+    if (-not $p.StartsWith($RootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Knowledge archive manifest required path escapes repository root: $rel"
+    }
+    if (-not $SeenRequiredPaths.Add($p)) {
+        throw "Duplicate knowledge archive required path: $rel"
+    }
     if (-not (Test-Path -LiteralPath $p -PathType Leaf)) {
-        $missing += [string]$rel
+        $missing += $rel
     }
 }
 if ($missing.Count -ne 0) {
@@ -85,7 +125,7 @@ foreach ($rel in $forbiddenPaths) {
     }
 }
 
-Write-Host "PASS knowledge archive manifest paths: $($Manifest.required_paths.Count)"
+Write-Host "PASS knowledge archive manifest paths: $($RequiredPaths.Count)"
 Write-Host "PASS source registry markers"
 Write-Host "PASS superbook cross-links and canonical markers"
 Write-Host "PASS root knowledge graph cross-links"
