@@ -1008,3 +1008,36 @@ Next exact pass:
 - Reuse the stateless existing-actor header primitive; require exact R3.18AJ tuple membership.
 - Decode exactly one header and stop at `payload_start`.
 - Following payload, another control and generalized loop/cursor remain closed.
+
+
+---
+
+## 2026-08-21 — R3.18AK — Bounded post-AG following-header production
+
+Production base SHA: `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
+Production commit SHA: `f20f529e3ada6e9a671ea91e5676a17a00770145`
+Pass type: production implementation + exact-head validation + publication
+Outcome: **A — ADMITTED / PRODUCTION**
+
+What changed:
+- added one boundary-specific post-AG following-header composition in `mimir-replay`;
+- reused the existing stateless existing-actor header primitive;
+- enforced exact R3.18AJ seven-field tuple membership;
+- stopped exactly at `payload_start`; no payload or later-control decode was added.
+
+Evidence / validation:
+- R3.18AJ contract `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c` / 17 tuples / multiplicity 47 / Int=47;
+- corrected builder `32454544283/96689214219` SUCCESS; focused AK tests 5/5 and full `mimir-replay` PASS;
+- validation PR #62 exact-head CI `32454918857/96690251188` SUCCESS and PR closed unmerged;
+- published-main CI `32459617440/96703744791` SUCCESS; exactly one natural push CI matched the published SHA; duplicate guard PASS;
+- published-main discovery receipt run/job `32459835105/96704374410` SUCCESS, artifact `9438546068`, ZIP `sha256:b952c9e8fd4deda3eb99a0b8c1b3f9d2e5c8938a2d45224e7120d7bf2df233ba`;
+- clean production scope exactly `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs`.
+
+Boundaries opened:
+- exactly one AJ-admitted post-AG following header through `payload_start`.
+
+Boundaries still closed:
+- post-AK following payload; another property control; generalized/repeated property loop or cursor; next actor/frame/lifecycle/raw state/events/slices/skills/runtime/export.
+
+Next exact pass:
+- `R3.18AL — read-only published-R3.18AK following-header differential on the immutable R3.18AI 47-row lane`.
