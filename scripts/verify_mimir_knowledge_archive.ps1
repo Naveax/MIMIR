@@ -2,6 +2,11 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$RootPrefix = $Root.TrimEnd(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+) + [System.IO.Path]::DirectorySeparatorChar
+$PathComparison = [System.StringComparison]::OrdinalIgnoreCase
 $ManifestPath = Join-Path $Root "docs\chatgpt-archive\MANIFEST.json"
 if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
     throw "Missing knowledge archive manifest: $ManifestPath"
@@ -11,12 +16,39 @@ $Manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
 if ($Manifest.schema -ne "mimir-knowledge-archive-v1") {
     throw "Unexpected archive schema: $($Manifest.schema)"
 }
+if ($null -eq $Manifest.required_paths -or $Manifest.required_paths.Count -eq 0) {
+    throw "Knowledge archive manifest required_paths must not be empty."
+}
 
+$SeenRequiredPaths = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase
+)
 $missing = @()
 foreach ($rel in $Manifest.required_paths) {
-    $p = Join-Path $Root ([string]$rel)
+    $relText = [string]$rel
+    if ([string]::IsNullOrWhiteSpace($relText)) {
+        throw "Knowledge archive manifest contains a blank required path."
+    }
+    if ([System.IO.Path]::IsPathRooted($relText)) {
+        throw "Knowledge archive manifest required path must be relative: $relText"
+    }
+
+    $segments = @($relText -split '[\\/]')
+    if ($segments.Count -eq 0 -or $segments | Where-Object { $_ -eq '' -or $_ -eq '.' -or $_ -eq '..' }) {
+        throw "Knowledge archive manifest required path must contain only normal path segments: $relText"
+    }
+
+    if (-not $SeenRequiredPaths.Add($relText)) {
+        throw "Duplicate required path in knowledge archive manifest: $relText"
+    }
+
+    $p = [System.IO.Path]::GetFullPath((Join-Path $Root $relText))
+    if (-not $p.StartsWith($RootPrefix, $PathComparison)) {
+        throw "Knowledge archive manifest required path escapes repository root: $relText"
+    }
+
     if (-not (Test-Path -LiteralPath $p -PathType Leaf)) {
-        $missing += [string]$rel
+        $missing += $relText
     }
 }
 if ($missing.Count -ne 0) {
