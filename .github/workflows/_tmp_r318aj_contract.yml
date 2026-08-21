@@ -25,7 +25,6 @@ jobs:
       BASE_TREE: cd00dd18da0a177415ce569b7909ec6390cbb252
       GENERATOR_BLOB: 492ded3d58f26483bef14d6779962b3eb7a8a3b3
       OPS_BRANCH: ops/r318aj-contract-ak-open-v1
-      AI_RUN: '32418184036'
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -127,8 +126,9 @@ jobs:
 
           python - <<'PY'
           from pathlib import Path
-          p=Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md')
-          p.write_text(p.read_text(encoding='utf-8').rstrip()+'\n',encoding='utf-8',newline='\n')
+          for name in ('MIMIR_CONTINUE_HERE.md','docs/continuity/MIMIR_PROGRESS_LEDGER.md'):
+              p=Path(name)
+              p.write_text(p.read_text(encoding='utf-8').rstrip()+'\n',encoding='utf-8',newline='\n')
           PY
 
           expected="$RUNNER_TEMP/expected.txt"
