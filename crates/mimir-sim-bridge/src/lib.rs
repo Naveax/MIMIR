@@ -79,7 +79,10 @@ impl SimBackend for DeterministicFakeBackend {
 }
 
 impl DeterministicFakeBackend {
-    pub fn simulate_bound_v1(&self, request: &SimulationRequest) -> Result<BoundSimulationResultV1> {
+    pub fn simulate_bound_v1(
+        &self,
+        request: &SimulationRequest,
+    ) -> Result<BoundSimulationResultV1> {
         Ok(BoundSimulationResultV1 {
             version: BOUND_SIMULATION_RESULT_VERSION_V1,
             request_digest: simulation_request_digest_v1(request)?,
@@ -128,10 +131,7 @@ mod tests {
             seed: 7,
             commands: vec![SimulationCommand {
                 label: "tick".to_string(),
-                metadata: Metadata::from([(
-                    "mode",
-                    FieldValue::Text("baseline".to_string()),
-                )]),
+                metadata: Metadata::from([("mode", FieldValue::Text("baseline".to_string()))]),
             }],
         }
     }
@@ -170,10 +170,9 @@ mod tests {
         );
 
         let mut metadata_drift = baseline.clone();
-        metadata_drift.commands[0].metadata.insert(
-            "mode".to_string(),
-            FieldValue::Text("changed".to_string()),
-        );
+        metadata_drift.commands[0]
+            .metadata
+            .insert("mode".to_string(), FieldValue::Text("changed".to_string()));
         assert_ne!(
             baseline_digest,
             simulation_request_digest_v1(&metadata_drift).expect("metadata drift digest")
