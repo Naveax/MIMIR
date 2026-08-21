@@ -1,0 +1,107 @@
+name: R3.18AL Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318al-continuity-am-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318al_continuity_trigger.txt
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout builder head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact parent and detach temporary builder material
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git merge-base --is-ancestor 02233c8125e658513dcb068370c48b1e8f15a01c HEAD; echo $?)" = "0"
+          cp tools/_tmp_r318al_continuity_generate.py /tmp/r318al_continuity_generate.py
+          git reset --hard 02233c8125e658513dcb068370c48b1e8f15a01c
+          git clean -fdx
+          test "$(git rev-parse HEAD)" = "02233c8125e658513dcb068370c48b1e8f15a01c"
+          test "$(git rev-parse HEAD^{tree})" = "fc9293d821dd3e6e269763c3c0ab091428c29490"
+
+      - name: Discover exact builder job receipt
+        id: receipt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          job_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" --jq '.jobs[] | select(.name=="build-continuity") | .id' | head -n1)"
+          test -n "$job_id"
+          echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
+          echo "R3_18AL_BUILDER_RECEIPT=${GITHUB_RUN_ID}/${job_id}"
+
+      - name: Generate exact docs-only admission candidate
+        shell: bash
+        env:
+          R318AL_BUILDER_RUN: ${{ github.run_id }}
+          R318AL_BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          python /tmp/r318al_continuity_generate.py
+
+      - name: Verify exact nine-file scope and syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -N docs/continuity/MIMIR_R3_18AL_DECISION.md docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md
+          mapfile -t actual < <(git diff --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AL_DECISION.md \
+            docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          test ! -e .github/workflows/_tmp_r318al_continuity.yml
+          test ! -e tools/_tmp_r318al_continuity_generate.py
+          test ! -e .github/workflows/_tmp_r318al_continuity_trigger.txt
+          echo R3_18AL_SCOPE=PASS
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          & ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Commit and publish clean continuity candidate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "MIMIR Admission Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AL_DECISION.md \
+            docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m "Admit R3.18AL and open R3.18AM"
+          git push origin HEAD:refs/heads/continuity/r318al-admit-am-v1
+          echo "R3_18AL_CONTINUITY_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18AL_CONTINUITY_TREE=$(git rev-parse HEAD^{tree})"
