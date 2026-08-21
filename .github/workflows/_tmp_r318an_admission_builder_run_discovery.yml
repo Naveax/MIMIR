@@ -1,0 +1,89 @@
+name: R3.18AN Admission Builder Run Discovery
+
+on:
+  push:
+    branches:
+      - ops/r318an-admission-builder-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318an_admission_builder_run_discovery_trigger.txt
+
+concurrency:
+  group: r318an-admission-builder-run-discovery
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BUILDER_HEAD: f32e0df54178f956b6aac5bd6f47b33ea746947f
+      BUILDER_NAME: R3.18AN Continuity Admission Builder
+    steps:
+      - uses: actions/checkout@v6
+      - name: Mark discovery pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318an/admission-builder-discovery' \
+            -f description='R3.18AN admission builder discovery running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+      - name: Discover immutable builder run
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 36); do
+            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$BUILDER_HEAD&event=push&per_page=20")"
+            count="$(jq --arg n "$BUILDER_NAME" '[.workflow_runs[] | select(.name == $n)] | length' <<<"$runs")"
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate admission builder runs detected: $count" >&2
+              exit 1
+            fi
+            if [ "$count" -eq 1 ]; then
+              status="$(jq -r --arg n "$BUILDER_NAME" '.workflow_runs[] | select(.name == $n) | .status' <<<"$runs")"
+              run="$(jq -r --arg n "$BUILDER_NAME" '.workflow_runs[] | select(.name == $n) | .id' <<<"$runs")"
+              if [ "$status" = completed ]; then
+                conclusion="$(jq -r --arg n "$BUILDER_NAME" '.workflow_runs[] | select(.name == $n) | .conclusion' <<<"$runs")"
+                job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/jobs" --jq '.jobs[0].id')"
+                {
+                  echo "R3_18AN_ADMISSION_BUILDER_HEAD=$BUILDER_HEAD"
+                  echo "R3_18AN_ADMISSION_BUILDER_RUN=$run"
+                  echo "R3_18AN_ADMISSION_BUILDER_JOB=$job"
+                  echo "R3_18AN_ADMISSION_BUILDER_CONCLUSION=$conclusion"
+                  echo "R3_18AN_ADMISSION_BUILDER_COUNT=$count"
+                  echo "R3_18AN_ADMISSION_BUILDER_DUPLICATE_GUARD=PASS"
+                } | tee r318an_admission_builder_run.txt
+                test "$conclusion" = success
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo 'builder run did not settle uniquely' >&2
+          exit 1
+      - name: Upload discovery receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318an-admission-builder-run
+          path: r318an_admission_builder_run.txt
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report discovery status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure; desc='R3.18AN admission builder discovery failed'
+          if [ "$JOB_STATUS" = success ]; then state=success; desc='R3.18AN admission builder discovery succeeded'; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" -f context='r318an/admission-builder-discovery' -f description="$desc" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
