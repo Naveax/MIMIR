@@ -1,31 +1,204 @@
-name: CI
+name: Aux Export Symlink Confinement Builder V1
 
 on:
   push:
-  pull_request:
+    branches:
+      - recovery/export-symlink-confinement-ci-v1
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'tools/_tmp_export_symlink_confinement_patch.py'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: aux-export-symlink-confinement-builder-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  build-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      PATCH_BLOB: cc0ab6f28e76e0607b85dace8b69dadb74ebb5af
+      CANDIDATE_BRANCH: aux/export-symlink-confinement-v1
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout exact recovery head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze helper scope and fresh main
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_export_symlink_confinement_patch.py)" = "$PATCH_BLOB"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_export_symlink_confinement_patch.py | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          cp tools/_tmp_export_symlink_confinement_patch.py /tmp/export_symlink_confinement_patch.py
+          python -m py_compile /tmp/export_symlink_confinement_patch.py
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Refuse existing clean candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'exists=1' >> "$GITHUB_OUTPUT"
+            echo AUX_EXPORT_SYMLINK_NOOP_EXISTING=1
+          else
+            echo 'exists=0' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply confined read path and Unix regressions
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python /tmp/export_symlink_confinement_patch.py
+          cat > crates/mimir-export/tests/symlink_confinement.rs <<'RS'
+          #![cfg(unix)]
+
+          use mimir_anchor::ANCHOR_ARTIFACT_PRODUCER;
+          use mimir_export::{
+              ExportBundleInput, ExportEncoding, export_bundle, inspect_export_bundle,
+              load_export_bundle,
+          };
+          use mimir_types::{
+              AnchorId, AnchorKind, AnchorRecord, ArtifactHeader, ArtifactKind, FrameIndex, Metadata,
+              PersistedAnchorArtifact, ReplayId,
+          };
+          use std::fs;
+          use std::os::unix::fs::symlink;
+          use std::path::{Path, PathBuf};
+          use tempfile::tempdir;
+
+          fn valid_anchor() -> PersistedAnchorArtifact {
+              PersistedAnchorArtifact::new(
+                  ArtifactHeader::for_kind(ArtifactKind::Anchor, ANCHOR_ARTIFACT_PRODUCER),
+                  AnchorRecord {
+                      id: AnchorId::new("anchor-symlink-confinement"),
+                      replay_id: ReplayId::new("replay-symlink-confinement"),
+                      frame_index: FrameIndex::new(1),
+                      kind: AnchorKind::Manual,
+                      metadata: Metadata::new(),
+                  },
+              )
+          }
+
+          fn write_bundle(parent: &Path) -> PathBuf {
+              let bundle = parent.join("bundle");
+              export_bundle(
+                  &bundle,
+                  &ExportBundleInput {
+                      export_name: "symlink-confinement".to_string(),
+                      artifact_encoding: ExportEncoding::Json,
+                      anchor_artifacts: vec![valid_anchor()],
+                      branch_artifacts: Vec::new(),
+                      created_by_component: Some("symlink-confinement-test".to_string()),
+                  },
+              )
+              .expect("valid bundle should export");
+              inspect_export_bundle(&bundle).expect("regular bundle should inspect");
+              load_export_bundle(&bundle).expect("regular bundle should load");
+              bundle
+          }
+
+          #[test]
+          fn byte_identical_final_artifact_symlink_is_rejected_before_consumption() {
+              let directory = tempdir().expect("tempdir");
+              let bundle = write_bundle(directory.path());
+              let artifact = bundle.join("anchors/anchor-0000.json");
+              let outside = directory.path().join("outside-anchor.json");
+              fs::copy(&artifact, &outside).expect("copy byte-identical outside artifact");
+              fs::remove_file(&artifact).expect("remove in-root artifact");
+              symlink(&outside, &artifact).expect("create final artifact symlink");
+
+              assert!(inspect_export_bundle(&bundle).is_err());
+              assert!(load_export_bundle(&bundle).is_err());
+          }
+
+          #[test]
+          fn symlinked_intermediate_artifact_directory_is_rejected() {
+              let directory = tempdir().expect("tempdir");
+              let bundle = write_bundle(directory.path());
+              let anchors = bundle.join("anchors");
+              let outside = directory.path().join("outside-anchors");
+              fs::rename(&anchors, &outside).expect("move anchors outside bundle");
+              symlink(&outside, &anchors).expect("create intermediate directory symlink");
+
+              assert!(inspect_export_bundle(&bundle).is_err());
+              assert!(load_export_bundle(&bundle).is_err());
+          }
+
+          #[test]
+          fn manifest_and_index_symlinks_are_rejected() {
+              for file_name in ["manifest.json", "index.json"] {
+                  let directory = tempdir().expect("tempdir");
+                  let bundle = write_bundle(directory.path());
+                  let in_root = bundle.join(file_name);
+                  let outside = directory.path().join(format!("outside-{file_name}"));
+                  fs::copy(&in_root, &outside).expect("copy control file outside bundle");
+                  fs::remove_file(&in_root).expect("remove in-root control file");
+                  symlink(&outside, &in_root).expect("create control-file symlink");
+
+                  assert!(inspect_export_bundle(&bundle).is_err(), "{file_name}");
+                  assert!(load_export_bundle(&bundle).is_err(), "{file_name}");
+              }
+          }
+
+          #[test]
+          fn symlink_bundle_root_is_rejected() {
+              let directory = tempdir().expect("tempdir");
+              let bundle = write_bundle(directory.path());
+              let alias = directory.path().join("bundle-alias");
+              symlink(&bundle, &alias).expect("create root symlink");
+
+              assert!(inspect_export_bundle(&alias).is_err());
+              assert!(load_export_bundle(&alias).is_err());
+          }
+          RS
+          cargo fmt --all
+          git diff --check
+          mapfile -t actual < <(git diff --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' crates/mimir-export/src/lib.rs crates/mimir-export/tests/symlink_confinement.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+
+      - name: Linux symlink confinement regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-export --test symlink_confinement -- --nocapture
+
+      - name: Full mimir-export regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-export -- --nocapture
+
+      - name: Publish clean source-and-test candidate once
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Auxiliary Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- crates/mimir-export/src/lib.rs crates/mimir-export/tests/symlink_confinement.rs
+          mapfile -t actual < <(git diff --cached --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' crates/mimir-export/src/lib.rs crates/mimir-export/tests/symlink_confinement.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --cached --check
+          git commit -m 'fix(export): reject symlink traversal on bundle reads'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared during builder run; refusing overwrite' >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_EXPORT_SYMLINK_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
