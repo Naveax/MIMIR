@@ -11,26 +11,60 @@ param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+if ($Count -le 0) {
+    throw "Count must be greater than zero. Actual: $Count"
+}
+
 if (-not (Test-Path -LiteralPath $ReplayRoot -PathType Container)) {
     throw "Replay root not found: $ReplayRoot"
 }
 
-if (Test-Path -LiteralPath $OutputRoot) {
-    Remove-Item -LiteralPath $OutputRoot -Recurse -Force
+$ReplayRootFull = [System.IO.Path]::GetFullPath(
+    (Resolve-Path -LiteralPath $ReplayRoot -ErrorAction Stop).Path
+)
+$OutputRootFull = if (Test-Path -LiteralPath $OutputRoot) {
+    [System.IO.Path]::GetFullPath(
+        (Resolve-Path -LiteralPath $OutputRoot -ErrorAction Stop).Path
+    )
+} else {
+    [System.IO.Path]::GetFullPath($OutputRoot)
 }
-New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
 
-$ManifestPath = Join-Path $OutputRoot "manifest.jsonl"
+$PathComparison = if ($IsWindows) {
+    [System.StringComparison]::OrdinalIgnoreCase
+} else {
+    [System.StringComparison]::Ordinal
+}
+$Separator = [System.IO.Path]::DirectorySeparatorChar
+$ReplayPrefix = $ReplayRootFull.TrimEnd([char[]]@('/', '\')) + $Separator
+$OutputPrefix = $OutputRootFull.TrimEnd([char[]]@('/', '\')) + $Separator
+
+$SameRoot = [string]::Equals($ReplayRootFull, $OutputRootFull, $PathComparison)
+$OutputInsideReplay = $OutputPrefix.StartsWith($ReplayPrefix, $PathComparison)
+$ReplayInsideOutput = $ReplayPrefix.StartsWith($OutputPrefix, $PathComparison)
+
+if ($SameRoot -or $OutputInsideReplay -or $ReplayInsideOutput) {
+    throw "ReplayRoot and OutputRoot must not overlap. replay=$ReplayRootFull output=$OutputRootFull"
+}
+
+if (Test-Path -LiteralPath $OutputRootFull) {
+    Remove-Item -LiteralPath $OutputRootFull -Recurse -Force
+}
+New-Item -ItemType Directory -Path $OutputRootFull -Force | Out-Null
+
+$ManifestPath = Join-Path $OutputRootFull "manifest.jsonl"
 
 $Files = @(
     Get-ChildItem `
-        -LiteralPath $ReplayRoot `
+        -LiteralPath $ReplayRootFull `
         -File `
         -Filter "*.replay" `
         -Recurse `
         -Force `
         -ErrorAction Stop |
-    Sort-Object Length -Descending
+    Sort-Object `
+        @{ Expression = { [int64]$_.Length }; Descending = $true }, `
+        @{ Expression = { [string]$_.FullName }; Descending = $false }
 )
 
 if ($Files.Count -lt $Count) {
@@ -60,7 +94,7 @@ foreach ($File in $Files) {
 
     $Rank = $Selected.Count + 1
     $Name = "{0:D3}_{1}" -f $Rank, $File.Name
-    $Dest = Join-Path $OutputRoot $Name
+    $Dest = Join-Path $OutputRootFull $Name
 
     Copy-Item `
         -LiteralPath $File.FullName `
@@ -68,14 +102,14 @@ foreach ($File in $Files) {
         -Force
 
     $Record = [ordered]@{
-        rank             = $Rank
-        fixture_id       = "largest_{0:D3}" -f $Rank
-        filename         = $Name
+        rank              = $Rank
+        fixture_id        = "largest_{0:D3}" -f $Rank
+        filename          = $Name
         original_filename = $File.Name
-        bytes            = [int64]$File.Length
-        sha256           = $Hash
-        source           = "RLCS_REPLAYS_1V1"
-        selection_policy = "largest_sha256_unique_by_file_size"
+        bytes             = [int64]$File.Length
+        sha256            = $Hash
+        source            = "RLCS_REPLAYS_1V1"
+        selection_policy  = "largest_sha256_unique_by_file_size"
     }
 
     $Json = $Record | ConvertTo-Json -Compress
