@@ -159,6 +159,15 @@ where
     dispatch(cli)
 }
 
+pub fn try_run_from<I, T>(args: I) -> Result<String>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    let cli = Cli::try_parse_from(args).map_err(|error| MimirError::message(error.to_string()))?;
+    dispatch(cli)
+}
+
 pub fn dispatch(cli: Cli) -> Result<String> {
     let report = match cli.command {
         Commands::Mine {
@@ -321,6 +330,17 @@ mod tests {
             }
             _ => panic!("expected replay-compat-matrix command"),
         }
+    }
+
+    #[test]
+    fn try_run_from_returns_parse_errors_without_process_exit() {
+        let error = try_run_from(["mimir-cli", "definitely-not-a-command"])
+            .expect_err("fallible library parsing should return an error");
+
+        assert!(matches!(error, MimirError::Message(_)));
+        let message = error.to_string();
+        assert!(message.contains("unrecognized subcommand"));
+        assert!(message.contains("definitely-not-a-command"));
     }
 
     #[test]
