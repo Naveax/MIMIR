@@ -1,0 +1,30 @@
+name: Aux Corpus Manifest Contract Validation
+
+on:
+  pull_request:
+    branches:
+      - aux/corpus-manifest-fail-closed-v1
+    paths:
+      - scripts/verify_test_corpus.ps1
+      - scripts/test_verify_test_corpus_contracts.ps1
+      - .github/workflows/_tmp_aux_corpus_contracts.yml
+
+concurrency:
+  group: aux-corpus-manifest-contract-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  corpus-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout validation head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Run synthetic corpus fail-closed contracts
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/test_verify_test_corpus_contracts.ps1
