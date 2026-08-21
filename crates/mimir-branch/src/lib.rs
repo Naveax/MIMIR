@@ -1,9 +1,10 @@
-use mimir_core::{NamedComponent, Result};
+use mimir_core::{MimirError, NamedComponent, Result};
 use mimir_types::{
     ActionRecord, AnchorRecord, ArtifactHeader, ArtifactKind, BranchId, BranchOrigin, BranchRecord,
     Metadata, PersistedBranchArtifact,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 pub const BRANCH_ARTIFACT_PRODUCER: &str = "mimir-branch";
 
@@ -37,6 +38,39 @@ impl LegalityFilter for LegalHintFilter {
 
 pub trait BranchGenerator {
     fn generate(&self, request: &BranchGenerationRequest) -> Result<Vec<BranchRecord>>;
+}
+
+/// Additive validation surface for materialized branch batches.
+///
+/// It deliberately preserves the historical `anchor:branch:index` generator identity contract.
+/// Consumers that reload or compose batches can opt into parent/identity validation without
+/// changing proposal filtering, ordering, labels, actions, scores, or generated IDs.
+pub trait BranchBatchVerifier {
+    fn verify_batch(&self, anchor: &AnchorRecord, branches: &[BranchRecord]) -> Result<()>;
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub struct StrictBranchIdentityVerifier;
+
+impl BranchBatchVerifier for StrictBranchIdentityVerifier {
+    fn verify_batch(&self, anchor: &AnchorRecord, branches: &[BranchRecord]) -> Result<()> {
+        let mut ids = BTreeSet::new();
+        for branch in branches {
+            if branch.anchor_id != anchor.id {
+                return Err(MimirError::message(format!(
+                    "branch parent mismatch for {}: expected {}, got {}",
+                    branch.id, anchor.id, branch.anchor_id
+                )));
+            }
+            if !ids.insert(branch.id.clone()) {
+                return Err(MimirError::message(format!(
+                    "duplicate branch id in batch: {}",
+                    branch.id
+                )));
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -118,15 +152,19 @@ mod tests {
         AnchorId, AnchorKind, ArtifactHeader, ArtifactKind, FieldValue, FrameIndex, ReplayId,
     };
 
-    #[test]
-    fn generator_respects_bound_and_legal_hint_filter() {
-        let anchor = AnchorRecord {
+    fn anchor() -> AnchorRecord {
+        AnchorRecord {
             id: AnchorId::new("anchor-1"),
             replay_id: ReplayId::new("replay-1"),
             frame_index: FrameIndex::new(10),
             kind: AnchorKind::Manual,
             metadata: Metadata::new(),
-        };
+        }
+    }
+
+    #[test]
+    fn generator_respects_bound_and_legal_hint_filter() {
+        let anchor = anchor();
 
         let proposals = vec![
             BranchProposal {
@@ -170,13 +208,7 @@ mod tests {
 
     #[test]
     fn generator_emits_persisted_branch_artifacts() {
-        let anchor = AnchorRecord {
-            id: AnchorId::new("anchor-1"),
-            replay_id: ReplayId::new("replay-1"),
-            frame_index: FrameIndex::new(10),
-            kind: AnchorKind::Manual,
-            metadata: Metadata::new(),
-        };
+        let anchor = anchor();
         let actions = vec![ActionRecord {
             action_key: "jump".to_string(),
             fields: Metadata::from([("pressed", FieldValue::Boolean(true))]),
@@ -215,6 +247,66 @@ mod tests {
                 legality_hint: Some(true),
                 metadata,
             }
+        );
+    }
+
+    #[test]
+    fn branch_batch_verifier_accepts_generated_batch_without_rewriting_ids() {
+        let anchor = anchor();
+        let request = BranchGenerationRequest {
+            anchor: anchor.clone(),
+            proposals: vec![
+                BranchProposal {
+                    label: "first".to_string(),
+                    actions: Vec::new(),
+                    legal_hint: Some(true),
+                    metadata: Metadata::new(),
+                },
+                BranchProposal {
+                    label: "second".to_string(),
+                    actions: Vec::new(),
+                    legal_hint: None,
+                    metadata: Metadata::new(),
+                },
+            ],
+            max_branches: 2,
+        };
+        let branches = BoundedManualBranchGenerator::default()
+            .generate(&request)
+            .expect("generated branches");
+
+        StrictBranchIdentityVerifier
+            .verify_batch(&anchor, &branches)
+            .expect("generated batch should verify");
+        assert_eq!(branches[0].id.as_str(), "anchor-1:branch:0");
+        assert_eq!(branches[1].id.as_str(), "anchor-1:branch:1");
+    }
+
+    #[test]
+    fn branch_batch_verifier_rejects_parent_drift_and_duplicate_ids() {
+        let anchor = anchor();
+        let valid = BranchRecord {
+            id: BranchId::new("branch-a"),
+            anchor_id: anchor.id.clone(),
+            origin: BranchOrigin::Imported,
+            label: None,
+            actions: Vec::new(),
+            legality_hint: None,
+            metadata: Metadata::new(),
+        };
+
+        let mut wrong_parent = valid.clone();
+        wrong_parent.anchor_id = AnchorId::new("other-anchor");
+        assert!(
+            StrictBranchIdentityVerifier
+                .verify_batch(&anchor, &[wrong_parent])
+                .is_err()
+        );
+
+        assert!(
+            StrictBranchIdentityVerifier
+                .verify_batch(&anchor, &[valid.clone(), valid])
+                .is_err()
         );
     }
 }
