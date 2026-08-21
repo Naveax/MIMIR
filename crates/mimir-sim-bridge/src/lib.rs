@@ -74,7 +74,8 @@ impl SimResultVerifier for DeterministicFakeBackend {
         if result.backend != self.component_name() {
             return Err(MimirError::message(format!(
                 "simulation result backend mismatch: expected {}, got {}",
-                self.component_name(), result.backend
+                self.component_name(),
+                result.backend
             )));
         }
 
@@ -143,7 +144,9 @@ mod tests {
     fn fake_backend_verifier_accepts_exact_result() {
         let request = request();
         let backend = DeterministicFakeBackend;
-        let result = backend.simulate(&request).expect("simulation should succeed");
+        let result = backend
+            .simulate(&request)
+            .expect("simulation should succeed");
 
         backend
             .verify_result(&request, &result)
@@ -154,7 +157,9 @@ mod tests {
     fn fake_backend_verifier_rejects_identity_backend_and_count_drift() {
         let request = request();
         let backend = DeterministicFakeBackend;
-        let result = backend.simulate(&request).expect("simulation should succeed");
+        let result = backend
+            .simulate(&request)
+            .expect("simulation should succeed");
 
         let mut wrong_id = result.clone();
         wrong_id.simulation_id = "other".to_string();
@@ -173,7 +178,9 @@ mod tests {
     fn fake_backend_verifier_rejects_tampered_step_hash() {
         let request = request();
         let backend = DeterministicFakeBackend;
-        let mut result = backend.simulate(&request).expect("simulation should succeed");
+        let mut result = backend
+            .simulate(&request)
+            .expect("simulation should succeed");
         result.step_hashes[1] = "tampered".to_string();
 
         let error = backend
