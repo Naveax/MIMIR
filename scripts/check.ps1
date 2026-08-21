@@ -1,2 +1,2 @@
 $ErrorActionPreference = "Stop"
-cargo check --workspace --all-targets --all-features
+cargo check --locked --workspace --all-targets --all-features
