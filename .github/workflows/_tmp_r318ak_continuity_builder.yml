@@ -1,0 +1,185 @@
+name: R3.18AK Continuity Builder
+
+on:
+  push:
+    branches:
+      - ops/r318ak-candidate-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318ak_continuity_builder_trigger.txt
+
+concurrency:
+  group: r318ak-continuity-builder
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_SHA: f20f529e3ada6e9a671ea91e5676a17a00770145
+      TARGET_BRANCH: parallel/s1-r3-18ak-continuity-v1
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Freeze authority and branch uniqueness
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "$TARGET_BRANCH" >/dev/null 2>&1; then
+            echo "target branch already exists" >&2
+            exit 1
+          fi
+          git checkout -b "$TARGET_BRANCH"
+      - name: Write AK closure and AL execution state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          prod='f20f529e3ada6e9a671ea91e5676a17a00770145'
+          tree='98c675811cca4e4d7f0122c762f371548c9266c2'
+          parent='5e26e7d3ceceac9752c35dde9c5074a1cd15262d'
+          contract='cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c'
+          candidate_run='32454918857/96690251188'
+          builder='32454544283/96689214219'
+          published='32459617440/96703744791'
+
+          def must_replace(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f'missing replacement anchor: {label}')
+              return text.replace(old, new, 1)
+
+          p=Path('MIMIR_CONTINUE_HERE.md'); s=p.read_text(encoding='utf-8')
+          s=must_replace(s,'LAST_PRODUCTION_CODE_SHA:\n  2d351e8ceb601e2fbe515d2977b2103a4b2c7976','LAST_PRODUCTION_CODE_SHA:\n  '+prod,'continue production sha')
+          s=must_replace(s,'LAST_PRODUCTION_MILESTONE:\n  R3.18AG — bounded true-only property-control production after published R3.18AD payload','LAST_PRODUCTION_MILESTONE:\n  R3.18AK — bounded post-AG following-header production composition','continue milestone')
+          s=must_replace(s,'CURRENT_PASS:\n  R3.18AK — bounded post-AG following-header production composition','CURRENT_PASS:\n  R3.18AL — published R3.18AK post-AG following-header differential audit','continue current pass')
+          s=must_replace(s,'CURRENT_PASS_TYPE:\n  production implementation / after one valid published R3.18AG true-control result decode exactly one following existing-actor header, require exact R3.18AJ membership and stop at payload_start','CURRENT_PASS_TYPE:\n  read-only differential audit / validate published R3.18AK on the immutable R3.18AI 47-row lane through payload_start with zero production mutation','continue current type')
+          s=must_replace(s,'  R3.18AK ACTIVE production implementation: only after one valid published R3.18AG true control, decode exactly one following header with the existing stateless primitive, require exact R3.18AJ membership, stop at payload_start','  R3.18AK PRODUCTION at '+prod+': validates one published R3.18AG true-control result, reuses the stateless header primitive, requires exact R3.18AJ seven-field membership, and stops exactly at payload_start\n  R3.18AL ACTIVE read-only differential: validate published AK on the exact immutable R3.18AI 47-row lane; production remains frozen at R3.18AK','continue hard stop')
+          closure=f'''\nR3_18AK_PRODUCTION_CLOSURE:\n  Outcome A / production {prod} / tree {tree} / parent {parent}\n  R3.18AJ contract: sha256:{contract} / exact_tuple_only / 17 contexts / multiplicity 47 / Int=47\n  corrected builder run/job: {builder} SUCCESS\n  exact clean/validation PR CI: {candidate_run} SUCCESS / PR #62 closed unmerged\n  published-main CI: {published} SUCCESS / unique natural push CI count 1 / duplicate guard PASS\n  discovery receipt: run/job 32459835105/96704374410 SUCCESS / artifact 9438546068 / ZIP sha256:b952c9e8fd4deda3eb99a0b8c1b3f9d2e5c8938a2d45224e7120d7bf2df233ba\n  exact clean scope: crates/mimir-replay/src/lib.rs + crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs\n  focused AK tests: 5/5 PASS; full mimir-replay + repository verification PASS\n  exact behavior: recompute supplied AG control; one stateless header; exact AJ tuple membership; stop=payload_start\n  negative controls: Cartesian/fabricated/old-Z/wrong-version/wrong-actor/unresolved/truncation/repeatability/post-payload poison PASS\n  following payload / another control consumption: 0/0\n  Cargo/fixture/corpus/workflow/support mutation in clean production commit: 0/0/0/0/0\n'''
+          anchor='R3_18AB_EVIDENCE_CLOSURE:'
+          if 'R3_18AK_PRODUCTION_CLOSURE:' not in s:
+              if anchor not in s: raise SystemExit('missing closure insertion anchor')
+              s=s.replace(anchor, closure+'\n'+anchor,1)
+          s=re.sub(r'# 39\. CURRENT ONE-LINE TRUTH\n\n> \*\*.*?\*\*\n',f'# 39. CURRENT ONE-LINE TRUTH\n\n> **MIMIR production is R3.18AK `{prod}` / tree `{tree}`. R3.18AK is CLOSED Outcome A: one post-AG following header, exact R3.18AJ 17-tuple membership, stop exactly at `payload_start`, published-main CI `{published}` SUCCESS. R3.18AL is active read-only published-AK differential on the immutable R3.18AI 47-row lane; payload, another control, loops/cursors and actor/frame/semantic/runtime widening remain closed.**\n',s,count=1,flags=re.S)
+          s=s.replace('[>] R3.18 complete property loop — active R3.18L following-property control evidence','[>] R3.18 complete property loop — active R3.18AL published-AK following-header differential')
+          checklist='''# CURRENT PASS CHECKLIST — R3.18AL\n\n**Goal:** differentially validate published R3.18AK on exactly the immutable R3.18AI 47-row lane through `payload_start`. Production Rust remains frozen.\n\n```text\n[ ] Fetch fresh main; require production R3.18AK f20f529e3ada6e9a671ea91e5676a17a00770145 / tree 98c675811cca4e4d7f0122c762f371548c9266c2.\n[ ] Freeze AK builder 32454544283/96689214219, PR CI 32454918857/96690251188 and published-main CI 32459617440/96703744791.\n[ ] Freeze R3.18AI authority 9d424dae2ed8cc7a0a6868111805a48763131196, artifact 9424764320/sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5; witness reselection = 0.\n[ ] Verify R3.18AJ contract sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / 17 exact tuples / multiplicity 47 / Int=47.\n[ ] Reconstruct the exact valid published R3.18AG prior/control for all 47 frozen rows and invoke published R3.18AK exactly once per row.\n[ ] Require published-AK header equality through payload_start 47/47 and direct stateless-header equality 47/47; native-oracle mismatch = 0.\n[ ] Reconstruct all 17 AJ exact contexts and exact observed multiplicities; no R3.18Z/R3.18P inheritance.\n[ ] Run truncation, corrupt-AG/prior, wrong actor, unresolved lookup, wrong version, Cartesian, fabricated eighteenth, old-Z-only, repeatability and post-payload-start poison negatives.\n[ ] Prove following-payload / another-control consumption 0/0; no repeated/generalized property loop or generic cursor.\n[ ] Produce privacy-safe immutable evidence with internal manifest, SHA-256 receipts and mutation counters.\n[ ] Run focused AK regression, full mimir-replay/workspace/clippy/repository verifier and same-head normal CI; reuse existing equivalent runs if present.\n[ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.\n[ ] Outcome A may open only a separate post-AK following-payload evidence pass; R3.18AL itself changes no production Rust.\n```\n'''
+          m=re.search(r'# CURRENT PASS CHECKLIST — R3\.18AK\n.*\Z',s,flags=re.S)
+          if not m: raise SystemExit('missing terminal AK checklist')
+          s=s[:m.start()]+checklist
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('MIMIR_KNOWLEDGE_GRAPH.md'); s=p.read_text(encoding='utf-8')
+          s=s.replace('R3.18AK active bounded post-AG following-header production composition','R3.18AK bounded post-AG following-header production composition / CLOSED\nR3.18AL active published-AK following-header differential')
+          start=s.index('## Mandatory reading order')
+          end=s.index('\n### ',start)
+          sec=s[start:end]
+          lines=sec.splitlines()
+          items=[]; prefix=[]
+          for line in lines:
+              m=re.match(r'^(\d+)\. `(.*)`$',line)
+              if m: items.append(m.group(2))
+              else: prefix.append(line)
+          for name, after in [
+              ('docs/continuity/MIMIR_R3_18AK_DECISION.md','docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md'),
+              ('docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md','docs/continuity/MIMIR_R3_18AK_DECISION.md')]:
+              if name not in items:
+                  items.insert(items.index(after)+1,name)
+          newsec='\n'.join(prefix).rstrip()+'\n\n'+'\n'.join(f'{i}. `{x}`' for i,x in enumerate(items,1))+'\n'
+          s=s[:start]+newsec+s[end:]
+          latest=f'''\n### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED\n- production `{prod}` / tree `{tree}` / parent `{parent}`\n- builder `{builder}`, validation PR #62 CI `{candidate_run}`, published-main CI `{published}` SUCCESS\n- exact AJ contract `{contract}` / 17 exact tuples / multiplicity 47 / Int=47\n- exact clean scope lib.rs + `r3_18ak_post_ag_following_header.rs`; payload/control consumption 0/0\n- next exact pass: R3.18AL published-AK differential on immutable R3.18AI 47-row lane\n\n### R3.18AL published-AK following-header differential: ACTIVE\n- read-only; production frozen at R3.18AK `{prod}`\n- reuse exactly the immutable R3.18AI 47 rows, witness reselection 0\n- stop at payload_start; payload/control/loop/cursor widening remains closed\n\n'''
+          marker='### R3.18AG bounded post-AD true control:'
+          if latest.strip() not in s:
+              s=s.replace(marker,latest+marker,1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('docs/continuity/MIMIR_BOUNDARY_LOCKS.md'); s=p.read_text(encoding='utf-8')
+          a=s.index('# 0. Current override')
+          b=s.index('\n---\n',a)
+          top=f'''# 0. Current override — R3.18AK production closed / R3.18AL active\n\nThis current override supersedes older status wording later in this historical lock file.\n\n## PRODUCTION — R3.18AK\n- `{prod}` / `{tree}`; parent `{parent}`;\n- requires one valid published R3.18AG true-control result and exact R3.18AJ seven-field membership;\n- reuses the existing stateless existing-actor property-header primitive;\n- decodes exactly one following header and stops exactly at `payload_start`;\n- following payload and another control consumption remain 0/0.\n\n## CLOSED EVIDENCE — R3.18AI Outcome A\n- immutable 47-row lane; one following header exact 47/47; 17 complete contexts; Int=47; mismatch 0; witness reselection 0.\n\n## CLOSED CONTRACT — R3.18AJ Outcome A\n- exact_tuple_only 17 complete seven-field tuples; multiplicity 47; contract `sha256:{contract}`;\n- R3.18Z/R3.18P inheritance false.\n\n## ACTIVE EVIDENCE GATE — R3.18AL\n- validate published R3.18AK on exactly the immutable R3.18AI 47-row lane;\n- production Rust frozen; no witness reselection;\n- compare through `payload_start` only and prove payload/control consumption 0/0.\n\n## CLOSED\n- post-AK following payload; another property control; false success semantics; alternate unadmitted layouts; repeated/generalized property loop or generic cursor;\n- next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.\n'''
+          s=s[:a]+top+s[b:]
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('docs/continuity/MIMIR_CONTINUITY_STATE.json'); d=json.loads(p.read_text(encoding='utf-8'))
+          d['updated_date']='2026-08-21'
+          d['last_production_code_sha']=prod
+          d['last_production_milestone']='R3.18AK'
+          d['last_production_milestone_name']='bounded post-AG following-header production composition'
+          d['current_pass']='R3.18AL'
+          d['current_pass_kind']='read-only differential audit / published-R3.18AK following-header validation'
+          d['current_pass_goal']='Validate published R3.18AK on exactly the immutable R3.18AI 47-row lane through payload_start with exact R3.18AJ membership and zero production mutation.'
+          d['current_pass_stop_boundary']='Exactly one published AK header through payload_start. No following payload, another control, repeated/generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.'
+          d['r3_18ak_production']={
+              'outcome':'A','sha':prod,'tree':tree,'parent':parent,'contract_sha256':contract,
+              'builder_run_job':builder,'candidate_ci_run_job':candidate_run,'validation_pr':62,
+              'published_main_ci_run_job':published,'published_main_ci_unique_count':1,
+              'duplicate_guard':'PASS','focused_tests':'5/5 PASS','following_payload_bits_consumed':0,
+              'another_control_bits_consumed':0,'clean_scope':['crates/mimir-replay/src/lib.rs','crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs']}
+          closed=d.setdefault('closed_now',[])
+          for x in ['post-R3.18AK following payload','another property control after R3.18AK','repeated/generalized property loop or generic cursor after R3.18AK']:
+              if x not in closed: closed.append(x)
+          n=d.setdefault('next_files_to_read',[])
+          for name, after in [('docs/continuity/MIMIR_R3_18AK_DECISION.md','docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md'),('docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md','docs/continuity/MIMIR_R3_18AK_DECISION.md')]:
+              if name not in n:
+                  n.insert(n.index(after)+1,name)
+          p.write_text(json.dumps(d,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+
+          Path('docs/continuity/MIMIR_CURRENT_STATE.md').write_text(f'''# MIMIR — Current Canonical State\n\n**Continuity date:** 2026-08-21\n**Repository:** `Naveax/MIMIR`\n**Canonical production SHA:** `{prod}`\n**Production tree:** `{tree}`\n**Production milestone:** `R3.18AK — bounded post-AG following-header production composition`\n**Last read-only evidence:** `R3.18AI — Outcome A / 47/47 / 17 exact contexts / Int=47 / mismatch 0 / artifact 9424764320`\n**Last contract:** `R3.18AJ — Outcome A / exact_tuple_only / 17 contexts / multiplicity 47 / sha256:{contract}`\n**Current exact pass:** `R3.18AL — published R3.18AK following-header differential audit`\n\n## Truthful boundary\n\nR3.18AK is published production at `{prod}` / `{tree}`. It validates the supplied published R3.18AG true-control result by recomputation, reuses the existing stateless property-header primitive, requires complete seven-field R3.18AJ membership, decodes exactly one following existing-actor header and stops at `payload_start`. It does not decode the following payload or another control bit.\n\n```text\npublication parent                  {parent}\nR3.18AJ contract                    sha256:{contract} / 17 tuples / multiplicity 47 / Int=47\nR3.18AK builder                     {builder} SUCCESS\nR3.18AK validation PR #62 CI        {candidate_run} SUCCESS / closed unmerged\nR3.18AK published-main CI           {published} SUCCESS / unique push CI count 1\nR3.18AK clean scope                 lib.rs + r3_18ak_post_ag_following_header.rs\nfollowing payload / another control 0 / 0\n```\n\n## Current gate\n\nR3.18AL is read-only. Reuse exactly the immutable R3.18AI 47-row authority with witness reselection 0 and validate the published R3.18AK API through `payload_start`. Production source must remain frozen.\n\n## Hard stop\n\nPost-AK payload, another property control, generalized/repeated property iteration or cursor, alternate unadmitted layouts, next actor/frame/lifecycle and raw-state/event/slice/skill/counterfactual/runtime/export behavior remain closed.\n''',encoding='utf-8')
+
+          Path('docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md').write_text(f'''# MIMIR — Next Chat Handoff\n\nCanonical production is **R3.18AK** at `{prod}` / `{tree}`. It was published from parent `{parent}` by force-free fast-forward. Validation PR #62 remained unmerged; exact-head CI `{candidate_run}` and published-main CI `{published}` are SUCCESS. The published-main push CI was unique; duplicate guard PASS.\n\nR3.18AJ remains the governing exact-context contract: `sha256:{contract}`, 17 complete seven-field tuples, multiplicity sum 47, `Int=47`, `exact_tuple_only`, with R3.18Z/R3.18P inheritance false.\n\nThe active pass is **R3.18AL**, read-only published-AK differential. Reuse exactly the immutable R3.18AI 47-row lane with witness reselection 0; reconstruct valid AG priors/controls, invoke published AK, compare through `payload_start`, and keep payload/another-control consumption at 0/0. Production Rust must not change.\n\nRead `MIMIR_CONTINUE_HERE.md`, `MIMIR_KNOWLEDGE_GRAPH.md`, `docs/continuity/MIMIR_CONTINUITY_STATE.json`, `docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json`, `docs/continuity/MIMIR_R3_18AK_DECISION.md`, and `docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md` before continuing.\n''',encoding='utf-8')
+
+          p=Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md'); s=p.read_text(encoding='utf-8')
+          if '## 2026-08-21 — R3.18AK — Bounded post-AG following-header production' not in s:
+              s += f'''\n\n---\n\n## 2026-08-21 — R3.18AK — Bounded post-AG following-header production\n\nProduction base SHA: `{parent}`\nProduction commit SHA: `{prod}`\nPass type: production implementation + exact-head validation + publication\nOutcome: **A — ADMITTED / PRODUCTION**\n\nWhat changed:\n- added one boundary-specific post-AG following-header composition in `mimir-replay`;\n- reused the existing stateless existing-actor header primitive;\n- enforced exact R3.18AJ seven-field tuple membership;\n- stopped exactly at `payload_start`; no payload or later-control decode was added.\n\nEvidence / validation:\n- R3.18AJ contract `sha256:{contract}` / 17 tuples / multiplicity 47 / Int=47;\n- corrected builder `{builder}` SUCCESS; focused AK tests 5/5 and full `mimir-replay` PASS;\n- validation PR #62 exact-head CI `{candidate_run}` SUCCESS and PR closed unmerged;\n- published-main CI `{published}` SUCCESS; exactly one natural push CI matched the published SHA; duplicate guard PASS;\n- published-main discovery receipt run/job `32459835105/96704374410` SUCCESS, artifact `9438546068`, ZIP `sha256:b952c9e8fd4deda3eb99a0b8c1b3f9d2e5c8938a2d45224e7120d7bf2df233ba`;\n- clean production scope exactly `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs`.\n\nBoundaries opened:\n- exactly one AJ-admitted post-AG following header through `payload_start`.\n\nBoundaries still closed:\n- post-AK following payload; another property control; generalized/repeated property loop or cursor; next actor/frame/lifecycle/raw state/events/slices/skills/runtime/export.\n\nNext exact pass:\n- `R3.18AL — read-only published-R3.18AK following-header differential on the immutable R3.18AI 47-row lane`.\n'''
+          p.write_text(s,encoding='utf-8')
+
+          Path('docs/continuity/MIMIR_R3_18AK_DECISION.md').write_text(f'''# MIMIR R3.18AK Decision — Bounded Post-R3.18AG Following-Header Production\n\n**Date:** 2026-08-21\n**Pass type:** production implementation\n**Outcome:** **A — ADMITTED / PRODUCTION / CLOSED**\n\n## Authority\n\n```text\ncanonical parent           {parent}\nproduction SHA             {prod}\nproduction tree            {tree}\nR3.18AJ contract SHA-256   {contract}\nR3.18AI immutable rows     47\nR3.18AI tags               Int=47\n```\n\n## Production behavior admitted\n\nStarting from one already-valid published R3.18AG true-control result, R3.18AK recomputes and requires exact control identity, derives the actor context from the already-valid prior, reuses the existing stateless existing-actor property-header primitive, resolves exactly one following header, requires complete seven-field R3.18AJ exact-tuple membership, and stops exactly at `payload_start`.\n\nNo following payload or another control bit is decoded or admitted. No repeated/generalized property loop or generic public cursor is introduced.\n\n## Validation\n\n```text\ncorrected builder          {builder} SUCCESS\nbuilder artifact           9436810006\nbuilder ZIP SHA-256        12926d7eff084c691d4430629fc135e54fa644e60ed92c7becc91af22e68b937\nfocused AK tests           5/5 PASS\nfull mimir-replay          PASS\nvalidation PR              #62 / CLOSED UNMERGED\nexact-head PR CI           {candidate_run} SUCCESS\npublished-main CI          {published} SUCCESS\npublished push CI count    1\nduplicate guard            PASS\ndiscovery receipt          32459835105/96704374410 SUCCESS\ndiscovery artifact         9438546068 / sha256:b952c9e8fd4deda3eb99a0b8c1b3f9d2e5c8938a2d45224e7120d7bf2df233ba\n```\n\nClean production scope is exactly `crates/mimir-replay/src/lib.rs` plus `crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs`; Cargo/fixture/corpus/workflow/support mutation is `0/0/0/0/0`.\n\nFocused negative controls reject Cartesian `(60,5,68,Int,868,32,10)`, fabricated `(60,5,39,Int,868,32,10)`, old-Z-only `(60,5,34,ActiveActor,868,32,10)`, wrong version, wrong actor, unresolved lookup, truncation, and prior/control inconsistency. Repeatability and post-`payload_start` poison invariance pass.\n\n## Hard stop\n\nStill closed: post-AK following payload, another property-control bit, false success semantics, alternate unadmitted layouts, repeated/generalized property iteration or generic cursor, next actor/frame/lifecycle, raw state, events, slices, skills, counterfactual execution and runtime/export widening.\n\n## Next exact pass\n\n`R3.18AL — read-only published-R3.18AK following-header differential on the exact immutable R3.18AI 47-row lane.`\n''',encoding='utf-8')
+
+          Path('docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md').write_text(f'''# MIMIR R3.18AL — Published R3.18AK Following-Header Differential Audit\n\n**Status:** ACTIVE\n**Pass type:** read-only differential evidence\n**Production authority:** R3.18AK `{prod}` / `{tree}`\n**Frozen parent evidence:** R3.18AI 47-row immutable lane\n**Contract authority:** R3.18AJ `sha256:{contract}`\n**Production mutation:** forbidden\n\n## 1. Goal\n\nValidate the published R3.18AK API on exactly the immutable R3.18AI 47-row lane. Reconstruct the already-admitted R3.18AG prior/control for every row, call published R3.18AK, compare the returned following header through `payload_start` against the frozen R3.18AI authority and the existing stateless native header primitive, and admit no bytes/bits after that boundary.\n\n## 2. Frozen authority\n\n```text\nproduction SHA/tree          {prod} / {tree}\nAK builder                    {builder} SUCCESS\nAK validation PR CI          {candidate_run} SUCCESS\nAK published-main CI         {published} SUCCESS\nAI evidence head             9d424dae2ed8cc7a0a6868111805a48763131196\nAI authority run/job         32418184036/96584056481 SUCCESS\nAI artifact                  9424764320 / sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5\nAI exact rows                47\nAI exact contexts            17\nAI tags                      Int=47\nwitness reselection          0\nAJ contract                  sha256:{contract}\n```\n\n## 3. Required evidence\n\n- verify all replay identities and frozen witness coordinates before decoding;\n- reconstruct valid published R3.18AG priors/true controls exactly;\n- invoke published R3.18AK once for each frozen row;\n- require control identity and header field/boundary equality 47/47;\n- require returned `stop_bit == payload_start_bit` 47/47;\n- compare to the direct stateless native header primitive without selecting new witnesses;\n- reconstruct the exact 17 AJ complete tuples and their observed multiplicities summing to 47;\n- require native/oracle mismatch 0;\n- consume zero following-payload bits and zero another-control bits.\n\n## 4. Negative controls\n\nRequire deterministic repeatability and fail-closed behavior for header truncation, corrupt AG/prior/control, wrong actor, unresolved lookup, wrong exact version context, Cartesian `(60,5,68,Int,868,32,10)`, fabricated `(60,5,39,Int,868,32,10)`, old-Z-only `(60,5,34,ActiveActor,868,32,10)`, and post-`payload_start` poison. R3.18Z/R3.18P inheritance remains forbidden.\n\n## 5. Evidence artifact\n\nProduce privacy-safe immutable evidence with exact source/production/oracle/replay identities, frozen witness manifest, per-row comparison, negative-control summary, mutation/consumption counters, internal manifest and SHA-256 receipts. Witness reselection must remain zero.\n\n## 6. Validation\n\nRun focused AK regression, full `mimir-replay`, workspace check/test/clippy and repository verifier, plus same-head normal CI. Before any workflow dispatch or PR, reuse an equivalent queued/in-progress run for the same SHA/workflow/input. Production/Cargo/fixture/corpus/support mutation must be `0/0/0/0/0`.\n\n## 7. Hard stop\n\nR3.18AL admits no production change and no post-AK payload. Another property-control bit, repeated/generalized property loop/cursor, next actor/frame/lifecycle, raw state/events/slices/skills/counterfactual/runtime/export remain closed.\n\n## 8. Outcome gate\n\n### Outcome A\nPublished R3.18AK matches the immutable 47-row authority exactly through `payload_start`; a later separate pass may investigate exactly one post-AK following payload.\n\n### Outcome B\nA bounded differential or harness gap exists; preserve evidence and open only the smallest targeted follow-up.\n\n### Outcome C\nProduction/source drift, witness reselection, contract widening, payload/control access, loop/generalization, mutation, or unexplained differential contradiction. Stop and do not widen.\n''',encoding='utf-8')
+          PY
+      - name: Scope and archive verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          changed="$(git diff --name-only | sort)"
+          printf '%s\n' "$changed"
+          expected="$(cat <<'EOF' | sort
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18AK_DECISION.md
+          docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md
+          EOF
+          )"
+          test "$changed" = "$expected"
+          test -z "$(git diff --name-only -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures corpus .github)"
+          grep -q 'CURRENT_PASS:' MIMIR_CONTINUE_HERE.md
+          grep -q 'R3.18AL' MIMIR_CONTINUE_HERE.md
+          grep -q 'R3.18AK bounded post-AG following-header production composition / CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+      - name: Commit and publish continuity branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AK_DECISION.md docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m 'Admit R3.18AK and open R3.18AL'
+          git push origin HEAD:"$TARGET_BRANCH"
+          echo "CONTINUITY_HEAD=$(git rev-parse HEAD)"
+          echo "CONTINUITY_TREE=$(git rev-parse HEAD^{tree})"
