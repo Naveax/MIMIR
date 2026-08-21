@@ -1,0 +1,10 @@
+# Repository-wide default ownership.
+* @Naveax
+
+# High-risk governance and continuity boundaries.
+/.github/ @Naveax
+/MIMIR_CONTINUE_HERE.md @Naveax
+/MIMIR_KNOWLEDGE_GRAPH.md @Naveax
+/MIMIR_ALL_SOURCES_SUPERBOOK.md @Naveax
+/docs/continuity/ @Naveax
+/scripts/ @Naveax
