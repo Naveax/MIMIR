@@ -1,31 +1,153 @@
-name: CI
+name: Aux Export Staged JSON Rename Builder V1
 
 on:
   push:
-  pull_request:
+    branches:
+      - recovery/export-staged-json-rename-ci-v1
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'tools/_tmp_export_staged_json_rename_patch.py'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: aux-export-staged-json-rename-builder-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
-
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      PATCH_BLOB: 455b0c97541bc3732255ca4b592d440e57b1e0b3
+      CANDIDATE_BRANCH: aux/export-staged-json-rename-v1
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout helper head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze helper and base
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_export_staged_json_rename_patch.py)" = "$PATCH_BLOB"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_export_staged_json_rename_patch.py | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          cp tools/_tmp_export_staged_json_rename_patch.py /tmp/patch.py
+          python -m py_compile /tmp/patch.py
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Refuse existing candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'exists=1' >> "$GITHUB_OUTPUT"
+            echo AUX_EXPORT_STAGED_JSON_RENAME_NOOP_EXISTING=1
+          else
+            echo 'exists=0' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply narrow source patch and regression
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python /tmp/patch.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('crates/mimir-export/src/lib.rs')
+          text = path.read_text(encoding='utf-8')
+          test_name = 'staged_json_replacement_uses_rename_and_cleans_failed_stage'
+          if test_name in text:
+              raise SystemExit('focused staged-json regression already exists')
+          if '#[cfg(test)]\nmod tests {' not in text:
+              raise SystemExit('expected inline test module not found')
+          insert = r'''
+
+    #[test]
+    fn staged_json_replacement_uses_rename_and_cleans_failed_stage() {
+        let directory = tempdir().expect("tempdir should be created");
+        let path = directory.path().join("value.json");
+        let first = BTreeMap::from([("version".to_string(), 1_u64)]);
+        let second = BTreeMap::from([("version".to_string(), 2_u64)]);
+
+        write_json_file_staged(&path, &first).expect("new staged JSON should publish");
+        write_json_file_staged(&path, &second)
+            .expect("existing staged JSON should be replaced through rename");
+        let loaded: BTreeMap<String, u64> =
+            load_json_file(&path).expect("replacement should reload");
+        assert_eq!(loaded, second);
+
+        let blocked_path = directory.path().join("blocked.json");
+        fs::create_dir(&blocked_path).expect("blocking destination directory should exist");
+        let error = write_json_file_staged(&blocked_path, &first)
+            .expect_err("rename onto an existing directory should fail");
+        assert!(error.to_string().contains("blocked.json"));
+        assert!(blocked_path.is_dir());
+
+        let mut names = fs::read_dir(directory.path())
+            .expect("temp directory should remain readable")
+            .map(|entry| {
+                entry
+                    .expect("directory entry should be readable")
+                    .file_name()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect::<Vec<_>>();
+        names.sort();
+        assert_eq!(names, vec!["blocked.json".to_string(), "value.json".to_string()]);
+    }
+'''
+          stripped = text.rstrip()
+          if not stripped.endswith('}'):
+              raise SystemExit('unexpected lib.rs ending')
+          idx = text.rfind('\n}')
+          if idx < 0:
+              raise SystemExit('final test-module brace not found')
+          text = text[:idx] + insert + text[idx:]
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
+          cargo fmt --all
+          git diff --check
+          test "$(git diff --name-only)" = 'crates/mimir-export/src/lib.rs'
+
+      - name: Focused staged replacement regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test -p mimir-export staged_json_replacement_uses_rename_and_cleans_failed_stage -- --nocapture
+
+      - name: Full mimir-export regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-export -- --nocapture
+
+      - name: Publish clean source-only candidate once
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Auxiliary Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- crates/mimir-export/src/lib.rs
+          test "$(git diff --cached --name-only)" = 'crates/mimir-export/src/lib.rs'
+          git diff --cached --check
+          git commit -m 'fix(export): replace staged JSON through rename'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared during builder run; refusing overwrite' >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_EXPORT_STAGED_JSON_RENAME_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
