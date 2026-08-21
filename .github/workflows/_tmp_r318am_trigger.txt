@@ -1,7 +1,7 @@
-R3.18AM evidence trigger v2
+R3.18AM evidence trigger v3
 base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
 production=f20f529e3ada6e9a671ea91e5676a17a00770145
 parent_al=06b8570a25a989651fc800a4ded900ce5e2f3dbe
-supersedes_failed_head=72184f77f3016ac38a41ca5bb11a9b44f2f1b16a
-fix=boxcars ordinal-4 payload insertion marker only
+supersedes_failed_heads=72184f77f3016ac38a41ca5bb11a9b44f2f1b16a,8917d4bfe69418f74f03b5611bf91670effad827
+fix=install rustfmt for exact Rust 1.85 toolchain only
 witness_reselection=0
