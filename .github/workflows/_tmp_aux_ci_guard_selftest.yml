@@ -1,0 +1,87 @@
+name: Aux Equivalent Run Guard Self-Test
+
+on:
+  push:
+    branches:
+      - validation/aux-ci-equivalent-run-guard-v1
+    paths:
+      - .github/workflows/_tmp_aux_ci_guard_selftest.yml
+
+concurrency:
+  group: aux-equivalent-run-guard-selftest
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  selftest:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout exact validation head
+        uses: actions/checkout@v6
+
+      - name: Exercise equivalent-run guard against live Actions API
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $repo = $env:GITHUB_REPOSITORY
+          $sha = $env:GITHUB_SHA
+          $branch = $env:GITHUB_REF_NAME
+          $workflow = 'Aux Equivalent Run Guard Self-Test'
+          $script = 'scripts/find_equivalent_active_action_run.ps1'
+
+          $foundSelf = $false
+          for ($attempt = 1; $attempt -le 6; $attempt++) {
+              & pwsh -NoProfile -File $script `
+                  -Repository $repo `
+                  -HeadSha $sha `
+                  -Workflow $workflow `
+                  -Event push `
+                  -HeadBranch $branch `
+                  -JsonOnly
+              $code = $LASTEXITCODE
+
+              if ($code -eq 3) {
+                  $foundSelf = $true
+                  break
+              }
+              if ($code -ne 0) {
+                  throw "guard inspection failed with exit code $code"
+              }
+
+              Start-Sleep -Seconds 5
+          }
+
+          if (-not $foundSelf) {
+              throw 'guard did not discover its own active workflow run'
+          }
+
+          & pwsh -NoProfile -File $script `
+              -Repository $repo `
+              -HeadSha $sha `
+              -Workflow $workflow `
+              -Event push `
+              -HeadBranch $branch `
+              -ExcludeRunId ([long]$env:GITHUB_RUN_ID) `
+              -JsonOnly
+          if ($LASTEXITCODE -ne 0) {
+              throw 'excluding the current run should leave no equivalent active run'
+          }
+
+          $missingSha = '0000000000000000000000000000000000000000'
+          & pwsh -NoProfile -File $script `
+              -Repository $repo `
+              -HeadSha $missingSha `
+              -Workflow $workflow `
+              -Event push `
+              -HeadBranch $branch `
+              -JsonOnly
+          if ($LASTEXITCODE -ne 0) {
+              throw 'a missing SHA should report no equivalent active run'
+          }
+
+          Write-Host 'AUX_EQUIVALENT_RUN_GUARD_SELFTEST=PASS'
