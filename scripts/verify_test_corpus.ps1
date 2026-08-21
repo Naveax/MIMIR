@@ -10,6 +10,7 @@ if ([string]::IsNullOrWhiteSpace($CorpusRoot)) {
     $CorpusRoot = Join-Path $RepoRoot "test_corpus\largest_100"
 }
 
+$CorpusRoot = [System.IO.Path]::GetFullPath($CorpusRoot)
 $Manifest = Join-Path $CorpusRoot "manifest.jsonl"
 
 if (-not (Test-Path -LiteralPath $Manifest -PathType Leaf)) {
@@ -40,18 +41,54 @@ if ($ReplayFiles.Count -ne 100) {
 $SeenHashes = [System.Collections.Generic.HashSet[string]]::new(
     [System.StringComparer]::OrdinalIgnoreCase
 )
+$SeenFilenames = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase
+)
 
 foreach ($Row in $Rows) {
-    $Path = Join-Path $CorpusRoot $Row.filename
+    $Filename = [string]$Row.filename
+
+    if (
+        [string]::IsNullOrWhiteSpace($Filename) -or
+        [System.IO.Path]::IsPathRooted($Filename) -or
+        $Filename -match '[\\/]' -or
+        $Filename -eq '.' -or
+        $Filename -eq '..' -or
+        [System.IO.Path]::GetExtension($Filename) -ine '.replay'
+    ) {
+        throw "Manifest filename must be a leaf .replay filename: $Filename"
+    }
+
+    if (-not $SeenFilenames.Add($Filename)) {
+        throw "Duplicate filename in checked-in corpus manifest: $Filename"
+    }
+
+    $ExpectedHash = [string]$Row.sha256
+    if ($ExpectedHash -notmatch '^[0-9A-Fa-f]{64}$') {
+        throw "Invalid SHA-256 in checked-in corpus manifest: $Filename"
+    }
+
+    try {
+        $ExpectedBytes = [int64]$Row.bytes
+    }
+    catch {
+        throw "Invalid byte length in checked-in corpus manifest: $Filename"
+    }
+
+    if ($ExpectedBytes -lt 0) {
+        throw "Invalid byte length in checked-in corpus manifest: $Filename"
+    }
+
+    $Path = Join-Path $CorpusRoot $Filename
 
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        throw "Missing replay: $($Row.filename)"
+        throw "Missing replay: $Filename"
     }
 
     $Item = Get-Item -LiteralPath $Path
 
-    if ([int64]$Item.Length -ne [int64]$Row.bytes) {
-        throw "Size mismatch: $($Row.filename)"
+    if ([int64]$Item.Length -ne $ExpectedBytes) {
+        throw "Size mismatch: $Filename"
     }
 
     $Hash = (
@@ -60,8 +97,8 @@ foreach ($Row in $Rows) {
             -Algorithm SHA256
     ).Hash.ToUpperInvariant()
 
-    if ($Hash -ne [string]$Row.sha256) {
-        throw "Hash mismatch: $($Row.filename)"
+    if ($Hash -ne $ExpectedHash.ToUpperInvariant()) {
+        throw "Hash mismatch: $Filename"
     }
 
     if (-not $SeenHashes.Add($Hash)) {
@@ -69,4 +106,10 @@ foreach ($Row in $Rows) {
     }
 }
 
-Write-Host "PASS: 100 replay fixtures match manifest size + SHA-256."
+foreach ($ReplayFile in $ReplayFiles) {
+    if (-not $SeenFilenames.Contains($ReplayFile.Name)) {
+        throw "Replay file is not represented exactly once in manifest: $($ReplayFile.Name)"
+    }
+}
+
+Write-Host "PASS: 100 replay fixtures match exact manifest filenames + size + SHA-256."
