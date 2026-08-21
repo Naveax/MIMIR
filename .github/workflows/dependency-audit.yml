@@ -45,8 +45,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cargo +1.85.0 install cargo-audit --version 0.22.2 --locked
-          cargo audit --version | grep -F 'cargo-audit 0.22.2'
+          cargo +1.85.0 install cargo-audit --version 0.22.1 --locked
+          cargo audit --version | grep -F 'cargo-audit 0.22.1'
 
       - name: Audit exact Cargo.lock and freeze advisory DB provenance
         shell: bash
