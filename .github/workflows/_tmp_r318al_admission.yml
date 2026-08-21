@@ -1,0 +1,151 @@
+name: R3.18AL Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318al-admission-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318al_admission_trigger.txt
+
+concurrency:
+  group: r318al-admission-builder
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  statuses: write
+
+jobs:
+  build-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_MAIN: 02233c8125e658513dcb068370c48b1e8f15a01c
+      BASE_TREE: fc9293d821dd3e6e269763c3c0ab091428c29490
+      GENERATOR_BLOB: 0f02cdd08a8a0d6efba207a4a5e6122e1cc5ac76
+      AL_HEAD: 06b8570a25a989651fc800a4ded900ce5e2f3dbe
+      AL_EVIDENCE_RUN: '32469442033'
+      AL_EVIDENCE_JOB: '96732952709'
+      AL_PUSH_CI: '32469442060'
+      AL_PUSH_JOB: '96732952869'
+      AL_PR_CI: '32470066272'
+      AL_PR_JOB: '96734795022'
+      AL_ARTIFACT: '9442034802'
+      AL_ARTIFACT_SIZE: '14650'
+      AL_ARTIFACT_DIGEST: sha256:5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639
+      CLEAN_BRANCH: admission/r318al-v1
+    steps:
+      - name: Checkout exact automation head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze canonical and R3.18AL evidence authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_main="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          test "$actual_main" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test "$(git hash-object tools/_tmp_r318al_admission.py)" = "$GENERATOR_BLOB"
+          python -m py_compile tools/_tmp_r318al_admission.py
+
+          ev_status="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AL_EVIDENCE_RUN" --jq '.status+":"+.conclusion+":"+.head_sha')"
+          test "$ev_status" = "completed:success:$AL_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AL_EVIDENCE_RUN/jobs" --jq ".jobs[] | select(.id==$AL_EVIDENCE_JOB) | .conclusion")" = success
+
+          push_status="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AL_PUSH_CI" --jq '.status+":"+.conclusion+":"+.head_sha')"
+          test "$push_status" = "completed:success:$AL_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AL_PUSH_CI/jobs" --jq ".jobs[] | select(.id==$AL_PUSH_JOB) | .conclusion")" = success
+
+          pr_status="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AL_PR_CI" --jq '.status+":"+.conclusion')"
+          test "$pr_status" = 'completed:success'
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AL_PR_CI/jobs" --jq ".jobs[] | select(.id==$AL_PR_JOB) | .conclusion")" = success
+
+          art="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AL_ARTIFACT" --jq '[.size_in_bytes,.digest,.expired] | @tsv')"
+          test "$art" = "$AL_ARTIFACT_SIZE	$AL_ARTIFACT_DIGEST	false"
+          cp tools/_tmp_r318al_admission.py "$RUNNER_TEMP/r318al_admission.py"
+
+      - name: Generate exact docs-only admission candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_MAIN"
+          git clean -fdx
+          git switch -C "$CLEAN_BRANCH" "$BASE_MAIN"
+          python "$RUNNER_TEMP/r318al_admission.py"
+
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18AL_DECISION.md
+          docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$expected"
+          {
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          } | sed '/^$/d' | sort -u > "$actual"
+          sort -u -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git diff --check
+
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AL_DECISION.md \
+            docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md
+          git diff --cached --check
+          test "$(git diff --cached --name-only | sort | tr '\n' ' ')" = "$(sort "$expected" | tr '\n' ' ')"
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Admit R3.18AL and open R3.18AM'
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          test "$(git diff --name-only "$BASE_MAIN" HEAD | sort | tr '\n' ' ')" = "$(sort "$expected" | tr '\n' ' ')"
+
+      - name: Publish clean admission candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          clean_sha="$(git rev-parse HEAD)"
+          clean_tree="$(git rev-parse HEAD^{tree})"
+          git push origin "HEAD:refs/heads/$CLEAN_BRANCH"
+          {
+            echo "R3_18AL_ADMISSION_BASE=$BASE_MAIN/$BASE_TREE"
+            echo "R3_18AL_EVIDENCE=$AL_HEAD/$AL_EVIDENCE_RUN/$AL_EVIDENCE_JOB"
+            echo "R3_18AL_PUSH_CI=$AL_PUSH_CI/$AL_PUSH_JOB"
+            echo "R3_18AL_PR_CI=$AL_PR_CI/$AL_PR_JOB"
+            echo "R3_18AL_ARTIFACT=$AL_ARTIFACT/$AL_ARTIFACT_SIZE/$AL_ARTIFACT_DIGEST"
+            echo "R3_18AL_CLEAN_SHA=$clean_sha"
+            echo "R3_18AL_CLEAN_TREE=$clean_tree"
+            echo "R3_18AL_CLEAN_BRANCH=$CLEAN_BRANCH"
+            echo "R3_18AL_CLEAN_FILE_COUNT=9"
+            echo "R3_18AL_PRODUCTION_MUTATION=0"
+            echo "R3_18AL_WORKFLOW_MUTATION=0"
+            echo "R3_18AL_KNOWLEDGE_ARCHIVE=PASS"
+          } | tee r318al_admission_receipt.txt
+
+      - name: Upload admission receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318al-admission-receipt
+          path: r318al_admission_receipt.txt
+          if-no-files-found: error
+          retention-days: 14
