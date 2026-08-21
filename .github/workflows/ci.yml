@@ -1,31 +1,206 @@
-name: CI
+name: R3.18AM Continuity Read-Only Recovery V6
 
 on:
-  push:
   pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'tools/_tmp_r318am_admission_generate.py'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: r318am-continuity-readonly-v6-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  recover-continuity-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      V5_HEAD: fb73105500ba25e34fe5c80303940007205f81bb
+      GENERATOR_BLOB: 952beba8bbfa9dd0bb4985c5ecba75b89e8dfb96
+      AM_HEAD: 842b94ed4c4e57323433585fea48116ecf18989b
+      AM_TREE: 486d0a0f3833dcb8872f062ae1927c9aefde87ba
+      AM_RUN: '32473716883'
+      AM_JOB: '96745647750'
+      AM_CI_RUN: '32474038136'
+      AM_CI_JOB: '96746590106'
+      AM_ARTIFACT: '9443581172'
+      AM_ARTIFACT_SIZE: '14827'
+      AM_ARTIFACT_DIGEST: 2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8
+      CANDIDATE_BRANCH: continuity/r318am-admit-an-v2
+      GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout exact V6 head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze helper scope and exact fresh main
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          test "${GITHUB_BASE_REF}" = main
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_r318am_admission_generate.py)" = "$GENERATOR_BLOB"
+          mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_r318am_admission_generate.py | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          cp tools/_tmp_r318am_admission_generate.py /tmp/r318am_admission_generate.py
+          python -m py_compile /tmp/r318am_admission_generate.py
+          echo R3_18AM_V6_HELPER_FREEZE=PASS
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Observe V5 and refuse duplicate active execution
+        id: race
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate_exists=0
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            candidate_exists=1
+          fi
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=recovery%2Fr318am-continuity-ci-v1&event=push&per_page=100")"
+          v5_count="$(jq --arg sha "$V5_HEAD" '[.workflow_runs[] | select(.head_sha == $sha)] | length' <<<"$runs")"
+          v5_active="$(jq --arg sha "$V5_HEAD" '[.workflow_runs[] | select(.head_sha == $sha and .status != "completed")] | length' <<<"$runs")"
+          v5_success="$(jq --arg sha "$V5_HEAD" '[.workflow_runs[] | select(.head_sha == $sha and .status == "completed" and .conclusion == "success")] | length' <<<"$runs")"
+          v5_failed="$(jq --arg sha "$V5_HEAD" '[.workflow_runs[] | select(.head_sha == $sha and .status == "completed" and .conclusion != "success")] | length' <<<"$runs")"
+          echo "R3_18AM_V6_V5_OBSERVATION=count:${v5_count},active:${v5_active},success:${v5_success},failed:${v5_failed},candidate:${candidate_exists}"
+          if [[ "$candidate_exists" -gt 0 ]]; then
+            echo 'mode=candidate_exists' >> "$GITHUB_OUTPUT"
+            echo R3_18AM_V6_NOOP_EXISTING_CANDIDATE=PASS
+            exit 0
+          fi
+          if [[ "$v5_active" -gt 0 ]]; then
+            echo 'mode=v5_active' >> "$GITHUB_OUTPUT"
+            echo R3_18AM_V6_NOOP_ACTIVE_V5=PASS
+            exit 0
+          fi
+          echo 'mode=generate' >> "$GITHUB_OUTPUT"
+          echo R3_18AM_V6_RACE_GUARD=PASS
+
+      - name: Freeze R3.18AM evidence authority
+        if: steps.race.outputs.mode == 'generate'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_RUN" --jq .head_sha)" = "$AM_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_RUN" --jq .head_commit.tree_id)" = "$AM_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AM_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_CI_RUN" --jq .head_sha)" = "$AM_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AM_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ARTIFACT" --jq .workflow_run.id)" = "$AM_RUN"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ARTIFACT" --jq .workflow_run.head_sha)" = "$AM_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ARTIFACT" --jq .name)" = r318am-post-ak-payload-evidence
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ARTIFACT" --jq .size_in_bytes)" = "$AM_ARTIFACT_SIZE"
+          digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ARTIFACT" --jq .digest)"
+          test "${digest#sha256:}" = "$AM_ARTIFACT_DIGEST"
+          rm -rf /tmp/r318am_art && mkdir -p /tmp/r318am_art
+          gh run download "$AM_RUN" -n r318am-post-ak-payload-evidence -D /tmp/r318am_art
+          (
+            cd /tmp/r318am_art
+            test "$(wc -l < r3_18am_artifact_sha256.txt)" -eq 11
+            sha256sum -c r3_18am_artifact_sha256.txt
+            grep -Fqx 'R3_18AM_OUTCOME=A' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_FROZEN_ROWS=47/47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_PUBLISHED_AK_EXACT=47/47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_TAG_INT=47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_OBSERVED_PAYLOAD_WIDTH=32' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_PAYLOAD_WIDTH_COUNT=47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_NATIVE_ORACLE_MISMATCH=0' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_WITNESS_RESELECTION=0' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_ANOTHER_CONTROL_BITS_CONSUMED=0' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_PRIVACY_SCAN=PASS' r3_18am_aggregate.txt
+          )
+          echo R3_18AM_V6_AUTHORITY_FREEZE=PASS
+
+      - name: Generate exact nine-file candidate read-only
+        if: steps.race.outputs.mode == 'generate'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python /tmp/r318am_admission_generate.py "$AM_CI_RUN" "$AM_CI_JOB"
+          git add -N docs/continuity/MIMIR_R3_18AM_DECISION.md docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md
+          mapfile -t actual < <(git diff --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AM_DECISION.md \
+            docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+          git diff --exit-code HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18AM_V6_SCOPE_AND_ARCHIVE=PASS files=9
+
+      - name: Package exact candidate and receipt
+        if: steps.race.outputs.mode == 'generate'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/r318am_candidate
+          mkdir -p /tmp/r318am_candidate/docs/continuity
+          cp MIMIR_CONTINUE_HERE.md /tmp/r318am_candidate/
+          cp MIMIR_KNOWLEDGE_GRAPH.md /tmp/r318am_candidate/
+          cp docs/continuity/MIMIR_BOUNDARY_LOCKS.md /tmp/r318am_candidate/docs/continuity/
+          cp docs/continuity/MIMIR_CONTINUITY_STATE.json /tmp/r318am_candidate/docs/continuity/
+          cp docs/continuity/MIMIR_CURRENT_STATE.md /tmp/r318am_candidate/docs/continuity/
+          cp docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md /tmp/r318am_candidate/docs/continuity/
+          cp docs/continuity/MIMIR_PROGRESS_LEDGER.md /tmp/r318am_candidate/docs/continuity/
+          cp docs/continuity/MIMIR_R3_18AM_DECISION.md /tmp/r318am_candidate/docs/continuity/
+          cp docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md /tmp/r318am_candidate/docs/continuity/
+          (
+            cd /tmp/r318am_candidate
+            find . -type f -not -name r3_18am_v6_receipt.txt -print0 | sort -z | xargs -0 sha256sum > r3_18am_v6_sha256.txt
+            {
+              echo R3_18AM_V6=PASS
+              echo R3_18AM_BASE=$BASE_SHA/$BASE_TREE
+              echo R3_18AM_EVIDENCE=$AM_HEAD/$AM_TREE
+              echo R3_18AM_EVIDENCE_RUN=$AM_RUN/$AM_JOB
+              echo R3_18AM_SAME_HEAD_CI=$AM_CI_RUN/$AM_CI_JOB
+              echo R3_18AM_ARTIFACT=$AM_ARTIFACT/$AM_ARTIFACT_SIZE/$AM_ARTIFACT_DIGEST
+              echo R3_18AM_SCOPE=9_CONTINUITY_FILES
+              echo R3_18AN_GATE=OPEN_PREPARED_NOT_PRODUCTION
+              echo R3_18AM_CANONICAL_PUBLICATION=0
+            } > r3_18am_v6_receipt.txt
+          )
+          echo R3_18AM_V6_PACKAGE=PASS
+
+      - name: Upload immutable read-only candidate
+        if: steps.race.outputs.mode == 'generate'
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318am-continuity-candidate-v6
+          path: /tmp/r318am_candidate
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Freeze no-op result
+        if: steps.race.outputs.mode != 'generate'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "R3_18AM_V6_NOOP=${{ steps.race.outputs.mode }}"
+          echo R3_18AM_CANONICAL_PUBLICATION=0
