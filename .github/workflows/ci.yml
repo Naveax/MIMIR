@@ -1,31 +1,162 @@
-name: CI
+name: Aux Job Report Index Binding Builder V1
 
 on:
   push:
-  pull_request:
+    branches:
+      - recovery/job-report-index-binding-ci-v1
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'tools/_tmp_job_report_index_binding_patch.py'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: aux-job-report-index-binding-builder-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      PATCH_BLOB: 13e587ed45009f68b036dd35617c54ae12074241
+      CANDIDATE_BRANCH: aux/job-report-index-binding-v1
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout exact recovery head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze helper scope and fresh main
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_job_report_index_binding_patch.py)" = "$PATCH_BLOB"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_job_report_index_binding_patch.py | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          cp tools/_tmp_job_report_index_binding_patch.py /tmp/job_report_index_binding_patch.py
+          python -m py_compile /tmp/job_report_index_binding_patch.py
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Refuse existing clean candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'exists=1' >> "$GITHUB_OUTPUT"
+            echo AUX_JOB_REPORT_INDEX_BINDING_NOOP_EXISTING=1
+          else
+            echo 'exists=0' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply index-to-report binding and focused regression
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python /tmp/job_report_index_binding_patch.py
+          cat > crates/mimir-export/tests/job_report_index_binding.rs <<'RS'
+          use mimir_export::{
+              ExecutionResultJobReport, ExecutionResultJobReportIndexEntry,
+              ExecutionResultSelectionMode, load_selected_execution_result_job_reports,
+              persist_execution_result_job_report,
+          };
+          use tempfile::tempdir;
+
+          fn report() -> ExecutionResultJobReport {
+              ExecutionResultJobReport {
+                  job_spec_id: "job-spec-binding".to_string(),
+                  source_run_request_id: "run-request-binding".to_string(),
+                  source_handoff_bundle_id: "handoff-binding".to_string(),
+                  export_name: "export-binding".to_string(),
+                  selection_mode: ExecutionResultSelectionMode::FullHistory,
+                  expected_entry_count: 0,
+                  source_provenance_hash: "provenance-binding".to_string(),
+                  entries: Vec::new(),
+              }
+          }
+
+          fn entry(report_path: &std::path::Path) -> ExecutionResultJobReportIndexEntry {
+              ExecutionResultJobReportIndexEntry {
+                  ordinal: 0,
+                  report_file_path: report_path.to_string_lossy().into_owned(),
+                  job_spec_id: "job-spec-binding".to_string(),
+                  source_run_request_id: "run-request-binding".to_string(),
+                  source_handoff_bundle_id: "handoff-binding".to_string(),
+                  export_name: "export-binding".to_string(),
+                  selection_mode: ExecutionResultSelectionMode::FullHistory,
+                  expected_entry_count: 0,
+                  source_provenance_hash: "provenance-binding".to_string(),
+              }
+          }
+
+          #[test]
+          fn selected_report_loader_binds_index_metadata_to_loaded_report() {
+              let directory = tempdir().expect("tempdir");
+              let report_path = directory.path().join("report.json");
+              let report = report();
+              persist_execution_result_job_report(&report_path, &report).expect("persist report");
+
+              let exact_entry = entry(&report_path);
+              let loaded = load_selected_execution_result_job_reports(&[exact_entry.clone()])
+                  .expect("exact index/report binding should load");
+              assert_eq!(loaded, vec![report.clone()]);
+
+              let mut job_spec_drift = exact_entry.clone();
+              job_spec_drift.job_spec_id = "other-job-spec".to_string();
+              let error = load_selected_execution_result_job_reports(&[job_spec_drift])
+                  .expect_err("job-spec drift must fail closed");
+              assert!(error.to_string().contains("job_spec_id"));
+
+              let mut provenance_drift = exact_entry;
+              provenance_drift.source_provenance_hash = "other-provenance".to_string();
+              let error = load_selected_execution_result_job_reports(&[provenance_drift])
+                  .expect_err("provenance drift must fail closed");
+              assert!(error.to_string().contains("source_provenance_hash"));
+          }
+          RS
+          cargo fmt --all
+          git diff --check
+          mapfile -t actual < <(git diff --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' crates/mimir-export/src/lib.rs crates/mimir-export/tests/job_report_index_binding.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+
+      - name: Focused binding regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-export --test job_report_index_binding -- --nocapture
+
+      - name: Full mimir-export regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-export -- --nocapture
+
+      - name: Publish clean source-and-test candidate once
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Auxiliary Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- crates/mimir-export/src/lib.rs crates/mimir-export/tests/job_report_index_binding.rs
+          mapfile -t actual < <(git diff --cached --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' crates/mimir-export/src/lib.rs crates/mimir-export/tests/job_report_index_binding.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --cached --check
+          git commit -m 'fix(export): bind report index metadata to loaded report'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared during builder run; refusing overwrite' >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_JOB_REPORT_INDEX_BINDING_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
