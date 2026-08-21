@@ -89,6 +89,10 @@ jobs:
           rm -f tools/_tmp_r318an_pre_admission_generate.py tools/_tmp_r318an_pre_admission_patch_v2.py
           rmdir tools 2>/dev/null || true
 
+          # The v1 helper proved that generated source is semantically scoped correctly but
+          # rustfmt-normalization is required before the immutable candidate is validated.
+          cargo +1.85.0 fmt --all
+
           expected="$RUNNER_TEMP/expected.txt"
           actual="$RUNNER_TEMP/actual.txt"
           printf '%s\n' \
@@ -104,7 +108,7 @@ jobs:
           grep -Fq 'r3_18an_all_47_frozen_am_rows_are_exact_and_stop_before_next_control' crates/mimir-replay/tests/r3_18an_post_ak_payload.rs
           grep -Fq 'matches!(' crates/mimir-replay/src/lib.rs
           grep -Fq '&following_payload.value' crates/mimir-replay/src/lib.rs
-          echo R3_18AN_V2_SCOPE=PASS files=2 frozen_rows=47
+          echo R3_18AN_V2_SCOPE=PASS files=2 frozen_rows=47 formatted=1
 
       - name: Focused and full validation
         shell: bash
