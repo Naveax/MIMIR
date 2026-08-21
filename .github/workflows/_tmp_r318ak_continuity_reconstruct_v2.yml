@@ -1,0 +1,66 @@
+name: R3.18AK Continuity Reconstruct V2
+
+on:
+  push:
+    branches:
+      - ops/r318ak-candidate-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318ak_continuity_reconstruct_v2_trigger.txt
+
+concurrency:
+  group: r318ak-continuity-reconstruct-v2
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      FRESH_MAIN_SHA: c00ef5c0ce9cd3ddce8bf4e4e020db51f0d9f282
+      STALE_VALIDATED_HEAD: 0d15e490f223716928de0aeeefadeae230c76263
+      TARGET_BRANCH: parallel/s1-r3-18ak-continuity-v2
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Reconstruct exact continuity delta on fresh main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$FRESH_MAIN_SHA"
+          git fetch origin main "$STALE_VALIDATED_HEAD"
+          test "$(git rev-parse origin/main)" = "$FRESH_MAIN_SHA"
+          test "$(git rev-parse HEAD^{tree})" = '98c675811cca4e4d7f0122c762f371548c9266c2'
+          if git ls-remote --exit-code --heads origin "$TARGET_BRANCH" >/dev/null 2>&1; then
+            echo 'target branch already exists' >&2
+            exit 1
+          fi
+          git checkout -b "$TARGET_BRANCH"
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git cherry-pick "$STALE_VALIDATED_HEAD"
+          changed="$(git diff --name-only "$FRESH_MAIN_SHA"..HEAD | sort)"
+          expected="$(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AK_DECISION.md \
+            docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md | sort)"
+          printf '%s\n' "$changed"
+          test "$changed" = "$expected"
+          test -z "$(git diff --name-only "$FRESH_MAIN_SHA"..HEAD -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures corpus .github)"
+          test "$(git rev-parse HEAD^{tree})" = 'fc9293d821dd3e6e269763c3c0ab091428c29490'
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git diff "$FRESH_MAIN_SHA"..HEAD --check
+          git push origin HEAD:"$TARGET_BRANCH"
+          echo "RECONSTRUCT_HEAD=$(git rev-parse HEAD)"
+          echo "RECONSTRUCT_TREE=$(git rev-parse HEAD^{tree})"
