@@ -1,0 +1,9 @@
+R3.18AN corrected pre-admission builder trigger v2
+base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+am_head=842b94ed4c4e57323433585fea48116ecf18989b
+am_run_job=32473716883/96745647750
+am_ci=32474038136/96746590106
+am_artifact=9443581172
+supersedes_builder_v1=1
+reason=all-47 permanent regression plus primitive-value borrow fix
+canonical_admission=0
