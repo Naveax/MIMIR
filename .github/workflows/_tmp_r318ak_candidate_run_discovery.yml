@@ -1,4 +1,4 @@
-name: R3.18AK Candidate Run Discovery
+name: R3.18AK Published Main Run Discovery
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - .github/workflows/_tmp_r318ak_candidate_run_discovery_trigger.txt
 
 concurrency:
-  group: r318ak-candidate-run-discovery
+  group: r318ak-published-main-run-discovery
   cancel-in-progress: false
 
 permissions:
@@ -22,8 +22,8 @@ jobs:
     timeout-minutes: 12
     env:
       GH_TOKEN: ${{ github.token }}
-      CANDIDATE_BRANCH: ops/r318ak-production-v1
-      CANDIDATE_SHA: f20f529e3ada6e9a671ea91e5676a17a00770145
+      TARGET_BRANCH: main
+      TARGET_SHA: f20f529e3ada6e9a671ea91e5676a17a00770145
     steps:
       - uses: actions/checkout@v6
       - name: Mark discovery pending
@@ -32,19 +32,19 @@ jobs:
           set -euo pipefail
           gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
             -f state=pending \
-            -f context='r318ak/candidate-run-discovery' \
-            -f description='R3.18AK candidate CI discovery running' \
+            -f context='r318ak/published-main-run-discovery' \
+            -f description='R3.18AK published-main CI discovery running' \
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-      - name: Discover and verify candidate CI
+      - name: Discover and verify published-main CI
         shell: bash
         run: |
           set -euo pipefail
-          receipt="$RUNNER_TEMP/r318ak_candidate_ci.txt"
+          receipt="$RUNNER_TEMP/r318ak_published_main_ci.txt"
           for attempt in $(seq 1 36); do
-            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$CANDIDATE_BRANCH&head_sha=$CANDIDATE_SHA&event=push&per_page=20")"
+            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$TARGET_BRANCH&head_sha=$TARGET_SHA&event=push&per_page=20")"
             count="$(jq '[.workflow_runs[] | select(.name == "CI")] | length' <<<"$runs")"
             if [ "$count" -gt 1 ]; then
-              echo "duplicate candidate CI detected: $count" >&2
+              echo "duplicate published-main CI detected: $count" >&2
               exit 1
             fi
             if [ "$count" -eq 1 ]; then
@@ -55,24 +55,24 @@ jobs:
                 run="$(jq -r '.workflow_runs[] | select(.name == "CI") | .id' <<<"$runs")"
                 job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/jobs" --jq '.jobs[0].id')"
                 {
-                  echo "R3_18AK_CANDIDATE_SHA=$CANDIDATE_SHA"
-                  echo "R3_18AK_CANDIDATE_CI=$run/$job SUCCESS"
-                  echo "R3_18AK_CANDIDATE_CI_COUNT=$count"
+                  echo "R3_18AK_PUBLISHED_MAIN_SHA=$TARGET_SHA"
+                  echo "R3_18AK_PUBLISHED_MAIN_CI=$run/$job SUCCESS"
+                  echo "R3_18AK_PUBLISHED_MAIN_CI_COUNT=$count"
                   echo "R3_18AK_DUPLICATE_GUARD=PASS"
                 } | tee "$receipt"
-                cp "$receipt" r318ak_candidate_ci.txt
+                cp "$receipt" r318ak_published_main_ci.txt
                 exit 0
               fi
             fi
             sleep 10
           done
-          echo "candidate CI did not settle uniquely within discovery window" >&2
+          echo "published-main CI did not settle uniquely within discovery window" >&2
           exit 1
-      - name: Upload candidate receipt
+      - name: Upload published-main receipt
         uses: actions/upload-artifact@v4
         with:
-          name: r318ak-candidate-ci-receipt
-          path: r318ak_candidate_ci.txt
+          name: r318ak-published-main-ci-receipt
+          path: r318ak_published_main_ci.txt
           if-no-files-found: error
           retention-days: 7
       - name: Report discovery status
@@ -83,13 +83,13 @@ jobs:
         run: |
           set -euo pipefail
           state=failure
-          description='R3.18AK candidate CI discovery failed'
+          description='R3.18AK published-main CI discovery failed'
           if [ "$JOB_STATUS" = success ]; then
             state=success
-            description='R3.18AK candidate CI discovery succeeded'
+            description='R3.18AK published-main CI discovery succeeded'
           fi
           gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
             -f state="$state" \
-            -f context='r318ak/candidate-run-discovery' \
+            -f context='r318ak/published-main-run-discovery' \
             -f description="$description" \
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
