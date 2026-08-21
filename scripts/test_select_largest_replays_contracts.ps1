@@ -114,8 +114,10 @@ try {
         }
     }
 
-    if ([string]$Rows[0].sha256 -ceq (Get-FileHash -LiteralPath (Join-Path $InputRoot "d_duplicate.replay") -Algorithm SHA256).Hash.ToUpperInvariant() -and
-        ($Rows | Where-Object { $_.original_filename -eq "d_duplicate.replay" }).Count -ne 0) {
+    $DuplicateRows = @(
+        $Rows | Where-Object { [string]$_.original_filename -ceq "d_duplicate.replay" }
+    )
+    if ($DuplicateRows.Count -ne 0) {
         throw "Duplicate-content replay was selected more than once."
     }
 
