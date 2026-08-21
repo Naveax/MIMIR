@@ -38,7 +38,10 @@ fn pass_through_preserves_order_values_and_returns_an_independent_clone() {
 #[test]
 fn pass_through_component_identity_is_stable_and_empty_input_stays_empty() {
     let synthesizer = PassThroughTeacherSynthesizer;
-    assert_eq!(synthesizer.component_name(), "pass-through-teacher-synthesizer");
+    assert_eq!(
+        synthesizer.component_name(),
+        "pass-through-teacher-synthesizer"
+    );
 
     let request = TeacherSynthesisRequest {
         namespace: "empty".to_owned(),
