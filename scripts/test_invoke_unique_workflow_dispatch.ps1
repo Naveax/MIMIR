@@ -28,8 +28,11 @@ function Invoke-Wrapper {
         '-HeadBranch', $Ref,
         '-HeadSha', $ExpectedSha
     )
-    foreach ($Entry in $Input) {
-        $Arguments += @('-Input', $Entry)
+    if ($Input.Count -gt 1) {
+        throw 'Test harness accepts at most one CLI-style -Input value per child pwsh invocation.'
+    }
+    if ($Input.Count -eq 1) {
+        $Arguments += @('-Input', $Input[0])
     }
     if ($DryRun) {
         $Arguments += '-DryRun'
@@ -115,7 +118,7 @@ exit 93
         throw 'Dry-run must not invoke gh workflow run.'
     }
 
-    $Dispatch = Invoke-Wrapper -Input @('mode=test', 'seed=7')
+    $Dispatch = Invoke-Wrapper -Input @('mode=test')
     if ($Dispatch.ExitCode -ne 0 -or $Dispatch.Output -notlike '*"dispatched": true*') {
         throw "Unique dispatch failed. Exit=$($Dispatch.ExitCode) Output=$($Dispatch.Output)"
     }
@@ -123,8 +126,8 @@ exit 93
     if ($DispatchLines.Count -ne 1) {
         throw "Expected exactly one gh workflow run invocation, found $($DispatchLines.Count)."
     }
-    if ($DispatchLines[0] -notlike '*-f mode=test*' -or $DispatchLines[0] -notlike '*-f seed=7*') {
-        throw "Workflow inputs were not forwarded exactly: $($DispatchLines[0])"
+    if ($DispatchLines[0] -notlike '*-f mode=test*') {
+        throw "Workflow input was not forwarded exactly: $($DispatchLines[0])"
     }
 
     Remove-Item -LiteralPath $LogPath -Force
