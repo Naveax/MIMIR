@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let expected_stream_end: u64 = f[12].parse()?;
         let expected_stream_id: u32 = f[13].parse()?;
         let expected_stream_bound: u32 = f[14].parse()?;
-        let expected_prop_bits: u32 = f[15].parse()?;
+        let expected_prop_bits: u8 = f[15].parse()?;
         let expected_property_object: u32 = f[16].parse()?;
         let expected_tag = f[17];
         let expected_payload_start: u64 = f[18].parse()?;
