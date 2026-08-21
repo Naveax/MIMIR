@@ -1,0 +1,101 @@
+name: Aux Scoreboard Branch Binding Builder
+
+on:
+  push:
+    branches:
+      - automation/aux-scoreboard-branch-binding-v1
+    paths:
+      - .github/workflows/_tmp_aux_scoreboard_branch_binding_trigger.txt
+
+concurrency:
+  group: aux-scoreboard-branch-binding-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact builder head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze fresh base and detach patcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          BASE_TREE=3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          cp tools/_tmp_aux_scoreboard_branch_binding.py /tmp/aux_scoreboard_branch_binding.py
+          python -m py_compile /tmp/aux_scoreboard_branch_binding.py
+          git reset --hard "$BASE"
+          git clean -fdx
+          test "$(git rev-parse HEAD)" = "$BASE"
+          echo AUX_SCOREBOARD_BRANCH_BINDING_BASE_FREEZE=PASS
+
+      - name: Apply narrow scoreboard identity hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/aux_scoreboard_branch_binding.py
+          mapfile -t changed < <(git diff --name-only)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = "crates/mimir-io/src/lib.rs"
+          git diff --check
+          echo AUX_SCOREBOARD_BRANCH_BINDING_SCOPE_PRE_FORMAT=PASS
+
+      - name: Install verification components
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup component add rustfmt clippy
+
+      - name: Format and focused verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all
+          git diff --check
+          cargo test --locked -p mimir-io scoreboard_wrapper_rejects_nested_branch_id_mismatch_before_write
+          cargo test --locked -p mimir-io scoreboard_loader_rejects_missing_nested_branch_id_from_generic_write
+          cargo test --locked -p mimir-io
+          echo AUX_SCOREBOARD_BRANCH_BINDING_FOCUSED=PASS
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          & ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean source-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          CANDIDATE_BRANCH=aux/scoreboard-branch-binding-v1
+          mapfile -t changed < <(git diff --name-only)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = "crates/mimir-io/src/lib.rs"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists; refusing to race another executor"
+            exit 1
+          fi
+          git config user.name "MIMIR Aux Builder"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- crates/mimir-io/src/lib.rs
+          git diff --cached --check
+          git commit -m "Bind persisted scoreboard scores to row branch IDs"
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse HEAD^{tree})"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_SCOREBOARD_BRANCH_BINDING_CANDIDATE=$candidate_sha/$candidate_tree"
+          echo AUX_SCOREBOARD_BRANCH_BINDING_BUILDER=PASS

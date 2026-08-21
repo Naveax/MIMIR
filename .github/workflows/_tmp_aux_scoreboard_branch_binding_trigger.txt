@@ -1,0 +1,6 @@
+Aux scoreboard branch binding builder trigger v1
+base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+scope=crates/mimir-io/src/lib.rs
+policy=persisted-score-row-branch-id-equals-nested-score-branch-id
+scorevector-generic-option-contract=unchanged
+canonical_replay_mutation=0
