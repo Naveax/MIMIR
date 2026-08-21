@@ -18,9 +18,17 @@ and orchestration wiring.
 
 ## Current replay boundary
 
-The replay lane has advanced beyond the original three-header-fixture stage. At the R3.13 production checkpoint, `mimir-replay` contains narrow production layers for admitted replay headers, body/content/footer structural boundaries, footer lookup materialization, conservative network attribute/spawn registries, timing/decoder prerequisites, and a static per-replay network lookup plan with inherited stream/property maps, `max_prop_id`, `prop_id_bits`, spawn trajectories, and channel/build-derived flags.
+The replay lane advances through admission-scoped canonical passes. The exact live production
+checkpoint is intentionally not duplicated as a pass number in this README because that authority
+moves more frequently than this overview. Only capabilities explicitly admitted by
+`MIMIR_CONTINUE_HERE.md` and the continuity records under `docs/continuity/` are part of the
+current production claim.
 
-The R3.13 lookup plan **does not consume network payload actor/frame bits**. Native actor-envelope decoding, spawn/property payload decoding, full frame iteration, canonical raw-state extraction, and event extraction remain later boundaries. See `MIMIR_CONTINUE_HERE.md` for the exact current pass and hard stop boundary.
+The admitted replay stack contains narrow, audited layers for replay headers and progressively
+admitted structural/network prerequisites. A local helper, fixture, experiment, validation branch,
+or historical document is not production authority by itself. Broader actor/frame payload decoding,
+full frame iteration, canonical raw-state extraction, event extraction, or any later replay capability
+must remain outside the claimed boundary until the live continuity chain explicitly admits it.
 
 Additional high-level boundaries:
 
@@ -84,7 +92,13 @@ summaries, and final in-memory aggregates through explicit summary index query/l
 
 ## Quick validation
 
-From PowerShell:
+The authoritative repository verification gate is:
+
+```powershell
+pwsh -NoProfile -File .\scripts\verify_repo.ps1
+```
+
+For focused local iteration, the component scripts remain available individually:
 
 ```powershell
 .\scripts\fmt.ps1
