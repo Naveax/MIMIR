@@ -25,26 +25,43 @@ function Invoke-VerificationCommand {
 }
 
 $RequiredReplayFixtures = @(
-    (Join-Path $RepoRoot "external_fixtures/sample_001.replay"),
-    (Join-Path $RepoRoot "external_fixtures/sample_002.replay"),
-    (Join-Path $RepoRoot "external_fixtures/sample_003.replay")
+    [pscustomobject]@{
+        Path = Join-Path $RepoRoot "external_fixtures/sample_001.replay"
+        Bytes = [int64]3001021
+        Sha256 = "F33EEFADAE8741DE7AA0CEC6D0BEA0120CDF795D16CAF3953A517B4AC6C6EAEB"
+    },
+    [pscustomobject]@{
+        Path = Join-Path $RepoRoot "external_fixtures/sample_002.replay"
+        Bytes = [int64]2632903
+        Sha256 = "376B00E023186B41408385AED4DEE1414AD919A40C92D9CE853F327F63FBCEC6"
+    },
+    [pscustomobject]@{
+        Path = Join-Path $RepoRoot "external_fixtures/sample_003.replay"
+        Bytes = [int64]1638538
+        Sha256 = "20444C8352123637212A752783A5D4A446A4235985E6530CD2030362F142E2DC"
+    }
 )
 
-foreach ($FixturePath in $RequiredReplayFixtures) {
-    if (-not (Test-Path -LiteralPath $FixturePath -PathType Leaf)) {
-        throw "Required checked-in replay fixture is missing: $FixturePath"
+foreach ($FixtureSpec in $RequiredReplayFixtures) {
+    if (-not (Test-Path -LiteralPath $FixtureSpec.Path -PathType Leaf)) {
+        throw "Required checked-in replay fixture is missing: $($FixtureSpec.Path)"
     }
 
-    $Fixture = Get-Item -LiteralPath $FixturePath
-    if ($Fixture.Length -le 0) {
-        throw "Required checked-in replay fixture is empty: $FixturePath"
+    $Fixture = Get-Item -LiteralPath $FixtureSpec.Path
+    if ([int64]$Fixture.Length -ne $FixtureSpec.Bytes) {
+        throw "Required checked-in replay fixture size drift: $($FixtureSpec.Path) expected=$($FixtureSpec.Bytes) actual=$($Fixture.Length)"
+    }
+
+    $Hash = (Get-FileHash -LiteralPath $FixtureSpec.Path -Algorithm SHA256).Hash.ToUpperInvariant()
+    if (-not [string]::Equals($Hash, $FixtureSpec.Sha256, [System.StringComparison]::Ordinal)) {
+        throw "Required checked-in replay fixture SHA-256 drift: $($FixtureSpec.Path) expected=$($FixtureSpec.Sha256) actual=$Hash"
     }
 }
 
-$env:MIMIR_REPLAY_FIXTURE_PATH = $RequiredReplayFixtures[0]
+$env:MIMIR_REPLAY_FIXTURE_PATH = $RequiredReplayFixtures[0].Path
 
 Write-Host ""
-Write-Host "PASS: required checked-in replay fixtures are present."
+Write-Host "PASS: required checked-in replay fixtures match admitted size + SHA-256 identities."
 Write-Host "MIMIR_REPLAY_FIXTURE_PATH=$env:MIMIR_REPLAY_FIXTURE_PATH"
 
 Invoke-VerificationCommand `
