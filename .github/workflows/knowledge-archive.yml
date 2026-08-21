@@ -10,6 +10,7 @@ on:
       - 'docs/continuity/**'
       - 'docs/chatgpt-archive/**'
       - 'scripts/verify_mimir_knowledge_archive.ps1'
+      - 'scripts/test_verify_mimir_knowledge_archive_paths.ps1'
       - '.github/workflows/knowledge-archive.yml'
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - 'docs/continuity/**'
       - 'docs/chatgpt-archive/**'
       - 'scripts/verify_mimir_knowledge_archive.ps1'
+      - 'scripts/test_verify_mimir_knowledge_archive_paths.ps1'
       - '.github/workflows/knowledge-archive.yml'
 
 concurrency:
@@ -34,4 +36,9 @@ jobs:
         shell: pwsh
         run: |
           ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify knowledge archive path contracts
+        shell: pwsh
+        run: |
+          ./scripts/test_verify_mimir_knowledge_archive_paths.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
