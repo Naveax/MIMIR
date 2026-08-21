@@ -99,22 +99,24 @@ Anchor and branch now also have real producer paths built on top of the existing
 - `BoundedManualBranchGenerator::generate_persisted(...)` turns bounded manual proposals into
   `PersistedBranchArtifact` values.
 - `mimir-export::export_anchor_artifacts(...)` and
-  `mimir-export::export_branch_artifacts(...)` provide the minimal batch export orchestration
-  that writes those persisted artifacts to disk with deterministic `anchor_<id>` /
-  `branch_<id>` filenames plus a deterministic `manifest.json` / `manifest.toml` batch index in
-  the same directory. That manifest records only the artifact ids, relative file paths,
-  artifact kind, and schema name/version pairs that were actually written. Batch writes are
-  staged inside a temporary subdirectory and only renamed into those final filenames after all
-  staged artifact writes and the staged manifest succeed. That reduces partial visible batch
-  output after write failures, but it is still not a true multi-file transaction. The same crate
-  now also provides `inspect_export_batch(...)` to re-open an exported batch via that manifest and
-  validate that the listed files still exist on disk and still match the manifest's kind/schema
-  header metadata. `load_export_batch(...)` builds directly on that manifest-driven inspection path
-  to load the currently supported anchor and branch batch kinds back as typed persisted artifacts
-  in manifest entry order. `adapt_loaded_batch(...)` and `load_and_adapt_export_batch(...)` then
-  flatten those loaded anchor/branch batches into explicit consumer-ready items that preserve that
-  manifest order and keep the validated source path visible without inventing higher-level
-  semantics.
+  `mimir-export::export_branch_artifacts(...)` provide the minimal bundle export orchestration.
+  Artifact payload files use deterministic ordinal paths under `anchors/` and `branches/`, for
+  example `anchors/anchor-0000.json` / `anchors/anchor-0000.toml` and
+  `branches/branch-0000.json` / `branches/branch-0000.toml`. JSON versus TOML is selected for the
+  artifact payload files only; bundle control metadata remains JSON. `manifest.json` records the
+  bundle version/name/producer, selected artifact encoding, relative `index.json` path, and
+  aggregate artifact/anchor/branch counts. `index.json` records one entry per written artifact,
+  including artifact kind, logical record id, relative path, schema name/version, and content
+  hash. Export first writes the complete bundle into a unique staging directory, validates that
+  staged bundle, and then renames the staging directory into the requested output directory. This
+  reduces partially visible bundle trees after failures but is not a general multi-file
+  transaction. `inspect_export_bundle(...)` reopens the manifest/index and validates bundle
+  structure, relative paths, artifact existence, encoding/extension agreement, and persisted
+  artifact header kind/schema metadata. `load_export_bundle(...)` builds on that inspection path,
+  reads the currently supported anchor/branch artifacts in index order, and additionally validates
+  each loaded artifact's logical record id and content hash against its index entry before
+  returning typed values. These checks intentionally do not claim same-kind logical record-id
+  uniqueness beyond what current production validation actually enforces.
 
 `mimir-io` is intentionally narrower. It owns raw artifact read/write helpers, artifact format
 selection, and schema/version validation, but not producer-coupled export orchestration.
