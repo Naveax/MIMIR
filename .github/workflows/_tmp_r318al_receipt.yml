@@ -1,0 +1,76 @@
+name: R3.18AL Receipt Discovery
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/_tmp_r318al_receipt.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: 42e6183d25f127ed156d1133a1037a571c528131
+      TARGET_BRANCH: evidence/r318al-ak-audit-v1
+    steps:
+      - name: Discover unique target runs and artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 240); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$TARGET_SHA&event=push&per_page=100" > /tmp/runs.json
+            python3 - <<'PY' > /tmp/state
+import json,os
+d=json.load(open('/tmp/runs.json')); sha=os.environ['TARGET_SHA']; branch=os.environ['TARGET_BRANCH']
+xs=[r for r in d.get('workflow_runs',[]) if r.get('head_sha')==sha and r.get('head_branch')==branch and r.get('event')=='push']
+ci=[r for r in xs if r.get('name')=='CI']; ev=[r for r in xs if r.get('name')=='R3.18AL Published AK Differential Evidence']
+assert len(ci)<=1, [('CI',r.get('id')) for r in ci]
+assert len(ev)<=1, [('EV',r.get('id')) for r in ev]
+for n,a in [('CI',ci),('EV',ev)]:
+ print(f'{n}_ID='+str(a[0]['id']) if a else f'{n}_ID=')
+ print(f'{n}_STATUS='+str(a[0]['status']) if a else f'{n}_STATUS=')
+ print(f'{n}_CONCLUSION='+str(a[0].get('conclusion') or '') if a else f'{n}_CONCLUSION=')
+PY
+            source /tmp/state
+            if [ -n "$CI_ID" ] && [ -n "$EV_ID" ] && [ "$CI_STATUS" = completed ] && [ "$EV_STATUS" = completed ]; then
+              test "$CI_CONCLUSION" = success
+              test "$EV_CONCLUSION" = success
+              break
+            fi
+            sleep 10
+          done
+          test -n "${CI_ID:-}"; test -n "${EV_ID:-}"
+          test "$CI_STATUS" = completed; test "$CI_CONCLUSION" = success
+          test "$EV_STATUS" = completed; test "$EV_CONCLUSION" = success
+          CI_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_ID/jobs" --jq '.jobs[]|select(.name=="rust")|.id')"
+          EV_JOB="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EV_ID/jobs" --jq '.jobs[]|select(.name=="evidence")|.id')"
+          test -n "$CI_JOB"; test -n "$EV_JOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$EV_JOB" --jq .conclusion)" = success
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EV_ID/artifacts" > /tmp/artifacts.json
+          AID="$(python3 - <<'PY'
+import json
+d=json.load(open('/tmp/artifacts.json')); xs=[a for a in d.get('artifacts',[]) if a.get('name')=='r318al-published-ak-differential-evidence']; assert len(xs)==1,[(a.get('id'),a.get('name')) for a in d.get('artifacts',[])]; a=xs[0]; assert not a.get('expired'); print(a['id'])
+PY
+)"
+          ASIZE="$(python3 - <<'PY'
+import json
+d=json.load(open('/tmp/artifacts.json')); a=[a for a in d['artifacts'] if a['name']=='r318al-published-ak-differential-evidence'][0]; print(a['size_in_bytes'])
+PY
+)"
+          ADIGEST="$(python3 - <<'PY'
+import json
+d=json.load(open('/tmp/artifacts.json')); a=[a for a in d['artifacts'] if a['name']=='r318al-published-ak-differential-evidence'][0]; print(a.get('digest') or '')
+PY
+)"
+          echo "R3_18AL_RECEIPT=PASS ci=$CI_ID/$CI_JOB evidence=$EV_ID/$EV_JOB artifact=$AID/$ASIZE/$ADIGEST"
