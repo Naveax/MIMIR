@@ -1,0 +1,5 @@
+aux export ledger prefix recovery v2
+base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+candidate=aux/export-ledger-prefix-hardening-v2
+reason=replace raw string prefix check with component-aware Path prefix and add sibling-prefix negatives
+canonical_admission=0

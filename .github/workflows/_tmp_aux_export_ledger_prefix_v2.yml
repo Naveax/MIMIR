@@ -1,27 +1,49 @@
-name: tmp aux export ledger prefix v2
+name: tmp aux export ledger prefix v2 recovery
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - automation/aux-export-ledger-prefix-v2
     paths:
-      - .github/workflows/_tmp_aux_export_ledger_prefix_v2.yml
+      - .github/workflows/_tmp_aux_export_ledger_prefix_v2_trigger.txt
+
+concurrency:
+  group: aux-export-ledger-prefix-v2-recovery
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
   build-candidate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      CANDIDATE_BRANCH: aux/export-ledger-prefix-hardening-v2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: fec9dca3cb8366108245788fc9a2b24a0c99fe94
           fetch-depth: 0
 
+      - name: Freeze exact base and candidate ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$BASE_TREE"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists; refusing to race or overwrite" >&2
+            exit 1
+          fi
+          echo AUX_EXPORT_LEDGER_BASE_FREEZE=PASS
+
       - name: Apply narrow ledger path hardening
         shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
 
@@ -120,22 +142,32 @@ jobs:
       - name: Format and verify narrow diff
         shell: bash
         run: |
+          set -euo pipefail
           cargo fmt --all
           git diff --check
           test "$(git diff --name-only)" = "crates/mimir-export/src/lib.rs"
+          echo AUX_EXPORT_LEDGER_SCOPE=PASS
 
-      - name: Focused regression
-        run: cargo test -p mimir-export load_execution_ledger_index_rejects_sibling_prefix_paths
-
-      - name: Full mimir-export tests
-        run: cargo test -p mimir-export
+      - name: Focused and crate regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-export load_execution_ledger_index_rejects_sibling_prefix_paths
+          cargo test --locked -p mimir-export
+          echo AUX_EXPORT_LEDGER_TESTS=PASS
 
       - name: Publish clean candidate branch
         shell: bash
         run: |
+          set -euo pipefail
           git config user.name "MIMIR Auxiliary Bot"
           git config user.email "actions@users.noreply.github.com"
-          git checkout -b aux/export-ledger-prefix-hardening-v2
+          git checkout -b "$CANDIDATE_BRANCH"
           git add -- crates/mimir-export/src/lib.rs
+          git diff --cached --check
+          test "$(git diff --cached --name-only)" = "crates/mimir-export/src/lib.rs"
           git commit -m "fix(export): harden execution ledger path boundary"
-          git push origin HEAD:refs/heads/aux/export-ledger-prefix-hardening-v2
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_EXPORT_LEDGER_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
+          echo AUX_EXPORT_LEDGER_CANONICAL_ADMISSION=0
