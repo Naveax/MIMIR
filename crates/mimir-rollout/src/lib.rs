@@ -161,10 +161,7 @@ mod tests {
                     fields: Metadata::from([("strength", FieldValue::Integer(1))]),
                 }],
                 legality_hint: Some(true),
-                metadata: Metadata::from([(
-                    "source",
-                    FieldValue::Text("manual".to_string()),
-                )]),
+                metadata: Metadata::from([("source", FieldValue::Text("manual".to_string()))]),
             },
             max_steps,
         }
@@ -209,18 +206,12 @@ mod tests {
         let request = request(8);
         let first = rollout_request_digest_v1(&request).expect("request digest");
         let repeated = rollout_request_digest_v1(&request).expect("request digest");
+        let other_domain =
+            hash_serializable(&("different-domain", &request)).expect("comparison digest");
 
         assert_eq!(first, repeated);
         assert_eq!(first.len(), 64);
-        assert_eq!(
-            hash_serializable(&("different-domain", &request))
-                .expect("comparison digest"),
-            hash_serializable(&("different-domain", &request)).expect("comparison digest")
-        );
-        assert_ne!(
-            first,
-            hash_serializable(&("different-domain", &request)).expect("comparison digest")
-        );
+        assert_ne!(first, other_domain);
     }
 
     #[test]
@@ -237,10 +228,10 @@ mod tests {
         );
 
         let mut changed_metadata = baseline.clone();
-        changed_metadata.branch.metadata.insert(
-            "source",
-            FieldValue::Text("counterfactual".to_string()),
-        );
+        changed_metadata
+            .branch
+            .metadata
+            .insert("source", FieldValue::Text("counterfactual".to_string()));
         assert_eq!(changed_metadata.branch.id, baseline.branch.id);
         assert_ne!(
             rollout_request_digest_v1(&changed_metadata).expect("changed metadata digest"),
