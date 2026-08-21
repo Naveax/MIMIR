@@ -1,0 +1,30 @@
+name: Aux Replay Selection Contracts
+
+on:
+  pull_request:
+    branches:
+      - parallel/select-replay-path-safety-v1
+    paths:
+      - '.github/workflows/_tmp_select_largest_replays_contracts.yml'
+
+concurrency:
+  group: aux-select-replay-contracts-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout validation head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Exercise replay selection safety contracts
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/test_select_largest_replays_contracts.ps1
