@@ -1,9 +1,7 @@
 use mimir_branch::{
     BoundedManualBranchGenerator, BranchGenerationRequest, BranchGenerator, BranchProposal,
 };
-use mimir_types::{
-    AnchorId, AnchorKind, AnchorRecord, FieldValue, FrameIndex, Metadata, ReplayId,
-};
+use mimir_types::{AnchorId, AnchorKind, AnchorRecord, FieldValue, FrameIndex, Metadata, ReplayId};
 
 fn anchor() -> AnchorRecord {
     AnchorRecord {
@@ -20,10 +18,7 @@ fn proposal(label: &str, legal_hint: Option<bool>) -> BranchProposal {
         label: label.to_string(),
         actions: Vec::new(),
         legal_hint,
-        metadata: Metadata::from([(
-            "proposal",
-            FieldValue::Text(label.to_string()),
-        )]),
+        metadata: Metadata::from([("proposal", FieldValue::Text(label.to_string()))]),
     }
 }
 
