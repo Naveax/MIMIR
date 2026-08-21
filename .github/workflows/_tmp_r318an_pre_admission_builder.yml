@@ -6,6 +6,11 @@ on:
       - automation/r318an-pre-admission-builder-v1
     paths:
       - .github/workflows/_tmp_r318an_pre_admission_trigger.txt
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/_tmp_r318an_pre_admission_trigger.txt
 
 concurrency:
   group: r318an-pre-admission-candidate-builder
