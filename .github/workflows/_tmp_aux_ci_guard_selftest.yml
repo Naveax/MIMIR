@@ -24,6 +24,8 @@ jobs:
   selftest:
     runs-on: windows-latest
     timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Checkout validation head
