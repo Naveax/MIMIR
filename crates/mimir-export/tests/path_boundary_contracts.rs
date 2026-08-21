@@ -64,7 +64,9 @@ fn whitespace_only_manifest_index_path_is_rejected() {
         .expect_err("blank export index path must fail closed");
 
     assert!(
-        error.to_string().contains("relative path must not be empty"),
+        error
+            .to_string()
+            .contains("relative paths in export index must not be empty"),
         "unexpected error: {error}"
     );
 }
