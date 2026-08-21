@@ -1,0 +1,4 @@
+R3.18AN continuity published-main run discovery trigger
+published_sha=68014a3b9aa3e5a84a4a03c2464863e9a60bfec2
+published_tree=6180021a44355e92348785d1f0f0d50002fb1a66
+purpose=read-only CI+Knowledge Archive receipt discovery; no dispatch or rerun

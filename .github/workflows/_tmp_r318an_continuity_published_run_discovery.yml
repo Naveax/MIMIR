@@ -1,0 +1,103 @@
+name: R3.18AN Continuity Published Main Run Discovery
+
+on:
+  push:
+    branches:
+      - ops/r318an-continuity-published-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318an_continuity_published_run_discovery_trigger.txt
+
+concurrency:
+  group: r318an-continuity-published-run-discovery
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PUBLISHED_SHA: 68014a3b9aa3e5a84a4a03c2464863e9a60bfec2
+      PUBLISHED_TREE: 6180021a44355e92348785d1f0f0d50002fb1a66
+    steps:
+      - uses: actions/checkout@v6
+      - name: Mark discovery pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318an/continuity-published-discovery' \
+            -f description='R3.18AN continuity published-main discovery running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+      - name: Freeze published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$PUBLISHED_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$PUBLISHED_TREE"
+      - name: Discover exact published-main CI and Knowledge Archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 48); do
+            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&head_sha=$PUBLISHED_SHA&event=push&per_page=30")"
+            ci_count="$(jq '[.workflow_runs[] | select(.name == "CI")] | length' <<<"$runs")"
+            ka_count="$(jq '[.workflow_runs[] | select(.name == "Knowledge Archive")] | length' <<<"$runs")"
+            if [ "$ci_count" -gt 1 ] || [ "$ka_count" -gt 1 ]; then
+              echo "duplicate published-main runs: CI=$ci_count KA=$ka_count" >&2
+              exit 1
+            fi
+            if [ "$ci_count" -eq 1 ] && [ "$ka_count" -eq 1 ]; then
+              ci_status="$(jq -r '.workflow_runs[] | select(.name == "CI") | .status' <<<"$runs")"
+              ka_status="$(jq -r '.workflow_runs[] | select(.name == "Knowledge Archive") | .status' <<<"$runs")"
+              if [ "$ci_status" = completed ] && [ "$ka_status" = completed ]; then
+                ci_conclusion="$(jq -r '.workflow_runs[] | select(.name == "CI") | .conclusion' <<<"$runs")"
+                ka_conclusion="$(jq -r '.workflow_runs[] | select(.name == "Knowledge Archive") | .conclusion' <<<"$runs")"
+                test "$ci_conclusion" = success
+                test "$ka_conclusion" = success
+                ci_run="$(jq -r '.workflow_runs[] | select(.name == "CI") | .id' <<<"$runs")"
+                ka_run="$(jq -r '.workflow_runs[] | select(.name == "Knowledge Archive") | .id' <<<"$runs")"
+                ci_job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ci_run/jobs" --jq '.jobs[0].id')"
+                ka_job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ka_run/jobs" --jq '.jobs[0].id')"
+                {
+                  echo "R3_18AN_CONTINUITY_PUBLISHED_SHA=$PUBLISHED_SHA"
+                  echo "R3_18AN_CONTINUITY_PUBLISHED_TREE=$PUBLISHED_TREE"
+                  echo "R3_18AN_CONTINUITY_PUBLISHED_CI=$ci_run/$ci_job SUCCESS"
+                  echo "R3_18AN_CONTINUITY_PUBLISHED_KA=$ka_run/$ka_job SUCCESS"
+                  echo "R3_18AN_CONTINUITY_PUBLISHED_CI_COUNT=$ci_count"
+                  echo "R3_18AN_CONTINUITY_PUBLISHED_KA_COUNT=$ka_count"
+                  echo "R3_18AN_CONTINUITY_PUBLISHED_DUPLICATE_GUARD=PASS"
+                } | tee r318an_continuity_published_main_runs.txt
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo 'published-main CI/Knowledge Archive did not settle uniquely' >&2
+          exit 1
+      - name: Upload published-main receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318an-continuity-published-main-runs
+          path: r318an_continuity_published_main_runs.txt
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report discovery status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure; desc='R3.18AN continuity published-main discovery failed'
+          if [ "$JOB_STATUS" = success ]; then state=success; desc='R3.18AN continuity published-main discovery succeeded'; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" -f context='r318an/continuity-published-discovery' -f description="$desc" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
