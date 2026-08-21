@@ -1,0 +1,132 @@
+name: R3.18AL Published AK Differential Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318al-published-ak-audit-v1
+    paths:
+      - .github/workflows/_tmp_r318al_trigger.txt
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318al-published-ak-differential-evidence
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      BASE_SHA: 02233c8125e658513dcb068370c48b1e8f15a01c
+      BASE_TREE: fc9293d821dd3e6e269763c3c0ab091428c29490
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318al/evidence' \
+            -f description='R3.18AL published-AK differential evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Freeze exact authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git ls-remote origin refs/heads/main | awk '{print $1}')" = "$BASE_SHA"
+          git fetch --no-tags origin "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          echo 'R3_18AL_AUTHORITY_FREEZE=PASS'
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Execute deterministic R3.18AL evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/_tmp_r318al_run.sh
+
+      - name: Upload immutable R3.18AL evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318al-published-ak-differential-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            r3_18al_source_scope.txt
+            r3_18al_replay_identity.tsv
+            r3_18al_frozen_ai_witnesses.json
+            r3_18al_frozen_ai_header_rows.json
+            r3_18al_comparison.json
+            r3_18al_header_summary.json
+            r3_18al_negative_controls.txt
+            r3_18al_aggregate.txt
+            r3_18al_upstream_receipts.txt
+            r3_18al_artifact_sha256.txt
+
+      - name: Verify immutable receipt and mark success
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r '.workflow_run.id' <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r '.workflow_run.head_sha' <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r '.expired' <<<"$meta")" = false
+          rest_digest="$(jq -r '.digest' <<<"$meta")"
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$rest_digest")" = "$(norm "$ARTIFACT_DIGEST")"
+          grep -Fqx 'R3_18AL_OUTCOME=A' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_EVIDENCE=PASS' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_FROZEN_ROWS=47/47' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_PUBLISHED_AK_EXACT=47/47' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_DIRECT_HEADER_EXACT=47/47' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_NATIVE_ORACLE_MISMATCH=0' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_WITNESS_RESELECTION=0' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_AJ_CONTRACT_EXACT=PASS' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_SECOND_LATER_CONTROL_BITS_CONSUMED=0' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_PRIVACY_SCAN=PASS' r3_18al_aggregate.txt
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318al/evidence' \
+            -f description='R3.18AL Outcome A published-AK differential PASS' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          echo "R3_18AL_EVIDENCE_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18AL_EVIDENCE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18AL_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18AL_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18AL_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          cat r3_18al_aggregate.txt
+
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318al/evidence' \
+            -f description='R3.18AL evidence failed; inspect exact run' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" || true
