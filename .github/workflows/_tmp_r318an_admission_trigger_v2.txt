@@ -1,0 +1,4 @@
+R3.18AN continuity admission builder V2 trigger
+base=3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+v1=f32e0df54178f956b6aac5bd6f47b33ea746947f
+fix=ledger EOF blank line only

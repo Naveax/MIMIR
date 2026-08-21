@@ -1,0 +1,187 @@
+name: R3.18AN Continuity Admission Builder V2
+
+on:
+  push:
+    branches:
+      - automation/r318an-admission-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318an_admission_trigger_v2.txt
+
+concurrency:
+  group: r318an-continuity-admission-builder-v2
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_SHA: 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+      BASE_TREE: 3efcc244bca55623b12bb21eb277753fc61144d4
+      V1_HEAD: f32e0df54178f956b6aac5bd6f47b33ea746947f
+      V1_WORKFLOW_BLOB: 63a66d4e49e0949e1442ac93dff0bea06c32da40
+      V1_RUN: '32520115374'
+      V1_JOB: '96890268892'
+      CANDIDATE_BRANCH: continuity/r318an-admit-ao-v2
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact V2 helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mark V2 pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318an/continuity-builder-v2' \
+            -f description='R3.18AN continuity builder V2 running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Freeze fresh main and immutable V1 failure
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$V1_RUN" --jq .head_sha)" = "$V1_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$V1_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$V1_RUN" --jq .conclusion)" = failure
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$V1_JOB" --jq .conclusion)" = failure
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'V2 continuity candidate already exists; refusing duplicate' >&2
+            exit 1
+          fi
+          echo R3_18AN_V2_FREEZE=PASS
+
+      - name: Extract frozen V1 generator and patch EOF hygiene only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse "$V1_HEAD:.github/workflows/_tmp_r318an_admission_builder.yml")" = "$V1_WORKFLOW_BLOB"
+          git show "$V1_HEAD:.github/workflows/_tmp_r318an_admission_builder.yml" > "$RUNNER_TEMP/v1.yml"
+          python - "$RUNNER_TEMP/v1.yml" "$RUNNER_TEMP/generator_v2.py" <<'PY'
+          from pathlib import Path
+          import sys
+          src = Path(sys.argv[1]).read_text(encoding='utf-8')
+          start = "          python - <<'PY'\n"
+          end = "          PY\n"
+          if src.count(start) != 1:
+              raise SystemExit(f'expected one generator start, got {src.count(start)}')
+          body = src.split(start, 1)[1]
+          if body.count(end) < 1:
+              raise SystemExit('generator end marker missing')
+          body = body.split(end, 1)[0]
+          lines = body.splitlines()
+          out = []
+          for line in lines:
+              if line.startswith('          '):
+                  line = line[10:]
+              out.append(line)
+          text = '\n'.join(out) + '\n'
+          old = "write(p,s.rstrip()+entry+'\\n')"
+          new = "write(p,s.rstrip()+entry.rstrip()+'\\n')"
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one ledger EOF expression, got {text.count(old)}')
+          text = text.replace(old, new, 1)
+          Path(sys.argv[2]).write_text(text, encoding='utf-8', newline='\n')
+          compile(text, sys.argv[2], 'exec')
+          print('R3_18AN_V2_EOF_PATCH=PASS')
+          PY
+
+      - name: Generate and validate exact 9-doc candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
+          python "$RUNNER_TEMP/generator_v2.py"
+          expected=(
+            MIMIR_CONTINUE_HERE.md
+            MIMIR_KNOWLEDGE_GRAPH.md
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+            docs/continuity/MIMIR_CONTINUITY_STATE.json
+            docs/continuity/MIMIR_CURRENT_STATE.md
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md
+            docs/continuity/MIMIR_R3_18AN_DECISION.md
+            docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md
+          )
+          printf '%s\n' "${expected[@]}" | sort > "$RUNNER_TEMP/expected.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sed '/^$/d' | sort -u > "$RUNNER_TEMP/actual.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          git diff --check
+          pwsh -NoProfile -File ./scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18AN_V2_SCOPE_AND_ARCHIVE=PASS files=9
+
+      - name: Commit and publish exact clean candidate once
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AN_DECISION.md docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git diff --cached --check
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Admit R3.18AN and open R3.18AO'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          sha="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared during validation; refusing overwrite' >&2
+            exit 1
+          fi
+          token_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote set-url origin "$token_url"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+
+      - name: Upload V2 receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo R3_18AN_CONTINUITY_BUILDER_V2=PASS
+            echo RUN_ID=$GITHUB_RUN_ID
+            echo BASE_SHA=$BASE_SHA
+            echo CANDIDATE_SHA=${{ steps.candidate.outputs.sha }}
+            echo CANDIDATE_TREE=${{ steps.candidate.outputs.tree }}
+            echo FILES=9
+            echo V1_FAILURE=ledger_blank_line_at_eof_only
+            echo NEXT_PASS=R3.18AO
+          } | tee r318an_continuity_v2_receipt.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r318an-continuity-v2-receipt
+          path: r318an_continuity_v2_receipt.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Report V2 status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure; desc='R3.18AN continuity builder V2 failed'
+          if [ "$JOB_STATUS" = success ]; then state=success; desc='R3.18AN continuity builder V2 succeeded'; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" -f context='r318an/continuity-builder-v2' -f description="$desc" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
