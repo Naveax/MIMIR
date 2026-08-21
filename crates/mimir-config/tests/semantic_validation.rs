@@ -29,10 +29,7 @@ fn semantic_validation_accepts_finite_nonzero_baseline_configs() {
     .expect("branching config");
 
     ScoringConfig {
-        weights: BTreeMap::from([
-            ("quality".to_string(), -2.5),
-            ("novelty".to_string(), 0.0),
-        ]),
+        weights: BTreeMap::from([("quality".to_string(), -2.5), ("novelty".to_string(), 0.0)]),
     }
     .validate()
     .expect("scoring config");
