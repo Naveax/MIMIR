@@ -56,7 +56,8 @@ impl RolloutArtifactVerifier for BoundedRolloutArtifactVerifier {
         if artifact.steps.len() > request.max_steps {
             return Err(MimirError::message(format!(
                 "rollout artifact step count {} exceeds max_steps {}",
-                artifact.steps.len(), request.max_steps
+                artifact.steps.len(),
+                request.max_steps
             )));
         }
 
