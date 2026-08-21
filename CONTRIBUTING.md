@@ -12,7 +12,9 @@ Run:
 pwsh -File scripts/verify_repo.ps1
 ```
 
-The verification gate covers formatting, workspace checking, tests, clippy, replay tests, skill tests, and export surface enumeration.
+The verification gate covers formatting, locked workspace checking, replay/skill/workspace tests,
+clippy, export surface enumeration, checked-in replay-corpus verification, a 100-row replay
+compatibility matrix plus summary, and replay-version-tuple ranking consistency checks.
 
 ## Repository boundaries
 
