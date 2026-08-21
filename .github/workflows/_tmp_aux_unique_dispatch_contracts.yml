@@ -1,0 +1,31 @@
+name: Aux Unique Workflow Dispatch Contract Validation
+
+on:
+  pull_request:
+    branches:
+      - aux/ci-unique-dispatch-wrapper-v1
+    paths:
+      - scripts/find_equivalent_active_action_run.ps1
+      - scripts/invoke_unique_workflow_dispatch.ps1
+      - scripts/test_invoke_unique_workflow_dispatch.ps1
+      - .github/workflows/_tmp_aux_unique_dispatch_contracts.yml
+
+concurrency:
+  group: aux-unique-dispatch-contract-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout validation head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Run unique dispatch contract tests
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/test_invoke_unique_workflow_dispatch.ps1
