@@ -1,0 +1,1 @@
+Single controlled read-only trigger for R3.18AJ published-main run discovery. Target published main is 5e26e7d3ceceac9752c35dde9c5074a1cd15262d. Discover exactly one natural push CI run and one natural push Knowledge Archive run for that SHA, require both SUCCESS, and fail if duplicates exist. Do not rerun either workflow.
