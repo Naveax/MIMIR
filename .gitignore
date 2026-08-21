@@ -5,6 +5,7 @@
 
 /.log_archive/
 /.recovery/
+/.tmp/
 
 /check*.out.txt
 /clippy*.out.txt
