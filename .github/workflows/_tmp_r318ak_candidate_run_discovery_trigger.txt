@@ -1,1 +1,1 @@
-Single controlled read-only trigger for R3.18AK clean candidate CI discovery. Target branch ops/r318ak-production-v1 at f20f529e3ada6e9a671ea91e5676a17a00770145. Require exactly one natural push CI run, require SUCCESS, and fail if duplicates exist. Do not dispatch or rerun CI.
+Single controlled read-only trigger for R3.18AK published-main CI discovery. Target branch main at f20f529e3ada6e9a671ea91e5676a17a00770145. Require exactly one natural push CI run, require SUCCESS, and fail if duplicates exist. Do not dispatch or rerun CI.
