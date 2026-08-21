@@ -19,7 +19,8 @@ param(
     [ValidatePattern('^[0-9a-fA-F]{40}$')]
     [string]$HeadSha,
 
-    [string[]]$Input = @(),
+    [Alias('Input')]
+    [string[]]$WorkflowInput = @(),
 
     [switch]$DryRun
 )
@@ -33,7 +34,7 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
 
 $HeadSha = $HeadSha.ToLowerInvariant()
 
-foreach ($Entry in $Input) {
+foreach ($Entry in $WorkflowInput) {
     if ($Entry -notmatch '^[^=\s]+=.+' ) {
         throw "Workflow input must use non-empty name=value form: $Entry"
     }
@@ -98,7 +99,7 @@ $DispatchArguments = @(
     '--repo', $Repository,
     '--ref', $Ref
 )
-foreach ($Entry in $Input) {
+foreach ($Entry in $WorkflowInput) {
     $DispatchArguments += @('-f', $Entry)
 }
 
@@ -114,5 +115,5 @@ if ($LASTEXITCODE -ne 0) {
     ref = $Ref
     head_branch = $HeadBranch
     head_sha = $HeadSha
-    input_count = $Input.Count
+    input_count = $WorkflowInput.Count
 } | ConvertTo-Json -Depth 4
