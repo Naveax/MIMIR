@@ -1,0 +1,140 @@
+name: R3.18AL Continuity Builder
+
+on:
+  push:
+    branches:
+      - automation/r318al-continuity-am-generator-v1
+    paths:
+      - .github/workflows/_tmp_r318al_continuity_trigger.txt
+
+concurrency:
+  group: r318al-continuity-builder
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  statuses: write
+
+jobs:
+  build-continuity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_MAIN: 02233c8125e658513dcb068370c48b1e8f15a01c
+      BASE_TREE: fc9293d821dd3e6e269763c3c0ab091428c29490
+      GENERATOR_BLOB: 7fa0be71f25be7df5c49af517c11abcb7f77e063
+      OPS_BRANCH: ops/r318al-continuity-am-open-v1
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout exact automation head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark builder pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=pending -f context='r318al/continuity-builder' -f description='R3.18AL continuity builder running' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Freeze authority and receipts
+        id: receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test "$(git hash-object tools/_tmp_r318al_continuity_generate.py)" = "$GENERATOR_BLOB"
+          python3 -m py_compile tools/_tmp_r318al_continuity_generate.py
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/32469442033" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/32469442033" --jq .head_sha)" = 06b8570a25a989651fc800a4ded900ce5e2f3dbe
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/96732952709" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/32470066272" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/96734795022" --jq .conclusion)" = success
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/9442034802")"
+          test "$(jq -r .workflow_run.id <<<"$meta")" = 32469442033
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = 06b8570a25a989651fc800a4ded900ce5e2f3dbe
+          test "$(jq -r .size_in_bytes <<<"$meta")" = 14650
+          test "$(jq -r .digest <<<"$meta")" = sha256:5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639
+          job_id=""
+          for _ in $(seq 1 20); do job_id="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" --jq '.jobs[] | select(.name=="build-continuity") | .id' | head -n1)"; [ -n "$job_id" ] && break; sleep 1; done
+          test -n "$job_id"
+          echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
+          cp tools/_tmp_r318al_continuity_generate.py "$RUNNER_TEMP/generator.py"
+
+      - name: Generate exact clean continuity candidate
+        shell: bash
+        env:
+          BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_MAIN"
+          git clean -fdx
+          git switch -C "$OPS_BRANCH" "$BASE_MAIN"
+          mkdir -p tools
+          cp "$RUNNER_TEMP/generator.py" tools/_tmp_r318al_continuity_generate.py
+          R318AL_BUILDER_RUN="$GITHUB_RUN_ID" R318AL_BUILDER_JOB="$BUILDER_JOB" python3 tools/_tmp_r318al_continuity_generate.py
+          rm tools/_tmp_r318al_continuity_generate.py
+          rmdir tools 2>/dev/null || true
+          cat > "$RUNNER_TEMP/expected.txt" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18AL_DECISION.md
+          docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/expected.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sed '/^$/d' | sort -u > "$RUNNER_TEMP/actual.txt"
+          sort -u -o "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/expected.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git diff --check
+          git diff --exit-code "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus .github/workflows scripts tools
+          git add -- MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AL_DECISION.md docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md
+          git diff --cached --check
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Admit R3.18AL and open R3.18AM'
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          test "$(git diff --name-only "$BASE_MAIN" HEAD | sort)" = "$(sort "$RUNNER_TEMP/expected.txt")"
+
+      - name: Publish continuity candidate
+        shell: bash
+        env:
+          BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          clean_sha="$(git rev-parse HEAD)"; clean_tree="$(git rev-parse HEAD^{tree})"
+          git push origin "HEAD:refs/heads/$OPS_BRANCH"
+          {
+            echo "R3_18AL_CONTINUITY_BUILDER=$GITHUB_RUN_ID/$BUILDER_JOB"
+            echo "R3_18AL_BASE=$BASE_MAIN/$BASE_TREE"
+            echo "R3_18AL_CLEAN_SHA=$clean_sha"
+            echo "R3_18AL_CLEAN_TREE=$clean_tree"
+            echo "R3_18AL_CLEAN_FILE_COUNT=9"
+            echo "R3_18AL_PRODUCTION_CARGO_FIXTURE_CORPUS_WORKFLOW_SUPPORT_MUTATION=0/0/0/0/0/0"
+            echo "R3_18AL_CONTINUITY_CANDIDATE=PASS"
+          } | tee r318al_continuity_candidate_receipt.txt
+
+      - name: Upload candidate receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318al-continuity-candidate-receipt
+          path: r318al_continuity_candidate_receipt.txt
+          if-no-files-found: error
+
+      - name: Report builder status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          state=failure; desc='R3.18AL continuity builder failed'
+          if [ "$JOB_STATUS" = success ]; then state=success; desc='R3.18AL continuity builder succeeded'; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state="$state" -f context='r318al/continuity-builder' -f description="$desc" -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" || true
