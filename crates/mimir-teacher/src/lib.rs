@@ -35,9 +35,7 @@ impl TeacherSynthesisRequestVerifier for StrictTeacherRequestVerifier {
         let mut seen_ids = BTreeSet::<TeacherLabelId>::new();
         for label in &request.labels {
             if label.id.as_str().trim().is_empty() {
-                return Err(MimirError::message(
-                    "teacher label id must not be blank",
-                ));
+                return Err(MimirError::message("teacher label id must not be blank"));
             }
             if !seen_ids.insert(label.id.clone()) {
                 return Err(MimirError::message(format!(
@@ -98,7 +96,12 @@ mod tests {
     use super::*;
     use mimir_types::{AnchorId, BranchId, Metadata, ReplayId, SkillId};
 
-    fn label(id: &str, target: TeacherLabelTarget, text: &str, score: Option<f32>) -> TeacherLabelRecord {
+    fn label(
+        id: &str,
+        target: TeacherLabelTarget,
+        text: &str,
+        score: Option<f32>,
+    ) -> TeacherLabelRecord {
         TeacherLabelRecord {
             id: TeacherLabelId::new(id),
             target,
@@ -143,7 +146,10 @@ mod tests {
         StrictTeacherRequestVerifier
             .verify_request(&TeacherSynthesisRequest {
                 namespace: "teacher".to_string(),
-                labels: vec![replay_label("label-1", Some(0.5)), replay_label("label-2", None)],
+                labels: vec![
+                    replay_label("label-1", Some(0.5)),
+                    replay_label("label-2", None),
+                ],
             })
             .expect("unique finite labels should verify");
     }
@@ -197,7 +203,10 @@ mod tests {
             StrictTeacherRequestVerifier
                 .verify_request(&TeacherSynthesisRequest {
                     namespace: "teacher".to_string(),
-                    labels: vec![replay_label("label-1", Some(1.0)), replay_label("label-1", None)],
+                    labels: vec![
+                        replay_label("label-1", Some(1.0)),
+                        replay_label("label-1", None),
+                    ],
                 })
                 .is_err()
         );
@@ -223,7 +232,9 @@ mod tests {
                 )],
             };
             assert!(
-                StrictTeacherRequestVerifier.verify_request(&request).is_err(),
+                StrictTeacherRequestVerifier
+                    .verify_request(&request)
+                    .is_err(),
                 "target variant {index} should reject a blank id"
             );
         }
