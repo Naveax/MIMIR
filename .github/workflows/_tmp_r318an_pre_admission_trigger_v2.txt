@@ -1,4 +1,4 @@
-R3.18AN corrected pre-admission builder trigger v2.1
+R3.18AN corrected pre-admission builder trigger v2.2
 base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
 am_head=842b94ed4c4e57323433585fea48116ecf18989b
 am_run_job=32473716883/96745647750
@@ -6,5 +6,8 @@ am_ci=32474038136/96746590106
 am_artifact=9443581172
 supersedes_builder_v1=1
 supersedes_v2_unformatted_head=1
-reason=all-47 permanent regression plus primitive-value borrow fix plus rustfmt normalization
+supersedes_v2_1_no_candidate_after_75m_timeout_window=1
+candidate_publish_before_full_repo_validation=1
+candidate_branch_must_not_preexist=1
+reason=all-47 permanent regression plus primitive-value borrow fix plus rustfmt normalization plus inspectable candidate publication
 canonical_admission=0

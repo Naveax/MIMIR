@@ -1,4 +1,4 @@
-name: R3.18AN Pre-Admission Candidate Builder V2
+name: R3.18AN Pre-Admission Candidate Builder V2.2 Inspectable
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - .github/workflows/_tmp_r318an_pre_admission_trigger_v2.txt
 
 concurrency:
-  group: r318an-pre-admission-candidate-builder-v2
+  group: r318an-pre-admission-candidate-builder-v2-2
   cancel-in-progress: false
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
   actions: read
 
 jobs:
-  build-candidate-v2:
+  build-candidate-v2-2:
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     env:
@@ -25,7 +25,7 @@ jobs:
       V1_HELPER_SHA: 52282c60f38a4970ae01930519b49173427358f1
       V1_GENERATOR_BLOB: 7bef3508f824d40b357eec6f411fc3dddef93fce
       V2_PATCH_BLOB: 91561bb9d94f0d4fff3817cff5830249749b78d3
-      CANDIDATE_BRANCH: candidate/r318an-post-ak-payload-pre-admission-v2
+      CANDIDATE_BRANCH: candidate/r318an-post-ak-payload-pre-admission-v2-2
       AM_HEAD: 842b94ed4c4e57323433585fea48116ecf18989b
       AM_RUN: '32473716883'
       AM_JOB: '96745647750'
@@ -34,7 +34,7 @@ jobs:
       AM_ARTIFACT: '9443581172'
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout exact V2 builder head
+      - name: Checkout exact V2.2 builder head
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -62,7 +62,7 @@ jobs:
           test "$(git hash-object "$RUNNER_TEMP/r318an_v1_generate.py")" = "$V1_GENERATOR_BLOB"
           cp tools/_tmp_r318an_pre_admission_patch_v2.py "$RUNNER_TEMP/r318an_patch_v2.py"
           python -m py_compile "$RUNNER_TEMP/r318an_v1_generate.py" "$RUNNER_TEMP/r318an_patch_v2.py"
-          echo R3_18AN_V2_AUTHORITY_FREEZE=PASS
+          echo R3_18AN_V2_2_AUTHORITY_FREEZE=PASS
 
       - name: Toolchain
         shell: bash
@@ -78,6 +78,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists; refusing to race or overwrite" >&2
+            exit 1
+          fi
           git reset --hard "$BASE_SHA"
           git clean -fdx
           git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
@@ -88,9 +92,6 @@ jobs:
           python tools/_tmp_r318an_pre_admission_patch_v2.py
           rm -f tools/_tmp_r318an_pre_admission_generate.py tools/_tmp_r318an_pre_admission_patch_v2.py
           rmdir tools 2>/dev/null || true
-
-          # The v1 helper proved that generated source is semantically scoped correctly but
-          # rustfmt-normalization is required before the immutable candidate is validated.
           cargo +1.85.0 fmt --all
 
           expected="$RUNNER_TEMP/expected.txt"
@@ -108,21 +109,19 @@ jobs:
           grep -Fq 'r3_18an_all_47_frozen_am_rows_are_exact_and_stop_before_next_control' crates/mimir-replay/tests/r3_18an_post_ak_payload.rs
           grep -Fq 'matches!(' crates/mimir-replay/src/lib.rs
           grep -Fq '&following_payload.value' crates/mimir-replay/src/lib.rs
-          echo R3_18AN_V2_SCOPE=PASS files=2 frozen_rows=47 formatted=1
+          echo R3_18AN_V2_2_SCOPE=PASS files=2 frozen_rows=47 formatted=1
 
-      - name: Focused and full validation
+      - name: Focused pre-publication validation
         shell: bash
         run: |
           set -euo pipefail
           cargo +1.85.0 fmt --all -- --check
-          cargo +1.85.0 test -p mimir-replay --test r3_18an_post_ak_payload
-          cargo +1.85.0 test -p mimir-replay --test r3_18ak_post_ag_following_header
-          cargo +1.85.0 check --workspace --all-targets --all-features
-          cargo +1.85.0 clippy --workspace --all-targets --all-features -- -D warnings
-          cargo +1.85.0 test --workspace
-          pwsh -NoProfile -File ./scripts/verify_repo.ps1
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18an_post_ak_payload
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18ak_post_ag_following_header
+          echo R3_18AN_V2_2_FOCUSED_GATE=PASS
 
-      - name: Commit and publish corrected pre-admission candidate
+      - name: Commit and publish inspectable pre-admission candidate
+        id: candidate
         shell: bash
         run: |
           set -euo pipefail
@@ -133,30 +132,52 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git commit -m "Prepare corrected bounded R3.18AN post-AK Int payload"
           test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse HEAD^{tree})"
           git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "sha=$candidate_sha" >> "$GITHUB_OUTPUT"
+          echo "tree=$candidate_tree" >> "$GITHUB_OUTPUT"
+          echo "R3_18AN_V2_2_CANDIDATE=$candidate_sha/$candidate_tree"
+          echo R3_18AN_V2_2_CANDIDATE_PUBLISHED_FOR_FULL_VALIDATION=PASS
 
+      - name: Full repository validation on exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ steps.candidate.outputs.sha }}"
+          cargo +1.85.0 check --locked --workspace --all-targets --all-features
+          cargo +1.85.0 clippy --locked --workspace --all-targets --all-features -- -D warnings
+          cargo +1.85.0 test --locked --workspace
+          pwsh -NoProfile -File ./scripts/verify_repo.ps1
+          echo R3_18AN_V2_2_FULL_REPO_GATE=PASS
+
+      - name: Freeze corrected candidate receipt
+        shell: bash
+        run: |
+          set -euo pipefail
           {
-            echo "R3_18AN_PRE_ADMISSION_V2=PASS"
+            echo "R3_18AN_PRE_ADMISSION_V2_2=PASS"
             echo "R3_18AN_SUPERSEDES_PRE_ADMISSION_V1=1"
+            echo "R3_18AN_SUPERSEDES_PRE_ADMISSION_V2_1_NO_OUTPUT=1"
             echo "R3_18AN_BASE_SHA=$BASE_SHA"
             echo "R3_18AN_BASE_TREE=$BASE_TREE"
             echo "R3_18AN_AM_HEAD=$AM_HEAD"
             echo "R3_18AN_AM_RUN_JOB=$AM_RUN/$AM_JOB"
             echo "R3_18AN_AM_CI=$AM_CI_RUN/$AM_CI_JOB"
-            echo "R3_18AN_CANDIDATE_SHA=$(git rev-parse HEAD)"
-            echo "R3_18AN_CANDIDATE_TREE=$(git rev-parse HEAD^{tree})"
+            echo "R3_18AN_CANDIDATE_SHA=${{ steps.candidate.outputs.sha }}"
+            echo "R3_18AN_CANDIDATE_TREE=${{ steps.candidate.outputs.tree }}"
             echo "R3_18AN_SCOPE=lib.rs+r3_18an_post_ak_payload.rs"
             echo "R3_18AN_FROZEN_ROWS=47/47"
             echo "R3_18AN_TAG=Int"
             echo "R3_18AN_WIDTH=32"
             echo "R3_18AN_NEXT_CONTROL_BITS=0"
             echo "R3_18AN_CANONICAL_ADMISSION=0"
-          } | tee r318an_pre_admission_v2_receipt.txt
+          } | tee r318an_pre_admission_v2_2_receipt.txt
 
       - name: Upload corrected candidate receipt
         uses: actions/upload-artifact@v4
         with:
-          name: r318an-pre-admission-candidate-v2-receipt
-          path: r318an_pre_admission_v2_receipt.txt
+          name: r318an-pre-admission-candidate-v2-2-receipt
+          path: r318an_pre_admission_v2_2_receipt.txt
           if-no-files-found: error
           retention-days: 30
