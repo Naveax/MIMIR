@@ -1,0 +1,30 @@
+name: Aux Knowledge Archive Path Contract Validation
+
+on:
+  pull_request:
+    branches:
+      - aux/knowledge-archive-manifest-paths-v1
+    paths:
+      - scripts/verify_mimir_knowledge_archive.ps1
+      - scripts/test_verify_mimir_knowledge_archive_paths.ps1
+      - .github/workflows/_tmp_aux_knowledge_archive_path_contracts.yml
+
+concurrency:
+  group: aux-knowledge-archive-path-contract-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  archive-path-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout validation head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Run archive path fail-closed contracts
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/test_verify_mimir_knowledge_archive_paths.ps1
