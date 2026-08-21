@@ -1,0 +1,96 @@
+name: R3.18AK Published Continuity Run Discovery
+
+on:
+  push:
+    branches:
+      - ops/r318ak-candidate-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318ak_published_continuity_discovery_trigger.txt
+
+concurrency:
+  group: r318ak-published-continuity-discovery
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: 02233c8125e658513dcb068370c48b1e8f15a01c
+    steps:
+      - uses: actions/checkout@v6
+      - name: Mark discovery pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318ak/published-continuity-discovery' \
+            -f description='R3.18AK published continuity run discovery running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+      - name: Discover exact main push runs without dispatching
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$TARGET_SHA&event=push&per_page=100")"
+            main="$(jq --arg sha "$TARGET_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .head_branch == "main" and .event == "push")]' <<<"$runs")"
+            ci_count="$(jq '[.[] | select(.name == "CI")] | length' <<<"$main")"
+            ka_count="$(jq '[.[] | select(.name == "Knowledge Archive")] | length' <<<"$main")"
+            total_count="$(jq 'length' <<<"$main")"
+            if [ "$ci_count" -gt 1 ] || [ "$ka_count" -gt 1 ]; then
+              echo "duplicate main-push run: ci=$ci_count ka=$ka_count total=$total_count" >&2
+              jq . <<<"$main" >&2
+              exit 1
+            fi
+            if [ "$ci_count" -eq 1 ] && [ "$ka_count" -eq 1 ]; then
+              ci_id="$(jq -r '.[] | select(.name == "CI") | .id' <<<"$main")"
+              ci_status="$(jq -r '.[] | select(.name == "CI") | .status' <<<"$main")"
+              ci_conclusion="$(jq -r '.[] | select(.name == "CI") | .conclusion // ""' <<<"$main")"
+              ka_id="$(jq -r '.[] | select(.name == "Knowledge Archive") | .id' <<<"$main")"
+              ka_status="$(jq -r '.[] | select(.name == "Knowledge Archive") | .status' <<<"$main")"
+              ka_conclusion="$(jq -r '.[] | select(.name == "Knowledge Archive") | .conclusion // ""' <<<"$main")"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_SHA=$TARGET_SHA"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_CI_RUN=$ci_id"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_CI_STATUS=$ci_status"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_CI_CONCLUSION=$ci_conclusion"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_KA_RUN=$ka_id"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_KA_STATUS=$ka_status"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_KA_CONCLUSION=$ka_conclusion"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_CI_COUNT=$ci_count"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_KA_COUNT=$ka_count"
+              echo "R3_18AK_PUBLISHED_CONTINUITY_MAIN_PUSH_TOTAL=$total_count"
+              if [ "$ci_status" = completed ] && [ "$ka_status" = completed ]; then
+                test "$ci_conclusion" = success
+                test "$ka_conclusion" = success
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo 'published continuity main-push runs did not both reach SUCCESS in discovery window' >&2
+          exit 1
+      - name: Mark discovery result
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure
+          description='R3.18AK published continuity discovery failed'
+          if [ "$JOB_STATUS" = success ]; then
+            state=success
+            description='R3.18AK published continuity CI+KA unique SUCCESS'
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context='r318ak/published-continuity-discovery' \
+            -f description="$description" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
