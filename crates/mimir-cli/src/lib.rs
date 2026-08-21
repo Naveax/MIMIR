@@ -159,6 +159,17 @@ where
     dispatch(cli)
 }
 
+/// Fallible library entry point for callers that must not let clap terminate the process on
+/// malformed arguments. The regular `run_from` path remains unchanged for CLI-style behavior.
+pub fn try_run_from<I, T>(args: I) -> Result<String>
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
+    let cli = Cli::try_parse_from(args).map_err(|error| MimirError::message(error.to_string()))?;
+    dispatch(cli)
+}
+
 pub fn dispatch(cli: Cli) -> Result<String> {
     let report = match cli.command {
         Commands::Mine {
@@ -321,6 +332,15 @@ mod tests {
             }
             _ => panic!("expected replay-compat-matrix command"),
         }
+    }
+
+    #[test]
+    fn try_run_from_returns_structured_error_for_malformed_arguments() {
+        let error = try_run_from(["mimir-cli", "not-a-command"])
+            .expect_err("fallible parser should return malformed argv as an error");
+
+        assert!(matches!(error, MimirError::Message(_)));
+        assert!(!error.to_string().trim().is_empty());
     }
 
     #[test]
