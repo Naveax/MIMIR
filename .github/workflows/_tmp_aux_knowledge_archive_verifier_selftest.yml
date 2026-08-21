@@ -1,0 +1,90 @@
+name: Aux Knowledge Archive Verifier Self-Test
+
+on:
+  pull_request:
+    paths:
+      - "scripts/verify_mimir_knowledge_archive.ps1"
+      - "docs/chatgpt-archive/MANIFEST.json"
+      - ".github/workflows/_tmp_aux_knowledge_archive_verifier_selftest.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verifier-boundaries:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Baseline manifest passes
+        shell: pwsh
+        run: ./scripts/verify_mimir_knowledge_archive.ps1
+
+      - name: Malformed required paths fail closed
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+
+          $ManifestPath = Join-Path $env:GITHUB_WORKSPACE 'docs\chatgpt-archive\MANIFEST.json'
+          $Verifier = Join-Path $env:GITHUB_WORKSPACE 'scripts\verify_mimir_knowledge_archive.ps1'
+          $Original = [System.IO.File]::ReadAllText($ManifestPath)
+          $Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
+          function Assert-Rejected {
+              param(
+                  [Parameter(Mandatory = $true)][string]$Label,
+                  [Parameter(Mandatory = $true)][scriptblock]$Mutate
+              )
+
+              $Manifest = $Original | ConvertFrom-Json
+              & $Mutate $Manifest
+              $Encoded = $Manifest | ConvertTo-Json -Depth 16
+              [System.IO.File]::WriteAllText($ManifestPath, $Encoded, $Utf8NoBom)
+
+              $Rejected = $false
+              try {
+                  & $Verifier
+              }
+              catch {
+                  $Rejected = $true
+                  Write-Host "PASS rejected $Label : $($_.Exception.Message)"
+              }
+              finally {
+                  [System.IO.File]::WriteAllText($ManifestPath, $Original, $Utf8NoBom)
+              }
+
+              if (-not $Rejected) {
+                  throw "Verifier unexpectedly accepted malformed required_paths case: $Label"
+              }
+          }
+
+          Assert-Rejected -Label 'blank path' -Mutate {
+              param($Manifest)
+              $Manifest.required_paths = @($Manifest.required_paths) + '   '
+          }
+
+          Assert-Rejected -Label 'duplicate path' -Mutate {
+              param($Manifest)
+              $Manifest.required_paths = @($Manifest.required_paths) + [string]$Manifest.required_paths[0]
+          }
+
+          Assert-Rejected -Label 'parent traversal' -Mutate {
+              param($Manifest)
+              $Manifest.required_paths = @($Manifest.required_paths) + '../outside.txt'
+          }
+
+          Assert-Rejected -Label 'current-directory component' -Mutate {
+              param($Manifest)
+              $Manifest.required_paths = @($Manifest.required_paths) + './MIMIR_CONTINUE_HERE.md'
+          }
+
+          Assert-Rejected -Label 'rooted path' -Mutate {
+              param($Manifest)
+              $Manifest.required_paths = @($Manifest.required_paths) + 'C:\Windows\win.ini'
+          }
+
+          & $Verifier
