@@ -1,17 +1,22 @@
 use mimir_types::{
-    ANCHOR_ARTIFACT_SCHEMA, ArtifactHeader, ArtifactKind, AnchorId, BranchId, CacheKey,
-    FieldValue, LOW_BOOST_RECOVERY_BC_ARTIFACT_SCHEMA, LowBoostRecoveryBcArtifactId,
-    LowBoostRecoveryVariantId, Metadata, RawStateWindowRef, ReplayId, ReplaySliceId,
-    ReplaySubjectRef, SCOREBOARD_ARTIFACT_SCHEMA, SKILL_ARTIFACT_SCHEMA, SkillId,
+    ANCHOR_ARTIFACT_SCHEMA, AnchorId, ArtifactHeader, ArtifactKind, BRANCH_ARTIFACT_SCHEMA,
+    BranchId, CacheKey, FieldValue, LOW_BOOST_RECOVERY_BC_ARTIFACT_SCHEMA,
+    LowBoostRecoveryBcArtifactId, LowBoostRecoveryVariantId, Metadata, RawStateWindowRef, ReplayId,
+    ReplaySliceId, ReplaySubjectRef, SCOREBOARD_ARTIFACT_SCHEMA, SKILL_ARTIFACT_SCHEMA, SkillId,
     TEACHER_LABEL_ARTIFACT_SCHEMA, TeacherLabelId, VERTICAL_SLICE_INPUT_ARTIFACT_SCHEMA,
-    BRANCH_ARTIFACT_SCHEMA,
 };
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use serde_json::json;
 
 fn assert_transparent_string_id<T>(value: &str)
 where
-    T: From<String> + AsRef<str> + std::fmt::Display + Serialize + DeserializeOwned + PartialEq + std::fmt::Debug,
+    T: From<String>
+        + AsRef<str>
+        + std::fmt::Display
+        + Serialize
+        + DeserializeOwned
+        + PartialEq
+        + std::fmt::Debug,
 {
     let id = T::from(value.to_owned());
     assert_eq!(id.as_ref(), value);
@@ -42,9 +47,21 @@ fn all_public_string_ids_keep_transparent_wire_contract() {
 #[test]
 fn artifact_kind_wire_schema_names_and_versions_are_exactly_locked() {
     let cases = [
-        (ArtifactKind::Anchor, ANCHOR_ARTIFACT_SCHEMA, "mimir.anchor_artifact"),
-        (ArtifactKind::Branch, BRANCH_ARTIFACT_SCHEMA, "mimir.branch_artifact"),
-        (ArtifactKind::Skill, SKILL_ARTIFACT_SCHEMA, "mimir.skill_artifact"),
+        (
+            ArtifactKind::Anchor,
+            ANCHOR_ARTIFACT_SCHEMA,
+            "mimir.anchor_artifact",
+        ),
+        (
+            ArtifactKind::Branch,
+            BRANCH_ARTIFACT_SCHEMA,
+            "mimir.branch_artifact",
+        ),
+        (
+            ArtifactKind::Skill,
+            SKILL_ARTIFACT_SCHEMA,
+            "mimir.skill_artifact",
+        ),
         (
             ArtifactKind::TeacherLabel,
             TEACHER_LABEL_ARTIFACT_SCHEMA,
