@@ -1,4 +1,4 @@
-name: Aux MIMIR IO Staged Write Builder V1
+name: Aux MIMIR IO Staged Write Builder V2
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - 'tools/_tmp_mimir_io_staged_write_patch.py'
 
 concurrency:
-  group: aux-mimir-io-staged-write-builder-v1
+  group: aux-mimir-io-staged-write-builder-v2
   cancel-in-progress: false
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
     env:
       BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
       BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
-      PATCH_BLOB: 17a0b880430c0ed241c0b174e2d6f4c04ce9f8a9
+      PATCH_BLOB: 2810ac78d7d4a85e0bc2c2711b6df817cba9bb0a
       CANDIDATE_BRANCH: aux/mimir-io-staged-write-v1
 
     steps:
@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD~2)" = "$BASE_SHA"
           test "$(git rev-parse HEAD:tools/_tmp_mimir_io_staged_write_patch.py)" = "$PATCH_BLOB"
           git fetch origin main --force
           test "$(git rev-parse origin/main)" = "$BASE_SHA"
