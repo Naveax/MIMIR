@@ -1,0 +1,1 @@
+Build exactly one docs-only R3.18AK continuity candidate from published main f20f529e3ada6e9a671ea91e5676a17a00770145 on parallel/s1-r3-18ak-continuity-v1. Do not mutate production/Cargo/fixtures/corpus/support. Open only R3.18AL read-only differential.
