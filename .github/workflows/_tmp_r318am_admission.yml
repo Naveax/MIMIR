@@ -1,0 +1,163 @@
+name: R3.18AM Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318am-admission-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318am_admission_trigger.txt
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+jobs:
+  build-continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout builder head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact parent and detach temporary builder material
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          BASE_TREE=3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          git merge-base --is-ancestor "$BASE" HEAD
+          cp tools/_tmp_r318am_admission_generate.py /tmp/r318am_admission_generate.py
+          git reset --hard "$BASE"
+          git clean -fdx
+          test "$(git rev-parse HEAD)" = "$BASE"
+          test "$(git rev-parse HEAD^{tree})" = "$BASE_TREE"
+
+      - name: Discover exact builder job receipt
+        id: receipt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          job_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" --jq '.jobs[] | select(.name=="build-continuity") | .id' | head -n1)"
+          test -n "$job_id"
+          echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
+          echo "R3_18AM_BUILDER_RECEIPT=${GITHUB_RUN_ID}/${job_id}"
+
+      - name: Freeze R3.18AM authority and artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          AM_HEAD=842b94ed4c4e57323433585fea48116ecf18989b
+          AM_TREE=486d0a0f3833dcb8872f062ae1927c9aefde87ba
+          AM_RUN=32473716883
+          AM_JOB=96745647750
+          CI_RUN=32474038136
+          CI_JOB=96746590106
+          AM_ART=9443581172
+          AM_SIZE=14827
+          AM_DIGEST=2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_RUN" --jq .head_sha)" = "$AM_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AM_RUN" --jq .head_commit.tree_id)" = "$AM_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AM_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$CI_RUN" --jq .head_sha)" = "$AM_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ART" --jq .workflow_run.id)" = "$AM_RUN"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ART" --jq .workflow_run.head_sha)" = "$AM_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ART" --jq .name)" = r318am-post-ak-payload-evidence
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ART" --jq .size_in_bytes)" = "$AM_SIZE"
+          digest="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ART" --jq .digest)"
+          test "${digest#sha256:}" = "$AM_DIGEST"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AM_ART" --jq .expired)" = false
+          rm -rf /tmp/r318am_art && mkdir -p /tmp/r318am_art
+          gh run download "$AM_RUN" -n r318am-post-ak-payload-evidence -D /tmp/r318am_art
+          (
+            cd /tmp/r318am_art
+            test "$(wc -l < r3_18am_artifact_sha256.txt)" -eq 11
+            sha256sum -c r3_18am_artifact_sha256.txt
+            grep -Fqx 'R3_18AM_OUTCOME=A' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_FROZEN_ROWS=47/47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_PUBLISHED_AK_EXACT=47/47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_TAG_INT=47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_OBSERVED_PAYLOAD_WIDTH=32' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_PAYLOAD_WIDTH_COUNT=47' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_NATIVE_ORACLE_MISMATCH=0' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_WITNESS_RESELECTION=0' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_ANOTHER_CONTROL_BITS_CONSUMED=0' r3_18am_aggregate.txt
+            grep -Fqx 'R3_18AM_PRIVACY_SCAN=PASS' r3_18am_aggregate.txt
+          )
+          echo R3_18AM_AUTHORITY_FREEZE=PASS
+
+      - name: Generate exact docs-only admission candidate
+        shell: bash
+        env:
+          R318AM_BUILDER_RUN: ${{ github.run_id }}
+          R318AM_BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          python /tmp/r318am_admission_generate.py 32474038136 96746590106
+
+      - name: Verify exact nine-file scope and syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -N docs/continuity/MIMIR_R3_18AM_DECISION.md docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md
+          mapfile -t actual < <(git diff --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AM_DECISION.md \
+            docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+          test ! -e .github/workflows/_tmp_r318am_admission.yml
+          test ! -e tools/_tmp_r318am_admission_generate.py
+          test ! -e .github/workflows/_tmp_r318am_admission_trigger.txt
+          git diff --exit-code HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github
+          echo R3_18AM_ADMISSION_SCOPE=PASS
+
+      - name: Verify Knowledge Archive
+        shell: pwsh
+        run: |
+          & ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Commit and publish clean continuity candidate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "MIMIR Admission Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AM_DECISION.md \
+            docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m "Admit R3.18AM and open R3.18AN"
+          git push origin HEAD:refs/heads/continuity/r318am-admit-an-v1
+          echo "R3_18AM_CONTINUITY_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18AM_CONTINUITY_TREE=$(git rev-parse HEAD^{tree})"
