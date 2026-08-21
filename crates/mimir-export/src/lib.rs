@@ -3510,6 +3510,8 @@ fn validate_index(manifest: &ExportManifest, index: &ExportIndex) -> Result<()> 
     let mut anchor_count = 0usize;
     let mut branch_count = 0usize;
     let mut seen_paths = BTreeSet::new();
+    let mut seen_anchor_record_ids = BTreeSet::new();
+    let mut seen_branch_record_ids = BTreeSet::new();
 
     for entry in &index.entries {
         validate_relative_path_text(&entry.relative_path)?;
@@ -3533,6 +3535,18 @@ fn validate_index(manifest: &ExportManifest, index: &ExportIndex) -> Result<()> 
             return Err(MimirError::message(format!(
                 "index entry {} has an empty record id",
                 entry.relative_path
+            )));
+        }
+
+        let seen_record_ids = match entry.artifact_kind {
+            ExportArtifactKind::Anchor => &mut seen_anchor_record_ids,
+            ExportArtifactKind::Branch => &mut seen_branch_record_ids,
+        };
+        if !seen_record_ids.insert(entry.record_id.clone()) {
+            return Err(MimirError::message(format!(
+                "duplicate {} record id {} in export index",
+                entry.artifact_kind.file_stem(),
+                entry.record_id
             )));
         }
 
@@ -3878,6 +3892,89 @@ mod tests {
                 .to_string()
                 .contains("non-normal relative path component")
         );
+    }
+
+    #[test]
+    fn validate_index_rejects_duplicate_record_ids_within_the_same_artifact_kind() {
+        let manifest = ExportManifest {
+            manifest_version: EXPORT_MANIFEST_VERSION,
+            export_name: "duplicate-anchor-ids".to_string(),
+            producer: EXPORT_BUNDLE_PRODUCER.to_string(),
+            created_by_component: Some("unit-test".to_string()),
+            artifact_encoding: ExportEncoding::Json,
+            relative_index_path: EXPORT_INDEX_FILE_NAME.to_string(),
+            artifact_count: 2,
+            anchor_count: 2,
+            branch_count: 0,
+        };
+        let index = ExportIndex {
+            index_version: EXPORT_INDEX_VERSION,
+            entries: vec![
+                ExportIndexEntry {
+                    artifact_kind: ExportArtifactKind::Anchor,
+                    record_id: "anchor-duplicate".to_string(),
+                    relative_path: "anchors/anchor-0000.json".to_string(),
+                    schema_name: ArtifactKind::Anchor.schema().name.to_string(),
+                    schema_version: ArtifactKind::Anchor.schema().version,
+                    content_hash: "hash-a".to_string(),
+                },
+                ExportIndexEntry {
+                    artifact_kind: ExportArtifactKind::Anchor,
+                    record_id: "anchor-duplicate".to_string(),
+                    relative_path: "anchors/anchor-0001.json".to_string(),
+                    schema_name: ArtifactKind::Anchor.schema().name.to_string(),
+                    schema_version: ArtifactKind::Anchor.schema().version,
+                    content_hash: "hash-b".to_string(),
+                },
+            ],
+        };
+
+        let error = validate_index(&manifest, &index)
+            .expect_err("same-kind duplicate record ids must fail closed");
+
+        assert!(
+            error
+                .to_string()
+                .contains("duplicate anchor record id anchor-duplicate in export index")
+        );
+    }
+
+    #[test]
+    fn validate_index_allows_the_same_textual_record_id_across_artifact_kinds() {
+        let manifest = ExportManifest {
+            manifest_version: EXPORT_MANIFEST_VERSION,
+            export_name: "cross-kind-id-reuse".to_string(),
+            producer: EXPORT_BUNDLE_PRODUCER.to_string(),
+            created_by_component: Some("unit-test".to_string()),
+            artifact_encoding: ExportEncoding::Json,
+            relative_index_path: EXPORT_INDEX_FILE_NAME.to_string(),
+            artifact_count: 2,
+            anchor_count: 1,
+            branch_count: 1,
+        };
+        let index = ExportIndex {
+            index_version: EXPORT_INDEX_VERSION,
+            entries: vec![
+                ExportIndexEntry {
+                    artifact_kind: ExportArtifactKind::Anchor,
+                    record_id: "shared-id".to_string(),
+                    relative_path: "anchors/anchor-0000.json".to_string(),
+                    schema_name: ArtifactKind::Anchor.schema().name.to_string(),
+                    schema_version: ArtifactKind::Anchor.schema().version,
+                    content_hash: "hash-anchor".to_string(),
+                },
+                ExportIndexEntry {
+                    artifact_kind: ExportArtifactKind::Branch,
+                    record_id: "shared-id".to_string(),
+                    relative_path: "branches/branch-0000.json".to_string(),
+                    schema_name: ArtifactKind::Branch.schema().name.to_string(),
+                    schema_version: ArtifactKind::Branch.schema().version,
+                    content_hash: "hash-branch".to_string(),
+                },
+            ],
+        };
+
+        validate_index(&manifest, &index).expect("cross-kind textual id reuse remains valid");
     }
 
     #[test]
