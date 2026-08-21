@@ -43,8 +43,5 @@ fn loop_config_toml_roundtrip_preserves_command_order_and_seed() {
     let decoded: LoopConfig = toml::from_str(&encoded).expect("loop config should roundtrip");
 
     assert_eq!(decoded, config);
-    assert_eq!(
-        decoded.command_labels,
-        vec!["bootstrap", "steer", "boost"]
-    );
+    assert_eq!(decoded.command_labels, vec!["bootstrap", "steer", "boost"]);
 }

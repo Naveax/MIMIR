@@ -1,5 +1,7 @@
 use mimir_rollout::{RolloutEngine, RolloutRequest, UnavailableRolloutEngine};
-use mimir_types::{ActionRecord, AnchorId, BranchId, BranchOrigin, BranchRecord, FieldValue, Metadata};
+use mimir_types::{
+    ActionRecord, AnchorId, BranchId, BranchOrigin, BranchRecord, FieldValue, Metadata,
+};
 
 fn request(max_steps: usize, actions: Vec<ActionRecord>) -> RolloutRequest {
     RolloutRequest {

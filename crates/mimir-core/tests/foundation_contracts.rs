@@ -16,7 +16,9 @@ fn missing_text_file_preserves_the_exact_path_in_the_io_error() {
     let error = read_text_file(&path).expect_err("missing file must fail");
 
     match error {
-        MimirError::Io { path: error_path, .. } => assert_eq!(error_path, path),
+        MimirError::Io {
+            path: error_path, ..
+        } => assert_eq!(error_path, path),
         other => panic!("expected I/O error, found {other}"),
     }
 }

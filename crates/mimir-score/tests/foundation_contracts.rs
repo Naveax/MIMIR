@@ -5,10 +5,7 @@ use std::collections::BTreeMap;
 #[test]
 fn unweighted_signals_are_retained_as_zero_components() {
     let scorer = WeightedSumScorer::new(BTreeMap::from([("known".to_string(), 2.0)]));
-    let signals = BTreeMap::from([
-        ("known".to_string(), 3.0),
-        ("unknown".to_string(), 9.0),
-    ]);
+    let signals = BTreeMap::from([("known".to_string(), 3.0), ("unknown".to_string(), 9.0)]);
 
     let score = scorer.score(Some(BranchId::new("foundation-branch")), &signals);
 
@@ -16,7 +13,11 @@ fn unweighted_signals_are_retained_as_zero_components() {
     assert_eq!(score.components["known"], 6.0);
     assert_eq!(score.components["unknown"], 0.0);
     assert_eq!(
-        score.components.keys().map(String::as_str).collect::<Vec<_>>(),
+        score
+            .components
+            .keys()
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
         vec!["known", "unknown"]
     );
 }
