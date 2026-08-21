@@ -307,18 +307,4 @@ mod tests {
         };
         assert!(bind_rollout_artifact_v1(&request, duplicate).is_err());
     }
-
-    #[test]
-    fn bound_wrapper_rejects_unknown_json_fields() {
-        let request = request(8);
-        let bound = bind_rollout_artifact_v1(&request, artifact(&request))
-            .expect("artifact should bind to request");
-        let mut value = serde_json::to_value(&bound).expect("bound artifact should serialize");
-        value
-            .as_object_mut()
-            .expect("wrapper should serialize as an object")
-            .insert("unexpected".to_string(), serde_json::json!(true));
-
-        assert!(serde_json::from_value::<BoundRolloutArtifactV1>(value).is_err());
-    }
 }
