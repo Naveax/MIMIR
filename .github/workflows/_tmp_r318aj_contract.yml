@@ -1,0 +1,271 @@
+name: R3.18AJ Contract Builder
+
+on:
+  push:
+    branches:
+      - automation/r318aj-contract-ak-generator-v1
+    paths:
+      - .github/workflows/_tmp_r318aj_contract_trigger.txt
+
+concurrency:
+  group: r318aj-contract-builder
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  statuses: write
+
+jobs:
+  build-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_MAIN: a048ba25f2ef023d07bab17716838f1c4777fe27
+      BASE_TREE: cd00dd18da0a177415ce569b7909ec6390cbb252
+      GENERATOR_BLOB: 492ded3d58f26483bef14d6779962b3eb7a8a3b3
+      OPS_BRANCH: ops/r318aj-contract-ak-open-v1
+      AI_RUN: '32418184036'
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact automation head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark builder pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318aj/contract-builder' \
+            -f description='R3.18AJ contract builder running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Freeze base and generator authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          actual_main="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          test "$actual_main" = "$BASE_MAIN"
+          test "$(git rev-parse "$BASE_MAIN^{tree}")" = "$BASE_TREE"
+          test "$(git hash-object tools/_tmp_r318aj_contract_generate.py)" = "$GENERATOR_BLOB"
+          python -m py_compile tools/_tmp_r318aj_contract_generate.py
+          cp tools/_tmp_r318aj_contract_generate.py "$RUNNER_TEMP/r318aj_contract_generate.py"
+
+      - name: Download immutable R3.18AI evidence artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: r318ai-following-property-header-evidence
+          path: ${{ runner.temp }}/r318ai
+          github-token: ${{ github.token }}
+          repository: Naveax/MIMIR
+          run-id: 32418184036
+
+      - name: Verify immutable R3.18AI evidence payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          d="$RUNNER_TEMP/r318ai"
+          test -f "$d/r3_18ai_header_summary.json"
+          test -f "$d/r3_18ai_header_rows.json"
+          test -f "$d/r3_18ai_negative_controls.txt"
+          test -f "$d/r3_18ai_aggregate.txt"
+          test -f "$d/r3_18ai_artifact_sha256.txt"
+          test "$(sha256sum "$d/r3_18ai_header_summary.json" | awk '{print $1}')" = "70ffb419d294d4e02bdd2ef843c84bcda466022d627d7dec0b736e8d19228dd1"
+          test "$(sha256sum "$d/r3_18ai_header_rows.json" | awk '{print $1}')" = "5dc8550d63688b263d87532f8330b3791736f04af98b0962cd91bd378fc4b8da"
+          test "$(sha256sum "$d/r3_18ai_negative_controls.txt" | awk '{print $1}')" = "9cacb2a613958fe399114d3030f2fd1bba2c463c1efdb607498abf9af1ea843e"
+          test "$(sha256sum "$d/r3_18ai_aggregate.txt" | awk '{print $1}')" = "be2593e55bce17b03bd994b98dff5e9e25a4fcb9ee40c685947bc05181925135"
+          (cd "$d" && sha256sum -c r3_18ai_artifact_sha256.txt)
+          python - "$d/r3_18ai_header_summary.json" <<'PY'
+          import json,sys
+          s=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert s['rows']==47
+          assert s['unique_exact_contexts']==17
+          assert s['tags']=={'Int':47}
+          assert s['native_oracle_mismatch']==0
+          assert s['witness_reselection']==0
+          assert s['earlier_header_contract_inheritance_assumed'] is False
+          assert sum(int(x['observed_count']) for x in s['contexts'])==47
+          PY
+
+      - name: Resolve immutable builder job receipt
+        id: receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          job_id=""
+          for _ in $(seq 1 20); do
+            job_id="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" --jq '.jobs[] | select(.name == "build-contract") | .id' | head -n 1)"
+            if [ -n "$job_id" ]; then break; fi
+            sleep 1
+          done
+          test -n "$job_id"
+          echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
+          echo "builder=$GITHUB_RUN_ID/$job_id"
+
+      - name: Generate clean R3.18AJ contract candidate
+        shell: bash
+        env:
+          R318AJ_BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_MAIN"
+          git clean -fdx
+          git switch -C "$OPS_BRANCH" "$BASE_MAIN"
+          mkdir -p tools
+          cp "$RUNNER_TEMP/r318aj_contract_generate.py" tools/_tmp_r318aj_contract_generate.py
+          R318AJ_BUILDER_RUN="$GITHUB_RUN_ID" \
+          R318AJ_BUILDER_JOB="$R318AJ_BUILDER_JOB" \
+          R318AI_HEADER_SUMMARY="$RUNNER_TEMP/r318ai/r3_18ai_header_summary.json" \
+          python tools/_tmp_r318aj_contract_generate.py
+          rm -f tools/_tmp_r318aj_contract_generate.py
+          rmdir tools 2>/dev/null || true
+
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md')
+          p.write_text(p.read_text(encoding='utf-8').rstrip()+'\n',encoding='utf-8',newline='\n')
+          PY
+
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json
+          docs/continuity/MIMIR_R3_18AJ_DECISION.md
+          docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$expected"
+          {
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          } | sed '/^$/d' | sort -u > "$actual"
+          sort -u -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          python -m json.tool docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json >/dev/null
+          python - <<'PY'
+          import json
+          c=json.load(open('docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json',encoding='utf-8'))
+          assert c['membership_policy']=='exact_tuple_only'
+          assert c['observed_row_count']==47
+          assert c['unique_exact_context_count']==17
+          assert c['observed_tag_counts']=={'Int':47}
+          assert len(c['admitted_contexts'])==17
+          assert sum(x['observed_count'] for x in c['admitted_contexts'])==47
+          fields=('stream_id_bound','prop_id_bits','property_object_index','attribute_tag','version_major','version_minor','net_version')
+          got={tuple(x[k] for k in fields) for x in c['admitted_contexts']}
+          assert len(got)==17
+          assert (60,5,68,'Int',868,32,10) not in got
+          assert (60,5,39,'Int',868,32,10) not in got
+          assert (60,5,34,'ActiveActor',868,32,10) not in got
+          a=c['anti_widening']
+          assert all(v is False for v in a.values())
+          auth=c['authority']
+          assert auth['base_main_sha']=='a048ba25f2ef023d07bab17716838f1c4777fe27'
+          assert auth['base_main_tree']=='cd00dd18da0a177415ce569b7909ec6390cbb252'
+          assert auth['r3_18z_cross_boundary_inherited'] is False
+          assert auth['r3_18p_cross_boundary_inherited'] is False
+          PY
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json \
+            docs/continuity/MIMIR_R3_18AJ_DECISION.md \
+            docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md
+          git diff --cached --check
+          test -z "$(git status --porcelain | awk '$1 != "M" && $1 != "A" {print}')"
+
+          git config user.name "MIMIR Admission Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "Admit R3.18AJ and open R3.18AK"
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          test "$(git diff --name-only "$BASE_MAIN" HEAD | sort | tr '\n' ' ')" = "$(sort "$expected" | tr '\n' ' ')"
+
+      - name: Publish clean candidate and receipt
+        shell: bash
+        env:
+          R318AJ_BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          clean_sha="$(git rev-parse HEAD)"
+          clean_tree="$(git rev-parse HEAD^{tree})"
+          contract_sha="$(sha256sum docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')"
+          receipt="$RUNNER_TEMP/r318aj_contract_candidate_receipt.txt"
+          {
+            echo "R3_18AJ_BUILDER_RUN=$GITHUB_RUN_ID"
+            echo "R3_18AJ_BUILDER_JOB=$R318AJ_BUILDER_JOB"
+            echo "R3_18AJ_BASE_MAIN=$BASE_MAIN"
+            echo "R3_18AJ_BASE_TREE=$BASE_TREE"
+            echo "R3_18AJ_CLEAN_SHA=$clean_sha"
+            echo "R3_18AJ_CLEAN_TREE=$clean_tree"
+            echo "R3_18AJ_CONTRACT_SHA256=$contract_sha"
+            echo "R3_18AJ_OPS_BRANCH=$OPS_BRANCH"
+            echo "R3_18AJ_CLEAN_FILE_COUNT=10"
+            echo "R3_18AJ_PRODUCTION_MUTATION=0"
+            echo "R3_18AJ_CARGO_MUTATION=0"
+            echo "R3_18AJ_FIXTURE_MUTATION=0"
+            echo "R3_18AJ_CORPUS_MUTATION=0"
+            echo "R3_18AJ_WORKFLOW_MUTATION=0"
+            echo "R3_18AJ_SUPPORT_MUTATION=0"
+            echo "R3_18AJ_CONTRACT_CANDIDATE=PASS"
+            echo "--- sha256 ---"
+            sha256sum \
+              MIMIR_CONTINUE_HERE.md \
+              MIMIR_KNOWLEDGE_GRAPH.md \
+              docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+              docs/continuity/MIMIR_CONTINUITY_STATE.json \
+              docs/continuity/MIMIR_CURRENT_STATE.md \
+              docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+              docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+              docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json \
+              docs/continuity/MIMIR_R3_18AJ_DECISION.md \
+              docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md
+          } | tee "$receipt"
+          git push origin "HEAD:refs/heads/$OPS_BRANCH"
+          cp "$receipt" r318aj_contract_candidate_receipt.txt
+
+      - name: Upload candidate receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318aj-contract-candidate-receipt
+          path: r318aj_contract_candidate_receipt.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Report builder status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure
+          description='R3.18AJ contract builder failed'
+          if [ "$JOB_STATUS" = 'success' ]; then
+            state=success
+            description='R3.18AJ contract builder succeeded'
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context='r318aj/contract-builder' \
+            -f description="$description" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
