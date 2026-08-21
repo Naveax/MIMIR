@@ -1,4 +1,4 @@
-R3.18AM continuity admission trigger v1
+R3.18AM continuity admission trigger v2
 base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
 evidence_head=842b94ed4c4e57323433585fea48116ecf18989b
 evidence_run=32473716883
@@ -8,3 +8,4 @@ same_head_ci_job=96746590106
 artifact=9443581172
 outcome=A
 next=R3.18AN
+registration_race=v1_no_run
