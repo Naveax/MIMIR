@@ -1,4 +1,4 @@
-name: R3.18AM Continuity Admission Builder
+name: R3.18AM Continuity Admission Builder V3
 
 on:
   push:
@@ -6,6 +6,10 @@ on:
       - automation/r318am-admission-builder-v1
     paths:
       - .github/workflows/_tmp_r318am_admission_trigger.txt
+
+concurrency:
+  group: r318am-continuity-admission-builder-v3
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -17,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout builder head
+      - name: Checkout exact V3 builder head
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -28,15 +32,19 @@ jobs:
           set -euo pipefail
           BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
           BASE_TREE=3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+          PREVIOUS_BUILDER=9680c8e5b4978764913577608621f12ef70379e0
+          test "$(git rev-parse HEAD^)" = "$PREVIOUS_BUILDER"
           git fetch origin main --force
           test "$(git rev-parse origin/main)" = "$BASE"
           test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
           git merge-base --is-ancestor "$BASE" HEAD
           cp tools/_tmp_r318am_admission_generate.py /tmp/r318am_admission_generate.py
+          python -m py_compile /tmp/r318am_admission_generate.py
           git reset --hard "$BASE"
           git clean -fdx
           test "$(git rev-parse HEAD)" = "$BASE"
           test "$(git rev-parse HEAD^{tree})" = "$BASE_TREE"
+          echo R3_18AM_V3_BASE_FREEZE=PASS
 
       - name: Discover exact builder job receipt
         id: receipt
@@ -48,7 +56,7 @@ jobs:
           job_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" --jq '.jobs[] | select(.name=="build-continuity") | .id' | head -n1)"
           test -n "$job_id"
           echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
-          echo "R3_18AM_BUILDER_RECEIPT=${GITHUB_RUN_ID}/${job_id}"
+          echo "R3_18AM_V3_BUILDER_RECEIPT=${GITHUB_RUN_ID}/${job_id}"
 
       - name: Freeze R3.18AM authority and artifact
         shell: bash
@@ -96,16 +104,14 @@ jobs:
             grep -Fqx 'R3_18AM_ANOTHER_CONTROL_BITS_CONSUMED=0' r3_18am_aggregate.txt
             grep -Fqx 'R3_18AM_PRIVACY_SCAN=PASS' r3_18am_aggregate.txt
           )
-          echo R3_18AM_AUTHORITY_FREEZE=PASS
+          echo R3_18AM_V3_AUTHORITY_FREEZE=PASS
 
       - name: Generate exact docs-only admission candidate
         shell: bash
-        env:
-          R318AM_BUILDER_RUN: ${{ github.run_id }}
-          R318AM_BUILDER_JOB: ${{ steps.receipt.outputs.job_id }}
         run: |
           set -euo pipefail
           python /tmp/r318am_admission_generate.py 32474038136 96746590106
+          echo R3_18AM_V3_GENERATION=PASS
 
       - name: Verify exact nine-file scope and syntax
         shell: bash
@@ -130,20 +136,15 @@ jobs:
           test ! -e tools/_tmp_r318am_admission_generate.py
           test ! -e .github/workflows/_tmp_r318am_admission_trigger.txt
           git diff --exit-code HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github
-          echo R3_18AM_ADMISSION_SCOPE=PASS
+          echo R3_18AM_V3_SCOPE=PASS files=9
 
-      - name: Verify Knowledge Archive
-        shell: pwsh
-        run: |
-          & ./scripts/verify_mimir_knowledge_archive.ps1
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Commit and publish clean continuity candidate
+      - name: Commit and publish inspectable clean candidate
+        id: candidate
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          CANDIDATE_BRANCH=continuity/r318am-admit-an-v2
           git config user.name "MIMIR Admission Bot"
           git config user.email "actions@users.noreply.github.com"
           git add -- \
@@ -157,7 +158,30 @@ jobs:
             docs/continuity/MIMIR_R3_18AM_DECISION.md \
             docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md
           git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
           git commit -m "Admit R3.18AM and open R3.18AN"
-          git push origin HEAD:refs/heads/continuity/r318am-admit-an-v1
-          echo "R3_18AM_CONTINUITY_HEAD=$(git rev-parse HEAD)"
-          echo "R3_18AM_CONTINUITY_TREE=$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse HEAD^{tree})"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "sha=$candidate_sha" >> "$GITHUB_OUTPUT"
+          echo "tree=$candidate_tree" >> "$GITHUB_OUTPUT"
+          echo "R3_18AM_V3_CANDIDATE=$candidate_sha/$candidate_tree"
+          echo R3_18AM_V3_CANDIDATE_PUBLISHED_FOR_VALIDATION=PASS
+
+      - name: Verify Knowledge Archive on published candidate head
+        shell: pwsh
+        run: |
+          & ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Freeze V3 success receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "R3_18AM_V3=PASS"
+          echo "R3_18AM_V3_BUILDER=${GITHUB_RUN_ID}/${{ steps.receipt.outputs.job_id }}"
+          echo "R3_18AM_V3_CANDIDATE=${{ steps.candidate.outputs.sha }}/${{ steps.candidate.outputs.tree }}"
+          echo "R3_18AM_V3_SCOPE=9_CONTINUITY_FILES"
+          echo "R3_18AN_GATE=OPEN_PREPARED_NOT_PRODUCTION"
+          echo "R3_18AM_CANONICAL_PUBLICATION=0"

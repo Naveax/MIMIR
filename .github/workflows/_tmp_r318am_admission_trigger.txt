@@ -1,11 +1,13 @@
-R3.18AM continuity admission trigger v2
+R3.18AM continuity admission trigger v3
 base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
 evidence_head=842b94ed4c4e57323433585fea48116ecf18989b
 evidence_run=32473716883
 evidence_job=96745647750
-same_head_ci=32474038136
+same_head_ci_run=32474038136
 same_head_ci_job=96746590106
 artifact=9443581172
 outcome=A
 next=R3.18AN
-registration_race=v1_no_run
+supersedes_v2_no_clean_output=1
+candidate_publish_before_archive_validation=1
+canonical_publication=0
