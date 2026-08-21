@@ -13,7 +13,9 @@ use serde::Serialize;
 use serde::de::{DeserializeOwned, IgnoredAny};
 use std::collections::BTreeMap;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArtifactFormat {
@@ -119,7 +121,67 @@ where
         ArtifactFormat::Toml => toml::to_string_pretty(artifact)?,
     };
 
-    fs::write(path, text).map_err(|error| MimirError::io(path, error))
+    write_text_file_staged(path, &text)
+}
+
+static ARTIFACT_STAGE_NONCE: AtomicU64 = AtomicU64::new(0);
+
+fn write_text_file_staged(path: &Path, text: &str) -> Result<()> {
+    let parent = path.parent().unwrap_or_else(|| Path::new("."));
+    let file_name = path.file_name().ok_or_else(|| {
+        MimirError::message(format!(
+            "artifact path has no file name: {}",
+            path.display()
+        ))
+    })?;
+
+    let mut stage = None;
+    for _ in 0..128 {
+        let nonce = ARTIFACT_STAGE_NONCE.fetch_add(1, Ordering::Relaxed);
+        let candidate = parent.join(format!(
+            ".{}.mimir-stage-{}-{nonce}",
+            file_name.to_string_lossy(),
+            std::process::id()
+        ));
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&candidate)
+        {
+            Ok(file) => {
+                stage = Some((candidate, file));
+                break;
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(error) => return Err(MimirError::io(&candidate, error)),
+        }
+    }
+
+    let (stage_path, mut stage_file) = stage.ok_or_else(|| {
+        MimirError::message(format!(
+            "could not allocate unique staged artifact file for {}",
+            path.display()
+        ))
+    })?;
+
+    if let Err(error) = stage_file.write_all(text.as_bytes()) {
+        drop(stage_file);
+        let _ = fs::remove_file(&stage_path);
+        return Err(MimirError::io(&stage_path, error));
+    }
+    if let Err(error) = stage_file.flush() {
+        drop(stage_file);
+        let _ = fs::remove_file(&stage_path);
+        return Err(MimirError::io(&stage_path, error));
+    }
+    drop(stage_file);
+
+    if let Err(error) = fs::rename(&stage_path, path) {
+        let _ = fs::remove_file(&stage_path);
+        return Err(MimirError::io(path, error));
+    }
+
+    Ok(())
 }
 
 pub fn write_anchor_artifact(
@@ -362,6 +424,77 @@ mod tests {
             read_artifact_auto(&path, ArtifactKind::Anchor.schema()).expect("artifact should read");
 
         assert_eq!(decoded, artifact);
+    }
+
+    #[test]
+    fn generic_artifact_writer_replaces_via_staged_file_without_leftovers() {
+        let directory = tempdir().expect("tempdir should be created");
+        let path = directory.path().join("artifact.json");
+        fs::write(&path, b"legacy-bytes").expect("seed destination");
+
+        let artifact = PersistedAnchorArtifact::new(
+            ArtifactHeader::for_kind(ArtifactKind::Anchor, "mimir-io-staged-write-test"),
+            AnchorArtifactPayload {
+                id: AnchorId::new("anchor-staged-write"),
+                replay_id: ReplayId::new("replay-staged-write"),
+                frame_index: FrameIndex::new(7),
+                kind: AnchorKind::Manual,
+                metadata: Metadata::new(),
+            },
+        );
+
+        write_artifact(&path, ArtifactFormat::Json, &artifact).expect("staged replacement");
+        let decoded: PersistedAnchorArtifact =
+            read_artifact_auto(&path, ArtifactKind::Anchor.schema()).expect("reload replacement");
+        assert_eq!(decoded, artifact);
+
+        let file_name = path.file_name().expect("file name").to_string_lossy();
+        let prefix = format!(".{file_name}.mimir-stage-");
+        let leftovers = fs::read_dir(directory.path())
+            .expect("read directory")
+            .map(|entry| {
+                entry
+                    .expect("entry")
+                    .file_name()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .filter(|name| name.starts_with(&prefix))
+            .collect::<Vec<_>>();
+        assert!(
+            leftovers.is_empty(),
+            "staged writer left temporary files: {leftovers:?}"
+        );
+    }
+
+    #[test]
+    fn generic_artifact_serialization_failure_preserves_existing_destination() {
+        let directory = tempdir().expect("tempdir should be created");
+        let path = directory.path().join("artifact.json");
+        let original = b"existing-safe-bytes";
+        fs::write(&path, original).expect("seed destination");
+
+        let artifact = PersistedAnchorArtifact::new(
+            ArtifactHeader::for_kind(ArtifactKind::Anchor, "mimir-io-staged-write-test")
+                .with_metadata(Metadata::from([(
+                    "non_finite",
+                    FieldValue::Float(f64::NAN),
+                )])),
+            AnchorArtifactPayload {
+                id: AnchorId::new("anchor-invalid"),
+                replay_id: ReplayId::new("replay-invalid"),
+                frame_index: FrameIndex::new(8),
+                kind: AnchorKind::Manual,
+                metadata: Metadata::new(),
+            },
+        );
+
+        write_artifact(&path, ArtifactFormat::Json, &artifact)
+            .expect_err("non-finite artifact serialization must fail");
+        assert_eq!(
+            fs::read(&path).expect("read preserved destination"),
+            original
+        );
     }
 
     #[test]
