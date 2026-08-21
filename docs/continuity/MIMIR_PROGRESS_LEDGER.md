@@ -986,3 +986,25 @@ Next exact pass:
 - Admit exactly 17 complete seven-field tuples and exact multiplicities summing to 47.
 - Membership `exact_tuple_only`; no tag/component/Cartesian/versionless matching and no R3.18Z/R3.18P inheritance.
 - Production remains R3.18AG. Following payload and later control remain closed.
+
+---
+
+## R3.18AJ post-AG following-header exact-context contract — Outcome A / CLOSED
+
+- Production unchanged: `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`.
+- Canonical parent: `a048ba25f2ef023d07bab17716838f1c4777fe27` / `cd00dd18da0a177415ce569b7909ec6390cbb252`.
+- AI authority: `9d424dae2ed8cc7a0a6868111805a48763131196` / `b2fa45cff46c81e0458423d6aa3d9f630e2182a3` / `32418184036/96584056481` SUCCESS; artifact `9424764320` / `sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5`.
+- AI published-main validation: CI `32424170707/96602481420` SUCCESS; Knowledge Archive `32424170684/96602481274` SUCCESS.
+- Contract: `MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json` / `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`.
+- Exact 17 complete seven-field contexts; observed multiplicity sum 47; tags Int=47; membership `exact_tuple_only`.
+- Tag/component/Cartesian/versionless/fabricated/outside widening rejected; `(60,5,34,ActiveActor,868,32,10)` old-Z cross-boundary negative rejected.
+- R3.18Z/R3.18P inheritance false; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+- Admission builder: `32452536884` / `96683539408`.
+- Admitted scope: contract/continuity only. No production composition, payload, later control, loop/cursor or semantic/runtime widening.
+
+## NEXT — R3.18AK bounded post-AG following-header production
+
+- Start only after a valid published R3.18AG true-control result.
+- Reuse the stateless existing-actor header primitive; require exact R3.18AJ tuple membership.
+- Decode exactly one header and stop at `payload_start`.
+- Following payload, another control and generalized loop/cursor remain closed.

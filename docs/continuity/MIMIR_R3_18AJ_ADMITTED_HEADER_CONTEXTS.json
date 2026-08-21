@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "contract": "MIMIR_R3_18AJ_AFTER_R3_18AG_FOLLOWING_HEADER_CONTEXTS",
+  "status": "admitted",
+  "admission_date": "2026-08-21",
+  "boundary": "exactly one existing-actor following property header immediately after a valid published R3.18AG true control",
+  "membership_policy": "exact_tuple_only",
+  "tuple_fields": [
+    "stream_id_bound",
+    "prop_id_bits",
+    "property_object_index",
+    "attribute_tag",
+    "version_major",
+    "version_minor",
+    "net_version"
+  ],
+  "observed_row_count": 47,
+  "unique_exact_context_count": 17,
+  "authority": {
+    "base_main_sha": "a048ba25f2ef023d07bab17716838f1c4777fe27",
+    "base_main_tree": "cd00dd18da0a177415ce569b7909ec6390cbb252",
+    "production_sha": "2d351e8ceb601e2fbe515d2977b2103a4b2c7976",
+    "production_tree": "4123820ce6537f2d4942cd0b5f72b52e43b96c1d",
+    "production_lib_blob": "db923ebcb419d278f4ab0144fe7ed15b298b60fa",
+    "production_ag_test_blob": "3f3e1c8f3f6deb7f2558862a1032f8a102131443",
+    "r3_18ai_execution_spec_blob": "dd064744b86ce4718d389c2bd4bf080b962b16d7",
+    "r3_18ai_decision_blob": "208f6f9b282d46d7a0360ddaf6374baf5f935d2b",
+    "r3_18aj_execution_spec_blob": "98ba33a49ee7470dce3dc9502eede6d038f44c2b",
+    "r3_18ai_evidence_head": "9d424dae2ed8cc7a0a6868111805a48763131196",
+    "r3_18ai_evidence_tree": "b2fa45cff46c81e0458423d6aa3d9f630e2182a3",
+    "r3_18ai_run": 32418184036,
+    "r3_18ai_job": 96584056481,
+    "r3_18ai_validation_pr": 59,
+    "r3_18ai_same_head_ci_run": 32420217393,
+    "r3_18ai_same_head_ci_job": 96590396395,
+    "r3_18ai_artifact_id": 9424764320,
+    "r3_18ai_artifact_size": 12054,
+    "r3_18ai_artifact_sha256": "ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5",
+    "r3_18ai_header_summary_sha256": "70ffb419d294d4e02bdd2ef843c84bcda466022d627d7dec0b736e8d19228dd1",
+    "r3_18ai_header_rows_sha256": "5dc8550d63688b263d87532f8330b3791736f04af98b0962cd91bd378fc4b8da",
+    "r3_18ai_negative_controls_sha256": "9cacb2a613958fe399114d3030f2fd1bba2c463c1efdb607498abf9af1ea843e",
+    "r3_18ai_aggregate_sha256": "be2593e55bce17b03bd994b98dff5e9e25a4fcb9ee40c685947bc05181925135",
+    "r3_18ai_published_main_ci_run": 32424170707,
+    "r3_18ai_published_main_ci_job": 96602481420,
+    "r3_18ai_published_main_knowledge_archive_run": 32424170684,
+    "r3_18ai_published_main_knowledge_archive_job": 96602481274,
+    "r3_18ai_published_run_discovery_run": 32424285013,
+    "r3_18ai_published_run_discovery_job": 96602844100,
+    "r3_18ai_published_run_discovery_artifact": 9426876000,
+    "r3_18ai_published_run_discovery_artifact_sha256": "3c44d9e1504caccb6875b4742c1ed9febfc6578bc36d57b79558a6e9cc491d4b",
+    "pinned_boxcars_sha": "c70e77df7af81b436cb545d070bb90c82f562d0b",
+    "witness_reselection": 0,
+    "r3_18z_historical_contract_sha256": "81f3072628ef78bcd71dacc1e31b5211aa0de9c32e922e01112b20f4df1425d9",
+    "r3_18p_historical_contract_sha256": "0dc2474a368a765c19cc49099fc61822954e9e29d1ce4ba8ad8fe21fe1fa181b",
+    "r3_18z_cross_boundary_inherited": false,
+    "r3_18p_cross_boundary_inherited": false
+  },
+  "observed_tag_counts": {
+    "Int": 47
+  },
+  "admitted_contexts": [
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 38,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 47,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 2
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 84,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 4
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 85,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 19
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 91,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 93,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 2
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 95,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 100,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 106,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 6
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 108,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 2
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 109,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 2
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 112,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 60,
+      "prop_id_bits": 5,
+      "property_object_index": 122,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 67,
+      "prop_id_bits": 6,
+      "property_object_index": 68,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 72,
+      "prop_id_bits": 6,
+      "property_object_index": 70,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 72,
+      "prop_id_bits": 6,
+      "property_object_index": 73,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 110,
+      "prop_id_bits": 6,
+      "property_object_index": 37,
+      "attribute_tag": "Int",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "observed_count": 1
+    }
+  ],
+  "anti_widening": {
+    "tag_only_membership": false,
+    "component_only_membership": false,
+    "cartesian_product_membership": false,
+    "versionless_membership": false,
+    "r3_18z_cross_boundary_inheritance": false,
+    "r3_18p_cross_boundary_inheritance": false,
+    "multiplicity_is_runtime_frequency_promise": false,
+    "contexts_outside_exact_set_admitted": false
+  }
+}

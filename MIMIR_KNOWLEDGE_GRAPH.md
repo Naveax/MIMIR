@@ -66,7 +66,8 @@ R3.18AF next property-control bit evidence after published AD payload / Outcome 
 R3.18AG bounded true-only property-control production after published AD payload / CLOSED                |
 R3.18AH published R3.18AG post-AD true-control differential / Outcome A CLOSED                        |
 R3.18AI one-following-property-header evidence after published AG control / Outcome A CLOSED               |
-R3.18AJ active post-AG following-header exact-context contract                                                  |
+R3.18AJ post-AG following-header exact-context contract / Outcome A CLOSED                                         |
+R3.18AK active bounded post-AG following-header production composition                                              |
         |                               |
         +---------------+---------------+
                         |
@@ -192,13 +193,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 105. `docs/continuity/MIMIR_R3_18AI_EXECUTION_SPEC.md`
 106. `docs/continuity/MIMIR_R3_18AI_DECISION.md`
 107. `docs/continuity/MIMIR_R3_18AJ_EXECUTION_SPEC.md`
-108. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-109. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-110. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-111. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-112. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-113. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-114. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+108. `docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json`
+109. `docs/continuity/MIMIR_R3_18AJ_DECISION.md`
+110. `docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md`
+111. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+112. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+113. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+114. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+115. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+116. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+117. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
@@ -221,10 +225,16 @@ scripts/verify_mimir_knowledge_archive.ps1
 - published AG exact 47/47; following header exact 47/47; 17 exact contexts; Int=47; native-oracle mismatch 0; witness reselection 0
 - following payload/second later control 0/0; earlier-header contract inheritance 0; production unchanged at `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`
 
-### R3.18AJ post-AG following-header exact-context contract: ACTIVE
-- contract-only; membership must be complete seven-field `exact_tuple_only`
-- preserve exactly 17 R3.18AI tuples and exact multiplicities summing to 47
-- no R3.18Z/R3.18P inheritance, production composition, following payload or later control
+### R3.18AJ post-AG following-header exact-context contract: OUTCOME A / CLOSED
+- contract `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`; exact 17 complete seven-field tuples / multiplicity sum 47 / Int=47
+- membership `exact_tuple_only`; tag/component/Cartesian/versionless/outside widening rejected
+- R3.18Z/R3.18P inheritance false; production unchanged at `2d351e8ceb601e2fbe515d2977b2103a4b2c7976`
+- builder `32452536884/96683539408`; exact 10-file docs-only admission candidate
+
+### R3.18AK bounded post-AG following-header production composition: ACTIVE
+- start only after one valid published R3.18AG true-control result
+- reuse existing stateless header primitive; require exact R3.18AJ tuple membership; stop at `payload_start`
+- following payload, another control, repeated/generalized loops/cursors and semantic/runtime widening remain closed
 
 ### R3.18I payload evidence: OUTCOME A / CLOSED
 - evidence head `45090a2c18fb517088bb411782bbaed0d7d68199`; run/job `31975063743/95233164711` SUCCESS

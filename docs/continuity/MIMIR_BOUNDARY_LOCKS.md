@@ -6,32 +6,34 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AI closed / R3.18AJ active
+# 0. Current override — R3.18AJ closed / R3.18AK active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AG
-- `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`; production remains unchanged by R3.18AI;
+- `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / `4123820ce6537f2d4942cd0b5f72b52e43b96c1d`; production remains unchanged by R3.18AJ;
 - input must already be one valid published R3.18AD result under exact `868.32 / net10 / non-RL223` context;
 - prior payload allowlist remains exactly ActiveActor/33, Int/32, UniqueId system1-Steam/80;
 - read exactly one bit at prior `stop_bit`; admit **true only**; false fails closed; stop exactly one bit later.
 
 ## CLOSED EVIDENCE — R3.18AI Outcome A
 - exact immutable 47-row lane; published AG exact 47/47; one following header exact 47/47; native-oracle mismatch 0; witness reselection 0;
-- 17 complete observed seven-field contexts; all tags Int=47; earlier-header contract inheritance assumed 0;
-- repeatability/header-truncation/corrupt-AG/wrong-actor/unresolved-lookup/wrong-context/post-payload-start-poison negatives 47/47;
-- following payload/second later control consumption 0/0;
-- artifact `9424764320` / `sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5`; same-head CI `32420217393/96590396395` SUCCESS.
+- 17 complete observed seven-field contexts; all tags Int=47; following payload/second later control 0/0.
 
-## ACTIVE CONTRACT-ONLY GATE — R3.18AJ
-- admit only the exact 17 complete R3.18AI seven-field tuples and exact multiplicities;
-- membership policy must be `exact_tuple_only`;
-- R3.18Z/R3.18P inheritance, component unions, Cartesian products and versionless matching are forbidden;
-- production mutation, payload decode and another control bit are forbidden.
+## CLOSED CONTRACT — R3.18AJ Outcome A
+- exact 17 complete seven-field tuples; observed multiplicity sum 47; `Int=47`;
+- membership `exact_tuple_only`; contract `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`;
+- tag/component/Cartesian/versionless/outside membership rejected; R3.18Z/R3.18P inheritance false;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+## ACTIVE PRODUCTION GATE — R3.18AK
+- only after one valid published R3.18AG true control, decode exactly one following existing-actor header;
+- reuse existing stateless header primitive and require exact R3.18AJ membership;
+- stop exactly at `payload_start`; payload decode and another control bit forbidden;
+- no repeated/generalized property loop or generic public cursor.
 
 ## CLOSED
-- post-AG following-header production composition until R3.18AJ is admitted;
-- following payload after the R3.18AI header; second later control; false success semantics; alternate UniqueId systems/layouts; repeated/generalized property loop or generic cursor;
+- following payload after the post-AG header; second later control; false success semantics; alternate unadmitted layouts; repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

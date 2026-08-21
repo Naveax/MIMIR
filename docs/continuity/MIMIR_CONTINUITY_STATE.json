@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.18AG",
   "last_production_milestone_name": "bounded true-only property-control production after published R3.18AD payload",
   "last_completed_read_only_audit": "R3.18AI",
-  "current_pass": "R3.18AJ",
-  "current_pass_kind": "contract-only exact-context admission / post-AG following-header boundary",
-  "current_pass_goal": "Admit exactly the 17 complete seven-field header contexts and exact multiplicities observed by R3.18AI using exact_tuple_only membership, without inheriting earlier header contracts.",
-  "current_pass_stop_boundary": "Contract docs only. No production header composition, following payload, second later control, generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "current_pass": "R3.18AK",
+  "current_pass_kind": "production implementation / bounded post-AG following-header composition",
+  "current_pass_goal": "After one valid published R3.18AG true-control result, decode exactly one following existing-actor property header with the existing stateless primitive, require exact R3.18AJ seven-field membership, and stop at payload_start.",
+  "current_pass_stop_boundary": "Exactly one header through payload_start. No following payload, another control, repeated/generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -96,8 +96,10 @@
     "following payload after the R3.18AI one-header evidence boundary",
     "second later property control bit after the R3.18AI header",
     "repeated/generalized property loop or generic cursor after R3.18AI",
-    "post-AG following-header production composition before R3.18AJ exact-context admission",
-    "R3.18Z or R3.18P context inheritance at the R3.18AI/R3.18AJ boundary"
+    "R3.18Z or R3.18P context inheritance at the R3.18AI/R3.18AJ boundary",
+    "following payload after the R3.18AK one-header production boundary",
+    "second later property control bit after R3.18AK",
+    "repeated/generalized property loop or generic cursor after R3.18AK"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -219,6 +221,9 @@
     "docs/continuity/MIMIR_R3_18AI_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AI_DECISION.md",
     "docs/continuity/MIMIR_R3_18AJ_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json",
+    "docs/continuity/MIMIR_R3_18AJ_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -229,7 +234,7 @@
   ],
   "last_completed_evidence_pass": "R3.18AI",
   "last_completed_evidence_outcome": "A — one post-AG following header exact 47/47; 17 exact complete contexts; Int=47; native-oracle mismatch 0; witness reselection 0; following payload/second-control 0/0; artifact 9424764320.",
-  "last_completed_contract_pass": "R3.18Z",
+  "last_completed_contract_pass": "R3.18AJ",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -2250,5 +2255,31 @@
     "privacy_scan": "PASS",
     "continuity_builder_run_id": 32423737353,
     "continuity_builder_job_id": 96601143838
+  },
+  "r3_18aj": {
+    "outcome": "A",
+    "contract_path": "docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json",
+    "contract_sha256": "cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c",
+    "membership_policy": "exact_tuple_only",
+    "exact_contexts": 17,
+    "observed_row_count": 47,
+    "observed_tag_counts": {
+      "Int": 47
+    },
+    "multiplicity_sum": 47,
+    "r3_18z_cross_boundary_inherited": false,
+    "r3_18p_cross_boundary_inherited": false,
+    "cartesian_negative": "(60,5,68,Int,868,32,10)",
+    "fabricated_eighteenth_negative": "(60,5,39,Int,868,32,10)",
+    "r3_18z_valid_aj_absent_negative": "(60,5,34,ActiveActor,868,32,10)",
+    "production_cargo_fixture_corpus_support_mutation": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "admission_builder_run_id": 32452536884,
+    "admission_builder_job_id": 96683539408
   }
 }
