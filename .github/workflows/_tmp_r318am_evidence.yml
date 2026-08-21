@@ -1,0 +1,134 @@
+name: R3.18AM Post-AK Payload Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318am-post-ak-payload-v1
+    paths:
+      - .github/workflows/_tmp_r318am_trigger.txt
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mark evidence pending
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318am/evidence' \
+            -f description='R3.18AM exact post-AK payload evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Freeze clean evidence scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          mapfile -t actual < <(git diff --name-only "$BASE" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            .github/workflows/_tmp_r318am_evidence.yml \
+            .github/workflows/_tmp_r318am_trigger.txt \
+            tools/_tmp_r318am_analyze.py \
+            tools/_tmp_r318am_boxcars.py \
+            tools/_tmp_r318am_make_probe.py \
+            tools/_tmp_r318am_run.sh | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --exit-code "$BASE" HEAD -- \
+            crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs \
+            MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+          echo R3_18AM_EVIDENCE_SCOPE=PASS
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal
+          rustup toolchain install stable --profile minimal
+          rustc +1.85.0 --version
+          cargo +1.85.0 --version
+          gh --version
+          jq --version
+          pwsh --version
+
+      - name: Correct exact checked-in archive workflow display name in temporary runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(grep -c 'Knowledge Archive Verification' tools/_tmp_r318am_run.sh)" -eq 1
+          sed -i 's/Knowledge Archive Verification/Knowledge Archive/' tools/_tmp_r318am_run.sh
+          test "$(grep -c 'Knowledge Archive Verification' tools/_tmp_r318am_run.sh)" -eq 0
+          test "$(grep -c 'Knowledge Archive' tools/_tmp_r318am_run.sh)" -ge 1
+          echo R3_18AM_PARENT_WORKFLOW_NAME_CORRECTION=PASS
+
+      - name: Execute deterministic R3.18AM evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          chmod +x tools/_tmp_r318am_run.sh
+          tools/_tmp_r318am_run.sh
+
+      - name: Upload immutable R3.18AM evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318am-post-ak-payload-evidence
+          path: r3_18am_*
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Verify artifact receipt and mark success
+        if: success()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          artifact=''
+          for attempt in $(seq 1 30); do
+            artifact="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" --jq '.artifacts[] | select(.name=="r318am-post-ak-payload-evidence") | [.id,.size_in_bytes,.digest] | @tsv' | head -n1)"
+            if [[ -n "$artifact" ]]; then break; fi
+            sleep 2
+          done
+          test -n "$artifact"
+          IFS=$'\t' read -r artifact_id artifact_size artifact_digest <<< "$artifact"
+          test -n "$artifact_id"
+          test -n "$artifact_size"
+          test -n "$artifact_digest"
+          echo "R3_18AM_ARTIFACT=${artifact_id}/${artifact_size}/${artifact_digest}"
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318am/evidence' \
+            -f description='R3.18AM exact post-AK payload evidence passed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318am/evidence' \
+            -f description='R3.18AM evidence failed; inspect exact run' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
