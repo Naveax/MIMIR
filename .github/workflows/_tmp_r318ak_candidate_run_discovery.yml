@@ -1,4 +1,4 @@
-name: R3.18AK Published Main Run Discovery
+name: R3.18AK Continuity Builder Run Discovery
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - .github/workflows/_tmp_r318ak_candidate_run_discovery_trigger.txt
 
 concurrency:
-  group: r318ak-published-main-run-discovery
+  group: r318ak-continuity-builder-run-discovery
   cancel-in-progress: false
 
 permissions:
@@ -22,59 +22,38 @@ jobs:
     timeout-minutes: 12
     env:
       GH_TOKEN: ${{ github.token }}
-      TARGET_BRANCH: main
-      TARGET_SHA: f20f529e3ada6e9a671ea91e5676a17a00770145
+      TARGET_BRANCH: ops/r318ak-candidate-run-discovery-v1
+      TARGET_SHA: 5d20d021518c588bb13e403b319a633c9b34fc91
     steps:
       - uses: actions/checkout@v6
       - name: Mark discovery pending
         shell: bash
         run: |
           set -euo pipefail
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            -f state=pending \
-            -f context='r318ak/published-main-run-discovery' \
-            -f description='R3.18AK published-main CI discovery running' \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-      - name: Discover and verify published-main CI
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=pending -f context='r318ak/continuity-builder-discovery' -f description='R3.18AK continuity builder discovery running' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+      - name: Discover existing builder run
         shell: bash
         run: |
           set -euo pipefail
-          receipt="$RUNNER_TEMP/r318ak_published_main_ci.txt"
           for attempt in $(seq 1 36); do
             runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$TARGET_BRANCH&head_sha=$TARGET_SHA&event=push&per_page=20")"
-            count="$(jq '[.workflow_runs[] | select(.name == "CI")] | length' <<<"$runs")"
-            if [ "$count" -gt 1 ]; then
-              echo "duplicate published-main CI detected: $count" >&2
-              exit 1
-            fi
+            count="$(jq '[.workflow_runs[] | select(.name == "R3.18AK Continuity Builder")] | length' <<<"$runs")"
+            if [ "$count" -gt 1 ]; then echo "duplicate builder runs: $count" >&2; exit 1; fi
             if [ "$count" -eq 1 ]; then
-              status="$(jq -r '.workflow_runs[] | select(.name == "CI") | .status' <<<"$runs")"
-              if [ "$status" = completed ]; then
-                conclusion="$(jq -r '.workflow_runs[] | select(.name == "CI") | .conclusion' <<<"$runs")"
-                test "$conclusion" = success
-                run="$(jq -r '.workflow_runs[] | select(.name == "CI") | .id' <<<"$runs")"
-                job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/jobs" --jq '.jobs[0].id')"
-                {
-                  echo "R3_18AK_PUBLISHED_MAIN_SHA=$TARGET_SHA"
-                  echo "R3_18AK_PUBLISHED_MAIN_CI=$run/$job SUCCESS"
-                  echo "R3_18AK_PUBLISHED_MAIN_CI_COUNT=$count"
-                  echo "R3_18AK_DUPLICATE_GUARD=PASS"
-                } | tee "$receipt"
-                cp "$receipt" r318ak_published_main_ci.txt
-                exit 0
-              fi
+              run="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder") | .id' <<<"$runs")"
+              status="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder") | .status' <<<"$runs")"
+              conclusion="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder") | .conclusion // ""' <<<"$runs")"
+              echo "R3_18AK_CONTINUITY_BUILDER_RUN=$run"
+              echo "R3_18AK_CONTINUITY_BUILDER_STATUS=$status"
+              echo "R3_18AK_CONTINUITY_BUILDER_CONCLUSION=$conclusion"
+              echo "R3_18AK_CONTINUITY_BUILDER_COUNT=$count"
+              if [ "$status" = completed ]; then test "$conclusion" = success; fi
+              exit 0
             fi
             sleep 10
           done
-          echo "published-main CI did not settle uniquely within discovery window" >&2
+          echo "continuity builder run not found" >&2
           exit 1
-      - name: Upload published-main receipt
-        uses: actions/upload-artifact@v4
-        with:
-          name: r318ak-published-main-ci-receipt
-          path: r318ak_published_main_ci.txt
-          if-no-files-found: error
-          retention-days: 7
       - name: Report discovery status
         if: always()
         shell: bash
@@ -82,14 +61,6 @@ jobs:
           JOB_STATUS: ${{ job.status }}
         run: |
           set -euo pipefail
-          state=failure
-          description='R3.18AK published-main CI discovery failed'
-          if [ "$JOB_STATUS" = success ]; then
-            state=success
-            description='R3.18AK published-main CI discovery succeeded'
-          fi
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            -f state="$state" \
-            -f context='r318ak/published-main-run-discovery' \
-            -f description="$description" \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          state=failure; description='R3.18AK continuity builder discovery failed'
+          if [ "$JOB_STATUS" = success ]; then state=success; description='R3.18AK continuity builder discovery succeeded'; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state="$state" -f context='r318ak/continuity-builder-discovery' -f description="$description" -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
