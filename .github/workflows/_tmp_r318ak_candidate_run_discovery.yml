@@ -1,4 +1,4 @@
-name: R3.18AK Continuity Builder Run Discovery
+name: R3.18AK Corrective Continuity Builder Discovery
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - .github/workflows/_tmp_r318ak_candidate_run_discovery_trigger.txt
 
 concurrency:
-  group: r318ak-continuity-builder-run-discovery
+  group: r318ak-corrective-continuity-builder-discovery
   cancel-in-progress: false
 
 permissions:
@@ -23,36 +23,36 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       TARGET_BRANCH: ops/r318ak-candidate-run-discovery-v1
-      TARGET_SHA: 5d20d021518c588bb13e403b319a633c9b34fc91
+      TARGET_SHA: 489f3ad58545ff3fba914e2cd171af7cc8b540c1
     steps:
       - uses: actions/checkout@v6
       - name: Mark discovery pending
         shell: bash
         run: |
           set -euo pipefail
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=pending -f context='r318ak/continuity-builder-discovery' -f description='R3.18AK continuity builder discovery running' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-      - name: Discover existing builder run
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=pending -f context='r318ak/corrective-continuity-discovery' -f description='R3.18AK corrective continuity discovery running' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+      - name: Discover existing corrective builder run
         shell: bash
         run: |
           set -euo pipefail
           for attempt in $(seq 1 36); do
             runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=$TARGET_BRANCH&head_sha=$TARGET_SHA&event=push&per_page=20")"
-            count="$(jq '[.workflow_runs[] | select(.name == "R3.18AK Continuity Builder")] | length' <<<"$runs")"
-            if [ "$count" -gt 1 ]; then echo "duplicate builder runs: $count" >&2; exit 1; fi
+            count="$(jq '[.workflow_runs[] | select(.name == "R3.18AK Continuity Builder Corrective")] | length' <<<"$runs")"
+            if [ "$count" -gt 1 ]; then echo "duplicate corrective builder runs: $count" >&2; exit 1; fi
             if [ "$count" -eq 1 ]; then
-              run="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder") | .id' <<<"$runs")"
-              status="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder") | .status' <<<"$runs")"
-              conclusion="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder") | .conclusion // ""' <<<"$runs")"
-              echo "R3_18AK_CONTINUITY_BUILDER_RUN=$run"
-              echo "R3_18AK_CONTINUITY_BUILDER_STATUS=$status"
-              echo "R3_18AK_CONTINUITY_BUILDER_CONCLUSION=$conclusion"
-              echo "R3_18AK_CONTINUITY_BUILDER_COUNT=$count"
+              run="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder Corrective") | .id' <<<"$runs")"
+              status="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder Corrective") | .status' <<<"$runs")"
+              conclusion="$(jq -r '.workflow_runs[] | select(.name == "R3.18AK Continuity Builder Corrective") | .conclusion // ""' <<<"$runs")"
+              echo "R3_18AK_CORRECTIVE_CONTINUITY_RUN=$run"
+              echo "R3_18AK_CORRECTIVE_CONTINUITY_STATUS=$status"
+              echo "R3_18AK_CORRECTIVE_CONTINUITY_CONCLUSION=$conclusion"
+              echo "R3_18AK_CORRECTIVE_CONTINUITY_COUNT=$count"
               if [ "$status" = completed ]; then test "$conclusion" = success; fi
               exit 0
             fi
             sleep 10
           done
-          echo "continuity builder run not found" >&2
+          echo "corrective continuity builder run not found" >&2
           exit 1
       - name: Report discovery status
         if: always()
@@ -61,6 +61,6 @@ jobs:
           JOB_STATUS: ${{ job.status }}
         run: |
           set -euo pipefail
-          state=failure; description='R3.18AK continuity builder discovery failed'
-          if [ "$JOB_STATUS" = success ]; then state=success; description='R3.18AK continuity builder discovery succeeded'; fi
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state="$state" -f context='r318ak/continuity-builder-discovery' -f description="$description" -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          state=failure; description='R3.18AK corrective continuity discovery failed'
+          if [ "$JOB_STATUS" = success ]; then state=success; description='R3.18AK corrective continuity discovery succeeded'; fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state="$state" -f context='r318ak/corrective-continuity-discovery' -f description="$description" -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
