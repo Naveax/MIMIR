@@ -1,0 +1,4 @@
+R3.18AN published-main run discovery trigger
+published_sha=3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+published_tree=3efcc244bca55623b12bb21eb277753fc61144d4
+purpose=read-only receipt discovery; no CI dispatch or rerun

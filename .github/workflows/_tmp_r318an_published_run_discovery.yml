@@ -1,0 +1,109 @@
+name: R3.18AN Published Main Run Discovery
+
+on:
+  push:
+    branches:
+      - ops/r318an-published-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318an_published_run_discovery_trigger.txt
+
+concurrency:
+  group: r318an-published-run-discovery
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PUBLISHED_SHA: 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+      PUBLISHED_TREE: 3efcc244bca55623b12bb21eb277753fc61144d4
+    steps:
+      - uses: actions/checkout@v6
+      - name: Mark discovery pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318an/published-run-discovery' \
+            -f description='R3.18AN published-main receipt discovery running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+      - name: Freeze published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$PUBLISHED_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$PUBLISHED_TREE"
+      - name: Discover and verify published-main CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          receipt="$RUNNER_TEMP/r318an_published_main_runs.txt"
+          for attempt in $(seq 1 36); do
+            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&head_sha=$PUBLISHED_SHA&event=push&per_page=20")"
+            ci_count="$(jq '[.workflow_runs[] | select(.name == "CI")] | length' <<<"$runs")"
+            ka_count="$(jq '[.workflow_runs[] | select(.name == "Knowledge Archive")] | length' <<<"$runs")"
+            if [ "$ci_count" -gt 1 ]; then
+              echo "duplicate published-main CI detected: $ci_count" >&2
+              exit 1
+            fi
+            if [ "$ka_count" -ne 0 ]; then
+              echo "unexpected Knowledge Archive run for source-only production publish: $ka_count" >&2
+              exit 1
+            fi
+            if [ "$ci_count" -eq 1 ]; then
+              ci_status="$(jq -r '.workflow_runs[] | select(.name == "CI") | .status' <<<"$runs")"
+              if [ "$ci_status" = completed ]; then
+                ci_conclusion="$(jq -r '.workflow_runs[] | select(.name == "CI") | .conclusion' <<<"$runs")"
+                test "$ci_conclusion" = success
+                ci_run="$(jq -r '.workflow_runs[] | select(.name == "CI") | .id' <<<"$runs")"
+                ci_job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$ci_run/jobs" --jq '.jobs[0].id')"
+                {
+                  echo "R3_18AN_PUBLISHED_SHA=$PUBLISHED_SHA"
+                  echo "R3_18AN_PUBLISHED_TREE=$PUBLISHED_TREE"
+                  echo "R3_18AN_PUBLISHED_CI=$ci_run/$ci_job SUCCESS"
+                  echo "R3_18AN_PUBLISHED_CI_COUNT=$ci_count"
+                  echo "R3_18AN_PUBLISHED_KA_COUNT=$ka_count"
+                  echo "R3_18AN_DUPLICATE_GUARD=PASS"
+                } | tee "$receipt"
+                cp "$receipt" r318an_published_main_runs.txt
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "published-main CI did not settle uniquely within discovery window" >&2
+          exit 1
+      - name: Upload published-main receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318an-published-main-runs
+          path: r318an_published_main_runs.txt
+          if-no-files-found: error
+          retention-days: 7
+      - name: Report discovery status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure
+          description='R3.18AN published-main discovery failed'
+          if [ "$JOB_STATUS" = success ]; then
+            state=success
+            description='R3.18AN published-main discovery succeeded'
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context='r318an/published-run-discovery' \
+            -f description="$description" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
