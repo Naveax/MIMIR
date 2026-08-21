@@ -1,31 +1,190 @@
-name: CI
+name: Export Ledger Prefix Recovery via Registered CI
 
 on:
   push:
-  pull_request:
+    branches:
+      - recovery/export-ledger-prefix-ci-v1
+    paths:
+      - '.github/workflows/ci.yml'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: export-ledger-prefix-registered-ci-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
+  actions: read
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  recover-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      OLD_RECOVERY_HEAD: 0307883c5295482ef6fff3b9b0f9d05ad93fb171
+      CANDIDATE_BRANCH: aux/export-ledger-prefix-hardening-v2
+      GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Checkout
+      - name: Checkout exact registered-CI helper
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze helper and fresh main
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git diff --name-only "$BASE_SHA" HEAD)" = '.github/workflows/ci.yml'
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          echo EXPORT_LEDGER_REGISTERED_HELPER_FREEZE=PASS
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Refuse duplicate candidate or active old recovery
+        id: race
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate_exists=1' >> "$GITHUB_OUTPUT"
+            echo EXPORT_LEDGER_REGISTERED_NOOP_EXISTING_CANDIDATE=1
+            exit 0
+          fi
+          active="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=automation%2Faux-export-ledger-prefix-v2&event=push&per_page=100" --jq "[.workflow_runs[] | select(.head_sha == \"$OLD_RECOVERY_HEAD\" and .status != \"completed\")] | length")"
+          test "$active" -eq 0
+          echo 'candidate_exists=0' >> "$GITHUB_OUTPUT"
+          echo EXPORT_LEDGER_REGISTERED_RACE_GUARD=PASS
+
+      - name: Apply exact component-aware boundary fix
+        if: steps.race.outputs.candidate_exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('crates/mimir-export/src/lib.rs')
+          text = path.read_text(encoding='utf-8')
+          old = '''    validate_relative_path_text(&entry.relative_result_path)?;
+
+    if path_extension(&entry.relative_result_path) != Some("json") {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must end with .json: {}",
+            entry.relative_result_path
+        )));
+    }
+
+    if !entry
+        .relative_result_path
+        .starts_with(EXECUTION_LEDGER_DIR_NAME)
+    {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must stay under {}: {}",
+            EXECUTION_LEDGER_DIR_NAME, entry.relative_result_path
+        )));
+    }
+'''
+          new = '''    let relative_result_path = validate_relative_path_text(&entry.relative_result_path)?;
+
+    if path_extension(&entry.relative_result_path) != Some("json") {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must end with .json: {}",
+            entry.relative_result_path
+        )));
+    }
+
+    if !relative_result_path.starts_with(Path::new(EXECUTION_LEDGER_DIR_NAME)) {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must stay under {}: {}",
+            EXECUTION_LEDGER_DIR_NAME, entry.relative_result_path
+        )));
+    }
+'''
+          if text.count(old) != 1:
+              raise SystemExit(f'validator marker drift: {text.count(old)}')
+          text = text.replace(old, new, 1)
+          marker = '''    #[test]
+    fn load_execution_ledger_index_is_empty_before_persisted_results_exist() {
+'''
+          test = '''    #[test]
+    fn load_execution_ledger_index_rejects_sibling_prefix_paths() {
+        let directory = tempdir().expect("tempdir should be created");
+        let output_dir = directory.path().join("bundle");
+
+        export_bundle(&output_dir, &sample_export_input(ExportEncoding::Json))
+            .expect("bundle export should succeed");
+        let ledger_dir = output_dir.join(EXECUTION_LEDGER_DIR_NAME);
+        fs::create_dir_all(&ledger_dir).expect("ledger directory should be created");
+        let index_path = ledger_dir.join(EXECUTION_LEDGER_INDEX_FILE_NAME);
+
+        for relative_result_path in [
+            "ledger-evil/results/result-0000.json",
+            "ledger2/results/result-0000.json",
+            "ledger_backup/results/result-0000.json",
+        ] {
+            let index = ExecutionLedgerIndex {
+                ledger_index_version: EXECUTION_LEDGER_INDEX_VERSION,
+                entries: vec![ExecutionLedgerIndexEntry {
+                    result_id: "result-1".to_string(),
+                    request_id: "request-1".to_string(),
+                    plan_id: "plan-1".to_string(),
+                    export_name: "restore-stage-1".to_string(),
+                    status: ExecutionResultStatus::StubbedSuccess,
+                    recorded_at_unix_ms: 1,
+                    relative_result_path: relative_result_path.to_string(),
+                    content_hash: "hash".to_string(),
+                }],
+            };
+            write_json_file(&index_path, &index).expect("malicious ledger index should write");
+
+            let error = load_execution_ledger_index(&output_dir)
+                .expect_err("sibling-prefix path should be rejected");
+            assert!(
+                error.to_string().contains("must stay under ledger"),
+                "unexpected error for {relative_result_path}: {error}"
+            );
+        }
+    }
+
+'''
+          if text.count(marker) != 1:
+              raise SystemExit(f'test marker drift: {text.count(marker)}')
+          path.write_text(text.replace(marker, test + marker, 1), encoding='utf-8', newline='\n')
+          PY
+          cargo fmt --all
+          git diff --check
+          test "$(git diff --name-only)" = 'crates/mimir-export/src/lib.rs'
+          echo EXPORT_LEDGER_REGISTERED_SCOPE=PASS
+
+      - name: Focused and crate validation
+        if: steps.race.outputs.candidate_exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --locked -p mimir-export load_execution_ledger_index_rejects_sibling_prefix_paths
+          cargo test --locked -p mimir-export
+          echo EXPORT_LEDGER_REGISTERED_TESTS=PASS
+
+      - name: Publish clean candidate once
+        if: steps.race.outputs.candidate_exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Auxiliary Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- crates/mimir-export/src/lib.rs
+          git diff --cached --check
+          test "$(git diff --cached --name-only)" = 'crates/mimir-export/src/lib.rs'
+          git commit -m 'fix(export): harden execution ledger path boundary'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared during recovery; refusing overwrite' >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "EXPORT_LEDGER_REGISTERED_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
+          echo EXPORT_LEDGER_REGISTERED_CANONICAL_ADMISSION=0
