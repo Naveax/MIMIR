@@ -1,0 +1,73 @@
+name: R3.18AK Continuity Builder Corrective
+
+on:
+  push:
+    branches:
+      - ops/r318ak-candidate-run-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318ak_continuity_builder_corrective_trigger.txt
+
+concurrency:
+  group: r318ak-continuity-builder-corrective
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_SHA: f20f529e3ada6e9a671ea91e5676a17a00770145
+      TARGET_BRANCH: parallel/s1-r3-18ak-continuity-v1
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ops/r318ak-candidate-run-discovery-v1
+          fetch-depth: 0
+      - name: Reuse verified generator and fix scope accounting
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "$TARGET_BRANCH" >/dev/null 2>&1; then
+            echo "target continuity branch already exists" >&2
+            exit 1
+          fi
+          awk '
+            /python3 - <<.PY./ { capture=1; next }
+            capture && /^[[:space:]]*PY[[:space:]]*$/ { exit }
+            capture { sub(/^          /, ""); print }
+          ' .github/workflows/_tmp_r318ak_continuity_builder.yml > /tmp/r318ak_continuity_generate.py
+          grep -q "Path('docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md')" /tmp/r318ak_continuity_generate.py
+          git worktree add -b "$TARGET_BRANCH" /tmp/r318ak-continuity "$BASE_SHA"
+          cd /tmp/r318ak-continuity
+          python3 /tmp/r318ak_continuity_generate.py
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git add -N docs/continuity/MIMIR_R3_18AK_DECISION.md docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md
+          changed="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AK_DECISION.md \
+            docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md | sort)"
+          printf '%s\n' "$changed"
+          test "$changed" = "$expected"
+          test -z "$(git diff --name-only -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures corpus .github)"
+          grep -q 'R3.18AL' MIMIR_CONTINUE_HERE.md
+          grep -q 'R3.18AK bounded post-AG following-header production composition / CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AK_DECISION.md docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m 'Admit R3.18AK and open R3.18AL'
+          git push origin HEAD:"$TARGET_BRANCH"
+          echo "CONTINUITY_HEAD=$(git rev-parse HEAD)"
+          echo "CONTINUITY_TREE=$(git rev-parse HEAD^{tree})"
