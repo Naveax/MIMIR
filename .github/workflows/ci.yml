@@ -1,4 +1,4 @@
-name: R3.18AM Continuity Recovery via Registered CI V5
+name: R3.18AM Continuity Recovery via Registered CI V7
 
 on:
   push:
@@ -9,12 +9,13 @@ on:
       - 'tools/_tmp_r318am_admission_generate.py'
 
 concurrency:
-  group: r318am-continuity-recovery-registered-ci-v5
+  group: r318am-continuity-recovery-registered-ci-v7
   cancel-in-progress: false
 
 permissions:
   contents: write
   actions: read
+  statuses: write
 
 jobs:
   recover-continuity:
@@ -23,7 +24,7 @@ jobs:
     env:
       BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
       BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
-      V4_HEAD: c5c2d7a08163afe0222a894c9cd78e4c6d734da3
+      V5_HEAD: fb73105500ba25e34fe5c80303940007205f81bb
       GENERATOR_BLOB: 952beba8bbfa9dd0bb4985c5ecba75b89e8dfb96
       AM_HEAD: 842b94ed4c4e57323433585fea48116ecf18989b
       AM_TREE: 486d0a0f3833dcb8872f062ae1927c9aefde87ba
@@ -38,44 +39,55 @@ jobs:
       GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Checkout exact registered-CI recovery head
-        uses: actions/checkout@v6
+      - name: Checkout exact V7 recovery head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
 
-      - name: Freeze helper scope and fresh main
+      - name: Mark registered recovery pending
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318am/continuity-recovery' \
+            -f description='R3.18AM continuity V7 recovery running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Freeze helper scope and exact fresh main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git merge-base "$BASE_SHA" HEAD)" = "$BASE_SHA"
           test "$(git rev-parse HEAD:tools/_tmp_r318am_admission_generate.py)" = "$GENERATOR_BLOB"
           mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
           mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_r318am_admission_generate.py | sort)
           diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
-          git fetch origin main --force
-          test "$(git rev-parse origin/main)" = "$BASE_SHA"
-          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
           cp tools/_tmp_r318am_admission_generate.py /tmp/r318am_admission_generate.py
           python -m py_compile /tmp/r318am_admission_generate.py
-          echo R3_18AM_V5_HELPER_FREEZE=PASS
+          echo R3_18AM_V7_HELPER_FREEZE=PASS
 
-      - name: Refuse to race an active V4 or existing clean candidate
+      - name: Refuse candidate or older active recovery
         id: race
         shell: bash
         run: |
           set -euo pipefail
           if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
-            echo "candidate_exists=1" >> "$GITHUB_OUTPUT"
-            echo R3_18AM_V5_NOOP_EXISTING_CANDIDATE=1
+            echo 'mode=candidate_exists' >> "$GITHUB_OUTPUT"
+            echo R3_18AM_V7_NOOP_EXISTING_CANDIDATE=PASS
             exit 0
           fi
-          active="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=automation%2Fr318am-admission-builder-v1&event=push&per_page=100" --jq "[.workflow_runs[] | select(.head_sha == \"$V4_HEAD\" and .status != \"completed\")] | length")"
-          test "$active" -eq 0
-          echo "candidate_exists=0" >> "$GITHUB_OUTPUT"
-          echo R3_18AM_V5_RACE_GUARD=PASS
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=recovery%2Fr318am-continuity-ci-v1&event=push&per_page=100")"
+          older_active="$(jq --arg current "$GITHUB_SHA" '[.workflow_runs[] | select(.head_sha != $current and .status != "completed")] | length' <<<"$runs")"
+          test "$older_active" -eq 0
+          echo 'mode=generate' >> "$GITHUB_OUTPUT"
+          echo R3_18AM_V7_RACE_GUARD=PASS
 
       - name: Freeze R3.18AM evidence authority
-        if: steps.race.outputs.candidate_exists == '0'
+        if: steps.race.outputs.mode == 'generate'
         shell: bash
         run: |
           set -euo pipefail
@@ -109,16 +121,26 @@ jobs:
             grep -Fqx 'R3_18AM_ANOTHER_CONTROL_BITS_CONSUMED=0' r3_18am_aggregate.txt
             grep -Fqx 'R3_18AM_PRIVACY_SCAN=PASS' r3_18am_aggregate.txt
           )
-          echo R3_18AM_V5_AUTHORITY_FREEZE=PASS
+          echo R3_18AM_V7_AUTHORITY_FREEZE=PASS
 
-      - name: Generate exact nine-file clean candidate
-        if: steps.race.outputs.candidate_exists == '0'
+      - name: Generate normalize and verify exact nine-file candidate
+        if: steps.race.outputs.mode == 'generate'
         shell: bash
         run: |
           set -euo pipefail
           git reset --hard "$BASE_SHA"
           git clean -fdx
           python /tmp/r318am_admission_generate.py "$AM_CI_RUN" "$AM_CI_JOB"
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md')
+          text = path.read_text(encoding='utf-8')
+          trailing = len(text) - len(text.rstrip('\n'))
+          if trailing != 2:
+              raise SystemExit(f'expected known two-LF generated ledger tail, got {trailing}')
+          path.write_text(text.rstrip('\n') + '\n', encoding='utf-8', newline='\n')
+          print('R3_18AM_V7_LEDGER_EOF_NORMALIZATION=PASS')
+          PY
           git add -N docs/continuity/MIMIR_R3_18AM_DECISION.md docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md
           mapfile -t actual < <(git diff --name-only | sort)
           mapfile -t expected < <(printf '%s\n' \
@@ -135,15 +157,16 @@ jobs:
           python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
           git diff --check
           git diff --exit-code HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github
-          echo R3_18AM_V5_SCOPE=PASS files=9
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18AM_V7_SCOPE_AND_ARCHIVE=PASS files=9
 
       - name: Commit and publish clean candidate once
-        if: steps.race.outputs.candidate_exists == '0'
+        if: steps.race.outputs.mode == 'generate'
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "MIMIR Admission Bot"
-          git config user.email "actions@users.noreply.github.com"
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
           git add -- \
             MIMIR_CONTINUE_HERE.md \
             MIMIR_KNOWLEDGE_GRAPH.md \
@@ -156,12 +179,34 @@ jobs:
             docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md
           test "$(git diff --cached --name-only | wc -l)" -eq 9
           git diff --cached --check
-          git commit -m "Admit R3.18AM and open R3.18AN"
+          git commit -m 'Admit R3.18AM and open R3.18AN'
           test "$(git rev-parse HEAD^)" = "$BASE_SHA"
           if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
-            echo "candidate appeared during recovery; refusing overwrite" >&2
+            echo 'candidate appeared during recovery; refusing overwrite' >&2
             exit 1
           fi
           git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
-          echo "R3_18AM_V5_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
-          echo R3_18AM_V5_CANDIDATE_PUBLISHED=PASS
+          echo "R3_18AM_V7_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
+          echo R3_18AM_V7_CANDIDATE_PUBLISHED=PASS
+
+      - name: Mark registered recovery success
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318am/continuity-recovery' \
+            -f description='R3.18AM continuity V7 recovery passed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Mark registered recovery failure
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318am/continuity-recovery' \
+            -f description='R3.18AM continuity V7 recovery failed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
