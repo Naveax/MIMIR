@@ -24,7 +24,7 @@ jobs:
       BASE_MAIN: a048ba25f2ef023d07bab17716838f1c4777fe27
       BASE_TREE: cd00dd18da0a177415ce569b7909ec6390cbb252
       GENERATOR_BLOB: 492ded3d58f26483bef14d6779962b3eb7a8a3b3
-      OPS_BRANCH: ops/r318aj-contract-ak-open-v1
+      OPS_BRANCH: ops/r318aj-contract-ak-open-v2
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -69,11 +69,6 @@ jobs:
         run: |
           set -euo pipefail
           d="$RUNNER_TEMP/r318ai"
-          test -f "$d/r3_18ai_header_summary.json"
-          test -f "$d/r3_18ai_header_rows.json"
-          test -f "$d/r3_18ai_negative_controls.txt"
-          test -f "$d/r3_18ai_aggregate.txt"
-          test -f "$d/r3_18ai_artifact_sha256.txt"
           test "$(sha256sum "$d/r3_18ai_header_summary.json" | awk '{print $1}')" = "70ffb419d294d4e02bdd2ef843c84bcda466022d627d7dec0b736e8d19228dd1"
           test "$(sha256sum "$d/r3_18ai_header_rows.json" | awk '{print $1}')" = "5dc8550d63688b263d87532f8330b3791736f04af98b0962cd91bd378fc4b8da"
           test "$(sha256sum "$d/r3_18ai_negative_controls.txt" | awk '{print $1}')" = "9cacb2a613958fe399114d3030f2fd1bba2c463c1efdb607498abf9af1ea843e"
@@ -82,11 +77,9 @@ jobs:
           python - "$d/r3_18ai_header_summary.json" <<'PY'
           import json,sys
           s=json.load(open(sys.argv[1],encoding='utf-8'))
-          assert s['rows']==47
-          assert s['unique_exact_contexts']==17
+          assert s['rows']==47 and s['unique_exact_contexts']==17
           assert s['tags']=={'Int':47}
-          assert s['native_oracle_mismatch']==0
-          assert s['witness_reselection']==0
+          assert s['native_oracle_mismatch']==0 and s['witness_reselection']==0
           assert s['earlier_header_contract_inheritance_assumed'] is False
           assert sum(int(x['observed_count']) for x in s['contexts'])==47
           PY
@@ -104,7 +97,6 @@ jobs:
           done
           test -n "$job_id"
           echo "job_id=$job_id" >> "$GITHUB_OUTPUT"
-          echo "builder=$GITHUB_RUN_ID/$job_id"
 
       - name: Generate clean R3.18AJ contract candidate
         shell: bash
@@ -129,6 +121,11 @@ jobs:
           for name in ('MIMIR_CONTINUE_HERE.md','docs/continuity/MIMIR_PROGRESS_LEDGER.md'):
               p=Path(name)
               p.write_text(p.read_text(encoding='utf-8').rstrip()+'\n',encoding='utf-8',newline='\n')
+          p=Path('docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md')
+          s=p.read_text(encoding='utf-8')
+          old='canonical parent                    a048ba25f2ef023d07bab17716838f1c4777fe27 / cd00dd18da0a177415ce569b7909ec6390cbb252\n'
+          assert s.count(old)==1
+          p.write_text(s.replace(old,'R3.18AJ admission base             a048ba25f2ef023d07bab17716838f1c4777fe27 / cd00dd18da0a177415ce569b7909ec6390cbb252\n'),encoding='utf-8',newline='\n')
           PY
 
           expected="$RUNNER_TEMP/expected.txt"
@@ -146,10 +143,7 @@ jobs:
           docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md
           EOF
           sed -i 's/^          //' "$expected"
-          {
-            git diff --name-only
-            git ls-files --others --exclude-standard
-          } | sed '/^$/d' | sort -u > "$actual"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sed '/^$/d' | sort -u > "$actual"
           sort -u -o "$expected" "$expected"
           diff -u "$expected" "$actual"
 
@@ -159,10 +153,8 @@ jobs:
           import json
           c=json.load(open('docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json',encoding='utf-8'))
           assert c['membership_policy']=='exact_tuple_only'
-          assert c['observed_row_count']==47
-          assert c['unique_exact_context_count']==17
-          assert c['observed_tag_counts']=={'Int':47}
-          assert len(c['admitted_contexts'])==17
+          assert c['observed_row_count']==47 and c['unique_exact_context_count']==17
+          assert c['observed_tag_counts']=={'Int':47} and len(c['admitted_contexts'])==17
           assert sum(x['observed_count'] for x in c['admitted_contexts'])==47
           fields=('stream_id_bound','prop_id_bits','property_object_index','attribute_tag','version_major','version_minor','net_version')
           got={tuple(x[k] for k in fields) for x in c['admitted_contexts']}
@@ -170,8 +162,7 @@ jobs:
           assert (60,5,68,'Int',868,32,10) not in got
           assert (60,5,39,'Int',868,32,10) not in got
           assert (60,5,34,'ActiveActor',868,32,10) not in got
-          a=c['anti_widening']
-          assert all(v is False for v in a.values())
+          assert all(v is False for v in c['anti_widening'].values())
           auth=c['authority']
           assert auth['base_main_sha']=='a048ba25f2ef023d07bab17716838f1c4777fe27'
           assert auth['base_main_tree']=='cd00dd18da0a177415ce569b7909ec6390cbb252'
@@ -193,7 +184,6 @@ jobs:
             docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md
           git diff --cached --check
           test -z "$(git status --porcelain | awk '$1 != "M" && $1 != "A" {print}')"
-
           git config user.name "MIMIR Admission Bot"
           git config user.email "actions@users.noreply.github.com"
           git commit -m "Admit R3.18AJ and open R3.18AK"
@@ -228,17 +218,7 @@ jobs:
             echo "R3_18AJ_SUPPORT_MUTATION=0"
             echo "R3_18AJ_CONTRACT_CANDIDATE=PASS"
             echo "--- sha256 ---"
-            sha256sum \
-              MIMIR_CONTINUE_HERE.md \
-              MIMIR_KNOWLEDGE_GRAPH.md \
-              docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
-              docs/continuity/MIMIR_CONTINUITY_STATE.json \
-              docs/continuity/MIMIR_CURRENT_STATE.md \
-              docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
-              docs/continuity/MIMIR_PROGRESS_LEDGER.md \
-              docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json \
-              docs/continuity/MIMIR_R3_18AJ_DECISION.md \
-              docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md
+            sha256sum MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json docs/continuity/MIMIR_R3_18AJ_DECISION.md docs/continuity/MIMIR_R3_18AK_EXECUTION_SPEC.md
           } | tee "$receipt"
           git push origin "HEAD:refs/heads/$OPS_BRANCH"
           cp "$receipt" r318aj_contract_candidate_receipt.txt
@@ -260,12 +240,7 @@ jobs:
           set -euo pipefail
           state=failure
           description='R3.18AJ contract builder failed'
-          if [ "$JOB_STATUS" = 'success' ]; then
-            state=success
-            description='R3.18AJ contract builder succeeded'
-          fi
+          if [ "$JOB_STATUS" = 'success' ]; then state=success; description='R3.18AJ contract builder succeeded'; fi
           gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            -f state="$state" \
-            -f context='r318aj/contract-builder' \
-            -f description="$description" \
+            -f state="$state" -f context='r318aj/contract-builder' -f description="$description" \
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
