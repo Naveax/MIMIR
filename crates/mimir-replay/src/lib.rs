@@ -9473,6 +9473,137 @@ mod tests {
     }
 }
 
+// R3.18AN PRE-ADMISSION BEGIN bounded post-AK payload composition
+/// Bounded composition of the published R3.18AK following header plus exactly one
+/// R3.18AM-observed Int payload.
+///
+/// `stop_bit` is exactly the first bit after the 32-bit Int payload. This type is
+/// deliberately boundary-specific and does not admit another property-control bit,
+/// another header/payload, a repeated property loop, or a generic cursor.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1 {
+    pub header_composition:
+        ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    pub following_payload: ReplayNetworkPrimitiveScalarDecodeV1,
+    pub stop_bit: u64,
+}
+
+fn network_existing_actor_post_ak_payload_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-AK payload error: {category}: {}",
+        detail.into()
+    ))
+}
+
+/// Compose exactly one R3.18AM-observed Int payload after a valid published R3.18AK header.
+///
+/// The nested R3.18AK composition revalidates the supplied R3.18AG control and exact
+/// R3.18AJ seven-field header membership. This function then reuses the existing stateless
+/// primitive scalar decoder for exactly one Int payload, requires the observed 32-bit width,
+/// and stops at the payload end without reading the next `property_present` bit.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    control: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1>{
+    let header_composition = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+        network_bytes,
+        prior,
+        control,
+        lookup_plan,
+        context,
+    )?;
+
+    let tag = header_composition
+        .following_header
+        .resolved_attribute_tag
+        .ok_or_else(|| {
+            network_existing_actor_post_ak_payload_error(
+                "missing-resolved-attribute-tag",
+                "published R3.18AK header has no resolved attribute tag",
+            )
+        })?;
+    if tag != ReplayNetworkAttributeTagV1::Int {
+        return Err(network_existing_actor_post_ak_payload_error(
+            "unsupported-payload-tag",
+            format!("R3.18AM admits only Int at this boundary, got {tag:?}"),
+        ));
+    }
+
+    let payload_start_bit = header_composition
+        .following_header
+        .payload_start_bit
+        .ok_or_else(|| {
+            network_existing_actor_post_ak_payload_error(
+                "missing-payload-start",
+                "published R3.18AK header has no payload start",
+            )
+        })?;
+    if payload_start_bit != header_composition.stop_bit
+        || payload_start_bit != header_composition.following_header.stop_bit
+    {
+        return Err(network_existing_actor_post_ak_payload_error(
+            "header-stop-mismatch",
+            format!(
+                "payload_start={payload_start_bit}, composition_stop={}, header_stop={}",
+                header_composition.stop_bit, header_composition.following_header.stop_bit,
+            ),
+        ));
+    }
+
+    let following_payload =
+        decode_replay_network_primitive_scalar_v1(network_bytes, payload_start_bit, tag)?;
+    if following_payload.attribute_tag != ReplayNetworkAttributeTagV1::Int
+        || following_payload.payload_start_bit != payload_start_bit
+        || following_payload.payload_width != 32
+        || following_payload.payload_end_bit != following_payload.stop_bit
+        || !matches!(
+            &following_payload.value,
+            ReplayNetworkPrimitiveScalarValueV1::Int(_)
+        )
+    {
+        return Err(network_existing_actor_post_ak_payload_error(
+            "int-boundary-mismatch",
+            format!(
+                "start={}, end={}, width={}, stop={}, value={:?}",
+                following_payload.payload_start_bit,
+                following_payload.payload_end_bit,
+                following_payload.payload_width,
+                following_payload.stop_bit,
+                following_payload.value,
+            ),
+        ));
+    }
+    let expected_end = payload_start_bit.checked_add(32).ok_or_else(|| {
+        network_existing_actor_post_ak_payload_error(
+            "payload-end-overflow",
+            "32-bit Int payload end overflowed u64",
+        )
+    })?;
+    if following_payload.payload_end_bit != expected_end {
+        return Err(network_existing_actor_post_ak_payload_error(
+            "payload-end-mismatch",
+            format!(
+                "payload start {payload_start_bit} requires end {expected_end}, got {}",
+                following_payload.payload_end_bit,
+            ),
+        ));
+    }
+
+    let stop_bit = following_payload.stop_bit;
+    Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1 {
+        header_composition,
+        following_payload,
+        stop_bit,
+    })
+}
+// R3.18AN PRE-ADMISSION END bounded post-AK payload composition
+
 /// R3.18J bounded second-property payload value.
 ///
 /// This enum represents exactly one second payload after the already-bounded R3.18G header
