@@ -18,16 +18,31 @@ and orchestration wiring.
 
 ## Current replay boundary
 
-The replay lane has advanced beyond the original three-header-fixture stage. At the R3.13 production checkpoint, `mimir-replay` contains narrow production layers for admitted replay headers, body/content/footer structural boundaries, footer lookup materialization, conservative network attribute/spawn registries, timing/decoder prerequisites, and a static per-replay network lookup plan with inherited stream/property maps, `max_prop_id`, `prop_id_bits`, spawn trajectories, and channel/build-derived flags.
+The replay lane is actively staged and admission-scoped. This README intentionally does **not**
+pin a current R3.x pass number or reproduce the live parser hard-stop in prose, because those
+values change as canonical milestones are admitted and a copied checkpoint becomes stale quickly.
 
-The R3.13 lookup plan **does not consume network payload actor/frame bits**. Native actor-envelope decoding, spawn/property payload decoding, full frame iteration, canonical raw-state extraction, and event extraction remain later boundaries. See `MIMIR_CONTINUE_HERE.md` for the exact current pass and hard stop boundary.
+For current replay truth, use this authority order:
 
-Additional high-level boundaries:
+1. fresh `main` source and tests;
+2. [`MIMIR_CONTINUE_HERE.md`](MIMIR_CONTINUE_HERE.md), which is the single required continuity entry point;
+3. the mandatory reading order and evidence links referenced by that continuity file;
+4. historical planning/executor documents only as pass-time evidence, never as current authority by themselves.
 
-- Current replay parsing remains deliberately admission-scoped rather than wildcard future-version support.
-- No bundled RocketSim integration.
-- No disguised intelligence or placeholder heuristics.
-- A deterministic fake sim backend exists only for tests and CLI smoke validation.
+If fresh source/tests disagree with continuity text, capability widening stops until continuity is
+repaired. Do not infer a newer parser capability from this README alone.
+
+Stable high-level boundaries:
+
+- Replay parsing remains deliberately admission-scoped rather than wildcard future-version support.
+- Unsupported or unproven replay surfaces remain fail-closed until explicitly admitted.
+- No bundled RocketSim integration is implied by the replay parser lane.
+- No disguised intelligence or placeholder heuristics are presented as production replay truth.
+- A deterministic fake sim backend exists only for tests and CLI smoke validation unless a later admitted continuity milestone explicitly says otherwise.
+
+The execution-result material below describes a separate deterministic infrastructure family. It
+must not be used to infer the current replay-parser pass, real rollout physics, learned teacher
+behavior, or other capability outside its explicitly documented boundary.
 
 Exported anchor and branch batches can now be validated, loaded, adapted into consumer items,
 converted into deterministic candidate-request batches, and projected into deterministic
