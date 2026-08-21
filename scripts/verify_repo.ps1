@@ -55,14 +55,9 @@ Invoke-VerificationCommand `
     -Executable "cargo" `
     -CommandArguments @("check", "--locked", "--workspace", "--all-targets", "--all-features")
 
-Invoke-VerificationCommand `
-    -Executable "cargo" `
-    -CommandArguments @("test", "--locked", "-p", "mimir-replay", "--", "--nocapture")
-
-Invoke-VerificationCommand `
-    -Executable "cargo" `
-    -CommandArguments @("test", "--locked", "-p", "mimir-skill", "--", "--nocapture")
-
+# The workspace all-target/all-feature test pass below already executes the
+# mimir-replay and mimir-skill test suites. Keep one authoritative execution
+# instead of running those package suites once here and then immediately again.
 Invoke-VerificationCommand `
     -Executable "cargo" `
     -CommandArguments @("test", "--locked", "--workspace", "--all-targets", "--all-features")
