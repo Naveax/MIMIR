@@ -163,10 +163,8 @@ mod tests {
 
     #[test]
     fn checked_weighted_sum_rejects_non_finite_configuration_and_signals() {
-        let bad_weight = WeightedSumScorer::new(BTreeMap::from([(
-            "coverage".to_string(),
-            f64::NAN,
-        )]));
+        let bad_weight =
+            WeightedSumScorer::new(BTreeMap::from([("coverage".to_string(), f64::NAN)]));
         let finite_signals = BTreeMap::from([("coverage".to_string(), 1.0)]);
         assert!(bad_weight.score_checked(None, &finite_signals).is_err());
 
@@ -177,10 +175,7 @@ mod tests {
 
     #[test]
     fn checked_weighted_sum_rejects_finite_inputs_that_overflow() {
-        let scorer = WeightedSumScorer::new(BTreeMap::from([(
-            "overflow".to_string(),
-            f64::MAX,
-        )]));
+        let scorer = WeightedSumScorer::new(BTreeMap::from([("overflow".to_string(), f64::MAX)]));
         let signals = BTreeMap::from([("overflow".to_string(), 2.0)]);
 
         let error = scorer
