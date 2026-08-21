@@ -3,6 +3,8 @@ name: Knowledge Archive
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'MIMIR_CONTINUE_HERE.md'
       - 'MIMIR_KNOWLEDGE_GRAPH.md'
