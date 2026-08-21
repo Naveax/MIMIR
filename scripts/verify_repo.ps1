@@ -24,6 +24,17 @@ function Invoke-VerificationCommand {
     }
 }
 
+function Remove-StaleVerificationArtifact {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    if (Test-Path -LiteralPath $Path) {
+        Remove-Item -LiteralPath $Path -Force
+    }
+}
+
 $RequiredReplayFixtures = @(
     (Join-Path $RepoRoot "external_fixtures/sample_001.replay"),
     (Join-Path $RepoRoot "external_fixtures/sample_002.replay"),
@@ -99,6 +110,9 @@ $MatrixOutput = Join-Path $RepoRoot "target/replay_compatibility_matrix.jsonl"
 $MatrixSummary = Join-Path $RepoRoot "target/replay_compatibility_matrix.summary.json"
 $RankingOutput = Join-Path $RepoRoot "target/replay_compatibility_ranking.json"
 
+Remove-StaleVerificationArtifact -Path $MatrixOutput
+Remove-StaleVerificationArtifact -Path $MatrixSummary
+
 Invoke-VerificationCommand `
     -Executable "cargo" `
     -CommandArguments @(
@@ -142,6 +156,8 @@ Write-Host ""
 Write-Host "PASS: replay compatibility matrix scanned 100 checked-in replays."
 Write-Host "supported=$($Summary.supported) unsupported=$($Summary.unsupported) malformed=$($Summary.malformed) mapping_error=$($Summary.mapping_error) other_error=$($Summary.other_error)"
 Write-Host "unique_version_tuples=$($Summary.unique_version_tuples) unique_builds=$($Summary.unique_builds)"
+
+Remove-StaleVerificationArtifact -Path $RankingOutput
 
 Invoke-VerificationCommand `
     -Executable "cargo" `
