@@ -92,14 +92,18 @@ Batch export orchestration is now separate: `mimir-export` owns the deterministi
 `detect/generate -> filename -> write` path for persisted anchor and branch artifacts, while
 `mimir-io` stays limited to raw artifact serialization and schema/version validation.
 
-Those export batches also emit a small `manifest.json` / `manifest.toml` index alongside the
-artifact files. The manifest has its own `manifest_version`, but it stays an export-orchestration
-contract owned by `mimir-export` rather than a new `ArtifactKind`. The batch writer now stages
-artifacts and the manifest in a temporary subdirectory before finalizing them into place, which
-reduces partial visible output after write failures but still does not provide a true multi-file
-transaction. `mimir-export::inspect_export_batch(...)` can now re-open one of those batch
-directories through its manifest and verify that every listed file exists, reads as a supported
-persisted artifact, and still matches the manifest's kind/schema metadata.
+Those export bundles emit JSON `manifest.json` and JSON `index.json` metadata alongside the
+`anchors/` and `branches/` artifact directories. Artifact payload encoding may be JSON or TOML;
+the bundle manifest and index remain JSON. The manifest has its own `manifest_version`, records
+the selected artifact encoding and count fields, and points to the relative index path. The index
+owns the per-artifact record id, relative path, artifact kind, schema name/version, and content
+hash. Both remain export-orchestration contracts owned by `mimir-export` rather than new
+`ArtifactKind` values. The bundle writer stages artifacts, the index, and the manifest in a
+temporary subdirectory before renaming the staged directory into place, which reduces partial
+visible output after write failures but still does not provide a true multi-file transaction.
+`mimir-export::inspect_export_bundle(...)` can re-open one of those bundle directories and verify
+that every indexed file exists, reads as a supported persisted artifact, and still matches the
+index/header metadata and recorded content hash.
 
 If the version is unsupported, reading fails immediately with an explicit error.
 
