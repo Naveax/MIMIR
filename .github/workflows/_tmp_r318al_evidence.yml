@@ -1,0 +1,210 @@
+name: R3.18AL Published AK Differential Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318al-ak-audit-v1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 02233c8125e658513dcb068370c48b1e8f15a01c
+      BASE_TREE: fc9293d821dd3e6e269763c3c0ab091428c29490
+      PROD_SHA: f20f529e3ada6e9a671ea91e5676a17a00770145
+      PROD_TREE: 98c675811cca4e4d7f0122c762f371548c9266c2
+      LIB_BLOB: a4001e631b306ba0297fb8a4abc97778f81659c2
+      AK_TEST_BLOB: 9014505e1736498ee5e2ef7a1ce6118030580202
+      AK_DECISION_BLOB: 2aec3537d26275bd401313f8c720b298f338f33f
+      AL_SPEC_BLOB: d079d0f20e939a7f5f5a80c55bb8897032610567
+      AJ_SHA256: cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c
+      AI_HEAD: 9d424dae2ed8cc7a0a6868111805a48763131196
+      AI_RUN: '32418184036'
+      AI_JOB: '96584056481'
+      AI_CI: '32420217393'
+      AI_CI_JOB: '96590396395'
+      AI_ART: '9424764320'
+      AI_ART_NAME: r318ai-following-property-header-evidence
+      AI_ART_SIZE: '12054'
+      AI_ART_DIGEST: sha256:ce5cd54908cd4c75228f94e9ea3520bef1c03766bdbbba028a708e51485494a5
+      AI_ROWS_SHA256: 5dc8550d63688b263d87532f8330b3791736f04af98b0962cd91bd378fc4b8da
+      AI_SUMMARY_SHA256: 70ffb419d294d4e02bdd2ef843c84bcda466022d627d7dec0b736e8d19228dd1
+      AI_NEG_SHA256: 9cacb2a613958fe399114d3030f2fd1bba2c463c1efdb607498abf9af1ea843e
+      AI_AGG_SHA256: be2593e55bce17b03bd994b98dff5e9e25a4fcb9ee40c685947bc05181925135
+      AI_WIT_SHA256: 31b1b759a33a4831e0cfe0ca7028a85c2573149a0e7426bc7c9b4a59c2315019
+      AI_ID_SHA256: b02488b13cd6374219bbb89f884b03f8356f3744f930e39b2279df34859015cf
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Freeze exact authority and source scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(git merge-base "$BASE_SHA" HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs")" = "$AK_TEST_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18AK_DECISION.md")" = "$AK_DECISION_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18AL_EXECUTION_SPEC.md")" = "$AL_SPEC_BLOB"
+          test "$(sha256sum docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$AJ_SHA256"
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          expected=( '.github/workflows/_tmp_r318al_evidence.yml' 'tools/_tmp_r318al_driver.py' 'tools/_tmp_r318al_probe.rs' )
+          mapfile -t wanted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 3
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${wanted[@]}")"
+          git diff --exit-code "$BASE_SHA" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md AGENTS.md
+          for run in "$AI_RUN" "$AI_CI" 32454918857 32459617440 32459835105; do test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" = success; done
+          for job in "$AI_JOB" "$AI_CI_JOB" 96690251188 96703744791 96704374410; do test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .conclusion)" = success; done
+          echo 'R3_18AL_AUTHORITY_FREEZE=PASS'
+
+      - name: Verify immutable R3.18AI artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/r318ai"; rm -rf "$D"; mkdir -p "$D"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AI_ART" --jq .workflow_run.id)" = "$AI_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AI_ART" --jq .workflow_run.head_sha)" = "$AI_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AI_ART" --jq .name)" = "$AI_ART_NAME"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AI_ART" --jq .size_in_bytes)" = "$AI_ART_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AI_ART" --jq .digest)" = "$AI_ART_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AI_ART" --jq .expired)" = false
+          gh run download "$AI_RUN" -n "$AI_ART_NAME" -D "$D"
+          test "$(sha256sum "$D/r3_18ai_header_rows.json"|awk '{print $1}')" = "$AI_ROWS_SHA256"
+          test "$(sha256sum "$D/r3_18ai_header_summary.json"|awk '{print $1}')" = "$AI_SUMMARY_SHA256"
+          test "$(sha256sum "$D/r3_18ai_negative_controls.txt"|awk '{print $1}')" = "$AI_NEG_SHA256"
+          test "$(sha256sum "$D/r3_18ai_aggregate.txt"|awk '{print $1}')" = "$AI_AGG_SHA256"
+          test "$(sha256sum "$D/r3_18ai_frozen_witnesses.json"|awk '{print $1}')" = "$AI_WIT_SHA256"
+          test "$(sha256sum "$D/r3_18ai_replay_identity.tsv"|awk '{print $1}')" = "$AI_ID_SHA256"
+          (cd "$D" && test "$(wc -l < r3_18ai_artifact_sha256.txt)" -eq 9 && sha256sum -c r3_18ai_artifact_sha256.txt)
+          grep -Fqx 'R3_18AI_OUTCOME=A' "$D/r3_18ai_aggregate.txt"
+          grep -Fqx 'R3_18AI_FROZEN_ROWS=47/47' "$D/r3_18ai_aggregate.txt"
+          grep -Fqx 'R3_18AI_UNIQUE_EXACT_CONTEXTS=17' "$D/r3_18ai_aggregate.txt"
+          grep -Fqx 'R3_18AI_NATIVE_ORACLE_MISMATCH=0' "$D/r3_18ai_aggregate.txt"
+          echo "AI_DIR=$D" >> "$GITHUB_ENV"
+
+      - name: Prepare exact frozen targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/_tmp_r318al_driver.py prepare "$AI_DIR" docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json /tmp/r318al_targets.tsv
+          test "$(wc -l < /tmp/r318al_targets.tsv)" -eq 47
+          mkdir -p crates/mimir-replay/examples
+          cp tools/_tmp_r318al_probe.rs crates/mimir-replay/examples/_tmp_r318al_probe.rs
+
+      - name: Published AK frozen-AI direct-native differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          cleanup(){ rm -f crates/mimir-replay/examples/_tmp_r318al_probe.rs; }; trap cleanup EXIT
+          cargo +1.85.0 run --locked -q -p mimir-replay --example _tmp_r318al_probe -- /tmp/r318al_targets.tsv > /tmp/r318al_run1.log
+          cargo +1.85.0 run --locked -q -p mimir-replay --example _tmp_r318al_probe -- /tmp/r318al_targets.tsv > /tmp/r318al_run2.log
+          cmp /tmp/r318al_run1.log /tmp/r318al_run2.log
+          test "$(grep -c $'^R3_18AL_PUBLISHED\t' /tmp/r318al_run1.log)" -eq 47
+          grep -Fqx $'R3_18AL_PUBLISHED_AGG\trows=47\tpublished_exact=47\tdirect_equal=47\tcontrol_identity=47\trepeatability=47\ttruncation=47\tcorrupt_ag_negative=47\twrong_actor_negative=47\tunresolved_lookup_negative=47\twrong_version_negative=47\tpost_payload_poison=47\tfollowing_payload_bits_consumed=0\tanother_control_bits_consumed=0' /tmp/r318al_run1.log
+          python3 tools/_tmp_r318al_driver.py analyze "$AI_DIR" docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json /tmp/r318al_run1.log
+          cleanup; trap - EXIT
+          git diff --exit-code "$BASE_SHA" HEAD -- crates
+
+      - name: Focused permanent AK boundary tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18ak_post_ag_following_header -- --nocapture | tee /tmp/r318al_focused.txt
+          grep -F 'test result: ok. 5 passed; 0 failed' /tmp/r318al_focused.txt
+
+      - name: Require unique same-head normal CI success
+        shell: bash
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 180); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&event=push&per_page=100" > /tmp/runs.json
+            n="$(python3 - <<'PY'
+import json,os
+d=json.load(open('/tmp/runs.json')); xs=[r for r in d.get('workflow_runs',[]) if r.get('head_sha')==os.environ['GITHUB_SHA'] and r.get('head_branch')=='evidence/r318al-ak-audit-v1' and r.get('name')=='CI']; print(len(xs));
+if len(xs)==1: open('/tmp/ciid','w').write(str(xs[0]['id']))
+PY
+)"
+            test "$n" -le 1
+            if [ "$n" = 1 ]; then
+              id="$(cat /tmp/ciid)"; s="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq .status)"; c="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" --jq '.conclusion // ""')"
+              if [ "$s" = completed ]; then test "$c" = success; echo "HEAD_CI_RUN=$id" >> "$GITHUB_ENV"; break; fi
+            fi
+            sleep 10
+          done
+          test -n "${HEAD_CI_RUN:-$(grep '^HEAD_CI_RUN=' "$GITHUB_ENV"|cut -d= -f2-)}"
+
+      - name: Build privacy-safe immutable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > r3_18al_source_scope.txt <<EOF
+          R3_18AL_BASE_MAIN=$BASE_SHA
+          R3_18AL_BASE_TREE=$BASE_TREE
+          R3_18AL_PRODUCTION_SHA=$PROD_SHA
+          R3_18AL_PRODUCTION_TREE=$PROD_TREE
+          R3_18AL_LIB_BLOB=$LIB_BLOB
+          R3_18AL_AK_TEST_BLOB=$AK_TEST_BLOB
+          R3_18AL_AK_DECISION_BLOB=$AK_DECISION_BLOB
+          R3_18AL_SPEC_BLOB=$AL_SPEC_BLOB
+          R3_18AL_AJ_SHA256=$AJ_SHA256
+          R3_18AL_CHANGED_TEMP_FILES=3
+          R3_18AL_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0
+          EOF
+          cat > r3_18al_upstream_receipts.txt <<EOF
+          R3_18AL_AI_HEAD=$AI_HEAD
+          R3_18AL_AI_AUTH=$AI_RUN/$AI_JOB
+          R3_18AL_AI_CI=$AI_CI/$AI_CI_JOB
+          R3_18AL_AI_ARTIFACT=$AI_ART/$AI_ART_SIZE/$AI_ART_DIGEST
+          R3_18AL_AK_VALIDATION=32454918857/96690251188
+          R3_18AL_AK_PUBLISHED_MAIN=32459617440/96703744791
+          R3_18AL_AK_DISCOVERY=32459835105/96704374410
+          EOF
+          files=(r3_18al_source_scope.txt r3_18al_replay_identity.tsv r3_18al_frozen_ai_rows.json r3_18al_published_rows.json r3_18al_context_summary.json r3_18al_negative_controls.txt r3_18al_aggregate.txt r3_18al_upstream_receipts.txt)
+          : > r3_18al_artifact_sha256.txt
+          for f in "${files[@]}"; do sha256sum "$f" >> r3_18al_artifact_sha256.txt; done
+          grep -RIE '(Authorization:|Bearer [A-Za-z0-9]|ghp_|github_pat_|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)' "${files[@]}" && exit 1 || true
+          grep -Fqx 'R3_18AL_OUTCOME=A' r3_18al_aggregate.txt
+          grep -Fqx 'R3_18AL_PUBLISHED_AK_FROZEN_AI_DIRECT_MISMATCH=0' r3_18al_aggregate.txt
+          echo 'R3_18AL_ARTIFACT_READY=PASS'
+
+      - name: Upload immutable R3.18AL evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318al-published-ak-differential-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            r3_18al_source_scope.txt
+            r3_18al_replay_identity.tsv
+            r3_18al_frozen_ai_rows.json
+            r3_18al_published_rows.json
+            r3_18al_context_summary.json
+            r3_18al_negative_controls.txt
+            r3_18al_aggregate.txt
+            r3_18al_upstream_receipts.txt
+            r3_18al_artifact_sha256.txt
