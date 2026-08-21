@@ -1,0 +1,7 @@
+Aux export record-id uniqueness builder trigger v2
+base_main=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+scope=crates/mimir-export/src/lib.rs
+policy=same-kind-record-id-unique
+cross-kind-textual-id-reuse=allowed
+candidate=aux/export-record-id-uniqueness-v2
+canonical_replay_mutation=0

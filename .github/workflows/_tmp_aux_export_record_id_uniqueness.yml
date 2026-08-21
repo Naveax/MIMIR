@@ -1,0 +1,101 @@
+name: Aux Export Record ID Uniqueness Builder
+
+on:
+  push:
+    branches:
+      - automation/aux-export-record-id-uniqueness-v2
+    paths:
+      - .github/workflows/_tmp_aux_export_record_id_uniqueness_trigger.txt
+
+concurrency:
+  group: aux-export-record-id-uniqueness-v2
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact builder head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze fresh base and detach patcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          BASE_TREE=3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          cp tools/_tmp_aux_export_record_id_uniqueness.py /tmp/aux_export_record_id_uniqueness.py
+          python -m py_compile /tmp/aux_export_record_id_uniqueness.py
+          git reset --hard "$BASE"
+          git clean -fdx
+          test "$(git rev-parse HEAD)" = "$BASE"
+          echo AUX_EXPORT_RECORD_ID_BASE_FREEZE=PASS
+
+      - name: Apply narrow production hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/aux_export_record_id_uniqueness.py
+          mapfile -t changed < <(git diff --name-only)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = "crates/mimir-export/src/lib.rs"
+          git diff --check
+          echo AUX_EXPORT_RECORD_ID_SCOPE_PRE_FORMAT=PASS
+
+      - name: Install verification components
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup component add rustfmt clippy
+
+      - name: Format and focused verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all
+          git diff --check
+          cargo test --locked -p mimir-export validate_index_rejects_duplicate_record_ids_within_the_same_artifact_kind
+          cargo test --locked -p mimir-export validate_index_allows_the_same_textual_record_id_across_artifact_kinds
+          cargo test --locked -p mimir-export
+          echo AUX_EXPORT_RECORD_ID_FOCUSED=PASS
+
+      - name: Full repository verification
+        shell: pwsh
+        run: |
+          & ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publish clean source-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          CANDIDATE_BRANCH=aux/export-record-id-uniqueness-v2
+          mapfile -t changed < <(git diff --name-only)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = "crates/mimir-export/src/lib.rs"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists; refusing to race another executor"
+            exit 1
+          fi
+          git config user.name "MIMIR Aux Builder"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- crates/mimir-export/src/lib.rs
+          git diff --cached --check
+          git commit -m "Fail closed on duplicate export record IDs"
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse HEAD^{tree})"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_EXPORT_RECORD_ID_CANDIDATE=$candidate_sha/$candidate_tree"
+          echo AUX_EXPORT_RECORD_ID_BUILDER=PASS
