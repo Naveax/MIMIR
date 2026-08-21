@@ -1,7 +1,7 @@
-R3.18AN corrective registered CI V5 trigger
-parent_head=3c39435b26519a43480472f08cad5fe278de2688
-parent_run=32516295833 failure
+R3.18AN corrective registered CI V6 trigger
+previous_head=54425c52d176d6b225ca55df301dc0da7bb2f865
+previous_run=32516680074 failure_after_full_validation_pass
 base=6f92e817a88056ba303229541ae04a5d5e03239b
 tree=607905f33c10c6d5cc9715a5d372354ff8960e0e
-candidate=candidate/r318an-post-ak-payload-v5
-fix=sample_001 post-stop bit read clippy identity_op only
+candidate=candidate/r318an-post-ak-payload-v6
+fix=authenticated git transport only

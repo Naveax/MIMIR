@@ -1,4 +1,4 @@
-name: R3.18AN Corrective Registered CI V5
+name: R3.18AN Corrective Registered CI V6
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
       - .github/workflows/_tmp_r318an_corrective_trigger_v4.txt
 
 concurrency:
-  group: r318an-corrective-registered-ci-v5
+  group: r318an-corrective-registered-ci-v6
   cancel-in-progress: false
 
 permissions:
@@ -24,12 +24,12 @@ jobs:
     env:
       BASE_SHA: 6f92e817a88056ba303229541ae04a5d5e03239b
       BASE_TREE: 607905f33c10c6d5cc9715a5d372354ff8960e0e
-      PREVIOUS_CORRECTIVE_HEAD: 3c39435b26519a43480472f08cad5fe278de2688
-      PREVIOUS_CORRECTIVE_RUN: '32516295833'
+      PREVIOUS_CORRECTIVE_HEAD: 54425c52d176d6b225ca55df301dc0da7bb2f865
+      PREVIOUS_CORRECTIVE_RUN: '32516680074'
       V1_GENERATOR_BLOB: 7bef3508f824d40b357eec6f411fc3dddef93fce
       V2_PATCH_BLOB: 91561bb9d94f0d4fff3817cff5830249749b78d3
       RELOCATE_BLOB: 7b55e7b9f32bc80ac0a76de0160c82516058147a
-      CANDIDATE_BRANCH: candidate/r318an-post-ak-payload-v5
+      CANDIDATE_BRANCH: candidate/r318an-post-ak-payload-v6
       AM_HEAD: 842b94ed4c4e57323433585fea48116ecf18989b
       AM_RUN: '32473716883'
       AM_JOB: '96745647750'
@@ -39,7 +39,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Checkout exact V5 recovery head
+      - name: Checkout exact V6 recovery head
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
@@ -52,7 +52,7 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
             -f state=pending \
             -f context='r318an/production-recovery' \
-            -f description='R3.18AN V5 corrective recovery running' \
+            -f description='R3.18AN V6 corrective recovery running' \
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
 
       - name: Freeze helper scope and fresh main
@@ -72,7 +72,7 @@ jobs:
           diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
           cp tools/_tmp_r318an_relocate_v3.py "$RUNNER_TEMP/r318an_relocate_v3.py"
           python -m py_compile "$RUNNER_TEMP/r318an_relocate_v3.py"
-          echo R3_18AN_V5_HELPER_SCOPE=PASS
+          echo R3_18AN_V6_HELPER_SCOPE=PASS
 
       - name: Refuse active prior recovery or conflicting candidates
         shell: bash
@@ -81,13 +81,13 @@ jobs:
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PREVIOUS_CORRECTIVE_RUN" --jq .head_sha)" = "$PREVIOUS_CORRECTIVE_HEAD"
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PREVIOUS_CORRECTIVE_RUN" --jq .status)" = completed
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PREVIOUS_CORRECTIVE_RUN" --jq .conclusion)" = failure
-          for branch in candidate/r318an-post-ak-payload-v3 candidate/r318an-post-ak-payload-v4 "$CANDIDATE_BRANCH"; do
+          for branch in candidate/r318an-post-ak-payload-v3 candidate/r318an-post-ak-payload-v4 candidate/r318an-post-ak-payload-v5 "$CANDIDATE_BRANCH"; do
             if git ls-remote --exit-code --heads origin "refs/heads/$branch" >/dev/null 2>&1; then
               echo "conflicting candidate already exists: $branch" >&2
               exit 1
             fi
           done
-          echo R3_18AN_V5_RACE_GUARD=PASS
+          echo R3_18AN_V6_RACE_GUARD=PASS
 
       - name: Freeze R3.18AM authority and source helpers
         shell: bash
@@ -107,7 +107,7 @@ jobs:
           test "$(git hash-object "$RUNNER_TEMP/r318an_generate.py")" = "$V1_GENERATOR_BLOB"
           test "$(git hash-object "$RUNNER_TEMP/r318an_patch_v2.py")" = "$V2_PATCH_BLOB"
           python -m py_compile "$RUNNER_TEMP/r318an_generate.py" "$RUNNER_TEMP/r318an_patch_v2.py"
-          echo R3_18AN_V5_AUTHORITY_FREEZE=PASS
+          echo R3_18AN_V6_AUTHORITY_FREEZE=PASS
 
       - name: Toolchain
         shell: bash
@@ -140,7 +140,7 @@ jobs:
           if text.count(old) != 1:
               raise SystemExit(f'expected one Clippy identity-op expression, got {text.count(old)}')
           path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
-          print('R3_18AN_V5_CLIPPY_IDENTITY_FIX=PASS')
+          print('R3_18AN_V6_CLIPPY_IDENTITY_FIX=PASS')
           PY
           rm -f tools/_tmp_r318an_pre_admission_generate.py tools/_tmp_r318an_pre_admission_patch_v2.py tools/_tmp_r318an_relocate_v3.py
           rmdir tools 2>/dev/null || true
@@ -149,7 +149,7 @@ jobs:
           { git diff --name-only; git ls-files --others --exclude-standard; } | sed '/^$/d' | sort -u > "$RUNNER_TEMP/actual.txt"
           diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
           git diff --check
-          echo R3_18AN_V5_SCOPE=PASS files=2 rows=47
+          echo R3_18AN_V6_SCOPE=PASS files=2 rows=47
 
       - name: Focused and source-scope validation
         shell: bash
@@ -161,7 +161,7 @@ jobs:
           cargo +1.85.0 test --locked -p mimir-replay --test r3_18w_following_payload_control
           cargo +1.85.0 test --locked -p mimir-replay --test r3_18aa_post_w_following_header
           cargo +1.85.0 test --locked -p mimir-replay --test r3_18ag_post_ad_payload_control
-          echo R3_18AN_V5_FOCUSED=PASS
+          echo R3_18AN_V6_FOCUSED=PASS
 
       - name: Commit exact clean candidate
         id: candidate
@@ -187,7 +187,7 @@ jobs:
           cargo +1.85.0 clippy --locked --workspace --all-targets --all-features -- -D warnings
           cargo +1.85.0 test --locked --workspace
           pwsh -NoProfile -File ./scripts/verify_repo.ps1
-          echo R3_18AN_V5_FULL_REPO=PASS
+          echo R3_18AN_V6_FULL_REPO=PASS
 
       - name: Publish exact clean candidate once
         shell: bash
@@ -199,15 +199,17 @@ jobs:
             echo 'candidate appeared during validation; refusing overwrite' >&2
             exit 1
           fi
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
-          echo R3_18AN_V5_CANDIDATE_PUBLISHED=PASS
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          echo R3_18AN_V6_CANDIDATE_PUBLISHED=PASS
 
       - name: Freeze and upload receipt
         shell: bash
         run: |
           set -euo pipefail
           {
-            echo 'R3_18AN_CORRECTIVE_V5=PASS'
+            echo 'R3_18AN_CORRECTIVE_V6=PASS'
             echo "RUN_ID=$GITHUB_RUN_ID"
             echo "BASE_SHA=$BASE_SHA"
             echo "BASE_TREE=$BASE_TREE"
@@ -220,14 +222,15 @@ jobs:
             echo 'NEXT_CONTROL_BITS=0'
             echo 'SOURCE_RELOCATION=after_internal_test_module_before_R3.18J'
             echo 'V4_FAILURE=clippy_identity_op_only'
+            echo 'V5_FAILURE=git_transport_auth_only_after_full_validation_pass'
             echo 'CANONICAL_ADMISSION=0'
-          } | tee r318an_corrective_v5_receipt.txt
+          } | tee r318an_corrective_v6_receipt.txt
 
       - name: Upload receipt artifact
         uses: actions/upload-artifact@v4
         with:
-          name: r318an-corrective-v5-receipt
-          path: r318an_corrective_v5_receipt.txt
+          name: r318an-corrective-v6-receipt
+          path: r318an_corrective_v6_receipt.txt
           if-no-files-found: error
           retention-days: 30
 
@@ -237,13 +240,13 @@ jobs:
         run: |
           set -euo pipefail
           job_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$GITHUB_RUN_ID/jobs" --jq '.jobs[] | select(.name == "build-an-corrected") | .id' | head -n1)"
-          gh issue comment 129 --repo "$GITHUB_REPOSITORY" --body "R3.18AN V5 corrective recovery SUCCESS: run/job \`$GITHUB_RUN_ID/$job_id\`; candidate \`${{ steps.candidate.outputs.sha }}/${{ steps.candidate.outputs.tree }}\`; exact two-file scope; 47/47 AM Int/32; source-scope regressions PASS; V4 Clippy identity-op corrected without rerun. Candidate is validation evidence only, not canonical admission."
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=success -f context='r318an/production-recovery' -f description='R3.18AN V5 corrective recovery passed' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          gh issue comment 129 --repo "$GITHUB_REPOSITORY" --body "R3.18AN V6 corrective recovery SUCCESS: run/job \`$GITHUB_RUN_ID/$job_id\`; candidate \`${{ steps.candidate.outputs.sha }}/${{ steps.candidate.outputs.tree }}\`; exact two-file scope; 47/47 AM Int/32; full Rust 1.85 workspace verification PASS; safe source-scope relocation PASS; V5 transport-auth failure corrected without rerun. Candidate is validation evidence only, not canonical admission."
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=success -f context='r318an/production-recovery' -f description='R3.18AN V6 corrective recovery passed' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
 
       - name: Record failure
         if: failure()
         shell: bash
         run: |
           set -euo pipefail
-          gh issue comment 129 --repo "$GITHUB_REPOSITORY" --body "R3.18AN V5 corrective recovery failed on immutable helper head \`$GITHUB_SHA\`, run \`$GITHUB_RUN_ID\`. Do not rerun this SHA; inspect the exact failed step first."
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=failure -f context='r318an/production-recovery' -f description='R3.18AN V5 corrective recovery failed' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          gh issue comment 129 --repo "$GITHUB_REPOSITORY" --body "R3.18AN V6 corrective recovery failed on immutable helper head \`$GITHUB_SHA\`, run \`$GITHUB_RUN_ID\`. Do not rerun this SHA; inspect the exact failed step first."
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" -f state=failure -f context='r318an/production-recovery' -f description='R3.18AN V6 corrective recovery failed' -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
