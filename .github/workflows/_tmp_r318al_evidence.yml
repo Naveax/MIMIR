@@ -25,6 +25,7 @@ jobs:
       BASE_TREE: fc9293d821dd3e6e269763c3c0ab091428c29490
       PROBE_BLOB: 344f638d19317d54a1a2fdccf34e0d68c95c86e2
       RUNNER_BLOB: b8aa57b7b38be67c6673bd8a0eba8c95fa4aa69e
+      CI_WORKFLOW_ID: '332614145'
       GH_TOKEN: ${{ github.token }}
 
     steps:
@@ -66,6 +67,56 @@ jobs:
           set -euo pipefail
           bash tools/_tmp_r318al_run.sh
 
+      - name: Freeze same-head normal CI receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          ci_run=''
+          ci_job=''
+          for attempt in $(seq 1 40); do
+            runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${GITHUB_SHA}&event=push&per_page=100")"
+            count="$(jq --argjson wid "$CI_WORKFLOW_ID" --arg sha "$GITHUB_SHA" --arg branch "$GITHUB_REF_NAME" '[.workflow_runs[] | select(.workflow_id == $wid and .head_sha == $sha and .head_branch == $branch and .event == "push" and .name == "CI")] | length' <<<"$runs")"
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate same-head normal CI runs: $count" >&2
+              exit 1
+            fi
+            if [ "$count" -eq 1 ]; then
+              ci_run="$(jq -r --argjson wid "$CI_WORKFLOW_ID" --arg sha "$GITHUB_SHA" --arg branch "$GITHUB_REF_NAME" '.workflow_runs[] | select(.workflow_id == $wid and .head_sha == $sha and .head_branch == $branch and .event == "push" and .name == "CI") | .id' <<<"$runs")"
+              status="$(jq -r --argjson wid "$CI_WORKFLOW_ID" --arg sha "$GITHUB_SHA" --arg branch "$GITHUB_REF_NAME" '.workflow_runs[] | select(.workflow_id == $wid and .head_sha == $sha and .head_branch == $branch and .event == "push" and .name == "CI") | .status' <<<"$runs")"
+              conclusion="$(jq -r --argjson wid "$CI_WORKFLOW_ID" --arg sha "$GITHUB_SHA" --arg branch "$GITHUB_REF_NAME" '.workflow_runs[] | select(.workflow_id == $wid and .head_sha == $sha and .head_branch == $branch and .event == "push" and .name == "CI") | .conclusion' <<<"$runs")"
+              if [ "$status" = completed ]; then
+                test "$conclusion" = success
+                break
+              fi
+            fi
+            sleep 30
+          done
+          test -n "$ci_run"
+          run_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${ci_run}")"
+          test "$(jq -r .head_sha <<<"$run_meta")" = "$GITHUB_SHA"
+          test "$(jq -r .head_branch <<<"$run_meta")" = "$GITHUB_REF_NAME"
+          test "$(jq -r .event <<<"$run_meta")" = push
+          test "$(jq -r .name <<<"$run_meta")" = CI
+          test "$(jq -r .workflow_id <<<"$run_meta")" = "$CI_WORKFLOW_ID"
+          test "$(jq -r .status <<<"$run_meta")" = completed
+          test "$(jq -r .conclusion <<<"$run_meta")" = success
+          jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${ci_run}/jobs?per_page=100")"
+          rust_count="$(jq '[.jobs[] | select(.name == "rust")] | length' <<<"$jobs")"
+          test "$rust_count" -eq 1
+          ci_job="$(jq -r '.jobs[] | select(.name == "rust") | .id' <<<"$jobs")"
+          test "$(jq -r '.jobs[] | select(.name == "rust") | .status' <<<"$jobs")" = completed
+          test "$(jq -r '.jobs[] | select(.name == "rust") | .conclusion' <<<"$jobs")" = success
+          cat > r3_18al_same_head_ci.txt <<EOF
+          R3_18AL_SAME_HEAD_CI_RUN=${ci_run}
+          R3_18AL_SAME_HEAD_CI_JOB=${ci_job}
+          R3_18AL_SAME_HEAD_CI_CONCLUSION=success
+          R3_18AL_SAME_HEAD_CI_COUNT=1
+          EOF
+          sed -i 's/^          //' r3_18al_same_head_ci.txt
+          sha256sum r3_18al_same_head_ci.txt >> r3_18al_artifact_sha256.txt
+          sha256sum -c r3_18al_artifact_sha256.txt
+          cat r3_18al_same_head_ci.txt
+
       - name: Upload immutable R3.18AL evidence
         id: upload
         uses: actions/upload-artifact@v4
@@ -84,6 +135,7 @@ jobs:
             r3_18al_upstream_receipts.txt
             r3_18al_negative_controls.txt
             r3_18al_aggregate.txt
+            r3_18al_same_head_ci.txt
             r3_18al_artifact_sha256.txt
 
       - name: Verify immutable receipt and mark success
@@ -112,6 +164,8 @@ jobs:
           grep -Fx 'R3_18AL_WITNESS_RESELECTION=0' r3_18al_aggregate.txt
           grep -Fx 'R3_18AL_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' r3_18al_aggregate.txt
           grep -Fx 'R3_18AL_SECOND_LATER_CONTROL_BITS_CONSUMED=0' r3_18al_aggregate.txt
+          grep -Fx 'R3_18AL_SAME_HEAD_CI_CONCLUSION=success' r3_18al_same_head_ci.txt
+          grep -Fx 'R3_18AL_SAME_HEAD_CI_COUNT=1' r3_18al_same_head_ci.txt
           gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
             -f state=success \
             -f context='r318al/evidence' \
@@ -123,6 +177,7 @@ jobs:
           echo "R3_18AL_ARTIFACT_ID=$ARTIFACT_ID"
           echo "R3_18AL_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
           cat r3_18al_aggregate.txt
+          cat r3_18al_same_head_ci.txt
 
       - name: Mark evidence failure
         if: failure()
