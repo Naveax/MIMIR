@@ -11,26 +11,60 @@ param(
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+if ($Count -le 0) {
+    throw "Count must be greater than zero."
+}
+
 if (-not (Test-Path -LiteralPath $ReplayRoot -PathType Container)) {
     throw "Replay root not found: $ReplayRoot"
 }
 
-if (Test-Path -LiteralPath $OutputRoot) {
-    Remove-Item -LiteralPath $OutputRoot -Recurse -Force
-}
-New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
+$ReplayRootFull = (Get-Item -LiteralPath $ReplayRoot -ErrorAction Stop).FullName.TrimEnd(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+)
+$OutputRootFull = [System.IO.Path]::GetFullPath($OutputRoot).TrimEnd(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+)
+$OutputFilesystemRoot = [System.IO.Path]::GetPathRoot($OutputRootFull).TrimEnd(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+)
+$PathComparison = [System.StringComparison]::OrdinalIgnoreCase
 
-$ManifestPath = Join-Path $OutputRoot "manifest.jsonl"
+if ($OutputRootFull.Equals($OutputFilesystemRoot, $PathComparison)) {
+    throw "Output root must not be a filesystem root: $OutputRootFull"
+}
+
+if ($OutputRootFull.Equals($ReplayRootFull, $PathComparison)) {
+    throw "Output root must not be the replay root: $OutputRootFull"
+}
+
+$OutputPrefix = $OutputRootFull + [System.IO.Path]::DirectorySeparatorChar
+$ReplayPrefix = $ReplayRootFull + [System.IO.Path]::DirectorySeparatorChar
+if ($ReplayPrefix.StartsWith($OutputPrefix, $PathComparison)) {
+    throw "Output root must not contain the replay root: $OutputRootFull"
+}
+
+if (Test-Path -LiteralPath $OutputRootFull) {
+    Remove-Item -LiteralPath $OutputRootFull -Recurse -Force
+}
+New-Item -ItemType Directory -Path $OutputRootFull -Force | Out-Null
+
+$ManifestPath = Join-Path $OutputRootFull "manifest.jsonl"
 
 $Files = @(
     Get-ChildItem `
-        -LiteralPath $ReplayRoot `
+        -LiteralPath $ReplayRootFull `
         -File `
         -Filter "*.replay" `
         -Recurse `
         -Force `
         -ErrorAction Stop |
-    Sort-Object Length -Descending
+    Sort-Object -Property `
+        @{ Expression = "Length"; Descending = $true }, `
+        @{ Expression = "FullName"; Descending = $false }
 )
 
 if ($Files.Count -lt $Count) {
@@ -60,7 +94,7 @@ foreach ($File in $Files) {
 
     $Rank = $Selected.Count + 1
     $Name = "{0:D3}_{1}" -f $Rank, $File.Name
-    $Dest = Join-Path $OutputRoot $Name
+    $Dest = Join-Path $OutputRootFull $Name
 
     Copy-Item `
         -LiteralPath $File.FullName `
@@ -68,14 +102,14 @@ foreach ($File in $Files) {
         -Force
 
     $Record = [ordered]@{
-        rank             = $Rank
-        fixture_id       = "largest_{0:D3}" -f $Rank
-        filename         = $Name
+        rank              = $Rank
+        fixture_id        = "largest_{0:D3}" -f $Rank
+        filename          = $Name
         original_filename = $File.Name
-        bytes            = [int64]$File.Length
-        sha256           = $Hash
-        source           = "RLCS_REPLAYS_1V1"
-        selection_policy = "largest_sha256_unique_by_file_size"
+        bytes             = [int64]$File.Length
+        sha256            = $Hash
+        source            = "RLCS_REPLAYS_1V1"
+        selection_policy  = "largest_sha256_unique_by_file_size_then_full_path"
     }
 
     $Json = $Record | ConvertTo-Json -Compress
