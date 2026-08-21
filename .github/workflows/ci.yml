@@ -1,4 +1,4 @@
-name: R3.18AM Continuity Read-Only Recovery V6
+name: R3.18AM Continuity Read-Only Recovery V6.1
 
 on:
   pull_request:
@@ -38,7 +38,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Checkout exact V6 head
+      - name: Checkout exact corrective head
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -50,17 +50,17 @@ jobs:
         run: |
           set -euo pipefail
           test "${GITHUB_BASE_REF}" = main
-          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git merge-base "$BASE_SHA" HEAD)" = "$BASE_SHA"
           test "$(git rev-parse HEAD:tools/_tmp_r318am_admission_generate.py)" = "$GENERATOR_BLOB"
           mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
           mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_r318am_admission_generate.py | sort)
           diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
-          git fetch origin main --force
-          test "$(git rev-parse origin/main)" = "$BASE_SHA"
-          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
           cp tools/_tmp_r318am_admission_generate.py /tmp/r318am_admission_generate.py
           python -m py_compile /tmp/r318am_admission_generate.py
-          echo R3_18AM_V6_HELPER_FREEZE=PASS
+          echo R3_18AM_V6_1_HELPER_FREEZE=PASS
 
       - name: Observe V5 and refuse duplicate active execution
         id: race
@@ -76,19 +76,17 @@ jobs:
           v5_active="$(jq --arg sha "$V5_HEAD" '[.workflow_runs[] | select(.head_sha == $sha and .status != "completed")] | length' <<<"$runs")"
           v5_success="$(jq --arg sha "$V5_HEAD" '[.workflow_runs[] | select(.head_sha == $sha and .status == "completed" and .conclusion == "success")] | length' <<<"$runs")"
           v5_failed="$(jq --arg sha "$V5_HEAD" '[.workflow_runs[] | select(.head_sha == $sha and .status == "completed" and .conclusion != "success")] | length' <<<"$runs")"
-          echo "R3_18AM_V6_V5_OBSERVATION=count:${v5_count},active:${v5_active},success:${v5_success},failed:${v5_failed},candidate:${candidate_exists}"
+          echo "R3_18AM_V6_1_V5_OBSERVATION=count:${v5_count},active:${v5_active},success:${v5_success},failed:${v5_failed},candidate:${candidate_exists}"
           if [[ "$candidate_exists" -gt 0 ]]; then
             echo 'mode=candidate_exists' >> "$GITHUB_OUTPUT"
-            echo R3_18AM_V6_NOOP_EXISTING_CANDIDATE=PASS
             exit 0
           fi
           if [[ "$v5_active" -gt 0 ]]; then
             echo 'mode=v5_active' >> "$GITHUB_OUTPUT"
-            echo R3_18AM_V6_NOOP_ACTIVE_V5=PASS
             exit 0
           fi
           echo 'mode=generate' >> "$GITHUB_OUTPUT"
-          echo R3_18AM_V6_RACE_GUARD=PASS
+          echo R3_18AM_V6_1_RACE_GUARD=PASS
 
       - name: Freeze R3.18AM evidence authority
         if: steps.race.outputs.mode == 'generate'
@@ -125,9 +123,9 @@ jobs:
             grep -Fqx 'R3_18AM_ANOTHER_CONTROL_BITS_CONSUMED=0' r3_18am_aggregate.txt
             grep -Fqx 'R3_18AM_PRIVACY_SCAN=PASS' r3_18am_aggregate.txt
           )
-          echo R3_18AM_V6_AUTHORITY_FREEZE=PASS
+          echo R3_18AM_V6_1_AUTHORITY_FREEZE=PASS
 
-      - name: Generate exact nine-file candidate read-only
+      - name: Generate and normalize exact nine-file candidate
         if: steps.race.outputs.mode == 'generate'
         shell: bash
         run: |
@@ -135,6 +133,16 @@ jobs:
           git reset --hard "$BASE_SHA"
           git clean -fdx
           python /tmp/r318am_admission_generate.py "$AM_CI_RUN" "$AM_CI_JOB"
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md')
+          text = path.read_text(encoding='utf-8')
+          trailing = len(text) - len(text.rstrip('\n'))
+          if trailing != 2:
+              raise SystemExit(f'expected known two-LF generated ledger tail, got {trailing}')
+          path.write_text(text.rstrip('\n') + '\n', encoding='utf-8', newline='\n')
+          print('R3_18AM_V6_1_LEDGER_EOF_NORMALIZATION=PASS')
+          PY
           git add -N docs/continuity/MIMIR_R3_18AM_DECISION.md docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md
           mapfile -t actual < <(git diff --name-only | sort)
           mapfile -t expected < <(printf '%s\n' \
@@ -152,7 +160,7 @@ jobs:
           git diff --check
           git diff --exit-code HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts .github
           pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
-          echo R3_18AM_V6_SCOPE_AND_ARCHIVE=PASS files=9
+          echo R3_18AM_V6_1_SCOPE_AND_ARCHIVE=PASS files=9
 
       - name: Package exact candidate and receipt
         if: steps.race.outputs.mode == 'generate'
@@ -174,7 +182,7 @@ jobs:
             cd /tmp/r318am_candidate
             find . -type f -not -name r3_18am_v6_receipt.txt -print0 | sort -z | xargs -0 sha256sum > r3_18am_v6_sha256.txt
             {
-              echo R3_18AM_V6=PASS
+              echo R3_18AM_V6_1=PASS
               echo R3_18AM_BASE=$BASE_SHA/$BASE_TREE
               echo R3_18AM_EVIDENCE=$AM_HEAD/$AM_TREE
               echo R3_18AM_EVIDENCE_RUN=$AM_RUN/$AM_JOB
@@ -185,7 +193,7 @@ jobs:
               echo R3_18AM_CANONICAL_PUBLICATION=0
             } > r3_18am_v6_receipt.txt
           )
-          echo R3_18AM_V6_PACKAGE=PASS
+          echo R3_18AM_V6_1_PACKAGE=PASS
 
       - name: Upload immutable read-only candidate
         if: steps.race.outputs.mode == 'generate'
@@ -202,5 +210,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "R3_18AM_V6_NOOP=${{ steps.race.outputs.mode }}"
+          echo "R3_18AM_V6_1_NOOP=${{ steps.race.outputs.mode }}"
           echo R3_18AM_CANONICAL_PUBLICATION=0
