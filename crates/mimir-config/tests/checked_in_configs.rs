@@ -10,8 +10,12 @@ fn config_text(name: &str) -> String {
         .and_then(Path::parent)
         .expect("mimir-config should live under <repo>/crates/mimir-config");
     let path = repo_root.join("configs").join(name);
-    std::fs::read_to_string(&path)
-        .unwrap_or_else(|error| panic!("failed to read checked-in config {}: {error}", path.display()))
+    std::fs::read_to_string(&path).unwrap_or_else(|error| {
+        panic!(
+            "failed to read checked-in config {}: {error}",
+            path.display()
+        )
+    })
 }
 
 #[test]
