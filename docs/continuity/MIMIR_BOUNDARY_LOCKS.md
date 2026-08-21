@@ -6,31 +6,29 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AK production closed / R3.18AL active
+# 0. Current override — R3.18AL closed / R3.18AM active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AK
-- `f20f529e3ada6e9a671ea91e5676a17a00770145` / `98c675811cca4e4d7f0122c762f371548c9266c2`; parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`;
-- requires one valid published R3.18AG true-control result and exact R3.18AJ seven-field membership;
-- reuses the existing stateless existing-actor property-header primitive;
-- decodes exactly one following header and stops exactly at `payload_start`;
-- following payload and another control consumption remain 0/0.
+- `f20f529e3ada6e9a671ea91e5676a17a00770145` / `98c675811cca4e4d7f0122c762f371548c9266c2` remains canonical production;
+- exact R3.18AJ membership; exactly one following header; stop at `payload_start`;
+- following payload and another control are not production capabilities.
 
-## CLOSED EVIDENCE — R3.18AI Outcome A
-- immutable 47-row lane; one following header exact 47/47; 17 complete contexts; Int=47; mismatch 0; witness reselection 0.
+## CLOSED DIFFERENTIAL — R3.18AL Outcome A
+- exact immutable 47-row lane; published-AK/frozen-AI/direct-header exact 47/47;
+- 17 exact contexts; multiplicity 47; `Int=47`; mismatch 0; witness reselection 0;
+- artifact `9442034802` / `sha256:5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639`;
+- following-payload / second-later-control consumption 0/0.
 
-## CLOSED CONTRACT — R3.18AJ Outcome A
-- exact_tuple_only 17 complete seven-field tuples; multiplicity 47; contract `sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`;
-- R3.18Z/R3.18P inheritance false.
-
-## ACTIVE EVIDENCE GATE — R3.18AL
-- validate published R3.18AK on exactly the immutable R3.18AI 47-row lane;
-- production Rust frozen; no witness reselection;
-- compare through `payload_start` only and prove payload/control consumption 0/0.
+## ACTIVE EVIDENCE GATE — R3.18AM
+- begin exactly at each validated R3.18AK `payload_start` on the same 47 rows;
+- prove exactly one payload against pinned Boxcars and native evidence;
+- stop at payload end; another-control consumption must remain 0;
+- production Rust remains frozen.
 
 ## CLOSED
-- post-AK following payload; another property control; false success semantics; alternate unadmitted layouts; repeated/generalized property loop or generic cursor;
+- post-AK payload production before R3.18AM closure; another property control; false/unproven success semantics; alternate unadmitted payload layouts; repeated/generalized property loop or cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

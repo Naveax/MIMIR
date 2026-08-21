@@ -1041,3 +1041,15 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18AL — read-only published-R3.18AK following-header differential on the immutable R3.18AI 47-row lane`.
+
+## 2026-08-21 — R3.18AL — Published R3.18AK Following-Header Differential — Outcome A / CLOSED
+
+- Canonical production unchanged: `f20f529e3ada6e9a671ea91e5676a17a00770145` / `98c675811cca4e4d7f0122c762f371548c9266c2`.
+- Evidence authority: `06b8570a25a989651fc800a4ded900ce5e2f3dbe` / `2753baa23be49a819cfceb333977473864a1b02b`; run/job `32469442033/96732952709` SUCCESS.
+- Same-head normal CI: `32470066272/96734795022` SUCCESS; validation PR #130 closed unmerged.
+- Immutable artifact: `9442034802` / 14650 bytes / `sha256:5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639`; downloaded ZIP digest exact and internal manifest PASS.
+- Result: published-AK/frozen-AI/direct-header exact 47/47; AJ contexts 17/17; multiplicity 47/47; `Int=47`; mismatch 0; witness reselection 0.
+- Negative controls: repeatability, bit-exact truncation, corrupt AG, wrong actor, unresolved lookup, wrong exact context, post-payload poison 47/47; Cartesian/fabricated/old-Z focused negatives PASS.
+- Following payload / second later control consumed: 0/0.
+- Production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0.
+- Next pass opened: R3.18AM read-only one-following-payload evidence.

@@ -6,11 +6,11 @@
   "last_production_code_sha": "f20f529e3ada6e9a671ea91e5676a17a00770145",
   "last_production_milestone": "R3.18AK",
   "last_production_milestone_name": "bounded post-AG following-header production composition",
-  "last_completed_read_only_audit": "R3.18AI",
-  "current_pass": "R3.18AL",
-  "current_pass_kind": "read-only differential audit / published-R3.18AK following-header validation",
-  "current_pass_goal": "Validate published R3.18AK on exactly the immutable R3.18AI 47-row lane through payload_start with exact R3.18AJ membership and zero production mutation.",
-  "current_pass_stop_boundary": "Exactly one published AK header through payload_start. No following payload, another control, repeated/generalized property loop/cursor, next actor/frame or semantic/runtime/export widening.",
+  "last_completed_read_only_audit": "R3.18AL",
+  "current_pass": "R3.18AM",
+  "current_pass_kind": "read-only structural/value evidence / one post-AK following payload",
+  "current_pass_goal": "On exactly the immutable 47-row R3.18AI/R3.18AL lane, begin at R3.18AK payload_start and prove exactly one following payload against pinned Boxcars/native evidence with zero another-control consumption.",
+  "current_pass_stop_boundary": "Exactly one payload end after R3.18AK. No payload production, another property control, generalized loop/cursor, next actor/frame or semantic/runtime/export widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -101,7 +101,10 @@
     "second later property control bit after R3.18AK",
     "repeated/generalized property loop or generic cursor after R3.18AK",
     "post-R3.18AK following payload",
-    "another property control after R3.18AK"
+    "another property control after R3.18AK",
+    "post-R3.18AK following-payload production before R3.18AM evidence closure",
+    "another property control after the one R3.18AM payload evidence boundary",
+    "earlier payload-contract inheritance at the R3.18AM boundary"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -234,7 +237,9 @@
     "MIMIR_ALL_SOURCES_SUPERBOOK.md",
     "docs/chatgpt-archive/SOURCE_REGISTRY.md",
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
-    "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
+    "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md",
+    "docs/continuity/MIMIR_R3_18AL_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18AI",
   "last_completed_evidence_outcome": "A — one post-AG following header exact 47/47; 17 exact complete contexts; Int=47; native-oracle mismatch 0; witness reselection 0; following payload/second-control 0/0; artifact 9424764320.",
@@ -2305,5 +2310,33 @@
       "crates/mimir-replay/src/lib.rs",
       "crates/mimir-replay/tests/r3_18ak_post_ag_following_header.rs"
     ]
+  },
+  "r3_18al": {
+    "outcome": "A",
+    "closed": true,
+    "pass_kind": "read-only published-AK differential",
+    "production_sha": "f20f529e3ada6e9a671ea91e5676a17a00770145",
+    "evidence_head": "06b8570a25a989651fc800a4ded900ce5e2f3dbe",
+    "evidence_tree": "2753baa23be49a819cfceb333977473864a1b02b",
+    "authority_run": 32469442033,
+    "authority_job": 96732952709,
+    "same_head_ci_run": 32470066272,
+    "same_head_ci_job": 96734795022,
+    "artifact_id": 9442034802,
+    "artifact_size": 14650,
+    "artifact_sha256": "5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639",
+    "rows": 47,
+    "published_ak_exact": 47,
+    "direct_header_exact": 47,
+    "exact_contexts": 17,
+    "multiplicity_sum": 47,
+    "tags": {
+      "Int": 47
+    },
+    "native_oracle_mismatch": 0,
+    "witness_reselection": 0,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0,
+    "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0"
   }
 }

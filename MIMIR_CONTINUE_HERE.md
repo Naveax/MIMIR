@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AK — bounded post-AG following-header production composition
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AI — one following property-header evidence after published R3.18AG / Outcome A / 47/47 / 17 exact contexts / Int=47 / mismatch 0 / artifact 9424764320
+  R3.18AL — published R3.18AK following-header differential / Outcome A / 47/47 / 17 exact contexts / Int=47 / mismatch 0 / artifact 9442034802
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AJ — post-AG following-header exact-context contract / Outcome A / 17 exact tuples / 47 multiplicities / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AI — one post-AG following header exact / 47 rows / 17 exact contexts / Int=47 / native-oracle mismatch 0 / following-payload-second-control 0/0 / artifact 9424764320
+  R3.18AL — published AK/frozen AI/direct header exact 47/47 / 17 contexts / Int=47 / mismatch 0 / payload-control 0/0 / artifact 9442034802
 
 CURRENT_PASS:
-  R3.18AL — published R3.18AK post-AG following-header differential audit
+  R3.18AM — post-AK one following-payload evidence
 
 CURRENT_PASS_TYPE:
-  read-only differential audit / validate published R3.18AK on the immutable R3.18AI 47-row lane through payload_start with zero production mutation
+  read-only payload evidence / begin at validated R3.18AK payload_start, decode exactly one payload against pinned Boxcars/native evidence, stop at payload end, consume zero another-control bits
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -115,8 +115,20 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AI CLOSED Outcome A: one post-AG following header exact 47/47; 17 exact seven-field contexts; Int=47; native-oracle mismatch 0; witness reselection 0; following payload/second-control 0/0; artifact 9424764320
   R3.18AJ CLOSED Outcome A: exact_tuple_only 17 complete seven-field contexts / multiplicity sum 47 / Int=47 / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
   R3.18AK PRODUCTION at f20f529e3ada6e9a671ea91e5676a17a00770145: validates one published R3.18AG true-control result, reuses the stateless header primitive, requires exact R3.18AJ seven-field membership, and stops exactly at payload_start
-  R3.18AL ACTIVE read-only differential: validate published AK on the exact immutable R3.18AI 47-row lane; production remains frozen at R3.18AK
-  NO following payload, second later control, false success semantics, alternate unadmitted layout, repeated/generalized property loop, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AL CLOSED Outcome A: published-AK/frozen-AI/direct-header exact 47/47; AJ contexts 17/17; multiplicity 47/47; Int=47; mismatch 0; witness reselection 0; payload/control 0/0; artifact 9442034802
+  R3.18AM ACTIVE read-only payload evidence: start exactly at R3.18AK payload_start on the same 47 rows; prove one payload independently; another-control consumption must remain 0
+  NO post-AK payload production before R3.18AM evidence closure, another property control, alternate unadmitted payload layout, repeated/generalized property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AL_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at f20f529e3ada6e9a671ea91e5676a17a00770145
+  evidence head/tree: 06b8570a25a989651fc800a4ded900ce5e2f3dbe / 2753baa23be49a819cfceb333977473864a1b02b
+  authority run/job: 32469442033/96732952709 SUCCESS
+  same-head normal CI: 32470066272/96734795022 SUCCESS / PR #130 closed unmerged
+  artifact: 9442034802 / 14650 bytes / sha256:5fcb8f796ba365193698d5d27e2e7dc0e8c221dd42d7a901e956522b7ca1f639; downloaded ZIP digest exact / inner manifest PASS
+  47/47 published-AK exact / 47/47 direct-header exact / AJ contexts 17/17 / multiplicity 47/47 / Int=47 / mismatch 0
+  witness reselection 0 / following payload bits 0 / second later control bits 0
+  repeatability/truncation/corrupt-control/wrong-actor/unresolved/wrong-version/post-payload poison PASS; Cartesian/fabricated/old-Z focused negatives PASS
+  production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
 
 R3_18AK_PRODUCTION_CLOSURE:
   Outcome A / production f20f529e3ada6e9a671ea91e5676a17a00770145 / tree 98c675811cca4e4d7f0122c762f371548c9266c2 / parent 5e26e7d3ceceac9752c35dde9c5074a1cd15262d
