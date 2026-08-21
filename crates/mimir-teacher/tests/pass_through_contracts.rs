@@ -2,7 +2,7 @@ use mimir_core::NamedComponent;
 use mimir_teacher::{PassThroughTeacherSynthesizer, TeacherSynthesisRequest, TeacherSynthesizer};
 use mimir_types::{Metadata, ReplayId, TeacherLabelId, TeacherLabelRecord, TeacherLabelTarget};
 
-fn label(id: &str, replay: &str, text: &str, score: Option<f64>) -> TeacherLabelRecord {
+fn label(id: &str, replay: &str, text: &str, score: Option<f32>) -> TeacherLabelRecord {
     TeacherLabelRecord {
         id: TeacherLabelId::new(id),
         target: TeacherLabelTarget::Replay(ReplayId::new(replay)),
