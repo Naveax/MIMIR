@@ -1,0 +1,141 @@
+name: tmp aux export ledger prefix v2
+
+on:
+  push:
+    branches:
+      - automation/aux-export-ledger-prefix-v2
+    paths:
+      - .github/workflows/_tmp_aux_export_ledger_prefix_v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+          fetch-depth: 0
+
+      - name: Apply narrow ledger path hardening
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('crates/mimir-export/src/lib.rs')
+          text = path.read_text()
+
+          old = '''    validate_relative_path_text(&entry.relative_result_path)?;
+
+    if path_extension(&entry.relative_result_path) != Some("json") {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must end with .json: {}",
+            entry.relative_result_path
+        )));
+    }
+
+    if !entry
+        .relative_result_path
+        .starts_with(EXECUTION_LEDGER_DIR_NAME)
+    {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must stay under {}: {}",
+            EXECUTION_LEDGER_DIR_NAME, entry.relative_result_path
+        )));
+    }
+'''
+          new = '''    let relative_result_path = validate_relative_path_text(&entry.relative_result_path)?;
+
+    if path_extension(&entry.relative_result_path) != Some("json") {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must end with .json: {}",
+            entry.relative_result_path
+        )));
+    }
+
+    if !relative_result_path.starts_with(Path::new(EXECUTION_LEDGER_DIR_NAME)) {
+        return Err(MimirError::message(format!(
+            "execution ledger result path must stay under {}: {}",
+            EXECUTION_LEDGER_DIR_NAME, entry.relative_result_path
+        )));
+    }
+'''
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one validator block, found {text.count(old)}')
+          text = text.replace(old, new, 1)
+
+          marker = '''    #[test]
+    fn load_execution_ledger_index_is_empty_before_persisted_results_exist() {
+'''
+          test = '''    #[test]
+    fn load_execution_ledger_index_rejects_sibling_prefix_paths() {
+        let directory = tempdir().expect("tempdir should be created");
+        let output_dir = directory.path().join("bundle");
+
+        export_bundle(&output_dir, &sample_export_input(ExportEncoding::Json))
+            .expect("bundle export should succeed");
+        let ledger_dir = output_dir.join(EXECUTION_LEDGER_DIR_NAME);
+        fs::create_dir_all(&ledger_dir).expect("ledger directory should be created");
+        let index_path = ledger_dir.join(EXECUTION_LEDGER_INDEX_FILE_NAME);
+
+        for relative_result_path in [
+            "ledger-evil/results/result-0000.json",
+            "ledger2/results/result-0000.json",
+            "ledger_backup/results/result-0000.json",
+        ] {
+            let index = ExecutionLedgerIndex {
+                ledger_index_version: EXECUTION_LEDGER_INDEX_VERSION,
+                entries: vec![ExecutionLedgerIndexEntry {
+                    result_id: "result-1".to_string(),
+                    request_id: "request-1".to_string(),
+                    plan_id: "plan-1".to_string(),
+                    export_name: "restore-stage-1".to_string(),
+                    status: ExecutionResultStatus::StubbedSuccess,
+                    recorded_at_unix_ms: 1,
+                    relative_result_path: relative_result_path.to_string(),
+                    content_hash: "hash".to_string(),
+                }],
+            };
+            write_json_file(&index_path, &index).expect("malicious ledger index should write");
+
+            let error = load_execution_ledger_index(&output_dir)
+                .expect_err("sibling-prefix path should be rejected");
+            assert!(
+                error.to_string().contains("must stay under ledger"),
+                "unexpected error for {relative_result_path}: {error}"
+            );
+        }
+    }
+
+'''
+          if text.count(marker) != 1:
+              raise SystemExit(f'expected exactly one test marker, found {text.count(marker)}')
+          text = text.replace(marker, test + marker, 1)
+          path.write_text(text)
+          PY
+
+      - name: Format and verify narrow diff
+        shell: bash
+        run: |
+          cargo fmt --all
+          git diff --check
+          test "$(git diff --name-only)" = "crates/mimir-export/src/lib.rs"
+
+      - name: Focused regression
+        run: cargo test -p mimir-export load_execution_ledger_index_rejects_sibling_prefix_paths
+
+      - name: Full mimir-export tests
+        run: cargo test -p mimir-export
+
+      - name: Publish clean candidate branch
+        shell: bash
+        run: |
+          git config user.name "MIMIR Auxiliary Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -b aux/export-ledger-prefix-hardening-v2
+          git add -- crates/mimir-export/src/lib.rs
+          git commit -m "fix(export): harden execution ledger path boundary"
+          git push origin HEAD:refs/heads/aux/export-ledger-prefix-hardening-v2
