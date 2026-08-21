@@ -1,31 +1,171 @@
-name: CI
+name: Aux Export Stage Cleanup Builder V1
 
 on:
   push:
-  pull_request:
+    branches:
+      - recovery/export-stage-cleanup-ci-v1
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'tools/_tmp_export_stage_cleanup_patch.py'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: aux-export-stage-cleanup-builder-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      PATCH_BLOB: 8b75180e26e535649dbf4ad80a63cf6ef0dbd37c
+      CANDIDATE_BRANCH: aux/export-stage-cleanup-v1
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout exact recovery head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze helper scope and fresh main
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_export_stage_cleanup_patch.py)" = "$PATCH_BLOB"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_export_stage_cleanup_patch.py | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          cp tools/_tmp_export_stage_cleanup_patch.py /tmp/export_stage_cleanup_patch.py
+          python -m py_compile /tmp/export_stage_cleanup_patch.py
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Refuse existing clean candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'exists=1' >> "$GITHUB_OUTPUT"
+            echo AUX_EXPORT_STAGE_CLEANUP_NOOP_EXISTING=1
+          else
+            echo 'exists=0' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply narrow cleanup patch and focused regression
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python /tmp/export_stage_cleanup_patch.py
+          cat > crates/mimir-export/tests/stage_cleanup_contract.rs <<'RS'
+          use mimir_anchor::ANCHOR_ARTIFACT_PRODUCER;
+          use mimir_export::{ExportBundleInput, ExportEncoding, export_bundle};
+          use mimir_types::{
+              AnchorId, AnchorKind, AnchorRecord, ArtifactHeader, ArtifactKind, FieldValue, FrameIndex,
+              Metadata, PersistedAnchorArtifact, ReplayId,
+          };
+          use std::path::{Path, PathBuf};
+          use tempfile::tempdir;
+
+          fn serialization_failing_anchor() -> PersistedAnchorArtifact {
+              let header = ArtifactHeader::for_kind(ArtifactKind::Anchor, ANCHOR_ARTIFACT_PRODUCER)
+                  .with_metadata(Metadata::from([(
+                      "non_finite",
+                      FieldValue::Float(f64::NAN),
+                  )]));
+
+              PersistedAnchorArtifact::new(
+                  header,
+                  AnchorRecord {
+                      id: AnchorId::new("anchor-stage-cleanup"),
+                      replay_id: ReplayId::new("replay-stage-cleanup"),
+                      frame_index: FrameIndex::new(1),
+                      kind: AnchorKind::Manual,
+                      metadata: Metadata::new(),
+                  },
+              )
+          }
+
+          fn sibling_stage_paths(parent: &Path, output_name: &str) -> Vec<PathBuf> {
+              let prefix = format!(".{output_name}.stage-");
+              let mut paths = std::fs::read_dir(parent)
+                  .expect("read temp export parent")
+                  .map(|entry| entry.expect("read directory entry").path())
+                  .filter(|path| {
+                      path.file_name()
+                          .and_then(|name| name.to_str())
+                          .is_some_and(|name| name.starts_with(&prefix))
+                  })
+                  .collect::<Vec<_>>();
+              paths.sort();
+              paths
+          }
+
+          #[test]
+          fn failed_bundle_serialization_removes_exact_staging_directory() {
+              let directory = tempdir().expect("tempdir");
+              let output_dir = directory.path().join("bundle");
+              let input = ExportBundleInput {
+                  export_name: "stage-cleanup-contract".to_string(),
+                  artifact_encoding: ExportEncoding::Json,
+                  anchor_artifacts: vec![serialization_failing_anchor()],
+                  branch_artifacts: Vec::new(),
+                  created_by_component: Some("stage-cleanup-contract".to_string()),
+              };
+
+              export_bundle(&output_dir, &input)
+                  .expect_err("non-finite metadata must fail serialization after staging begins");
+
+              assert!(
+                  !output_dir.exists(),
+                  "a failed staged export must not publish the final bundle"
+              );
+              assert!(
+                  sibling_stage_paths(directory.path(), "bundle").is_empty(),
+                  "a failed staged export must best-effort remove its private stage directory"
+              );
+          }
+          RS
+          cargo fmt --all
+          git diff --check
+          mapfile -t actual < <(git diff --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' crates/mimir-export/src/lib.rs crates/mimir-export/tests/stage_cleanup_contract.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+
+      - name: Focused cleanup regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-export failed_bundle_serialization_removes_exact_staging_directory -- --nocapture
+
+      - name: Full mimir-export regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-export -- --nocapture
+
+      - name: Publish clean source-and-test candidate once
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Auxiliary Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- crates/mimir-export/src/lib.rs crates/mimir-export/tests/stage_cleanup_contract.rs
+          mapfile -t actual < <(git diff --cached --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' crates/mimir-export/src/lib.rs crates/mimir-export/tests/stage_cleanup_contract.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --cached --check
+          git commit -m 'fix(export): clean failed bundle staging directories'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared during builder run; refusing overwrite' >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_EXPORT_STAGE_CLEANUP_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
