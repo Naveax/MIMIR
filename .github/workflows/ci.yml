@@ -1,31 +1,100 @@
-name: CI
+name: Aux MIMIR IO Staged Write Builder V1
 
 on:
   push:
-  pull_request:
+    branches:
+      - recovery/mimir-io-staged-write-ci-v1
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'tools/_tmp_mimir_io_staged_write_patch.py'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: aux-mimir-io-staged-write-builder-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_SHA: fec9dca3cb8366108245788fc9a2b24a0c99fe94
+      BASE_TREE: 3bf5f68ec7df5565f78f89fd4bc2254f2a64e010
+      PATCH_BLOB: 17a0b880430c0ed241c0b174e2d6f4c04ce9f8a9
+      CANDIDATE_BRANCH: aux/mimir-io-staged-write-v1
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout exact recovery head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze helper scope and fresh main
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_mimir_io_staged_write_patch.py)" = "$PATCH_BLOB"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          mapfile -t actual < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/ci.yml tools/_tmp_mimir_io_staged_write_patch.py | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          cp tools/_tmp_mimir_io_staged_write_patch.py /tmp/mimir_io_staged_write_patch.py
+          python -m py_compile /tmp/mimir_io_staged_write_patch.py
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Refuse existing clean candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'exists=1' >> "$GITHUB_OUTPUT"
+            echo AUX_MIMIR_IO_STAGED_WRITE_NOOP_EXISTING=1
+          else
+            echo 'exists=0' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply narrow generic artifact publication hardening
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python /tmp/mimir_io_staged_write_patch.py
+          cargo fmt --all
+          git diff --check
+          mapfile -t actual < <(git diff --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' crates/mimir-io/src/lib.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+
+      - name: Focused mimir-io tests
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-io generic_artifact_ -- --nocapture
+
+      - name: Full mimir-io regression
+        if: steps.candidate.outputs.exists == '0'
+        run: cargo test --locked -p mimir-io -- --nocapture
+
+      - name: Publish clean source-only candidate once
+        if: steps.candidate.outputs.exists == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Auxiliary Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- crates/mimir-io/src/lib.rs
+          test "$(git diff --cached --name-only)" = 'crates/mimir-io/src/lib.rs'
+          git diff --cached --check
+          git commit -m 'fix(io): stage generic artifact publication'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared during builder run; refusing overwrite' >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "AUX_MIMIR_IO_STAGED_WRITE_CANDIDATE=$(git rev-parse HEAD)/$(git rev-parse HEAD^{tree})"
