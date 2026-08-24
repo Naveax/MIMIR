@@ -50,7 +50,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p crates/mimir-replay/examples
-          bash tools/_tmp_r318ap_run.sh
+          cp tools/_tmp_r318ap_run.sh "$RUNNER_TEMP/r318ap_run.sh"
+          python3 - "$RUNNER_TEMP/r318ap_run.sh" <<'PY'
+          from pathlib import Path
+          import sys
+          path = Path(sys.argv[1])
+          text = path.read_text(encoding='utf-8')
+          old = "        assert parts[0] == prefix\n        row = {}\n"
+          new = "        if parts[0] == f'{prefix}_AGG':\n            continue\n        assert parts[0] == prefix\n        row = {}\n"
+          if text.count(old) != 1:
+              raise SystemExit(f'R3.18AP V5 footer patch count={text.count(old)}')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+          print('R3_18AP_V5_KNOWN_AGG_FOOTER_PATCH=PASS')
+          PY
+          bash "$RUNNER_TEMP/r318ap_run.sh"
 
       - name: Reuse and verify the unique same-head natural CI
         shell: bash
