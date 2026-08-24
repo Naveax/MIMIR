@@ -72,7 +72,8 @@ R3.18AL published-AK following-header differential / Outcome A CLOSED
 R3.18AM post-AK one-following-payload evidence / Outcome A CLOSED
 R3.18AN bounded post-AK one-following-payload production / CLOSED
 R3.18AO published-AN one-following-payload differential / CLOSED
-R3.18AP next property-control bit evidence after published AN payload / ACTIVE                         |
+R3.18AP next property-control bit evidence after published AN payload / Outcome A CLOSED
+R3.18AQ bounded post-AN following-control production / ACTIVE                                      |
         |                               |
         +---------------+---------------+
                         |
@@ -211,13 +212,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 118. `docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md`
 119. `docs/continuity/MIMIR_R3_18AO_DECISION.md`
 120. `docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md`
-121. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-122. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-123. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-124. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-125. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-126. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-127. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+121. `docs/continuity/MIMIR_R3_18AP_DECISION.md`
+122. `docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md`
+123. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+124. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+125. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+126. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+127. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+128. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+129. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
@@ -253,11 +256,20 @@ scripts/verify_mimir_knowledge_archive.ps1
 - published AN exact 47/47; AM/direct-native/oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0; witness reselection 0
 - next-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS
 
-### R3.18AP next property-control bit evidence after published AN payload: ACTIVE
-- read-only; production remains R3.18AN `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38`
-- reuse exactly the immutable AO 47-row lane; first reconstruct published AN exactly through payload end
-- observe exactly one next `property_present` bit with pinned Boxcars plus independent LSB-first evidence read; report full false/true distribution
-- stop one bit later; next stream/header/payload and second later control consumption remain 0/0/0/0
+### R3.18AP next property-control bit evidence after published AN payload: OUTCOME A / CLOSED
+- evidence `736ac33c099a9183693bfcb2b5f5b74704a8808e` / tree `840011b603b5bb330e018bd060650cfb3af29b73`; run/job `32745234196/97489066582` SUCCESS
+- same-head natural CI `32745233671/97489738567` SUCCESS; exact run count 1; no rerun
+- artifact `9526988237` / `9692` bytes / `sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc`; downloaded ZIP digest exact / inner manifest 10/10 PASS
+- published AN exact 47/47; oracle-native exact 47/47; false=7 true=40; mismatch 0; witness reselection 0
+- truncation/prior-stop/repeatability/post-control-poison/published-AN prerequisite negatives PASS 47/47
+- next stream/header/payload/second-control consumption 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS
+- false is evidence-admitted at this boundary; earlier true-only M/W/AG semantics are not inherited
+
+### R3.18AQ bounded post-AN following-control production: ACTIVE
+- production remains R3.18AN until AQ passes full clean-candidate and publication validation
+- validate/recompute one exact AN prior; read exactly one AP-admitted property_present bit
+- both false and true are valid result values; stop exactly one bit later
+- no next stream/header/payload, second control, generic cursor/loop or wider semantic/runtime layer
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
 - production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`

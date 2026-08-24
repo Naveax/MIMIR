@@ -1118,3 +1118,43 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - R3.18AP — one next property-control bit evidence after published R3.18AN payload.
+
+---
+
+## 2026-08-24 — R3.18AP — Next Property-Control Bit Evidence After Published R3.18AN Payload
+
+Production base SHA: `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38`
+Production commit SHA: unchanged; read-only evidence pass
+Pass type: exact one-control differential / boundary characterization
+Outcome: **A — ADMITTED / CLOSED**
+
+What changed:
+- no production Rust/Cargo/fixture/corpus/support source changed;
+- exactly one next `property_present` bit after valid published AN payload end was characterized on the immutable 47-row lane;
+- both boolean classes were observed and are now evidence-admitted for the separate AQ production gate.
+
+Evidence:
+- evidence head/tree `736ac33c099a9183693bfcb2b5f5b74704a8808e` / `840011b603b5bb330e018bd060650cfb3af29b73`;
+- authority `32745234196/97489066582` SUCCESS; same-head natural CI `32745233671/97489738567` SUCCESS, run count 1, rerun 0;
+- artifact `9526988237` / `9692` bytes / `sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc`; downloaded ZIP digest exact; inner manifest 10/10 PASS;
+- rows 47/47; published AN exact 47/47; oracle-native exact 47/47; false=7 / true=40; mismatch 0; witness reselection 0;
+- adjacent stream/header/payload/second-control consumption 0/0/0/0; privacy PASS.
+
+Validation:
+- focused AN, fmt, workspace check, clippy -D warnings, workspace test and repository verifier PASS;
+- truncation, prior-stop mismatch, repeatability, post-control poison and published-AN prerequisite negatives PASS 47/47;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+Boundaries opened:
+- R3.18AQ may implement exactly one mixed-value post-AN control result.
+
+Boundaries still closed:
+- next stream/header/payload; second later control; generalized property cursor/loop; next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Important negative facts / anti-regressions:
+- false is **not** fail-closed here: 7 real frozen witnesses observed false;
+- earlier R3.18M/W/AG true-only semantics must not be inherited across this boundary;
+- AP itself did not consume any adjacent field.
+
+Next exact pass:
+- `R3.18AQ — bounded post-AN following-control production with false+true success semantics`.

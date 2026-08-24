@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AN — bounded post-AK one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AO — published-R3.18AN one-following-payload differential / Outcome A / 47/47 / Int=47 / width32=47 / mismatch 0 / artifact 9522750814
+  R3.18AP — next property-control bit evidence after published R3.18AN payload / Outcome A / 47/47 / false=7 / true=40 / mismatch 0 / artifact 9526988237
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AJ — post-AG following-header exact-context contract / Outcome A / 17 exact tuples / 47 multiplicities / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AO — published-AN one-payload exact 47/47 / width32=47 / semantic range 1..415 / mismatch 0 / next-control 0 / artifact 9522750814
+  R3.18AP — exact one-control observation 47/47 / false=7 / true=40 / oracle-native exact 47/47 / mismatch 0 / adjacent consumption 0/0/0/0 / artifact 9526988237
 
 CURRENT_PASS:
-  R3.18AP — next property-control bit evidence after published R3.18AN payload
+  R3.18AQ — bounded post-AN following-control production
 
 CURRENT_PASS_TYPE:
-  read-only one-control differential / reuse exactly the frozen R3.18AO 47-row lane, reconstruct published R3.18AN through payload end, observe exactly one next property_present bit, stop one bit later, consume zero stream/header/payload/second-control bits
+  production implementation / validate one exact published R3.18AN prior, consume exactly one AP-admitted property_present bit, represent both false and true, stop one bit later, consume zero following stream/header/payload/second-control bits
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -119,8 +119,22 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AM CLOSED Outcome A: one post-AK payload exact 47/47; Int=47; width=32 on 47/47; semantic Int range 1..415; native-oracle mismatch 0; witness reselection 0; another-control bits 0; artifact 9443581172
   R3.18AN PRODUCTION at 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38: validates/recomputes the R3.18AK/AJ boundary, decodes exactly one R3.18AM-admitted Int/32 payload, stops exactly at payload end, and consumes zero next-control bits
   R3.18AO CLOSED Outcome A: published-R3.18AN/frozen-R3.18AM/direct-native-oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0; witness reselection 0; next-control consumption 0; artifact 9522750814
-  R3.18AP ACTIVE read-only evidence: after exact published R3.18AN payload-end reconstruction, observe exactly one next property_present bit on the frozen 47-row lane and stop one bit later
-  NO next stream/header/payload after the R3.18AP control bit, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AP CLOSED Outcome A: exact one next property_present bit on the frozen 47-row lane; false=7 true=40; published AN exact 47/47; oracle-native exact 47/47; mismatch 0; witness reselection 0; adjacent consumption 0/0/0/0; artifact 9526988237
+  R3.18AQ ACTIVE bounded production: validate/recompute the exact R3.18AN prior, consume exactly one AP-admitted control bit, admit both false and true as data, and stop one bit later
+  NO next stream/header/payload after the R3.18AQ control result, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AP_EVIDENCE_CLOSURE:
+Outcome A / read-only / production unchanged at 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+canonical main before admission: c55c23c0fa86de6bacb79456795dafd996d2d96f / tree 26ba2777045299c99546a4777fc884048157dd60
+evidence head/tree: 736ac33c099a9183693bfcb2b5f5b74704a8808e / 840011b603b5bb330e018bd060650cfb3af29b73
+authority run/job: 32745234196/97489066582 SUCCESS
+same-head natural CI: 32745233671/97489738567 SUCCESS / count=1 / rerun=0
+artifact: 9526988237 / 9692 bytes / sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc; downloaded ZIP digest exact / inner manifest 10/10 PASS
+frozen rows 47/47 / published R3.18AN exact 47/47 / oracle-native exact 47/47 / mismatch 0 / witness reselection 0
+control distribution: false=7 / true=40; both classes are evidence-admitted at this exact boundary
+truncation/prior-stop/repeatability/post-control-poison/published-AN prerequisite negatives PASS 47/47
+next stream/header/payload/second-control bits 0/0/0/0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0 / privacy PASS
+next exact pass: R3.18AQ bounded one-control production; false MUST NOT be inherited as fail-closed from M/W/AG
 
 R3_18AO_EVIDENCE_CLOSURE:
 Outcome A / read-only / production unchanged at 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
