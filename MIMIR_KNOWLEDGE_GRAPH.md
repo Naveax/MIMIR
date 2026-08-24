@@ -71,7 +71,8 @@ R3.18AK bounded post-AG following-header production composition / CLOSED
 R3.18AL published-AK following-header differential / Outcome A CLOSED
 R3.18AM post-AK one-following-payload evidence / Outcome A CLOSED
 R3.18AN bounded post-AK one-following-payload production / CLOSED
-R3.18AO published-AN one-following-payload differential / ACTIVE                                      |
+R3.18AO published-AN one-following-payload differential / CLOSED
+R3.18AP next property-control bit evidence after published AN payload / ACTIVE                         |
         |                               |
         +---------------+---------------+
                         |
@@ -208,13 +209,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 116. `docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md`
 117. `docs/continuity/MIMIR_R3_18AN_DECISION.md`
 118. `docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md`
-119. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-120. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-121. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-122. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-123. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-124. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-125. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+119. `docs/continuity/MIMIR_R3_18AO_DECISION.md`
+120. `docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md`
+121. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+122. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+123. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+124. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+125. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+126. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+127. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
@@ -243,10 +246,18 @@ scripts/verify_mimir_knowledge_archive.ps1
 - published discovery `32519544607/96888554951` SUCCESS / artifact `9460031187` / duplicate guard PASS; exactly one CI and zero Knowledge Archive runs for the source-only publish
 - exact AM-admitted `Int/32` only; stop at payload end; next-control bits 0
 
-### R3.18AO published-AN one-following-payload differential: ACTIVE
-- read-only; production frozen at R3.18AN `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38`
-- reuse exactly immutable R3.18AM 47 witnesses; witness reselection 0
-- require published-AN payload identity exact through payload end; next-control bits remain 0
+### R3.18AO published-AN one-following-payload differential: OUTCOME A / CLOSED
+- evidence `0f5ecb5b1dccf35aaabf6a45645bc70ad8a68a1c` / tree `59126fe2757ecc500a5cc6f822d76fbc380ef85b`; run/job `32734420624/97453768432` SUCCESS
+- validation-only PR #194 closed unmerged; exact-head normal CI `32734946566/97455429462` SUCCESS
+- artifact `9522750814` / `sha256:2e34f3be6963b2b6031a395e85e9699b64df7413d62dd9809fa8fd9794547d73`; downloaded ZIP digest exact / inner manifest 7/7 PASS
+- published AN exact 47/47; AM/direct-native/oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0; witness reselection 0
+- next-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS
+
+### R3.18AP next property-control bit evidence after published AN payload: ACTIVE
+- read-only; production remains R3.18AN `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38`
+- reuse exactly the immutable AO 47-row lane; first reconstruct published AN exactly through payload end
+- observe exactly one next `property_present` bit with pinned Boxcars plus independent LSB-first evidence read; report full false/true distribution
+- stop one bit later; next stream/header/payload and second later control consumption remain 0/0/0/0
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
 - production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`

@@ -1079,3 +1079,42 @@ Next exact pass:
 - Admitted boundary: exact AK/AJ authority -> one `Int/32` payload -> exact payload end; next property-control bits consumed 0.
 - Cargo/fixture/corpus/docs/workflow/support mutation in clean production commit: 0/0/0/0/0/0.
 - Next pass opened: R3.18AO read-only published-AN one-following-payload differential.
+
+## 2026-08-24 — R3.18AO — Published R3.18AN One-Following-Payload Differential
+Production base SHA: `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38`
+Production commit SHA: unchanged / `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38`
+Pass type: read-only published-production differential
+Outcome: A — CLOSED
+
+What changed:
+- No production source changed.
+- Published R3.18AN was independently checked on exactly the immutable 47-row R3.18AM lane.
+- Continuity advances to R3.18AP, exactly one next property-control evidence bit.
+
+Evidence:
+- Evidence head/tree `0f5ecb5b1dccf35aaabf6a45645bc70ad8a68a1c` / `59126fe2757ecc500a5cc6f822d76fbc380ef85b`.
+- Authority run/job `32734420624/97453768432` SUCCESS.
+- Artifact `9522750814` / `4619` bytes / `sha256:2e34f3be6963b2b6031a395e85e9699b64df7413d62dd9809fa8fd9794547d73`; downloaded ZIP exact; inner manifest 7/7 PASS.
+- Published AN exact 47/47; AM/direct-native/oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0.
+- Witness reselection 0; next-control bits consumed 0; privacy PASS.
+
+Validation:
+- Validation-only PR #194 closed unmerged.
+- Same exact evidence-head normal CI `32734946566/97455429462` SUCCESS.
+- Focused AN/AK, fmt, workspace check/clippy/test and repository verifier PASS.
+- Production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+Boundaries opened:
+- Read-only R3.18AP observation of exactly one next `property_present` bit after valid published AN payload end.
+
+Boundaries still closed:
+- Production consumption of that bit.
+- Next stream/header/payload, second later control and generalized property cursor/loop.
+- Next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Important negative facts / anti-regressions:
+- R3.18AO itself consumed zero next-control bits.
+- AO does not authorize a next-control value or boolean distribution by analogy.
+
+Next exact pass:
+- R3.18AP — one next property-control bit evidence after published R3.18AN payload.

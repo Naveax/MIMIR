@@ -6,27 +6,30 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AN closed / R3.18AO active
+# 0. Current override — R3.18AO closed / R3.18AP active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AN
-- `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38` / `3efcc244bca55623b12bb21eb277753fc61144d4` is canonical production; parent `6f92e817a88056ba303229541ae04a5d5e03239b`;
+- `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38` / `3efcc244bca55623b12bb21eb277753fc61144d4` remains canonical production;
 - validates/recomputes exact R3.18AK/R3.18AJ authority, decodes exactly one R3.18AM-admitted `Int/32` payload, and stops at payload end;
-- next property-control consumption is zero.
+- next property-control consumption in production remains zero.
 
-## CLOSED EVIDENCE — R3.18AM Outcome A
-- immutable 47-row lane; `Int=47`; width 32 on 47/47; semantic range 1..415; native/oracle mismatch 0; witness reselection 0;
-- artifact `9443581172`; another-control consumption 0.
+## CLOSED DIFFERENTIAL — R3.18AO Outcome A
+- immutable 47-row lane; published R3.18AN exact 47/47;
+- AM/direct-native/oracle exact 47/47; `Int=47`; width32=47; semantic range 1..415; mismatch 0; witness reselection 0;
+- artifact `9522750814` / `sha256:2e34f3be6963b2b6031a395e85e9699b64df7413d62dd9809fa8fd9794547d73`; next-control consumption 0; production mutation 0.
 
-## ACTIVE DIFFERENTIAL GATE — R3.18AO
-- reuse exactly the frozen R3.18AM witnesses and published R3.18AN API;
-- prove published-AN equals AM/direct-native/oracle through one payload end on the entire lane;
-- production/Cargo/fixture/corpus/support mutation remains zero;
-- stop before the next property-control bit.
+## ACTIVE EVIDENCE GATE — R3.18AP
+- reuse exactly the frozen R3.18AO witnesses and published R3.18AN API;
+- reconstruct each row exactly through the published AN payload end;
+- observe exactly one next `property_present` bit at that stop with pinned Boxcars plus independent LSB-first evidence logic;
+- report both boolean classes without filtering, stop one bit later, and consume no next stream/header/payload/second-control bits.
 
 ## CLOSED
-- next property-control bit after R3.18AN; alternate payload tags/layouts; repeated/generalized property loop or cursor;
+- production consumption of the R3.18AP-observed control bit until a separate bounded production pass;
+- next stream/header/payload after the one R3.18AP evidence bit;
+- second later property-control bit, alternate payload widening, repeated/generalized property loop or cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---
