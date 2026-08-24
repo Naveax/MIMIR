@@ -1,0 +1,145 @@
+name: R3.18AP Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318ap-admission-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318ap_admission_trigger.txt
+
+concurrency:
+  group: r318ap-continuity-admission-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  statuses: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_SHA: c55c23c0fa86de6bacb79456795dafd996d2d96f
+      BASE_TREE: 26ba2777045299c99546a4777fc884048157dd60
+      AP_HEAD: 736ac33c099a9183693bfcb2b5f5b74704a8808e
+      AP_TREE: 840011b603b5bb330e018bd060650cfb3af29b73
+      AP_RUN: '32745234196'
+      AP_JOB: '97489066582'
+      AP_CI_RUN: '32745233671'
+      AP_CI_JOB: '97489738567'
+      AP_ARTIFACT: '9526988237'
+      AP_ARTIFACT_SIZE: '9692'
+      AP_DIGEST: 'sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc'
+      CANDIDATE_BRANCH: continuity/r318ap-admit-aq-v1
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze fresh main and immutable AP authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$AP_HEAD" --jq .tree.sha)" = "$AP_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_RUN" --jq .head_sha)" = "$AP_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AP_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_CI_RUN" --jq .head_sha)" = "$AP_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AP_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AP_ARTIFACT" --jq .digest)" = "$AP_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AP_ARTIFACT" --jq .size_in_bytes)" = "$AP_ARTIFACT_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AP_ARTIFACT" --jq .expired)" = false
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+          echo R3_18AP_AUTHORITY_FREEZE=PASS
+
+      - name: Generate exact 9-doc AP closure and AQ opening
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318ap_admit.py "$RUNNER_TEMP/r318ap_admit.py"
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
+          python "$RUNNER_TEMP/r318ap_admit.py"
+
+      - name: Verify exact candidate scope and archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$RUNNER_TEMP/expected.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18AP_DECISION.md
+          docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$expected"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/actual.txt"
+          sort -o "$expected" "$expected"
+          diff -u "$expected" "$RUNNER_TEMP/actual.txt"
+          test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+          git diff --check
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          grep -F 'false=7' docs/continuity/MIMIR_R3_18AP_DECISION.md
+          grep -F 'true=40' docs/continuity/MIMIR_R3_18AP_DECISION.md
+          grep -F 'R3.18AQ' MIMIR_CONTINUE_HERE.md
+          grep -F '129. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          echo R3_18AP_EXACT_9_DOC_SCOPE=PASS
+
+      - name: Commit and push candidate once
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AP_DECISION.md \
+            docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18AP and open R3.18AQ'
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate appeared during builder; refusing race" >&2
+            exit 1
+          fi
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          printf 'CANDIDATE_SHA=%s\nCANDIDATE_TREE=%s\nBASE_SHA=%s\nFILES=9\nNEXT_PASS=R3.18AQ\n' \
+            "$candidate_sha" "$candidate_tree" "$BASE_SHA" | tee "$RUNNER_TEMP/r318ap_admission_receipt.txt"
+
+      - name: Upload builder receipt
+        uses: actions/upload-artifact@v6
+        with:
+          name: r318ap-continuity-admission-receipt
+          path: ${{ runner.temp }}/r318ap_admission_receipt.txt
+          if-no-files-found: error
+          retention-days: 30
