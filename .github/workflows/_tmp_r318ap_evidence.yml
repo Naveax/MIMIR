@@ -59,9 +59,15 @@ jobs:
           old="insert_after='use std::path::{Path, PathBuf};\\n'"
           new="insert_after='use std::path::PathBuf;\\n'"
           if s.count(old) != 1:
-              raise SystemExit(f'R3.18AP V2 import-anchor patch count={s.count(old)}')
-          p.write_text(s.replace(old,new,1),encoding='utf-8',newline='\n')
-          print('R3_18AP_V2_IMPORT_ANCHOR_PATCH=PASS')
+              raise SystemExit(f'R3.18AP V3 import-anchor patch count={s.count(old)}')
+          s=s.replace(old,new,1)
+          old_run='cargo +1.85.0 run -p mimir-replay --example _tmp_r318ap_probe --quiet > "$TMP/native.log"'
+          new_run='RUST_BACKTRACE=1 cargo +1.85.0 run -p mimir-replay --example _tmp_r318ap_probe --quiet 2>&1 | tee "$TMP/native.log"'
+          if s.count(old_run) != 1:
+              raise SystemExit(f'R3.18AP V3 native-run patch count={s.count(old_run)}')
+          s=s.replace(old_run,new_run,1)
+          p.write_text(s,encoding='utf-8',newline='\n')
+          print('R3_18AP_V3_DIAGNOSTIC_PATCH=PASS')
           PY
           bash "$RUNNER_TEMP/r318ap_run.sh"
 
