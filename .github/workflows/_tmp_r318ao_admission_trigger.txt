@@ -1,0 +1,4 @@
+R3.18AO continuity admission builder trigger
+base=68014a3b9aa3e5a84a4a03c2464863e9a60bfec2
+evidence=0f5ecb5b1dccf35aaabf6a45645bc70ad8a68a1c
+next=R3.18AP

@@ -1,0 +1,672 @@
+name: R3.18AO Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318ao-admission-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318ao_admission_trigger.txt
+
+concurrency:
+  group: r318ao-continuity-admission-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_SHA: 68014a3b9aa3e5a84a4a03c2464863e9a60bfec2
+      BASE_TREE: 6180021a44355e92348785d1f0f0d50002fb1a66
+      PROD_SHA: 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+      PROD_TREE: 3efcc244bca55623b12bb21eb277753fc61144d4
+      PROD_LIB_BLOB: 9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822
+      PROD_TEST_BLOB: 8aa48b2b74d0956d1d2e965d056e1cf14a81f703
+      AO_HEAD: 0f5ecb5b1dccf35aaabf6a45645bc70ad8a68a1c
+      AO_TREE: 59126fe2757ecc500a5cc6f822d76fbc380ef85b
+      AO_RUN: '32734420624'
+      AO_JOB: '97453768432'
+      AO_ARTIFACT: '9522750814'
+      AO_ARTIFACT_SIZE: '4619'
+      AO_DIGEST: 'sha256:2e34f3be6963b2b6031a395e85e9699b64df7413d62dd9809fa8fd9794547d73'
+      AO_VALIDATION_PR: '194'
+      AO_CI_RUN: '32734946566'
+      AO_CI_JOB: '97455429462'
+      CANDIDATE_BRANCH: continuity/r318ao-admit-ap-v1
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Mark admission builder pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318ao/continuity-builder' \
+            -f description='R3.18AO continuity builder running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+      - name: Freeze fresh main and immutable AO authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(git rev-parse "$BASE_SHA:crates/mimir-replay/src/lib.rs")" = "$PROD_LIB_BLOB"
+          test "$(git rev-parse "$BASE_SHA:crates/mimir-replay/tests/r3_18an_post_ak_payload.rs")" = "$PROD_TEST_BLOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AO_RUN" --jq .head_sha)" = "$AO_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AO_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AO_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$AO_HEAD" --jq .tree.sha)" = "$AO_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AO_ARTIFACT" --jq .digest)" = "$AO_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AO_ARTIFACT" --jq .size_in_bytes)" = "$AO_ARTIFACT_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$AO_VALIDATION_PR" --jq .state)" = closed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$AO_VALIDATION_PR" --jq '.merged_at // "null"')" = null
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AO_CI_RUN" --jq .head_sha)" = "$AO_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AO_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AO_CI_JOB" --jq .conclusion)" = success
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "R3.18AO continuity candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+          echo R3_18AO_AUTHORITY_FREEZE=PASS
+      - name: Generate exact 9-doc AO closure and AP opening
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
+          python - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          DATE='2026-08-24'
+          BASE='68014a3b9aa3e5a84a4a03c2464863e9a60bfec2'
+          BASE_TREE='6180021a44355e92348785d1f0f0d50002fb1a66'
+          PROD='3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38'
+          PROD_TREE='3efcc244bca55623b12bb21eb277753fc61144d4'
+          LIB='9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822'
+          TEST='8aa48b2b74d0956d1d2e965d056e1cf14a81f703'
+          AO='0f5ecb5b1dccf35aaabf6a45645bc70ad8a68a1c'
+          AO_TREE='59126fe2757ecc500a5cc6f822d76fbc380ef85b'
+          AO_RUN='32734420624/97453768432'
+          AO_CI='32734946566/97455429462'
+          AO_ART='9522750814'
+          AO_SIZE='4619'
+          AO_DIG='2e34f3be6963b2b6031a395e85e9699b64df7413d62dd9809fa8fd9794547d73'
+          AO_AGG='63af8982928307ad6432a5935e32cd229f9316a1800c130e9547fdb4be0b0f3b'
+          AO_ROWS='40b08b16f857aecd7e15b9cb6f20d5b35a1d5ff2fd280989e217e5b4511de343'
+          AO_NEG='7d88f48abc322b49c35d7b7e246b9db7a7d2708e2391816b9eb901a3875f3bf7'
+          AO_SCOPE='c85e47a18a772aafd38b27524dc69ec90e2f1eb123dd7f6ff13d89916c39b815'
+          AO_SUM='fbde2f6bd1f64f20bc685802e64dc267c934acc2ceeaad1a0f230c8b8e8436d4'
+          AO_UP='cf255d2f1be329f8ca21a60f6fbd9d25797ea6ea8a3baaa708be7402df192419'
+          AO_VAL='05e30505bfafb841df4eab519aaeeb4f4645dd8dba3e0f900651bbb3ee981d35'
+          AO_MANIFEST='016c533cdde6b1cbd093a86227b0f989940ce39a1d27452144d35781bc21736a'
+          AJ='cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c'
+          AM='842b94ed4c4e57323433585fea48116ecf18989b'
+          AM_ART='9443581172'
+          AM_DIG='2f65de5207bd96787fd7d1527a55991f08d5da614a0ddfce22a7aa267968e3c8'
+          BOX='c70e77df7af81b436cb545d070bb90c82f562d0b'
+
+          def read(p):
+              return Path(p).read_text(encoding='utf-8')
+          def write(p,s):
+              Path(p).write_text(s, encoding='utf-8', newline='\n')
+          def rep1(p, old, new, label):
+              s=read(p)
+              n=s.count(old)
+              if n != 1:
+                  raise SystemExit(f'{p}: {label}: expected 1 occurrence, got {n}')
+              write(p, s.replace(old,new,1))
+          def regex1(p, pattern, repl, label):
+              s=read(p)
+              out,n=re.subn(pattern,repl,s,count=1,flags=re.S)
+              if n != 1:
+                  raise SystemExit(f'{p}: {label}: expected 1 regex match, got {n}')
+              write(p,out)
+
+          p='MIMIR_CONTINUE_HERE.md'
+          rep1(p,
+               'LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18AM — post-AK one-following-payload evidence / Outcome A / 47/47 / Int=47 / width32=47 / mismatch 0 / artifact 9443581172',
+               f'LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18AO — published-R3.18AN one-following-payload differential / Outcome A / 47/47 / Int=47 / width32=47 / mismatch 0 / artifact {AO_ART}',
+               'last read-only audit')
+          rep1(p,
+               'LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18AM — one post-AK Int payload exact 47/47 / width32=47 / semantic range 1..415 / mismatch 0 / another-control 0 / artifact 9443581172',
+               f'LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18AO — published-AN one-payload exact 47/47 / width32=47 / semantic range 1..415 / mismatch 0 / next-control 0 / artifact {AO_ART}',
+               'last evidence pass')
+          rep1(p,
+               'CURRENT_PASS:\n  R3.18AO — published-R3.18AN one-following-payload differential\n\nCURRENT_PASS_TYPE:\n  read-only published-production differential / reuse exactly the frozen R3.18AM 47-row lane, invoke published R3.18AN, require exact payload identity through payload end, consume zero next-control bits',
+               'CURRENT_PASS:\n  R3.18AP — next property-control bit evidence after published R3.18AN payload\n\nCURRENT_PASS_TYPE:\n  read-only one-control differential / reuse exactly the frozen R3.18AO 47-row lane, reconstruct published R3.18AN through payload end, observe exactly one next property_present bit, stop one bit later, consume zero stream/header/payload/second-control bits',
+               'current pass')
+          rep1(p,
+               '  R3.18AO ACTIVE read-only differential: published-R3.18AN versus frozen-R3.18AM exact 47-row validation through one payload end; production mutation 0; next-control consumption 0\n  NO next property-control bit after R3.18AN, alternate payload tag/layout, repeated/generalized property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted',
+               f'  R3.18AO CLOSED Outcome A: published-R3.18AN/frozen-R3.18AM/direct-native-oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0; witness reselection 0; next-control consumption 0; artifact {AO_ART}\n  R3.18AP ACTIVE read-only evidence: after exact published R3.18AN payload-end reconstruction, observe exactly one next property_present bit on the frozen 47-row lane and stop one bit later\n  NO next stream/header/payload after the R3.18AP control bit, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted',
+               'hard-stop frontier')
+          s=read(p)
+          marker='R3_18AN_PRODUCTION_CLOSURE:\n'
+          if s.count(marker) != 1:
+              raise SystemExit('MIMIR_CONTINUE_HERE.md: AN closure marker drift')
+          closure=f'''R3_18AO_EVIDENCE_CLOSURE:
+          Outcome A / read-only / production unchanged at {PROD}
+          canonical main before admission: {BASE} / tree {BASE_TREE}
+          evidence head/tree: {AO} / {AO_TREE}
+          authority run/job: {AO_RUN} SUCCESS
+          validation-only PR #194: closed unmerged / exact-head normal CI {AO_CI} SUCCESS
+          artifact: {AO_ART} / {AO_SIZE} bytes / sha256:{AO_DIG}; downloaded ZIP digest exact / inner manifest 7/7 PASS
+          frozen rows 47/47 / published R3.18AN exact 47/47 / AM-direct-native-oracle exact 47/47 / mismatch 0
+          Int=47 / width32=47 / semantic range 1..415 / witness reselection 0 / next-control bits consumed 0
+          aggregate/rows/negative/source-scope/summary/upstream/validation hashes: {AO_AGG} / {AO_ROWS} / {AO_NEG} / {AO_SCOPE} / {AO_SUM} / {AO_UP} / {AO_VAL}
+          production-Cargo-fixture-corpus-support mutation 0/0/0/0/0 / privacy PASS
+          next exact pass: R3.18AP one next property-control bit evidence only
+
+          '''
+          closure='\n'.join(line[10:] if line.startswith('          ') else line for line in closure.splitlines())+'\n'
+          write(p, s.replace(marker, closure+marker, 1))
+
+          p='MIMIR_KNOWLEDGE_GRAPH.md'
+          rep1(p,
+               'R3.18AN bounded post-AK one-following-payload production / CLOSED\nR3.18AO published-AN one-following-payload differential / ACTIVE                                      |',
+               'R3.18AN bounded post-AK one-following-payload production / CLOSED\nR3.18AO published-AN one-following-payload differential / CLOSED\nR3.18AP next property-control bit evidence after published AN payload / ACTIVE                         |',
+               'graph frontier')
+          old_tail='''114. `docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md`
+          115. `docs/continuity/MIMIR_R3_18AM_DECISION.md`
+          116. `docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md`
+          117. `docs/continuity/MIMIR_R3_18AN_DECISION.md`
+          118. `docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md`
+          119. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+          120. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+          121. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+          122. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+          123. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+          124. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+          125. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`'''
+          old_tail='\n'.join(line.strip() for line in old_tail.splitlines())
+          new_tail='''114. `docs/continuity/MIMIR_R3_18AM_EXECUTION_SPEC.md`
+          115. `docs/continuity/MIMIR_R3_18AM_DECISION.md`
+          116. `docs/continuity/MIMIR_R3_18AN_EXECUTION_SPEC.md`
+          117. `docs/continuity/MIMIR_R3_18AN_DECISION.md`
+          118. `docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md`
+          119. `docs/continuity/MIMIR_R3_18AO_DECISION.md`
+          120. `docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md`
+          121. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+          122. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+          123. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+          124. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+          125. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+          126. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+          127. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`'''
+          new_tail='\n'.join(line.strip() for line in new_tail.splitlines())
+          rep1(p,old_tail,new_tail,'mandatory reading tail')
+          oldsec=f'''### R3.18AO published-AN one-following-payload differential: ACTIVE
+          - read-only; production frozen at R3.18AN `{PROD}`
+          - reuse exactly immutable R3.18AM 47 witnesses; witness reselection 0
+          - require published-AN payload identity exact through payload end; next-control bits remain 0
+          '''
+          oldsec='\n'.join(line.strip() for line in oldsec.splitlines())+'\n'
+          newsec=f'''### R3.18AO published-AN one-following-payload differential: OUTCOME A / CLOSED
+          - evidence `{AO}` / tree `{AO_TREE}`; run/job `{AO_RUN}` SUCCESS
+          - validation-only PR #194 closed unmerged; exact-head normal CI `{AO_CI}` SUCCESS
+          - artifact `{AO_ART}` / `sha256:{AO_DIG}`; downloaded ZIP digest exact / inner manifest 7/7 PASS
+          - published AN exact 47/47; AM/direct-native/oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0; witness reselection 0
+          - next-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS
+
+          ### R3.18AP next property-control bit evidence after published AN payload: ACTIVE
+          - read-only; production remains R3.18AN `{PROD}`
+          - reuse exactly the immutable AO 47-row lane; first reconstruct published AN exactly through payload end
+          - observe exactly one next `property_present` bit with pinned Boxcars plus independent LSB-first evidence read; report full false/true distribution
+          - stop one bit later; next stream/header/payload and second later control consumption remain 0/0/0/0
+          '''
+          newsec='\n'.join(line.strip() for line in newsec.splitlines())+'\n'
+          rep1(p,oldsec,newsec,'AO/AP sections')
+
+          p='docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+          new_override=f'''# 0. Current override — R3.18AO closed / R3.18AP active
+
+          This current override supersedes older status wording later in this historical lock file.
+
+          ## PRODUCTION — R3.18AN
+          - `{PROD}` / `{PROD_TREE}` remains canonical production;
+          - validates/recomputes exact R3.18AK/R3.18AJ authority, decodes exactly one R3.18AM-admitted `Int/32` payload, and stops at payload end;
+          - next property-control consumption in production remains zero.
+
+          ## CLOSED DIFFERENTIAL — R3.18AO Outcome A
+          - immutable 47-row lane; published R3.18AN exact 47/47;
+          - AM/direct-native/oracle exact 47/47; `Int=47`; width32=47; semantic range 1..415; mismatch 0; witness reselection 0;
+          - artifact `{AO_ART}` / `sha256:{AO_DIG}`; next-control consumption 0; production mutation 0.
+
+          ## ACTIVE EVIDENCE GATE — R3.18AP
+          - reuse exactly the frozen R3.18AO witnesses and published R3.18AN API;
+          - reconstruct each row exactly through the published AN payload end;
+          - observe exactly one next `property_present` bit at that stop with pinned Boxcars plus independent LSB-first evidence logic;
+          - report both boolean classes without filtering, stop one bit later, and consume no next stream/header/payload/second-control bits.
+
+          ## CLOSED
+          - production consumption of the R3.18AP-observed control bit until a separate bounded production pass;
+          - next stream/header/payload after the one R3.18AP evidence bit;
+          - second later property-control bit, alternate payload widening, repeated/generalized property loop or cursor;
+          - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+          ---
+          '''
+          new_override='\n'.join(line[10:] if line.startswith('          ') else line for line in new_override.splitlines())+'\n'
+          regex1(p,r'# 0\. Current override — R3\.18AN closed / R3\.18AO active\n.*?\n---\n',new_override,'current override')
+
+          p='docs/continuity/MIMIR_CONTINUITY_STATE.json'
+          data=json.loads(read(p))
+          data['updated_date']=DATE
+          data['last_completed_read_only_audit']='R3.18AO'
+          data['current_pass']='R3.18AP'
+          data['current_pass_kind']='read-only one-control differential / exactly one next property_present bit after published R3.18AN payload end'
+          data['current_pass_goal']='On exactly the immutable 47-row R3.18AO lane, reproduce published R3.18AN through payload end, observe exactly one next property_present bit with pinned Boxcars and independent LSB-first evidence logic, require exact equality, and stop one bit later.'
+          data['current_pass_stop_boundary']='Exactly one property_present bit after a valid published R3.18AN payload end. No next stream/header/payload, second later control, generalized loop/cursor, next actor/frame or semantic/runtime/export widening.'
+          data['r3_18ao_evidence_closure']={'outcome':'A','production_sha':PROD,'base_main_sha':BASE,'evidence_head':AO,'evidence_tree':AO_TREE,'authority_run_job':AO_RUN,'same_head_ci':AO_CI,'validation_pr':194,'artifact_id':int(AO_ART),'artifact_size':int(AO_SIZE),'artifact_sha256':AO_DIG,'inner_manifest_entries':7,'frozen_rows':47,'published_an_exact':47,'am_native_oracle_exact':47,'tag_int':47,'payload_width_32':47,'semantic_int_min':1,'semantic_int_max':415,'mismatch':0,'witness_reselection':0,'next_control_bits_consumed':0,'production_cargo_fixture_corpus_support_mutation':'0/0/0/0/0','privacy':'PASS','aggregate_sha256':AO_AGG,'comparison_rows_sha256':AO_ROWS,'negative_controls_sha256':AO_NEG,'source_scope_sha256':AO_SCOPE,'summary_sha256':AO_SUM,'upstream_receipts_sha256':AO_UP,'validation_sha256':AO_VAL,'manifest_file_sha256':AO_MANIFEST}
+          closed=data.get('closed_now',[])
+          closed=[x for x in closed if x != 'another property control after the one R3.18AN payload end']
+          for x in ['production consumption of the one R3.18AP-observed property control bit before a separate bounded production pass','next stream/header/payload after the one R3.18AP evidence control bit','second later property control bit after R3.18AP','repeated/generalized property loop or generic cursor after R3.18AP']:
+              if x not in closed: closed.append(x)
+          data['closed_now']=closed
+          nf=data.get('next_files_to_read',[])
+          for item,after in [('docs/continuity/MIMIR_R3_18AO_DECISION.md','docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md'),('docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md','docs/continuity/MIMIR_R3_18AO_DECISION.md')]:
+              if item not in nf:
+                  try: i=nf.index(after)+1
+                  except ValueError: i=len(nf)
+                  nf.insert(i,item)
+          data['next_files_to_read']=nf
+          write(p,json.dumps(data,indent=2,ensure_ascii=False)+'\n')
+
+          write('docs/continuity/MIMIR_CURRENT_STATE.md',f'''# MIMIR — Current Canonical State
+
+          **Continuity date:** {DATE}
+          **Repository:** `Naveax/MIMIR`
+          **Canonical production SHA:** `{PROD}`
+          **Production tree:** `{PROD_TREE}`
+          **Production milestone:** `R3.18AN — bounded post-AK one-following-payload production`
+          **Last read-only evidence:** `R3.18AO — Outcome A / published AN exact 47/47 / Int=47 / width32=47 / semantic 1..415 / mismatch 0 / artifact {AO_ART}`
+          **Last contract:** `R3.18AJ — Outcome A / exact_tuple_only / 17 contexts / multiplicity 47 / sha256:{AJ}`
+          **Current exact pass:** `R3.18AP — next property-control bit evidence after published R3.18AN payload`
+
+          ## Truthful boundary
+
+          R3.18AN remains the production boundary. R3.18AO independently revalidated that published production on exactly the immutable 47 R3.18AM witnesses: published-AN and AM/direct-native/oracle identity matched 47/47 through one exact `Int/32` payload end, mismatch 0, witness reselection 0 and next-control consumption 0.
+
+          ```text
+          AO evidence head/tree               {AO} / {AO_TREE}
+          AO authority run/job                {AO_RUN} SUCCESS
+          AO validation PR                    #194 closed unmerged
+          AO exact-head normal CI             {AO_CI} SUCCESS
+          AO artifact                         {AO_ART} / {AO_SIZE} bytes
+          AO artifact SHA-256                 {AO_DIG}
+          AO inner manifest                   7/7 PASS
+          published AN exact                  47/47
+          AM/direct-native/oracle exact       47/47
+          mismatch                            0
+          next-control bits consumed          0
+          production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+          ```
+
+          ## Current gate
+
+          R3.18AP is read-only. Reuse exactly the AO 47-row witness lane. First reproduce published R3.18AN exactly through `stop_bit == payload_end`, then observe exactly one next `property_present` bit using pinned Boxcars plus an independent evidence-only LSB-first read. Record the complete false/true distribution without witness filtering and stop exactly one bit later.
+
+          ## Hard stop
+
+          R3.18AP may not resolve or consume the next stream ID, header or payload, may not read a second later control bit, may not create a generalized property loop/cursor, and may not widen into the next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export layers.
+          '''.replace('\n          ','\n').lstrip())
+
+          write('docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',f'''# MIMIR — Next Chat Handoff
+
+          Canonical production remains **R3.18AN** at `{PROD}` / `{PROD_TREE}`. R3.18AO is now closed Outcome A as a read-only published-production differential.
+
+          R3.18AO authority: evidence `{AO}` / tree `{AO_TREE}`; run/job `{AO_RUN}` SUCCESS; validation-only PR #194 closed unmerged; exact-head normal CI `{AO_CI}` SUCCESS; artifact `{AO_ART}` / `{AO_SIZE}` bytes / `sha256:{AO_DIG}` with downloaded ZIP digest exact and inner manifest 7/7 PASS.
+
+          Scientific result: frozen rows 47/47; published R3.18AN exact 47/47; R3.18AM/direct-native/oracle exact 47/47; `Int=47`; width32=47; semantic range 1..415; mismatch 0; witness reselection 0; next-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+          The active pass is **R3.18AP**. Reuse exactly those 47 rows, reconstruct published R3.18AN through payload end, then observe exactly one next `property_present` bit at `R3.18AN.stop_bit` using pinned Boxcars plus an independent LSB-first evidence read. Report the complete false/true distribution. Stop exactly one bit later. Do not read the next stream/header/payload or any second later control bit.
+
+          Mandatory current-tail reading: `MIMIR_CONTINUE_HERE.md`, `MIMIR_KNOWLEDGE_GRAPH.md`, `docs/continuity/MIMIR_CONTINUITY_STATE.json`, `docs/continuity/MIMIR_R3_18AJ_ADMITTED_HEADER_CONTEXTS.json`, `docs/continuity/MIMIR_R3_18AN_DECISION.md`, `docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md`, `docs/continuity/MIMIR_R3_18AO_DECISION.md`, and `docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md`.
+          '''.replace('\n          ','\n').lstrip())
+
+          p='docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+          s=read(p)
+          title='## 2026-08-24 — R3.18AO — Published R3.18AN One-Following-Payload Differential'
+          if title in s: raise SystemExit('ledger AO closure already exists')
+          entry=f'''{title}
+          Production base SHA: `{PROD}`
+          Production commit SHA: unchanged / `{PROD}`
+          Pass type: read-only published-production differential
+          Outcome: A — CLOSED
+
+          What changed:
+          - No production source changed.
+          - Published R3.18AN was independently checked on exactly the immutable 47-row R3.18AM lane.
+          - Continuity advances to R3.18AP, exactly one next property-control evidence bit.
+
+          Evidence:
+          - Evidence head/tree `{AO}` / `{AO_TREE}`.
+          - Authority run/job `{AO_RUN}` SUCCESS.
+          - Artifact `{AO_ART}` / `{AO_SIZE}` bytes / `sha256:{AO_DIG}`; downloaded ZIP exact; inner manifest 7/7 PASS.
+          - Published AN exact 47/47; AM/direct-native/oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0.
+          - Witness reselection 0; next-control bits consumed 0; privacy PASS.
+
+          Validation:
+          - Validation-only PR #194 closed unmerged.
+          - Same exact evidence-head normal CI `{AO_CI}` SUCCESS.
+          - Focused AN/AK, fmt, workspace check/clippy/test and repository verifier PASS.
+          - Production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+          Boundaries opened:
+          - Read-only R3.18AP observation of exactly one next `property_present` bit after valid published AN payload end.
+
+          Boundaries still closed:
+          - Production consumption of that bit.
+          - Next stream/header/payload, second later control and generalized property cursor/loop.
+          - Next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+          Important negative facts / anti-regressions:
+          - R3.18AO itself consumed zero next-control bits.
+          - AO does not authorize a next-control value or boolean distribution by analogy.
+
+          Next exact pass:
+          - R3.18AP — one next property-control bit evidence after published R3.18AN payload.
+          '''
+          entry='\n'.join(line.strip() for line in entry.splitlines()).strip()+'\n'
+          write(p,s.rstrip()+'\n\n'+entry)
+
+          write('docs/continuity/MIMIR_R3_18AO_DECISION.md',f'''# MIMIR R3.18AO — Published R3.18AN Post-AK Following-Payload Differential Decision
+
+          **Date:** {DATE}
+          **Outcome:** **A — ADMITTED / PUBLISHED DIFFERENTIAL EXACT**
+          **Production mutation:** none
+          **Canonical production:** `{PROD}` / `{PROD_TREE}`
+
+          ## Decision
+
+          R3.18AO closes Outcome A. On exactly the immutable 47 R3.18AM witnesses, the published R3.18AN API reproduced the frozen AK/AJ header authority and one following `Int/32` payload through its exact payload end on all 47 rows. Published AN, frozen AM and independent direct-native/oracle identity matched 47/47 with mismatch zero. The pass consumed zero next property-control bits.
+
+          This decision admits only the differential closure. It does not admit any value of the next `property_present` bit, a next stream/header/payload, a second later control bit, alternate payload layouts, a generalized property cursor/loop or semantic/runtime widening.
+
+          ## Exact authority
+
+          ```text
+          canonical main before admission     {BASE} / {BASE_TREE}
+          production SHA/tree                 {PROD} / {PROD_TREE}
+          production lib / AN test blobs      {LIB} / {TEST}
+          AO execution spec                   docs/continuity/MIMIR_R3_18AO_EXECUTION_SPEC.md
+          evidence head/tree                  {AO} / {AO_TREE}
+          authority run/job                   {AO_RUN} SUCCESS
+          validation-only PR                  #194 closed unmerged
+          same-head normal CI                 {AO_CI} SUCCESS
+          artifact                            {AO_ART} / {AO_SIZE} bytes
+          artifact ZIP SHA-256                sha256:{AO_DIG}
+          pinned Boxcars                      {BOX}
+          R3.18AJ contract                    sha256:{AJ}
+          R3.18AM authority                   {AM} / artifact {AM_ART} / sha256:{AM_DIG}
+          ```
+
+          The downloaded R3.18AO ZIP digest equals the GitHub artifact digest exactly. Its manifest contains seven payload entries and all seven verified.
+
+          ## Admitted evidence
+
+          ```text
+          frozen rows                         47/47
+          published R3.18AN exact             47/47
+          R3.18AM/direct-native/oracle exact  47/47
+          Int tag                             47
+          payload width 32                    47/47
+          semantic Int range                  1..415
+          native/oracle/published mismatch    0
+          witness reselection                 0
+          next property-control bits consumed 0
+          production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+          privacy scan                        PASS
+          ```
+
+          Artifact payload SHA-256:
+          - aggregate `{AO_AGG}`
+          - comparison rows `{AO_ROWS}`
+          - negative controls `{AO_NEG}`
+          - source scope `{AO_SCOPE}`
+          - summary `{AO_SUM}`
+          - upstream receipts `{AO_UP}`
+          - validation `{AO_VAL}`
+          - manifest file `{AO_MANIFEST}`
+
+          ## Negative and validation authority
+
+          Payload truncation, wrong actor, unresolved lookup, wrong exact version/context, non-AJ/fabricated/old-Z-only tuple, corrupt AG/control/prior authority, wrong payload start, unsupported payload shape and post-stop poison gates passed. Focused AN/AK tests, formatting, workspace check/clippy/test and repository verification passed.
+
+          ## Hard stop
+
+          No next control value is admitted by R3.18AO. No next stream/header/payload, second control, loop/cursor, next actor/frame/lifecycle, raw-state/event/replay-slice/skill/counterfactual/runtime/export behavior is admitted.
+
+          ## Next gate
+
+          R3.18AP is a separate read-only evidence pass. It may reconstruct the exact published R3.18AN result on the same 47 rows, then observe exactly one next `property_present` bit beginning at `R3.18AN.stop_bit`, cross-check that bit against pinned Boxcars with independent LSB-first evidence logic, and stop exactly one bit later. It may not resolve the following stream/header/payload or read a second control bit.
+          '''.replace('\n          ','\n').lstrip())
+
+          write('docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md',f'''# MIMIR R3.18AP — Next Property-Control Bit Evidence After Published R3.18AN Payload
+
+          **Status:** ACTIVE
+          **Pass type:** read-only evidence / differential boundary characterization
+          **Production authority:** R3.18AN `{PROD}` / `{PROD_TREE}`
+          **Evidence authority:** R3.18AO Outcome A / `{AO}`
+          **Production mutation:** forbidden
+          **Next stream/header/payload:** forbidden
+          **Second later property-control bit:** forbidden
+          **Repeated/generalized property loop:** forbidden
+
+          ## 1. Goal
+
+          On exactly the immutable 47 R3.18AO witnesses, first reconstruct the published R3.18AN composition through its proven `Int/32` payload end, then observe and differentially validate exactly one next `property_present` bit beginning at `R3.18AN.stop_bit`. Stop exactly one bit later.
+
+          R3.18AP does not resolve or decode the following stream ID, property header or payload and does not build a repeatable property cursor/loop.
+
+          ## 2. Frozen authority
+
+          ```text
+          canonical main before AP            continuity parent containing this spec
+          production SHA/tree                 {PROD} / {PROD_TREE}
+          production lib/test blobs           {LIB} / {TEST}
+          R3.18AO evidence head/tree          {AO} / {AO_TREE}
+          R3.18AO run/job                     {AO_RUN} SUCCESS
+          R3.18AO same-head CI                {AO_CI} SUCCESS
+          R3.18AO artifact                    {AO_ART} / {AO_SIZE} bytes / sha256:{AO_DIG}
+          frozen source lane                  exact 47 R3.18AO rows
+          published payload identity          Int=47 / width32=47 / semantic range 1..415
+          published/native/oracle mismatch    0
+          witness reselection                 0
+          pinned Boxcars                      {BOX}
+          ```
+
+          Before evidence, fetch fresh `main`, verify the exact production source/test blobs, AO run/CI/artifact digest and manifest, and replay/witness identities. Do not reselect witnesses based on the value of the next bit.
+
+          ## 3. Exact source lane
+
+          Use exactly the same 47 R3.18AO rows with zero reselection. Each row must first prove:
+
+          ```text
+          published R3.18AN result exact
+          embedded R3.18AK/R3.18AJ header exact
+          payload tag/start/end/width/value exact
+          R3.18AN stop_bit == frozen payload end
+          ```
+
+          Any row that no longer reproduces is authority drift and stops the pass. It must not be replaced.
+
+          ## 4. Differential observation
+
+          For every frozen row:
+
+          1. invoke published R3.18AN and require exact R3.18AO identity through `stop_bit`;
+          2. require `stop_bit == frozen payload_end_bit`;
+          3. with observation-only pinned Boxcars instrumentation, identify exactly the next property-loop `property_present` bit at that same global bit offset;
+          4. independently read exactly one LSB-first bit at the same offset with evidence-only logic;
+          5. require exact start/value/end equality between oracle and independent observation;
+          6. record the boolean value without filtering either class;
+          7. stop exactly one bit later.
+
+          Report the complete false/true distribution discovered on the 47 witnesses. No expected distribution is admitted in advance.
+
+          ## 5. Required negative controls
+
+          At minimum:
+
+          - truncate exactly before the one next control bit -> explicit failure with no fabricated value;
+          - mutate the prior R3.18AN payload-end/stop relationship -> reject before observation;
+          - repeat identical observation -> exact identical result;
+          - poison bits beginning at the one-bit control end -> observed control unchanged;
+          - require the prerequisite published AN reconstruction and AO identity before observation;
+          - prove next stream/header/payload and second later control consumption remain `0/0/0/0`.
+
+          ## 6. Evidence artifact
+
+          Produce one privacy-safe immutable artifact containing exact main/production/lib/test/AP-spec identities; complete R3.18AO authority receipts and hashes; pinned Boxcars SHA plus observation instrumentation hash; all 47 privacy-safe next-control rows; full false/true distribution; negatives; zero-consumption counters; mutation counters; privacy result; and a SHA-256 manifest.
+
+          ## 7. Required validation
+
+          - 47/47 replay/witness identities exact; witness reselection 0;
+          - 47/47 published R3.18AN reconstruction exact before observation;
+          - 47/47 pinned-oracle versus independent one-bit start/value/end exact;
+          - false + true distribution sums to 47;
+          - deterministic repeatability PASS;
+          - truncation, prior-stop mismatch and post-control poison negatives PASS;
+          - next stream/header/payload/second-control consumption `0/0/0/0`;
+          - focused R3.18AN regressions PASS;
+          - full `mimir-replay` PASS;
+          - workspace format/check/test/clippy PASS under the repository Rust floor;
+          - repository verifier PASS;
+          - same exact evidence-head normal CI SUCCESS;
+          - privacy scan PASS;
+          - production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.
+
+          ## 8. Hard stop
+
+          R3.18AP may not resolve/decode the next stream ID, property object, attribute tag, header or payload. It may not read a second later control bit, create a generalized/repeated property loop/cursor, iterate the next actor/frame, mutate lifecycle state, materialize raw state/events, slice replays, mine skills, run counterfactuals or widen runtime/export behavior.
+
+          ## 9. Outcome gate
+
+          ### Outcome A
+
+          All 47 frozen rows reproduce published R3.18AN exactly and the one next `property_present` start/value/end matches pinned Boxcars with zero mismatch; all negatives/privacy/mutation gates pass. Record the observed false/true distribution. Only then may a separate bounded production pass be proposed for exactly the observed control semantics.
+
+          ### Outcome B
+
+          A reproducible next-control boundary mismatch exists. Record exact privacy-safe row/bit coordinates and keep next-control production closed.
+
+          ### Outcome C
+
+          Authority drift, witness reselection, production mutation, next stream/header/payload access, second-control/loop widening, privacy failure or validation contradiction. Stop without admission.
+          '''.replace('\n          ','\n').lstrip())
+
+          for p in ['MIMIR_CONTINUE_HERE.md','MIMIR_KNOWLEDGE_GRAPH.md','docs/continuity/MIMIR_CURRENT_STATE.md','docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md','docs/continuity/MIMIR_BOUNDARY_LOCKS.md']:
+              s=read(p)
+              if 'R3.18AO ACTIVE read-only differential' in s or 'R3.18AO published-AN one-following-payload differential / ACTIVE' in s:
+                  raise SystemExit(f'{p}: stale AO active wording remains')
+          print('R3_18AO_CONTINUITY_GENERATION=PASS')
+          PY
+          expected=(
+            MIMIR_CONTINUE_HERE.md
+            MIMIR_KNOWLEDGE_GRAPH.md
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+            docs/continuity/MIMIR_CONTINUITY_STATE.json
+            docs/continuity/MIMIR_CURRENT_STATE.md
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md
+            docs/continuity/MIMIR_R3_18AO_DECISION.md
+            docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md
+          )
+          printf '%s\n' "${expected[@]}" | sort > "$RUNNER_TEMP/expected.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sed '/^$/d' | sort -u > "$RUNNER_TEMP/actual.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+          git diff --check
+          pwsh -NoProfile -File ./scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18AO_CONTINUITY_SCOPE_AND_ARCHIVE=PASS files=9
+      - name: Commit and publish exact clean continuity candidate once
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AO_DECISION.md \
+            docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git diff --cached --check
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Admit R3.18AO and open R3.18AP'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          sha="$(git rev-parse HEAD)"
+          tree="$(git rev-parse HEAD^{tree})"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate appeared during validation; refusing overwrite" >&2
+            exit 1
+          fi
+          token_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote set-url origin "$token_url"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tree=$tree" >> "$GITHUB_OUTPUT"
+      - name: Upload continuity receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo R3_18AO_CONTINUITY_BUILDER=PASS
+            echo BASE_SHA=$BASE_SHA
+            echo AO_EVIDENCE_HEAD=$AO_HEAD
+            echo AO_RUN=$AO_RUN/$AO_JOB
+            echo AO_ARTIFACT=$AO_ARTIFACT
+            echo AO_DIGEST=$AO_DIGEST
+            echo AO_EXACT_HEAD_CI=$AO_CI_RUN/$AO_CI_JOB
+            echo CANDIDATE_SHA=${{ steps.candidate.outputs.sha }}
+            echo CANDIDATE_TREE=${{ steps.candidate.outputs.tree }}
+            echo FILES=9
+            echo NEXT_PASS=R3.18AP
+          } | tee r318ao_continuity_receipt.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r318ao-continuity-admission-receipt
+          path: r318ao_continuity_receipt.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Report builder status
+        if: always()
+        shell: bash
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=failure
+          desc='R3.18AO continuity builder failed'
+          if [ "$JOB_STATUS" = success ]; then
+            state=success
+            desc='R3.18AO continuity builder succeeded'
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$state" \
+            -f context='r318ao/continuity-builder' \
+            -f description="$desc" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
