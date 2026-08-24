@@ -50,7 +50,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p crates/mimir-replay/examples
-          bash tools/_tmp_r318ap_run.sh
+          cp tools/_tmp_r318ap_run.sh "$RUNNER_TEMP/r318ap_run.sh"
+          python3 - "$RUNNER_TEMP/r318ap_run.sh" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1])
+          s=p.read_text(encoding='utf-8')
+          old="insert_after='use std::path::{Path, PathBuf};\\n'"
+          new="insert_after='use std::path::PathBuf;\\n'"
+          if s.count(old) != 1:
+              raise SystemExit(f'R3.18AP V2 import-anchor patch count={s.count(old)}')
+          p.write_text(s.replace(old,new,1),encoding='utf-8',newline='\n')
+          print('R3_18AP_V2_IMPORT_ANCHOR_PATCH=PASS')
+          PY
+          bash "$RUNNER_TEMP/r318ap_run.sh"
 
       - name: Reuse and verify the unique same-head natural CI
         shell: bash
