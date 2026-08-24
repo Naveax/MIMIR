@@ -1,0 +1,135 @@
+name: R3.18AO Published Main Run Discovery
+
+on:
+  push:
+    branches:
+      - automation/r318ao-published-discovery-v1
+    paths:
+      - .github/workflows/_tmp_r318ao_published_discovery_trigger.txt
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318ao-published-main-discovery-v1
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      TARGET_SHA: c55c23c0fa86de6bacb79456795dafd996d2d96f
+      TARGET_TREE: 26ba2777045299c99546a4777fc884048157dd60
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact discovery helper
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark discovery pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318ao/published-discovery' \
+            -f description='R3.18AO published-main discovery running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Discover unique natural push runs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$TARGET_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$TARGET_TREE"
+
+          discover_one() {
+            local workflow_path="$1" label="$2"
+            local workflow_id runs count run_id
+            workflow_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_path}" --jq .id)"
+            run_id=''
+            for attempt in $(seq 1 60); do
+              runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_id}/runs?head_sha=${TARGET_SHA}&event=push&per_page=100")"
+              count="$(jq --arg sha "$TARGET_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .event == "push" and .head_branch == "main")] | length' <<<"$runs")"
+              if [ "$count" -eq 1 ]; then
+                run_id="$(jq -r --arg sha "$TARGET_SHA" '.workflow_runs[] | select(.head_sha == $sha and .event == "push" and .head_branch == "main") | .id' <<<"$runs")"
+                break
+              fi
+              if [ "$count" -gt 1 ]; then
+                echo "$label duplicate natural push runs: $count" >&2
+                exit 1
+              fi
+              sleep 5
+            done
+            test -n "$run_id"
+            for attempt in $(seq 1 120); do
+              state="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)"
+              if [ "$state" = completed ]; then break; fi
+              sleep 5
+            done
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)" = completed
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .conclusion)" = success
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .head_sha)" = "$TARGET_SHA"
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .head_branch)" = main
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .event)" = push
+            jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?per_page=100")"
+            test "$(jq '.total_count' <<<"$jobs")" -eq 1
+            job_id="$(jq -r '.jobs[0].id' <<<"$jobs")"
+            test "$(jq -r '.jobs[0].conclusion' <<<"$jobs")" = success
+            printf '%s\t%s\t%s\n' "$run_id" "$job_id" "$count"
+          }
+
+          ci="$(discover_one ci.yml CI)"
+          ka="$(discover_one knowledge-archive.yml KnowledgeArchive)"
+          ci_run="${ci%%$'\t'*}"; rest="${ci#*$'\t'}"; ci_job="${rest%%$'\t'*}"; ci_count="${rest##*$'\t'}"
+          ka_run="${ka%%$'\t'*}"; rest="${ka#*$'\t'}"; ka_job="${rest%%$'\t'*}"; ka_count="${rest##*$'\t'}"
+          {
+            echo R3_18AO_PUBLISHED_DISCOVERY=PASS
+            echo TARGET_SHA=$TARGET_SHA
+            echo TARGET_TREE=$TARGET_TREE
+            echo PUBLISHED_CI_RUN=$ci_run
+            echo PUBLISHED_CI_JOB=$ci_job
+            echo PUBLISHED_CI_COUNT=$ci_count
+            echo PUBLISHED_KA_RUN=$ka_run
+            echo PUBLISHED_KA_JOB=$ka_job
+            echo PUBLISHED_KA_COUNT=$ka_count
+            echo DUPLICATE_GUARD=PASS
+          } | tee r318ao_published_discovery_receipt.txt
+
+      - name: Upload discovery receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ao-published-main-discovery-receipt
+          path: r318ao_published_discovery_receipt.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Mark discovery success
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fx 'R3_18AO_PUBLISHED_DISCOVERY=PASS' r318ao_published_discovery_receipt.txt
+          grep -Fx 'PUBLISHED_CI_COUNT=1' r318ao_published_discovery_receipt.txt
+          grep -Fx 'PUBLISHED_KA_COUNT=1' r318ao_published_discovery_receipt.txt
+          grep -Fx 'DUPLICATE_GUARD=PASS' r318ao_published_discovery_receipt.txt
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318ao/published-discovery' \
+            -f description='R3.18AO published-main runs unique and successful' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Mark discovery failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318ao/published-discovery' \
+            -f description='R3.18AO published-main discovery failed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null || true
