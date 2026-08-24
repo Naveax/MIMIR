@@ -1,0 +1,210 @@
+name: R3.18AP Continuity Admission Builder V3
+
+on:
+  push:
+    branches:
+      - automation/r318ap-admission-builder-v3
+    paths:
+      - .github/workflows/_tmp_r318ap_admission_trigger_v3.txt
+
+concurrency:
+  group: r318ap-continuity-admission-builder-v3
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  statuses: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_SHA: c55c23c0fa86de6bacb79456795dafd996d2d96f
+      BASE_TREE: 26ba2777045299c99546a4777fc884048157dd60
+      AP_HEAD: 736ac33c099a9183693bfcb2b5f5b74704a8808e
+      AP_TREE: 840011b603b5bb330e018bd060650cfb3af29b73
+      AP_RUN: '32745234196'
+      AP_JOB: '97489066582'
+      AP_CI_RUN: '32745233671'
+      AP_CI_JOB: '97489738567'
+      AP_ARTIFACT: '9526988237'
+      AP_ARTIFACT_SIZE: '9692'
+      AP_DIGEST: 'sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc'
+      CANDIDATE_BRANCH: continuity/r318ap-admit-aq-v3
+      PROBE_BRANCH: __probe_should_fail_existing_automation_r318ap_admission_builder_v1
+      PROBE_SHA: 3f97a3c05c1bb1b9d2ca6cd7ae3831d20af64a8f
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mark builder pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318ap/continuity-builder-v3' \
+            -f description='R3.18AP admission builder V3 running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Freeze fresh main and AP authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$AP_HEAD" --jq .tree.sha)" = "$AP_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_RUN" --jq .head_sha)" = "$AP_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AP_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_CI_RUN" --jq .head_sha)" = "$AP_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AP_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AP_ARTIFACT" --jq .digest)" = "$AP_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AP_ARTIFACT" --jq .size_in_bytes)" = "$AP_ARTIFACT_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AP_ARTIFACT" --jq .expired)" = false
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "V3 candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+          echo R3_18AP_V3_AUTHORITY_FREEZE=PASS
+
+      - name: Generate exact AP closure and AQ opening
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318ap_admit.py "$RUNNER_TEMP/r318ap_admit.py"
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
+          python "$RUNNER_TEMP/r318ap_admit.py"
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          state=Path('docs/continuity/MIMIR_CONTINUITY_STATE.json')
+          data=json.loads(state.read_text(encoding='utf-8'))
+          stale='production consumption of the one R3.18AP-observed property control bit before a separate bounded production pass'
+          closed=data.get('closed_now',[])
+          if stale not in closed:
+              raise SystemExit('expected stale AP production-consumption lock missing')
+          data['closed_now']=[x for x in closed if x != stale]
+          state.write_text(json.dumps(data,indent=2,ensure_ascii=False)+'\n',encoding='utf-8',newline='\n')
+          ledger=Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md')
+          ledger.write_text(ledger.read_text(encoding='utf-8').rstrip('\n')+'\n',encoding='utf-8',newline='\n')
+          print('R3_18AP_V3_SEMANTIC_AND_EOF_FIX=PASS')
+          PY
+
+      - name: Verify exact 9-doc candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/expected.txt" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18AP_DECISION.md
+          docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/expected.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/actual.txt"
+          sort -o "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/expected.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+          git diff --check
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          grep -F 'false=7' docs/continuity/MIMIR_R3_18AP_DECISION.md
+          grep -F 'true=40' docs/continuity/MIMIR_R3_18AP_DECISION.md
+          grep -F 'R3.18AQ' MIMIR_CONTINUE_HERE.md
+          grep -F 'R3.18AQ' docs/continuity/MIMIR_CURRENT_STATE.md
+          grep -F '129. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          if grep -F 'R3.18AP ACTIVE read-only evidence:' MIMIR_CONTINUE_HERE.md; then exit 1; fi
+          if grep -F '### R3.18AP next property-control bit evidence after published AN payload: ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md; then exit 1; fi
+          if grep -F 'production consumption of the one R3.18AP-observed property control bit before a separate bounded production pass' docs/continuity/MIMIR_CONTINUITY_STATE.json; then exit 1; fi
+          echo R3_18AP_V3_EXACT_9_DOC_SCOPE=PASS
+
+      - name: Commit and push candidate once
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AP_DECISION.md \
+            docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18AP and open R3.18AQ'
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          git fetch origin main --force
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "V3 candidate appeared during builder; refusing race" >&2
+            exit 1
+          fi
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          printf 'CANDIDATE_SHA=%s\nCANDIDATE_TREE=%s\nBASE_SHA=%s\nFILES=9\nNEXT_PASS=R3.18AQ\n' \
+            "$candidate_sha" "$candidate_tree" "$BASE_SHA" | tee "$RUNNER_TEMP/r318ap_admission_v3_receipt.txt"
+
+      - name: Remove accidental probe branch if exact
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_sha="$(git ls-remote --heads origin "refs/heads/$PROBE_BRANCH" | awk '{print $1}')"
+          if [ -z "$remote_sha" ]; then
+            echo R3_18AP_PROBE_BRANCH_ALREADY_ABSENT=PASS
+          elif [ "$remote_sha" = "$PROBE_SHA" ]; then
+            git push origin --delete "$PROBE_BRANCH"
+            echo R3_18AP_PROBE_BRANCH_REMOVAL=PASS
+          else
+            echo "probe branch points to unexpected SHA $remote_sha; refusing delete" >&2
+            exit 1
+          fi
+
+      - name: Upload builder receipt
+        uses: actions/upload-artifact@v6
+        with:
+          name: r318ap-continuity-admission-v3-receipt
+          path: ${{ runner.temp }}/r318ap_admission_v3_receipt.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Mark builder success
+        if: success()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318ap/continuity-builder-v3' \
+            -f description='R3.18AP admission V3 candidate published' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Mark builder failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318ap/continuity-builder-v3' \
+            -f description='R3.18AP admission V3 failed; inspect run' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
