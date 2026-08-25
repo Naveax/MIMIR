@@ -123,12 +123,17 @@ jobs:
           text = path.read_text(encoding='utf-8')
 
           import_anchor = 'use mimir_replay::{\n'
-          an_result_import = '    ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,\n'
+          an_result_type = 'ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1'
+          an_result_import = f'    {an_result_type},\n'
           if text.count(import_anchor) != 1:
               raise SystemExit(f'expected one AQ mimir_replay use block, found {text.count(import_anchor)}')
-          if an_result_import in text:
-              raise SystemExit('AN result import unexpectedly already present in generated AQ test')
-          text = text.replace(import_anchor, import_anchor + an_result_import, 1)
+          use_start = text.index(import_anchor)
+          use_end = text.find('};', use_start)
+          if use_end < 0:
+              raise SystemExit('AQ mimir_replay use block does not terminate')
+          use_block = text[use_start:use_end]
+          if an_result_type not in use_block:
+              text = text.replace(import_anchor, import_anchor + an_result_import, 1)
 
           anchor = '#[test]\nfn r3_18aq_truncation_corrupt_prior_and_wrong_context_fail_closed() {'
           if text.count(anchor) != 1:
