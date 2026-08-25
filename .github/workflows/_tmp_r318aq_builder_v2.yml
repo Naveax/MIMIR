@@ -1,0 +1,275 @@
+name: R3.18AQ Production Builder v2
+
+on:
+  push:
+    branches:
+      - automation/r318aq-production-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318aq_builder_v2.yml
+
+concurrency:
+  group: r318aq-production-builder-v2
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  BASE_SHA: ec2d6c29f90863d9e312856043d01fb98a0c2d2d
+  BASE_TREE: d7257f5d1f035a21721ebf489ca1ccd534354b96
+  PROD_SHA: 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+  PROD_TREE: 3efcc244bca55623b12bb21eb277753fc61144d4
+  PROD_PARENT: 6f92e817a88056ba303229541ae04a5d5e03239b
+  LIB_BLOB: 9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822
+  AN_TEST_BLOB: 8aa48b2b74d0956d1d2e965d056e1cf14a81f703
+  AQ_SPEC_BLOB: fa8e5f6798a42fbeeed86b3b14ea7e4f39b35ebb
+  AP_DECISION_BLOB: 8d6b28ce79f817e865e73a71f431d7caf17b4961
+  AP_HEAD: 736ac33c099a9183693bfcb2b5f5b74704a8808e
+  AP_RUN: "32745234196"
+  AP_JOB: "97489066582"
+  AP_ARTIFACT: "9526988237"
+  AP_ARTIFACT_SIZE: "9692"
+  AP_ARTIFACT_DIGEST: sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc
+  CANDIDATE_BRANCH: candidate/r318aq-production-v1
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout only helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Freeze canonical and AP authority without broad ref fetch
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          function Get-GhJson([string]$uri) {
+            Invoke-RestMethod -Headers $headers -Uri $uri
+          }
+          function Get-ContentSha([string]$path, [string]$ref) {
+            $encodedRef = [uri]::EscapeDataString($ref)
+            (Get-GhJson "https://api.github.com/repos/Naveax/MIMIR/contents/$path`?ref=$encodedRef").sha
+          }
+
+          $main = Get-GhJson "https://api.github.com/repos/Naveax/MIMIR/commits/main"
+          if ($main.sha -ne $env:BASE_SHA) { throw "fresh main drift: expected $env:BASE_SHA got $($main.sha)" }
+          if ($main.commit.tree.sha -ne $env:BASE_TREE) { throw "fresh main tree drift" }
+
+          $prod = Get-GhJson "https://api.github.com/repos/Naveax/MIMIR/commits/$env:PROD_SHA"
+          if ($prod.commit.tree.sha -ne $env:PROD_TREE) { throw "production tree drift" }
+          if ($prod.parents.Count -ne 1 -or $prod.parents[0].sha -ne $env:PROD_PARENT) { throw "production parent drift" }
+
+          $prodLib = Get-ContentSha "crates/mimir-replay/src/lib.rs" $env:PROD_SHA
+          $mainLib = Get-ContentSha "crates/mimir-replay/src/lib.rs" $env:BASE_SHA
+          $prodAn = Get-ContentSha "crates/mimir-replay/tests/r3_18an_post_ak_payload.rs" $env:PROD_SHA
+          $mainAn = Get-ContentSha "crates/mimir-replay/tests/r3_18an_post_ak_payload.rs" $env:BASE_SHA
+          $aqSpec = Get-ContentSha "docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md" $env:BASE_SHA
+          $apDecision = Get-ContentSha "docs/continuity/MIMIR_R3_18AP_DECISION.md" $env:BASE_SHA
+          if ($prodLib -ne $env:LIB_BLOB -or $mainLib -ne $env:LIB_BLOB) { throw "R3.18AN lib authority drift" }
+          if ($prodAn -ne $env:AN_TEST_BLOB -or $mainAn -ne $env:AN_TEST_BLOB) { throw "R3.18AN test authority drift" }
+          if ($aqSpec -ne $env:AQ_SPEC_BLOB) { throw "AQ spec blob drift" }
+          if ($apDecision -ne $env:AP_DECISION_BLOB) { throw "AP decision blob drift" }
+
+          $run = Get-GhJson "https://api.github.com/repos/Naveax/MIMIR/actions/runs/$env:AP_RUN"
+          if ($run.status -ne "completed" -or $run.conclusion -ne "success" -or $run.head_sha -ne $env:AP_HEAD -or [int]$run.run_attempt -ne 1) { throw "AP run authority drift" }
+          $jobs = Get-GhJson "https://api.github.com/repos/Naveax/MIMIR/actions/runs/$env:AP_RUN/jobs?per_page=100"
+          $job = $jobs.jobs | Where-Object { "$($_.id)" -eq $env:AP_JOB } | Select-Object -First 1
+          if ($null -eq $job -or $job.conclusion -ne "success") { throw "AP job authority drift" }
+          $artifact = Get-GhJson "https://api.github.com/repos/Naveax/MIMIR/actions/artifacts/$env:AP_ARTIFACT"
+          if ($artifact.name -ne "r318ap-next-control-evidence" -or "$($artifact.size_in_bytes)" -ne $env:AP_ARTIFACT_SIZE -or $artifact.digest -ne $env:AP_ARTIFACT_DIGEST -or $artifact.expired) { throw "AP artifact authority drift" }
+
+          $existing = git ls-remote --heads origin "refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate lookup failed" }
+          if ($existing) { throw "candidate branch already exists: $existing" }
+
+      - name: Extract frozen AQ generator before clean reset
+        shell: python
+        run: |
+          from pathlib import Path
+          import os
+          source = Path('.github/workflows/_tmp_r318aq_builder.yml').read_text(encoding='utf-8')
+          begin = "      - name: Generate bounded AQ source and focused test\n        shell: python\n        run: |\n"
+          end = "\n      - name: Install Rust 1.85 floor"
+          if source.count(begin) != 1 or source.count(end) != 1:
+              raise SystemExit('cannot uniquely locate frozen AQ generator block')
+          body = source.split(begin, 1)[1].split(end, 1)[0]
+          lines = body.splitlines()
+          out = []
+          for line in lines:
+              if line:
+                  if not line.startswith('          '):
+                      raise SystemExit(f'unexpected generator indentation: {line!r}')
+                  line = line[10:]
+              out.append(line)
+          target = Path(os.environ['RUNNER_TEMP']) / 'r318aq_generate.py'
+          target.write_text('\n'.join(out) + '\n', encoding='utf-8')
+          compile(target.read_text(encoding='utf-8'), str(target), 'exec')
+          print(target)
+
+      - name: Reconstruct exact clean candidate parent
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git fetch --no-tags --depth=1 origin "+refs/heads/main:refs/remotes/origin/main"
+          if ($LASTEXITCODE -ne 0) { throw "targeted main fetch failed" }
+          if ((git rev-parse origin/main).Trim() -ne $env:BASE_SHA) { throw "targeted main drift" }
+          if ((git show -s --format=%T origin/main).Trim() -ne $env:BASE_TREE) { throw "targeted main tree drift" }
+          git reset --hard origin/main
+          if ($LASTEXITCODE -ne 0) { throw "reset to base failed" }
+          git clean -fdx
+          if ($LASTEXITCODE -ne 0) { throw "clean failed" }
+          git switch -c $env:CANDIDATE_BRANCH
+          if ($LASTEXITCODE -ne 0) { throw "candidate switch failed" }
+          if ((git rev-parse HEAD).Trim() -ne $env:BASE_SHA) { throw "candidate parent drift" }
+
+      - name: Generate bounded AQ source and focused test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python (Join-Path $env:RUNNER_TEMP 'r318aq_generate.py')
+          if ($LASTEXITCODE -ne 0) { throw "AQ generator failed" }
+
+      - name: Install Rust 1.85 floor
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          rustup toolchain install 1.85.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { throw "rustup toolchain install failed" }
+          rustup component add rustfmt clippy --toolchain 1.85.0
+          if ($LASTEXITCODE -ne 0) { throw "rustup component install failed" }
+          rustup override set 1.85.0
+          if ($LASTEXITCODE -ne 0) { throw "rustup override failed" }
+          if ((rustc --version).Trim() -notmatch '^rustc 1\.85\.0 ') { throw "wrong rustc floor" }
+
+      - name: Audit exact two-file candidate scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = @('crates/mimir-replay/src/lib.rs','crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs') | Sort-Object
+          $paths = @(git status --porcelain=v1 | ForEach-Object { $_.Substring(3) } | Sort-Object)
+          if (($paths -join "`n") -ne ($expected -join "`n")) { throw "candidate scope drift:`n$($paths -join "`n")" }
+          git add -- $expected
+          if ($LASTEXITCODE -ne 0) { throw "git add failed" }
+          $staged = @(git diff --cached --name-only | Sort-Object)
+          if (($staged -join "`n") -ne ($expected -join "`n")) { throw "staged scope drift" }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed" }
+
+      - name: Focused AQ and boundary regressions
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed" }
+          cargo test -p mimir-replay --locked --test r3_18aq_post_an_payload_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "AQ focused test failed" }
+          cargo test -p mimir-replay --locked --test r3_18an_post_ak_payload -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "AN regression failed" }
+          cargo test -p mimir-replay --locked --test r3_18d_next_property_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "R3.18D regression failed" }
+          cargo test -p mimir-replay --locked --test r3_18ag_post_ad_payload_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "R3.18AG regression failed" }
+          cargo test -p mimir-replay --locked --test r3_18m_following_control --test r3_18w_following_payload_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "historical control regressions failed" }
+
+      - name: Full workspace validation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo check --workspace --all-targets --all-features --locked
+          if ($LASTEXITCODE -ne 0) { throw "workspace check failed" }
+          cargo test --workspace --all-targets --all-features --locked
+          if ($LASTEXITCODE -ne 0) { throw "workspace tests failed" }
+          cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+          if ($LASTEXITCODE -ne 0) { throw "workspace clippy failed" }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verifier failed" }
+
+      - name: Commit and push exact clean candidate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "final diff check failed" }
+          git config user.name "MIMIR AQ Builder"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "Publish R3.18AQ mixed following control"
+          if ($LASTEXITCODE -ne 0) { throw "candidate commit failed" }
+          $candidate = (git rev-parse HEAD).Trim()
+          $parent = (git rev-parse HEAD^).Trim()
+          $tree = (git show -s --format=%T HEAD).Trim()
+          if ($parent -ne $env:BASE_SHA) { throw "candidate parent drift" }
+          $expected = @('crates/mimir-replay/src/lib.rs','crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs') | Sort-Object
+          $files = @(git diff --name-only "$env:BASE_SHA..HEAD" | Sort-Object)
+          if (($files -join "`n") -ne ($expected -join "`n")) { throw "clean candidate file scope drift" }
+
+          $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = "application/vnd.github+json"; "X-GitHub-Api-Version" = "2022-11-28" }
+          $main = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/Naveax/MIMIR/commits/main"
+          if ($main.sha -ne $env:BASE_SHA -or $main.commit.tree.sha -ne $env:BASE_TREE) { throw "main advanced during AQ builder" }
+          $existing = git ls-remote --heads origin "refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate race lookup failed" }
+          if ($existing) { throw "candidate branch appeared during run" }
+          git remote set-url origin "https://x-access-token:$env:GH_TOKEN@github.com/Naveax/MIMIR.git"
+          git push origin "HEAD:refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed" }
+          "R318AQ_CANDIDATE_SHA=$candidate" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "R318AQ_CANDIDATE_TREE=$tree" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Build immutable builder receipt
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'r318aq-receipt'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          $libBlob = (git rev-parse 'HEAD:crates/mimir-replay/src/lib.rs').Trim()
+          $testBlob = (git rev-parse 'HEAD:crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs').Trim()
+          @(
+            'R3_18AQ_BUILDER_V2=PASS',
+            "base_sha=$env:BASE_SHA",
+            "base_tree=$env:BASE_TREE",
+            "production_sha=$env:PROD_SHA",
+            "ap_head=$env:AP_HEAD",
+            "ap_run_job=$env:AP_RUN/$env:AP_JOB",
+            "ap_artifact=$env:AP_ARTIFACT",
+            "ap_artifact_digest=$env:AP_ARTIFACT_DIGEST",
+            "candidate_sha=$env:R318AQ_CANDIDATE_SHA",
+            "candidate_tree=$env:R318AQ_CANDIDATE_TREE",
+            "candidate_parent=$env:BASE_SHA",
+            'candidate_files=2',
+            "lib_blob=$libBlob",
+            "aq_test_blob=$testBlob",
+            'frozen_rows=47',
+            'false=7',
+            'true=40',
+            'new_control_reads=1',
+            'following_stream_header_payload_second_control=0/0/0/0',
+            'clean_scope=PASS',
+            'rust_floor=1.85.0',
+            'focused_validation=PASS',
+            'workspace_validation=PASS',
+            'repository_verifier=PASS'
+          ) | Set-Content -Path (Join-Path $dir 'receipt.txt') -Encoding utf8
+          git diff --stat "$env:BASE_SHA..HEAD" | Set-Content -Path (Join-Path $dir 'diff_stat.txt') -Encoding utf8
+          git diff --name-only "$env:BASE_SHA..HEAD" | Set-Content -Path (Join-Path $dir 'changed_files.txt') -Encoding utf8
+
+      - name: Upload builder receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318aq-production-builder-v2-receipt
+          path: ${{ runner.temp }}/r318aq-receipt
+          if-no-files-found: error
+          retention-days: 30
