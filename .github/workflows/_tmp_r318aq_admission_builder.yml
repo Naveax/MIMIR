@@ -1,0 +1,212 @@
+name: R3.18AQ Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318aq-admission-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318aq_admission_trigger.txt
+
+concurrency:
+  group: r318aq-continuity-admission-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BASE_SHA: e1ccbef95c8424b689dee7d77fd8fde2af3e0204
+      BASE_TREE: 4e7100625096594bcc5c5b4c6a8054c283643b13
+      PARENT_SHA: ec2d6c29f90863d9e312856043d01fb98a0c2d2d
+      LIB_BLOB: b886c58400de0efe0a6a6113d79e6f78e751a213
+      AQ_TEST_BLOB: 983cbda666f40cbc739b250eac87bc4ce0c9eb99
+      AQ_SPEC_BLOB: fa8e5f6798a42fbeeed86b3b14ea7e4f39b35ebb
+      AQ_BUILDER_HEAD: 4fee8974780fa2f8897bf0fea14ce13333a2dac4
+      AQ_BUILDER_RUN: '32860339919'
+      AQ_BUILDER_JOB: '97842469079'
+      AQ_RECEIPT_ARTIFACT: '9568109670'
+      AQ_RECEIPT_SIZE: '1183'
+      AQ_RECEIPT_DIGEST: sha256:1d865740559cb0748f840b3cca3d4ab9c627ac251bc15f6f99dbabb20c2e3afe
+      AQ_VALIDATION_PR: '197'
+      AQ_PR_CI_RUN: '32861522922'
+      AQ_PR_CI_JOB: '97846413853'
+      AQ_PUBLISHED_CI_RUN: '32861924684'
+      AQ_PUBLISHED_CI_JOB: '97847764026'
+      AP_HEAD: 736ac33c099a9183693bfcb2b5f5b74704a8808e
+      AP_RUN: '32745234196'
+      AP_ARTIFACT: '9526988237'
+      AP_DIGEST: sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc
+      CANDIDATE_BRANCH: continuity/r318aq-admit-ar-v1
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout helper head only
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Freeze published AQ authority
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$BASE_SHA" --jq .tree.sha)" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$BASE_SHA" --jq .parents[0].sha)" = "$PARENT_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/contents/crates/mimir-replay/src/lib.rs?ref=$BASE_SHA" --jq .sha)" = "$LIB_BLOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/contents/crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs?ref=$BASE_SHA" --jq .sha)" = "$AQ_TEST_BLOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/contents/docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md?ref=$BASE_SHA" --jq .sha)" = "$AQ_SPEC_BLOB"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_BUILDER_RUN" --jq .head_sha)" = "$AQ_BUILDER_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_BUILDER_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AQ_BUILDER_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AQ_RECEIPT_ARTIFACT" --jq .digest)" = "$AQ_RECEIPT_DIGEST"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AQ_RECEIPT_ARTIFACT" --jq .size_in_bytes)" = "$AQ_RECEIPT_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AQ_RECEIPT_ARTIFACT" --jq .expired)" = false
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$AQ_VALIDATION_PR" --jq .state)" = closed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$AQ_VALIDATION_PR" --jq '.merged_at // ""')" = ""
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$AQ_VALIDATION_PR" --jq .head.sha)" = "$BASE_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_PR_CI_RUN" --jq .head_sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_PR_CI_RUN" --jq .event)" = pull_request
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_PR_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AQ_PR_CI_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_PUBLISHED_CI_RUN" --jq .head_sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_PUBLISHED_CI_RUN" --jq .event)" = push
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_PUBLISHED_CI_RUN" --jq .head_branch)" = main
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AQ_PUBLISHED_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$AQ_PUBLISHED_CI_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_RUN" --jq .head_sha)" = "$AP_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$AP_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AP_ARTIFACT" --jq .digest)" = "$AP_DIGEST"
+
+          if git ls-remote --exit-code --heads "https://github.com/$GITHUB_REPOSITORY.git" "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "AQ continuity candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+
+          echo R3_18AQ_CONTINUITY_AUTHORITY_FREEZE=PASS
+
+      - name: Reconstruct exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318aq_admit.py "$RUNNER_TEMP/r318aq_admit.py"
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git reset --hard FETCH_HEAD
+          git clean -fdx
+          git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$BASE_TREE"
+
+      - name: Generate AQ closure and AR opening
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$RUNNER_TEMP/r318aq_admit.py"
+
+      - name: Verify exact nine-doc candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/expected.txt" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18AQ_DECISION.md
+          docs/continuity/MIMIR_R3_18AR_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/expected.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/actual.txt"
+          sort -o "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/expected.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+          git diff --check
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+          grep -F 'R3.18AQ — bounded post-AN mixed following-control production' MIMIR_CONTINUE_HERE.md
+          grep -F 'R3.18AR — published-R3.18AQ mixed following-control differential' MIMIR_CONTINUE_HERE.md
+          grep -F 'false=7' docs/continuity/MIMIR_R3_18AQ_DECISION.md
+          grep -F 'true=40' docs/continuity/MIMIR_R3_18AQ_DECISION.md
+          grep -F '40 true continuation rows' docs/continuity/MIMIR_R3_18AR_EXECUTION_SPEC.md
+          grep -F '131. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`' MIMIR_KNOWLEDGE_GRAPH.md
+
+          if grep -F 'R3.18AQ bounded post-AN following-control production: ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md; then exit 1; fi
+          if grep -F 'R3.18AQ ACTIVE bounded production:' MIMIR_CONTINUE_HERE.md; then exit 1; fi
+
+          echo R3_18AQ_EXACT_9_DOC_SCOPE=PASS
+
+      - name: Commit and push candidate once
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR Admission Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AQ_DECISION.md \
+            docs/continuity/MIMIR_R3_18AR_EXECUTION_SPEC.md
+
+          git commit -m 'Admit R3.18AQ and open R3.18AR'
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse HEAD^{tree})"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads "https://github.com/$GITHUB_REPOSITORY.git" "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "AQ continuity candidate appeared during build; refusing race" >&2
+            exit 1
+          fi
+
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+
+          mkdir -p "$RUNNER_TEMP/r318aq-continuity-receipt"
+          {
+            echo R3_18AQ_CONTINUITY_BUILDER=PASS
+            echo "base_sha=$BASE_SHA"
+            echo "base_tree=$BASE_TREE"
+            echo "candidate_sha=$candidate_sha"
+            echo "candidate_tree=$candidate_tree"
+            echo "candidate_parent=$BASE_SHA"
+            echo "files=9"
+            echo "production_sha=$BASE_SHA"
+            echo "aq_builder_run_job=$AQ_BUILDER_RUN/$AQ_BUILDER_JOB"
+            echo "aq_validation_pr=$AQ_VALIDATION_PR"
+            echo "aq_pr_ci=$AQ_PR_CI_RUN/$AQ_PR_CI_JOB"
+            echo "aq_published_ci=$AQ_PUBLISHED_CI_RUN/$AQ_PUBLISHED_CI_JOB"
+            echo "rows=47"
+            echo "false=7"
+            echo "true=40"
+            echo "next_pass=R3.18AR"
+            echo "future_header_continuation_rows=40"
+          } | tee "$RUNNER_TEMP/r318aq-continuity-receipt/receipt.txt"
+
+      - name: Upload builder receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318aq-continuity-admission-receipt
+          path: ${{ runner.temp }}/r318aq-continuity-receipt
+          if-no-files-found: error
+          retention-days: 30
