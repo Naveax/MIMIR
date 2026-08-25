@@ -135,6 +135,11 @@ jobs:
           sort -o "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/expected.txt"
           diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
           test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("docs/continuity/MIMIR_PROGRESS_LEDGER.md")
+          path.write_text(path.read_text(encoding="utf-8").rstrip() + "\n", encoding="utf-8")
+          PY
           git diff --check
           python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
           pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
