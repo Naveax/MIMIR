@@ -1,0 +1,227 @@
+name: R3.18AQ Production Builder v4
+
+on:
+  push:
+    branches:
+      - automation/r318aq-production-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318aq_builder_v4.yml
+
+concurrency:
+  group: r318aq-production-builder-v4
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  BASE_SHA: ec2d6c29f90863d9e312856043d01fb98a0c2d2d
+  BASE_TREE: d7257f5d1f035a21721ebf489ca1ccd534354b96
+  PROD_SHA: 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+  PROD_TREE: 3efcc244bca55623b12bb21eb277753fc61144d4
+  PROD_PARENT: 6f92e817a88056ba303229541ae04a5d5e03239b
+  LIB_BLOB: 9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822
+  AN_TEST_BLOB: 8aa48b2b74d0956d1d2e965d056e1cf14a81f703
+  AQ_SPEC_BLOB: fa8e5f6798a42fbeeed86b3b14ea7e4f39b35ebb
+  AP_DECISION_BLOB: 8d6b28ce79f817e865e73a71f431d7caf17b4961
+  AP_HEAD: 736ac33c099a9183693bfcb2b5f5b74704a8808e
+  AP_RUN: "32745234196"
+  AP_JOB: "97489066582"
+  AP_ARTIFACT: "9526988237"
+  AP_ARTIFACT_SIZE: "9692"
+  AP_ARTIFACT_DIGEST: sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc
+  CANDIDATE_BRANCH: candidate/r318aq-production-v1
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout only helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Extract corrected v2 script blocks
+        shell: python
+        run: |
+          from pathlib import Path
+          import os
+
+          source = Path('.github/workflows/_tmp_r318aq_builder_v2.yml').read_text(encoding='utf-8')
+          wrong = 'r318ap-next-control-evidence'
+          correct = 'r318ap-next-property-control-differential-evidence'
+          if source.count(wrong) != 1:
+              raise SystemExit(f'expected one AP artifact-name guard, found {source.count(wrong)}')
+          source = source.replace(wrong, correct, 1)
+
+          steps = [
+              ('Freeze canonical and AP authority without broad ref fetch', 'freeze.ps1'),
+              ('Extract frozen AQ generator before clean reset', 'extract_generator.py'),
+              ('Reconstruct exact clean candidate parent', 'reconstruct.ps1'),
+              ('Generate bounded AQ source and focused test', 'generate.ps1'),
+              ('Install Rust 1.85 floor', 'rust.ps1'),
+              ('Audit exact two-file candidate scope', 'audit.ps1'),
+              ('Focused AQ and boundary regressions', 'focused.ps1'),
+              ('Full workspace validation', 'full.ps1'),
+              ('Commit and push exact clean candidate', 'publish.ps1'),
+              ('Build immutable builder receipt', 'receipt.ps1'),
+          ]
+          out_dir = Path(os.environ['RUNNER_TEMP']) / 'r318aq-v4-scripts'
+          out_dir.mkdir(parents=True, exist_ok=True)
+          for name, filename in steps:
+              marker = f'      - name: {name}\n'
+              if source.count(marker) != 1:
+                  raise SystemExit(f'cannot uniquely locate step {name!r}')
+              section = source.split(marker, 1)[1]
+              next_step = section.find('\n      - name: ')
+              if next_step >= 0:
+                  section = section[:next_step]
+              run_marker = '        run: |\n'
+              if section.count(run_marker) != 1:
+                  raise SystemExit(f'cannot uniquely locate run block for {name!r}')
+              body = section.split(run_marker, 1)[1]
+              decoded = []
+              for line in body.splitlines():
+                  if line:
+                      if not line.startswith('          '):
+                          raise SystemExit(f'unexpected indentation in {name!r}: {line!r}')
+                      line = line[10:]
+                  decoded.append(line)
+              target = out_dir / filename
+              target.write_text('\n'.join(decoded) + '\n', encoding='utf-8')
+              if target.suffix == '.py':
+                  compile(target.read_text(encoding='utf-8'), str(target), 'exec')
+              print(f'{name} -> {target}')
+
+      - name: Freeze canonical and AP authority
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/freeze.ps1')
+
+      - name: Extract frozen AQ generator
+        shell: pwsh
+        run: python (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/extract_generator.py')
+
+      - name: Reconstruct exact clean candidate parent
+        shell: pwsh
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/reconstruct.ps1')
+
+      - name: Generate bounded AQ source and focused test
+        shell: pwsh
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/generate.ps1')
+
+      - name: Add missing AQ authority negatives
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs')
+          text = path.read_text(encoding='utf-8')
+          anchor = '#[test]\nfn r3_18aq_truncation_corrupt_prior_and_wrong_context_fail_closed() {'
+          if text.count(anchor) != 1:
+              raise SystemExit(f'expected one AQ truncation anchor, found {text.count(anchor)}')
+
+          test = r'''#[test]
+          fn r3_18aq_wrong_actor_and_unresolved_lookup_fail_closed() {
+              let (network, plan) = sample_network_and_plan();
+              let prior = ad_prior(&network, &plan);
+              let control = ag_control(&network, &prior);
+              let an = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_v1(
+                  &network,
+                  &prior,
+                  &control,
+                  &plan,
+                  k3_context(),
+              )
+              .expect("sample R3.18AN authority");
+
+              let mut bad_prior = prior.clone();
+              bad_prior
+                  .header_composition
+                  .following_header
+                  .actor_object_index = u32::MAX;
+              assert!(
+                  decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+                      &network,
+                      &bad_prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                  )
+                  .is_err(),
+                  "wrong actor authority must reject before advancing the AQ control boundary"
+              );
+
+              let mut missing_lookup = plan.clone();
+              missing_lookup.object_lookups[98] = None;
+              assert!(
+                  decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+                      &network,
+                      &prior,
+                      &control,
+                      &missing_lookup,
+                      k3_context(),
+                      &an,
+                  )
+                  .is_err(),
+                  "unresolved actor lookup must reject before advancing the AQ control boundary"
+              );
+          }
+
+          '''
+          text = text.replace(anchor, test + anchor, 1)
+          path.write_text(text, encoding='utf-8')
+
+      - name: Install Rust 1.85 floor
+        shell: pwsh
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/rust.ps1')
+
+      - name: Format generated AQ candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt mutation failed" }
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt check failed after formatting" }
+
+      - name: Audit exact two-file candidate scope
+        shell: pwsh
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/audit.ps1')
+
+      - name: Focused AQ and boundary regressions
+        shell: pwsh
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/focused.ps1')
+
+      - name: Full workspace validation
+        shell: pwsh
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/full.ps1')
+
+      - name: Commit and push exact clean candidate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/publish.ps1')
+
+      - name: Build immutable builder receipt
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/receipt.ps1')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $receipt = Join-Path $env:RUNNER_TEMP 'r318aq-receipt/receipt.txt'
+          Add-Content -Path $receipt -Value 'wrong_actor_negative=PASS'
+          Add-Content -Path $receipt -Value 'unresolved_lookup_negative=PASS'
+          Add-Content -Path $receipt -Value 'generated_candidate_rustfmt=PASS'
+
+      - name: Upload builder receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318aq-production-builder-v4-receipt
+          path: ${{ runner.temp }}/r318aq-receipt
+          if-no-files-found: error
+          retention-days: 30
