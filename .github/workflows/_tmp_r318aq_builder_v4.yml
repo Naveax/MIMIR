@@ -114,13 +114,22 @@ jobs:
         shell: pwsh
         run: pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/generate.ps1')
 
-      - name: Add missing AQ authority negatives
+      - name: Harden generated AQ test authority
         shell: python
         run: |
           from pathlib import Path
 
           path = Path('crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs')
           text = path.read_text(encoding='utf-8')
+
+          import_anchor = 'use mimir_replay::{\n'
+          an_result_import = '    ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,\n'
+          if text.count(import_anchor) != 1:
+              raise SystemExit(f'expected one AQ mimir_replay use block, found {text.count(import_anchor)}')
+          if an_result_import in text:
+              raise SystemExit('AN result import unexpectedly already present in generated AQ test')
+          text = text.replace(import_anchor, import_anchor + an_result_import, 1)
+
           anchor = '#[test]\nfn r3_18aq_truncation_corrupt_prior_and_wrong_context_fail_closed() {'
           if text.count(anchor) != 1:
               raise SystemExit(f'expected one AQ truncation anchor, found {text.count(anchor)}')
@@ -214,6 +223,7 @@ jobs:
           pwsh -NoProfile -File (Join-Path $env:RUNNER_TEMP 'r318aq-v4-scripts/receipt.ps1')
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $receipt = Join-Path $env:RUNNER_TEMP 'r318aq-receipt/receipt.txt'
+          Add-Content -Path $receipt -Value 'an_result_import=PASS'
           Add-Content -Path $receipt -Value 'wrong_actor_negative=PASS'
           Add-Content -Path $receipt -Value 'unresolved_lookup_negative=PASS'
           Add-Content -Path $receipt -Value 'generated_candidate_rustfmt=PASS'
