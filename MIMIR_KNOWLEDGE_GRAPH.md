@@ -73,7 +73,8 @@ R3.18AM post-AK one-following-payload evidence / Outcome A CLOSED
 R3.18AN bounded post-AK one-following-payload production / CLOSED
 R3.18AO published-AN one-following-payload differential / CLOSED
 R3.18AP next property-control bit evidence after published AN payload / Outcome A CLOSED
-R3.18AQ bounded post-AN following-control production / ACTIVE                                      |
+R3.18AQ bounded post-AN following-control production / PRODUCTION CLOSED
+R3.18AR published-R3.18AQ mixed following-control differential / ACTIVE                             |
         |                               |
         +---------------+---------------+
                         |
@@ -214,13 +215,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 120. `docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md`
 121. `docs/continuity/MIMIR_R3_18AP_DECISION.md`
 122. `docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md`
-123. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-124. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-125. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-126. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-127. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-128. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-129. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+123. `docs/continuity/MIMIR_R3_18AQ_DECISION.md`
+124. `docs/continuity/MIMIR_R3_18AR_EXECUTION_SPEC.md`
+125. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+126. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+127. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+128. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+129. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+130. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+131. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
@@ -265,11 +268,22 @@ scripts/verify_mimir_knowledge_archive.ps1
 - next stream/header/payload/second-control consumption 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS
 - false is evidence-admitted at this boundary; earlier true-only M/W/AG semantics are not inherited
 
-### R3.18AQ bounded post-AN following-control production: ACTIVE
-- production remains R3.18AN until AQ passes full clean-candidate and publication validation
-- validate/recompute one exact AN prior; read exactly one AP-admitted property_present bit
-- both false and true are valid result values; stop exactly one bit later
-- no next stream/header/payload, second control, generic cursor/loop or wider semantic/runtime layer
+### R3.18AQ bounded post-AN following-control production: PRODUCTION / CLOSED
+- production `e1ccbef95c8424b689dee7d77fd8fde2af3e0204` / tree `4e7100625096594bcc5c5b4c6a8054c283643b13` / parent `ec2d6c29f90863d9e312856043d01fb98a0c2d2d`
+- lib/test blobs `b886c58400de0efe0a6a6113d79e6f78e751a213` / `983cbda666f40cbc739b250eac87bc4ce0c9eb99`; exact clean scope two files / 657 insertions
+- builder `32860339919/97842469079` SUCCESS / receipt artifact `9568109670` / `sha256:1d865740559cb0748f840b3cca3d4ab9c627ac251bc15f6f99dbabb20c2e3afe`
+- validation-only PR #197 closed unmerged; exact-head CI `32861522922/97846413853` SUCCESS; published-main CI `32861924684/97847764026` SUCCESS
+- immutable AP lane rows=47 / false=7 / true=40; both boolean classes succeed; exactly one new control read
+- wrong actor / unresolved lookup / truncation / corrupt prior / wrong context / repeatability / post-stop poison negatives PASS
+- next stream/header/payload/second-control consumption 0/0/0/0; force=false publication/readback PASS
+
+### R3.18AR published-R3.18AQ mixed following-control differential: ACTIVE
+- reuse exactly the immutable R3.18AP 47-row witnesses; witness reselection forbidden
+- reconstruct published AQ and require exact start/value/end/stop equality with AP on all 47 rows
+- expected immutable distribution false=7 / true=40; both are successful published AQ results
+- false rows are terminators; no following-header claim is permitted from them
+- AR consumes no following stream/header/payload/second-control and mutates no production
+- only after AR Outcome A may a separate later pass investigate one following header on the exact 40 true continuation rows
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
 - production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`

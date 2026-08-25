@@ -6,30 +6,32 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AP closed / R3.18AQ active
+# 0. Current override — R3.18AQ closed / R3.18AR active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18AN
-- `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38` / `3efcc244bca55623b12bb21eb277753fc61144d4` remains canonical production;
-- validates/recomputes exact R3.18AK/R3.18AJ authority, decodes exactly one R3.18AM-admitted `Int/32` payload, and stops at payload end;
-- following property-control consumption in published production remains zero until R3.18AQ is admitted.
+## PRODUCTION — R3.18AQ
+- `e1ccbef95c8424b689dee7d77fd8fde2af3e0204` / `4e7100625096594bcc5c5b4c6a8054c283643b13` is canonical production; parent `ec2d6c29f90863d9e312856043d01fb98a0c2d2d`;
+- validates/recomputes one exact published R3.18AN prior through its admitted Int/32 payload end;
+- consumes exactly one following LSB-first `property_present` bit at the AN stop;
+- accepts both AP-observed boolean values: false=7 / true=40 on the immutable lane;
+- stops exactly one bit later and consumes no following stream/header/payload/second-control bits.
 
 ## CLOSED EVIDENCE — R3.18AP Outcome A
 - immutable 47-row lane; published R3.18AN exact 47/47; oracle-native exact 47/47; mismatch 0; witness reselection 0;
-- exact next `property_present` distribution: false=7 / true=40; both observed classes are admitted as evidence at this boundary;
-- artifact `9526988237` / `sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc`; inner manifest 10/10; same-head natural CI count=1;
-- next stream/header/payload/second-control consumption 0/0/0/0; production mutation 0.
+- exact next `property_present` distribution false=7 / true=40;
+- artifact `9526988237` / `sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc`; adjacent consumption 0/0/0/0.
 
-## ACTIVE PRODUCTION GATE — R3.18AQ
-- validate/recompute exactly one published R3.18AN prior and require exact payload-end equality;
-- consume exactly one control bit beginning at `R3.18AN.stop_bit`;
-- represent both false and true successfully; false is not an error at this boundary;
-- stop exactly one bit later and consume no next stream/header/payload/second-control bits.
+## ACTIVE READ-ONLY GATE — R3.18AR
+- differentially validate the published R3.18AQ API on exactly the same 47 AP witnesses;
+- require published value/start/end/stop equality 47/47 and false=7 / true=40;
+- both booleans remain valid data; no witness reselection or production mutation;
+- stop at the AQ one-control boundary with adjacent stream/header/payload/second-control consumption 0/0/0/0.
 
 ## CLOSED
-- next stream/header/payload after the one R3.18AQ control result;
-- second later property-control bit, alternate payload widening, repeated/generalized property loop or cursor;
+- following stream/header/payload after the R3.18AQ/AR one-control result;
+- header evidence on any of the 7 false terminator rows;
+- a second later property-control bit, alternate payload widening, repeated/generalized property loop or cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

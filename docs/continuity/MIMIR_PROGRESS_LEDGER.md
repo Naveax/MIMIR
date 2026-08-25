@@ -1158,3 +1158,52 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - `R3.18AQ — bounded post-AN following-control production with false+true success semantics`.
+
+---
+
+## 2026-08-25 — R3.18AQ — Bounded Post-AN Mixed Following-Control Production
+
+Production base SHA: `ec2d6c29f90863d9e312856043d01fb98a0c2d2d`
+Production commit SHA: `e1ccbef95c8424b689dee7d77fd8fde2af3e0204`
+Pass type: bounded production implementation + clean reconstruction + publication
+Outcome: **A — ADMITTED / PRODUCTION**
+
+What changed:
+- added one boundary-specific R3.18AQ result/API after exact R3.18AN;
+- validates/recomputes the supplied AN authority and exact Int/32 payload end;
+- consumes exactly one LSB-first following `property_present` bit;
+- accepts both AP-admitted false and true outcomes;
+- stops exactly one bit later;
+- added one focused AQ integration test file with frozen-lane, negative and scope-lock coverage.
+
+Evidence:
+- immutable R3.18AP lane 47 rows;
+- false=7 / true=40;
+- exactly one new control read;
+- following stream/header/payload/second-control consumption 0/0/0/0;
+- wrong actor / unresolved lookup / truncation / corrupt prior / wrong context / repeatability / post-stop poison negatives PASS.
+
+Validation:
+- final builder `32860339919/97842469079` SUCCESS;
+- builder receipt artifact `9568109670` / `sha256:1d865740559cb0748f840b3cca3d4ab9c627ac251bc15f6f99dbabb20c2e3afe`;
+- exact clean scope two files / 657 insertions;
+- validation-only PR #197 closed unmerged;
+- exact-head CI `32861522922/97846413853` SUCCESS;
+- published-main CI `32861924684/97847764026` SUCCESS;
+- fresh-main ancestry, force=false fast-forward and exact-SHA readback PASS.
+
+Boundaries opened:
+- exactly one mixed false/true following control bit after one valid published R3.18AN payload.
+
+Boundaries still closed:
+- following stream/header/payload;
+- second later control;
+- generalized/repeated property loop/cursor;
+- next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export layers.
+
+Important negative facts / anti-regressions:
+- false is valid at this exact AQ boundary; do not inherit true-only M/W/AG behavior;
+- the 7 false rows are terminators and cannot be used for a following-header continuation claim.
+
+Next exact pass:
+- `R3.18AR — published-R3.18AQ mixed following-control differential` on exactly the immutable 47 AP witnesses.

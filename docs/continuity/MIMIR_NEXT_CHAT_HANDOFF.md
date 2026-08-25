@@ -1,13 +1,13 @@
 # MIMIR — Next Chat Handoff
 
-Canonical production remains **R3.18AN** at `3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38` / `3efcc244bca55623b12bb21eb277753fc61144d4`. R3.18AP is closed Outcome A as read-only one-control evidence.
+Canonical production is **R3.18AQ** at `e1ccbef95c8424b689dee7d77fd8fde2af3e0204` / `4e7100625096594bcc5c5b4c6a8054c283643b13`, parent `ec2d6c29f90863d9e312856043d01fb98a0c2d2d`.
 
-R3.18AP authority: evidence `736ac33c099a9183693bfcb2b5f5b74704a8808e` / tree `840011b603b5bb330e018bd060650cfb3af29b73`; run/job `32745234196/97489066582` SUCCESS; same-head natural CI `32745233671/97489738567` SUCCESS with exact run count 1 and no rerun; artifact `9526988237` / `9692` bytes / `sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc` with downloaded ZIP digest exact and inner manifest 10/10 PASS.
+AQ authority: builder `32860339919/97842469079` SUCCESS on helper `4fee8974780fa2f8897bf0fea14ce13333a2dac4`; receipt artifact `9568109670` / `1183` bytes / `sha256:1d865740559cb0748f840b3cca3d4ab9c627ac251bc15f6f99dbabb20c2e3afe`; validation-only PR #197 closed unmerged after exact-head CI `32861522922/97846413853` SUCCESS; published-main CI `32861924684/97847764026` SUCCESS. Clean production scope is exactly `crates/mimir-replay/src/lib.rs` plus `crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs`.
 
-Scientific result: frozen rows 47/47; published R3.18AN exact 47/47; oracle-native exact 47/47; **false=7 / true=40**; mismatch 0; witness reselection 0; next stream/header/payload/second-control consumption 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+Published behavior: immutable rows 47; false=7; true=40; both values succeed; exactly one new `property_present` bit is consumed; next stream/header/payload/second-control consumption 0/0/0/0. Wrong actor, unresolved lookup, truncation, corrupt AN prior, wrong context, repeatability and post-stop poison negatives PASS.
 
-The active pass is **R3.18AQ**. Build a clean bounded production composition from fresh canonical `main`. Validate/recompute the supplied AN prior, require exact payload-end equality, consume exactly one AP-admitted `property_present` bit, represent both false and true as successful results, and stop one bit later. Do not inherit true-only fail-closed behavior from R3.18M/W/AG.
+The active pass is **R3.18AR**, a read-only published-production differential. Reuse exactly the immutable R3.18AP 47 witnesses and require published AQ value/start/end/stop equality 47/47, false=7, true=40, mismatch 0, witness reselection 0, production mutation 0 and adjacent consumption 0/0/0/0.
 
-Do not consume the next stream/header/payload or a second control bit. Do not add a generic cursor/loop. Before any workflow dispatch/rerun, inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run if present.
+Do not decode the following header in AR. The 7 false rows are terminators. Only after AR Outcome A may a separate later pass investigate one following header on the exact 40 true continuation rows.
 
-Mandatory current-tail reading includes `MIMIR_CONTINUE_HERE.md`, `MIMIR_KNOWLEDGE_GRAPH.md`, `docs/continuity/MIMIR_CONTINUITY_STATE.json`, `docs/continuity/MIMIR_R3_18AN_DECISION.md`, `docs/continuity/MIMIR_R3_18AO_DECISION.md`, `docs/continuity/MIMIR_R3_18AP_EXECUTION_SPEC.md`, `docs/continuity/MIMIR_R3_18AP_DECISION.md`, and `docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md`.
+Before any workflow dispatch/rerun, inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run if present. Rerun is never polling.

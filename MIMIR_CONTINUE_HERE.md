@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+  e1ccbef95c8424b689dee7d77fd8fde2af3e0204
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18AN — bounded post-AK one-following-payload production
+  R3.18AQ — bounded post-AN mixed following-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18AP — next property-control bit evidence after published R3.18AN payload / Outcome A / 47/47 / false=7 / true=40 / mismatch 0 / artifact 9526988237
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18AP — exact one-control observation 47/47 / false=7 / true=40 / oracle-native exact 47/47 / mismatch 0 / adjacent consumption 0/0/0/0 / artifact 9526988237
 
 CURRENT_PASS:
-  R3.18AQ — bounded post-AN following-control production
+  R3.18AR — published-R3.18AQ mixed following-control differential
 
 CURRENT_PASS_TYPE:
-  production implementation / validate one exact published R3.18AN prior, consume exactly one AP-admitted property_present bit, represent both false and true, stop one bit later, consume zero following stream/header/payload/second-control bits
+  read-only published-production differential / reuse exactly the immutable R3.18AP 47-row lane, reconstruct the published R3.18AQ result, require exact false=7 true=40 start/value/end/stop equality, and consume zero following stream/header/payload/second-control bits
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -120,8 +120,25 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AN PRODUCTION at 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38: validates/recomputes the R3.18AK/AJ boundary, decodes exactly one R3.18AM-admitted Int/32 payload, stops exactly at payload end, and consumes zero next-control bits
   R3.18AO CLOSED Outcome A: published-R3.18AN/frozen-R3.18AM/direct-native-oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0; witness reselection 0; next-control consumption 0; artifact 9522750814
   R3.18AP CLOSED Outcome A: exact one next property_present bit on the frozen 47-row lane; false=7 true=40; published AN exact 47/47; oracle-native exact 47/47; mismatch 0; witness reselection 0; adjacent consumption 0/0/0/0; artifact 9526988237
-  R3.18AQ ACTIVE bounded production: validate/recompute the exact R3.18AN prior, consume exactly one AP-admitted control bit, admit both false and true as data, and stop one bit later
-  NO next stream/header/payload after the R3.18AQ control result, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AQ PRODUCTION at e1ccbef95c8424b689dee7d77fd8fde2af3e0204: validates/recomputes one exact R3.18AN prior, consumes exactly one AP-admitted property_present bit, accepts both false and true, and stops one bit later
+  R3.18AR ACTIVE read-only differential: prove published R3.18AQ exact on the immutable AP 47-row lane with false=7 / true=40 and adjacent consumption 0/0/0/0
+  NO following stream/header/payload after the R3.18AQ/AR one-control boundary, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AQ_PRODUCTION_CLOSURE:
+Outcome A / production / published exact mixed following-control boundary
+production SHA/tree: e1ccbef95c8424b689dee7d77fd8fde2af3e0204 / 4e7100625096594bcc5c5b4c6a8054c283643b13
+parent: ec2d6c29f90863d9e312856043d01fb98a0c2d2d
+lib/test blobs: b886c58400de0efe0a6a6113d79e6f78e751a213 / 983cbda666f40cbc739b250eac87bc4ce0c9eb99
+AQ execution spec blob: fa8e5f6798a42fbeeed86b3b14ea7e4f39b35ebb
+builder: 4fee8974780fa2f8897bf0fea14ce13333a2dac4 / 32860339919/97842469079 SUCCESS
+builder receipt: artifact 9568109670 / 1183 bytes / sha256:1d865740559cb0748f840b3cca3d4ab9c627ac251bc15f6f99dbabb20c2e3afe
+validation-only PR #197 closed unmerged / exact-head CI 32861522922/97846413853 SUCCESS
+published-main CI: 32861924684/97847764026 SUCCESS
+clean scope: exactly lib.rs + r3_18aq_post_an_payload_control.rs / 657 insertions / no Cargo-doc-workflow-fixture-corpus mutation
+frozen AP behavior: rows 47 / false=7 / true=40 / exactly one new control read / adjacent stream-header-payload-second-control 0/0/0/0
+wrong-actor / unresolved-lookup / truncation / corrupt-AN-prior / wrong-context / repeatability / post-stop-poison / source-scope negatives PASS
+fresh-main ancestry + force=false publication + exact-SHA readback PASS
+next exact pass: R3.18AR published-R3.18AQ mixed following-control differential; no following header in AR
 
 R3_18AP_EVIDENCE_CLOSURE:
 Outcome A / read-only / production unchanged at 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
