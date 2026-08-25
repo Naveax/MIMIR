@@ -1,0 +1,749 @@
+name: R3.18AQ Production Builder
+
+on:
+  push:
+    branches:
+      - automation/r318aq-production-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318aq_builder.yml
+
+concurrency:
+  group: r318aq-production-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  BASE_SHA: ec2d6c29f90863d9e312856043d01fb98a0c2d2d
+  BASE_TREE: d7257f5d1f035a21721ebf489ca1ccd534354b96
+  PROD_SHA: 3c74b276b8eeb1d99d2ca2b12a824c2d2ef66b38
+  PROD_TREE: 3efcc244bca55623b12bb21eb277753fc61144d4
+  PROD_PARENT: 6f92e817a88056ba303229541ae04a5d5e03239b
+  LIB_BLOB: 9d6b5ae2898cee745a17de9d1d7ef4b8fbd0e822
+  AN_TEST_BLOB: 8aa48b2b74d0956d1d2e965d056e1cf14a81f703
+  AQ_SPEC_BLOB: fa8e5f6798a42fbeeed86b3b14ea7e4f39b35ebb
+  AP_DECISION_BLOB: 8d6b28ce79f817e865e73a71f431d7caf17b4961
+  AP_HEAD: 736ac33c099a9183693bfcb2b5f5b74704a8808e
+  AP_RUN: "32745234196"
+  AP_JOB: "97489066582"
+  AP_ARTIFACT: "9526988237"
+  AP_ARTIFACT_SIZE: "9692"
+  AP_ARTIFACT_DIGEST: sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc
+  CANDIDATE_BRANCH: candidate/r318aq-production-v1
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze canonical and AP authority
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          git fetch origin main --force
+          if ($LASTEXITCODE -ne 0) { throw "git fetch main failed" }
+
+          $main = (git rev-parse origin/main).Trim()
+          if ($main -ne $env:BASE_SHA) {
+            throw "fresh main drift: expected $env:BASE_SHA got $main"
+          }
+          $tree = (git show -s --format=%T origin/main).Trim()
+          if ($tree -ne $env:BASE_TREE) {
+            throw "fresh main tree drift: expected $env:BASE_TREE got $tree"
+          }
+
+          $prodTree = (git show -s --format=%T $env:PROD_SHA).Trim()
+          $prodParent = (git rev-parse "$env:PROD_SHA^").Trim()
+          if ($prodTree -ne $env:PROD_TREE) { throw "production tree drift" }
+          if ($prodParent -ne $env:PROD_PARENT) { throw "production parent drift" }
+
+          $libBlob = (git rev-parse "${env:PROD_SHA}:crates/mimir-replay/src/lib.rs").Trim()
+          $anBlob = (git rev-parse "${env:PROD_SHA}:crates/mimir-replay/tests/r3_18an_post_ak_payload.rs").Trim()
+          $mainLibBlob = (git rev-parse "origin/main:crates/mimir-replay/src/lib.rs").Trim()
+          $mainAnBlob = (git rev-parse "origin/main:crates/mimir-replay/tests/r3_18an_post_ak_payload.rs").Trim()
+          $aqSpecBlob = (git rev-parse "origin/main:docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md").Trim()
+          $apDecisionBlob = (git rev-parse "origin/main:docs/continuity/MIMIR_R3_18AP_DECISION.md").Trim()
+
+          if ($libBlob -ne $env:LIB_BLOB -or $mainLibBlob -ne $env:LIB_BLOB) {
+            throw "R3.18AN lib authority drift"
+          }
+          if ($anBlob -ne $env:AN_TEST_BLOB -or $mainAnBlob -ne $env:AN_TEST_BLOB) {
+            throw "R3.18AN focused-test authority drift"
+          }
+          if ($aqSpecBlob -ne $env:AQ_SPEC_BLOB) { throw "AQ spec blob drift" }
+          if ($apDecisionBlob -ne $env:AP_DECISION_BLOB) { throw "AP decision blob drift" }
+
+          $headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $run = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/Naveax/MIMIR/actions/runs/$env:AP_RUN"
+          if ($run.status -ne "completed" -or $run.conclusion -ne "success") {
+            throw "AP authority run is not completed/success"
+          }
+          if ($run.head_sha -ne $env:AP_HEAD -or [int]$run.run_attempt -ne 1) {
+            throw "AP authority run head/attempt drift"
+          }
+
+          $jobs = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/Naveax/MIMIR/actions/runs/$env:AP_RUN/jobs?per_page=100"
+          $job = $jobs.jobs | Where-Object { "$($_.id)" -eq $env:AP_JOB } | Select-Object -First 1
+          if ($null -eq $job -or $job.conclusion -ne "success") {
+            throw "AP authority job receipt missing or non-success"
+          }
+
+          $artifact = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/Naveax/MIMIR/actions/artifacts/$env:AP_ARTIFACT"
+          if ($artifact.name -ne "r318ap-next-control-evidence") {
+            throw "AP artifact name drift: $($artifact.name)"
+          }
+          if ("$($artifact.size_in_bytes)" -ne $env:AP_ARTIFACT_SIZE) {
+            throw "AP artifact size drift"
+          }
+          if ($artifact.digest -ne $env:AP_ARTIFACT_DIGEST -or $artifact.expired) {
+            throw "AP artifact digest/expiry drift"
+          }
+
+          $existing = git ls-remote --heads origin "refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate branch lookup failed" }
+          if ($existing) { throw "candidate branch already exists: $existing" }
+
+      - name: Reconstruct exact clean candidate parent
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git reset --hard $env:BASE_SHA
+          if ($LASTEXITCODE -ne 0) { throw "reset to base failed" }
+          git clean -fdx
+          if ($LASTEXITCODE -ne 0) { throw "clean failed" }
+          git switch -c $env:CANDIDATE_BRANCH
+          if ($LASTEXITCODE -ne 0) { throw "candidate switch failed" }
+          if ((git rev-parse HEAD).Trim() -ne $env:BASE_SHA) { throw "candidate parent checkout drift" }
+
+      - name: Generate bounded AQ source and focused test
+        shell: python
+        run: |
+          #!/usr/bin/env python3
+          from __future__ import annotations
+
+          import re
+          from pathlib import Path
+
+          LIB_PATH = Path("crates/mimir-replay/src/lib.rs")
+          AN_TEST_PATH = Path("crates/mimir-replay/tests/r3_18an_post_ak_payload.rs")
+          AQ_TEST_PATH = Path("crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs")
+
+          AN_END_MARKER = "// R3.18AN PRE-ADMISSION END bounded post-AK payload composition"
+          AQ_BEGIN = "// R3.18AQ PRE-ADMISSION BEGIN bounded post-AN following control"
+          AQ_END = "// R3.18AQ PRE-ADMISSION END bounded post-AN following control"
+
+          AN_RESULT = "ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1"
+          AQ_RESULT = "ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1"
+          AN_PRIOR = "ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1"
+          AG_CONTROL = "ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1"
+          AN_FN = "decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_v1"
+          AQ_FN = "decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1"
+
+          def sub(template: str, **values: str) -> str:
+              for key, value in values.items():
+                  template = template.replace(f"@@{key}@@", value)
+              leftovers = re.findall(r"@@[A-Z_]+@@", template)
+              if leftovers:
+                  raise SystemExit(f"unresolved template tokens: {leftovers}")
+              return template
+
+          aq_template = r'''
+          @@AQ_BEGIN@@
+          /// Bounded composition of one published R3.18AN Int/32 payload result plus exactly one
+          /// R3.18AP-admitted following `property_present` control bit.
+          ///
+          /// Both boolean values are admitted at this exact boundary. `stop_bit` is exactly one
+          /// bit after the validated R3.18AN payload end. No following stream/header/payload or
+          /// second later control bit is consumed.
+          #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+          pub struct @@AQ_RESULT@@ {
+              pub payload_composition: @@AN_RESULT@@,
+              pub following_property_present: bool,
+              pub property_present_start_bit: u64,
+              pub property_present_end_bit: u64,
+              pub stop_bit: u64,
+          }
+
+          fn network_existing_actor_post_an_following_control_error(
+              category: &str,
+              detail: impl Into<String>,
+          ) -> MimirError {
+              MimirError::message(format!(
+                  "replay network post-AN following-control error: {category}: {}",
+                  detail.into()
+              ))
+          }
+
+          /// Validate/recompute exactly one published R3.18AN payload result, then consume exactly
+          /// one following LSB-first `property_present` bit.
+          ///
+          /// Unlike the earlier true-only R3.18M/R3.18W/R3.18AG boundaries, R3.18AP observed both
+          /// false and true at this exact boundary. Therefore both values are successful data here.
+          /// This function deliberately stops before any following stream/header/payload or second
+          /// control bit and exposes no repeatable property cursor.
+          pub fn @@AQ_FN@@(
+              network_bytes: &[u8],
+              prior: &@@AN_PRIOR@@,
+              control: &@@AG_CONTROL@@,
+              lookup_plan: &ReplayNetworkLookupPlanV1,
+              context: ReplayNetworkK3DecodeContextV1,
+              an_prior: &@@AN_RESULT@@,
+          ) -> Result<@@AQ_RESULT@@> {
+              let expected_an = @@AN_FN@@(
+                  network_bytes,
+                  prior,
+                  control,
+                  lookup_plan,
+                  context,
+              )?;
+
+              if expected_an != *an_prior {
+                  return Err(network_existing_actor_post_an_following_control_error(
+                      "invalid-r3-18an-prior",
+                      "supplied R3.18AN payload result does not match recomputed authority",
+                  ));
+              }
+
+              if an_prior.header_composition.stop_bit != an_prior.following_payload.payload_start_bit
+                  || an_prior.following_payload.payload_end_bit
+                      != an_prior
+                          .following_payload
+                          .payload_start_bit
+                          .checked_add(32)
+                          .ok_or_else(|| {
+                              network_existing_actor_post_an_following_control_error(
+                                  "invalid-prior-boundary",
+                                  "R3.18AN payload boundary addition overflows u64",
+                              )
+                          })?
+                  || an_prior.following_payload.payload_width != 32
+                  || an_prior.following_payload.stop_bit != an_prior.following_payload.payload_end_bit
+                  || an_prior.stop_bit != an_prior.following_payload.payload_end_bit
+                  || an_prior.following_payload.attribute_tag != ReplayNetworkAttributeTagV1::Int
+                  || !matches!(
+                      &an_prior.following_payload.value,
+                      ReplayNetworkPrimitiveScalarValueV1::Int(_)
+                  )
+              {
+                  return Err(network_existing_actor_post_an_following_control_error(
+                      "invalid-prior-boundary",
+                      "supplied R3.18AN result is not the exact admitted Int/32 payload boundary",
+                  ));
+              }
+
+              let property_present_start_bit = an_prior.stop_bit;
+              let property_present_start = usize::try_from(property_present_start_bit).map_err(|_| {
+                  network_existing_actor_post_an_following_control_error(
+                      "invalid-position",
+                      format!(
+                          "R3.18AN stop bit {property_present_start_bit} does not fit usize"
+                      ),
+                  )
+              })?;
+              let property_present_end = property_present_start.checked_add(1).ok_or_else(|| {
+                  network_existing_actor_post_an_following_control_error(
+                      "invalid-position",
+                      "following-control bit end overflows usize",
+                  )
+              })?;
+              let total_bits = network_bytes.len().checked_mul(8).ok_or_else(|| {
+                  network_existing_actor_post_an_following_control_error(
+                      "invalid-length",
+                      "network bit length overflows usize",
+                  )
+              })?;
+              if property_present_end > total_bits {
+                  return Err(network_existing_actor_post_an_following_control_error(
+                      "insufficient-bits",
+                      format!(
+                          "need one following control bit at {property_present_start}, but network ends at {total_bits}"
+                      ),
+                  ));
+              }
+
+              let mut cursor = NetworkBitCursor::new(network_bytes);
+              cursor.bit_position = property_present_start;
+              let following_property_present = cursor.read_bit().map_err(|error| {
+                  network_existing_actor_post_an_following_control_error(
+                      "control-read-failed",
+                      error.to_string(),
+                  )
+              })?;
+              if cursor.position_bits() != property_present_end {
+                  return Err(network_existing_actor_post_an_following_control_error(
+                      "invalid-stop",
+                      format!(
+                          "one control bit must stop at {property_present_end}, got {}",
+                          cursor.position_bits()
+                      ),
+                  ));
+              }
+
+              let property_present_end_bit = u64::try_from(property_present_end).map_err(|_| {
+                  network_existing_actor_post_an_following_control_error(
+                      "invalid-position",
+                      "following-control end does not fit u64",
+                  )
+              })?;
+
+              Ok(@@AQ_RESULT@@ {
+                  payload_composition: an_prior.clone(),
+                  following_property_present,
+                  property_present_start_bit,
+                  property_present_end_bit,
+                  stop_bit: property_present_end_bit,
+              })
+          }
+          @@AQ_END@@
+          '''
+
+          aq_block = sub(
+              aq_template,
+              AQ_BEGIN=AQ_BEGIN,
+              AQ_END=AQ_END,
+              AQ_RESULT=AQ_RESULT,
+              AN_RESULT=AN_RESULT,
+              AN_PRIOR=AN_PRIOR,
+              AG_CONTROL=AG_CONTROL,
+              AN_FN=AN_FN,
+              AQ_FN=AQ_FN,
+          )
+
+          lib = LIB_PATH.read_text(encoding="utf-8")
+          if AQ_BEGIN in lib or AQ_END in lib:
+              raise SystemExit("AQ source block already exists")
+          if lib.count(AN_END_MARKER) != 1:
+              raise SystemExit(f"expected exactly one AN end marker, got {lib.count(AN_END_MARKER)}")
+          lib = lib.replace(AN_END_MARKER, AN_END_MARKER + "\n" + aq_block, 1)
+          LIB_PATH.write_text(lib, encoding="utf-8")
+
+          an_test = AN_TEST_PATH.read_text(encoding="utf-8")
+          case_marker = 'let cases: [(&str, u64, u32, u64, u64, i32); 47] = ['
+          start = an_test.find(case_marker)
+          if start < 0:
+              raise SystemExit("cannot find AN 47-row case table")
+          end = an_test.find("\n    ];", start)
+          if end < 0:
+              raise SystemExit("cannot find AN 47-row case table end")
+          case_block = an_test[start:end]
+          pattern = re.compile(
+              r'\(\s*"([^"]+)"\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(-?\d+)\s*,?\s*\)',
+              re.S,
+          )
+          rows = [
+              (path, int(first_start), int(actor_object), int(payload_start), int(payload_end), int(value))
+              for path, first_start, actor_object, payload_start, payload_end, value in pattern.findall(case_block)
+          ]
+          if len(rows) != 47:
+              raise SystemExit(f"expected 47 AN rows, found {len(rows)}")
+
+          cases = "\n".join(
+              f'        ("{path}", {first_start}, {actor_object}, {payload_end}),' 
+              for path, first_start, actor_object, _payload_start, payload_end, _value in rows
+          )
+
+          aq_test_template = r'''include!("r3_18an_post_ak_payload.rs");
+
+          use mimir_replay::{
+              @@AQ_RESULT@@,
+              @@AQ_FN@@,
+          };
+
+          fn aq_from_frozen(
+              network: &[u8],
+              plan: &ReplayNetworkLookupPlanV1,
+              first_start: u64,
+              actor_object: u32,
+          ) -> (
+              @@AN_PRIOR@@,
+              @@AG_CONTROL@@,
+              @@AN_RESULT@@,
+          ) {
+              let prior = frozen_ad_prior(network, plan, first_start, actor_object);
+              let control = ag_control(network, &prior);
+              let an = @@AN_FN@@(
+                  network,
+                  &prior,
+                  &control,
+                  plan,
+                  k3_context(),
+              )
+              .expect("R3.18AN frozen prerequisite");
+              (prior, control, an)
+          }
+
+          fn raw_lsb(bytes: &[u8], bit: u64) -> bool {
+              let bit = usize::try_from(bit).expect("bit fits usize");
+              ((bytes[bit / 8] >> (bit % 8)) & 1) != 0
+          }
+
+          #[test]
+          fn r3_18aq_all_47_frozen_ap_rows_accept_mixed_boolean_and_stop_exactly_one_bit_later() {
+              let cases: [(&str, u64, u32, u64); 47] = [
+          @@CASES@@
+              ];
+
+              let mut false_count = 0usize;
+              let mut true_count = 0usize;
+
+              for (index, (path, first_start, actor_object, control_start)) in
+                  cases.into_iter().enumerate()
+              {
+                  let (network, plan) =
+                      frozen_network_and_plan(path, &format!("r318aq_frozen_{index}"));
+                  let (prior, control, an) = aq_from_frozen(
+                      &network,
+                      &plan,
+                      first_start,
+                      actor_object,
+                  );
+                  assert_eq!(an.stop_bit, control_start, "{path}");
+
+                  let expected = raw_lsb(&network, control_start);
+                  let got: @@AQ_RESULT@@ = @@AQ_FN@@(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                  )
+                  .unwrap_or_else(|error| panic!("AQ frozen row {index} {path}: {error}"));
+
+                  assert_eq!(got.payload_composition, an, "{path}");
+                  assert_eq!(got.following_property_present, expected, "{path}");
+                  assert_eq!(got.property_present_start_bit, control_start, "{path}");
+                  assert_eq!(got.property_present_end_bit, control_start + 1, "{path}");
+                  assert_eq!(got.stop_bit, control_start + 1, "{path}");
+
+                  if got.following_property_present {
+                      true_count += 1;
+                  } else {
+                      false_count += 1;
+                  }
+
+                  let repeated = @@AQ_FN@@(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                  )
+                  .expect("repeat frozen R3.18AQ");
+                  assert_eq!(repeated, got, "{path}");
+
+                  let mut poisoned = network.clone();
+                  let poison_bit = usize::try_from(got.stop_bit).expect("poison bit fits usize");
+                  assert!(poison_bit / 8 < poisoned.len(), "{path}");
+                  let poison_value = raw_lsb(&poisoned, got.stop_bit);
+                  set_bit(&mut poisoned, poison_bit, !poison_value);
+                  let after_poison = @@AQ_FN@@(
+                      &poisoned,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                  )
+                  .expect("post-control poison must not affect R3.18AQ");
+                  assert_eq!(after_poison, got, "{path}");
+              }
+
+              assert_eq!(false_count, 7, "R3.18AP false distribution drift");
+              assert_eq!(true_count, 40, "R3.18AP true distribution drift");
+              assert_eq!(false_count + true_count, 47);
+          }
+
+          #[test]
+          fn r3_18aq_truncation_corrupt_prior_and_wrong_context_fail_closed() {
+              let (network, plan) = sample_network_and_plan();
+              let prior = ad_prior(&network, &plan);
+              let control = ag_control(&network, &prior);
+              let an = @@AN_FN@@(
+                  &network,
+                  &prior,
+                  &control,
+                  &plan,
+                  k3_context(),
+              )
+              .expect("sample R3.18AN");
+              assert_eq!(an.stop_bit, 10392);
+              assert_eq!(an.stop_bit % 8, 0);
+
+              let exact_payload_bytes = usize::try_from(an.stop_bit / 8).unwrap();
+              let error = @@AQ_FN@@(
+                  &network[..exact_payload_bytes],
+                  &prior,
+                  &control,
+                  &plan,
+                  k3_context(),
+                  &an,
+              )
+              .expect_err("missing following control bit must reject");
+              assert!(
+                  error.to_string().contains("insufficient-bits"),
+                  "{error}"
+              );
+
+              let mut corrupt = an.clone();
+              corrupt.stop_bit += 1;
+              assert!(
+                  @@AQ_FN@@(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &corrupt,
+                  )
+                  .is_err()
+              );
+
+              let mut wrong_context = k3_context();
+              wrong_context.version_major -= 1;
+              assert!(
+                  @@AQ_FN@@(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      wrong_context,
+                      &an,
+                  )
+                  .is_err()
+              );
+          }
+
+          #[test]
+          fn r3_18aq_source_scope_is_one_an_recompute_one_read_bit_and_no_following_decode_or_loop() {
+              let source = include_str!("../src/lib.rs");
+              let begin = source
+                  .find("@@AQ_BEGIN@@")
+                  .expect("R3.18AQ begin marker");
+              let end_marker = "@@AQ_END@@";
+              let end = source[begin..]
+                  .find(end_marker)
+                  .map(|offset| begin + offset + end_marker.len())
+                  .expect("R3.18AQ end marker");
+              let block = &source[begin..end];
+
+              assert_eq!(block.matches("@@AN_FN@@(").count(), 1);
+              assert_eq!(block.matches("cursor.read_bit()").count(), 1);
+              assert!(!block.contains("cursor.read_bits_le("));
+              assert!(!block.contains("read_bounded_u32("));
+              assert!(!block.contains("decode_replay_network_existing_actor_property_header_v1("));
+              assert!(!block.contains("decode_replay_network_primitive_scalar_v1("));
+              assert!(!block.contains("unadmitted-following-control-false"));
+              assert!(!block.contains("if !following_property_present"));
+              assert!(!block.contains("\n    while "));
+              assert!(!block.contains("\n    for "));
+          }
+          '''
+
+          aq_test = sub(
+              aq_test_template,
+              AQ_RESULT=AQ_RESULT,
+              AQ_FN=AQ_FN,
+              AN_PRIOR=AN_PRIOR,
+              AG_CONTROL=AG_CONTROL,
+              AN_RESULT=AN_RESULT,
+              AN_FN=AN_FN,
+              CASES=cases,
+              AQ_BEGIN=AQ_BEGIN,
+              AQ_END=AQ_END,
+          )
+
+          AQ_TEST_PATH.write_text(aq_test, encoding="utf-8")
+          print("R3.18AQ generator wrote:", LIB_PATH, AQ_TEST_PATH)
+          print("R3.18AQ rows:", len(rows))
+
+      - name: Install Rust 1.85 floor
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          rustup toolchain install 1.85.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { throw "rustup toolchain install failed" }
+          rustup component add rustfmt clippy --toolchain 1.85.0
+          if ($LASTEXITCODE -ne 0) { throw "rustup component install failed" }
+          rustup override set 1.85.0
+          if ($LASTEXITCODE -ne 0) { throw "rustup override failed" }
+          $version = (rustc --version).Trim()
+          if ($version -notmatch '^rustc 1\.85\.0 ') { throw "wrong rustc floor: $version" }
+
+      - name: Audit exact two-file candidate scope
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $expected = @(
+            "crates/mimir-replay/src/lib.rs",
+            "crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs"
+          )
+          $paths = @(
+            git status --porcelain=v1 | ForEach-Object { $_.Substring(3) } | Sort-Object
+          )
+          if (($paths -join "`n") -ne (($expected | Sort-Object) -join "`n")) {
+            throw "candidate scope drift:`n$($paths -join "`n")"
+          }
+
+          git add -- $expected
+          if ($LASTEXITCODE -ne 0) { throw "git add candidate failed" }
+          $staged = @(git diff --cached --name-only | Sort-Object)
+          if (($staged -join "`n") -ne (($expected | Sort-Object) -join "`n")) {
+            throw "staged scope drift"
+          }
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed" }
+
+      - name: Focused AQ and boundary regressions
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed" }
+
+          cargo test -p mimir-replay --locked --test r3_18aq_post_an_payload_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "AQ focused test failed" }
+
+          cargo test -p mimir-replay --locked --test r3_18an_post_ak_payload -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "AN regression failed" }
+
+          cargo test -p mimir-replay --locked --test r3_18d_next_property_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "R3.18D mixed-control precedent regression failed" }
+
+          cargo test -p mimir-replay --locked --test r3_18ag_post_ad_payload_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "R3.18AG prior-control regression failed" }
+
+          cargo test -p mimir-replay --locked --test r3_18m_following_control --test r3_18w_following_payload_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "true-only historical boundary regressions failed" }
+
+      - name: Full workspace validation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          cargo check --workspace --all-targets --all-features --locked
+          if ($LASTEXITCODE -ne 0) { throw "workspace check failed" }
+
+          cargo test --workspace --all-targets --all-features --locked
+          if ($LASTEXITCODE -ne 0) { throw "workspace tests failed" }
+
+          cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+          if ($LASTEXITCODE -ne 0) { throw "workspace clippy failed" }
+
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verifier failed" }
+
+      - name: Commit and push exact clean candidate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          git diff --cached --check
+          if ($LASTEXITCODE -ne 0) { throw "final staged diff check failed" }
+
+          git config user.name "MIMIR AQ Builder"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "Publish R3.18AQ mixed following control"
+          if ($LASTEXITCODE -ne 0) { throw "candidate commit failed" }
+
+          $candidate = (git rev-parse HEAD).Trim()
+          $parent = (git rev-parse HEAD^).Trim()
+          $tree = (git show -s --format=%T HEAD).Trim()
+          if ($parent -ne $env:BASE_SHA) {
+            throw "candidate parent drift: expected $env:BASE_SHA got $parent"
+          }
+
+          $files = @(git diff --name-only "$env:BASE_SHA..HEAD" | Sort-Object)
+          $expected = @(
+            "crates/mimir-replay/src/lib.rs",
+            "crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs"
+          ) | Sort-Object
+          if (($files -join "`n") -ne ($expected -join "`n")) {
+            throw "clean candidate file scope drift"
+          }
+
+          git fetch origin main --force
+          if ($LASTEXITCODE -ne 0) { throw "pre-push fresh main fetch failed" }
+          if ((git rev-parse origin/main).Trim() -ne $env:BASE_SHA) {
+            throw "main advanced during AQ builder; refusing candidate push"
+          }
+
+          $existing = git ls-remote --heads origin "refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate race lookup failed" }
+          if ($existing) { throw "candidate branch appeared during run; refusing overwrite" }
+
+          git remote set-url origin "https://x-access-token:$env:GH_TOKEN@github.com/Naveax/MIMIR.git"
+          git push origin "HEAD:refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed" }
+
+          "R318AQ_CANDIDATE_SHA=$candidate" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "R318AQ_CANDIDATE_TREE=$tree" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Build immutable builder receipt
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $receiptDir = Join-Path $env:RUNNER_TEMP "r318aq-receipt"
+          New-Item -ItemType Directory -Force -Path $receiptDir | Out-Null
+
+          $libBlob = (git rev-parse "HEAD:crates/mimir-replay/src/lib.rs").Trim()
+          $testBlob = (git rev-parse "HEAD:crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs").Trim()
+
+          $receipt = @(
+            "R3_18AQ_BUILDER=PASS",
+            "base_sha=$env:BASE_SHA",
+            "base_tree=$env:BASE_TREE",
+            "production_sha=$env:PROD_SHA",
+            "ap_head=$env:AP_HEAD",
+            "ap_run_job=$env:AP_RUN/$env:AP_JOB",
+            "ap_artifact=$env:AP_ARTIFACT",
+            "ap_artifact_digest=$env:AP_ARTIFACT_DIGEST",
+            "candidate_sha=$env:R318AQ_CANDIDATE_SHA",
+            "candidate_tree=$env:R318AQ_CANDIDATE_TREE",
+            "candidate_parent=$env:BASE_SHA",
+            "candidate_files=2",
+            "lib_blob=$libBlob",
+            "aq_test_blob=$testBlob",
+            "frozen_rows=47",
+            "false=7",
+            "true=40",
+            "new_control_reads=1",
+            "following_stream_header_payload_second_control=0/0/0/0",
+            "clean_scope=PASS",
+            "rust_floor=1.85.0",
+            "focused_validation=PASS",
+            "workspace_validation=PASS",
+            "repository_verifier=PASS"
+          )
+          $receipt | Set-Content -Path (Join-Path $receiptDir "receipt.txt") -Encoding utf8
+
+          git diff --stat "$env:BASE_SHA..HEAD" | Set-Content -Path (Join-Path $receiptDir "diff_stat.txt") -Encoding utf8
+          git diff --name-only "$env:BASE_SHA..HEAD" | Set-Content -Path (Join-Path $receiptDir "changed_files.txt") -Encoding utf8
+
+      - name: Upload builder receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318aq-production-builder-receipt
+          path: ${{ runner.temp }}/r318aq-receipt
+          if-no-files-found: error
+          retention-days: 30
