@@ -1,0 +1,29 @@
+name: R3.18AS Continuity Admission Builder v3
+on:
+  push:
+    branches: [automation/r318as-admission-builder-v3]
+    paths: [.github/workflows/_tmp_r318as_admission_v3_trigger.txt]
+concurrency:
+  group: r318as-continuity-admission-builder-v3
+  cancel-in-progress: false
+permissions:
+  contents: write
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - run: bash tools/_tmp_r318as_admission_v3.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r318as-continuity-admission-v3-receipt
+          path: ${{ runner.temp }}/receipt
+          if-no-files-found: error
+          retention-days: 30
