@@ -76,7 +76,9 @@ jobs:
         shell: bash
         run: |
           git diff --check
-          changed="$(git diff --name-only | sort)"
+          tracked="$(git diff --name-only)"
+          untracked="$(git ls-files --others --exclude-standard)"
+          changed="$(printf '%s\n%s\n' "$tracked" "$untracked" | sed '/^$/d' | sort)"
           expected=$'crates/mimir-replay/src/lib.rs\ncrates/mimir-replay/tests/r3_18au_post_aq_following_header.rs'
           if [ "$changed" != "$expected" ]; then
             printf 'Unexpected production paths before helper cleanup:\n%s\n' "$changed"
