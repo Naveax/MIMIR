@@ -48,6 +48,13 @@ jobs:
           code = '\n'.join(recovered) + '\n'
           compile(code, 'r318au_materializer.py', 'exec')
           exec(compile(code, 'r318au_materializer.py', 'exec'), {'__name__': '__main__'})
+
+          test_path = Path('crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs')
+          test_source = test_path.read_text(encoding='utf-8')
+          duplicate = '    ReplayNetworkAttributeTagV1,\n'
+          if test_source.count(duplicate) != 1:
+              raise SystemExit('expected exactly one duplicate ReplayNetworkAttributeTagV1 import')
+          test_path.write_text(test_source.replace(duplicate, '', 1), encoding='utf-8', newline='\n')
           PY
 
       - name: Rust 1.85 formatting
