@@ -1,0 +1,50 @@
+name: R3.18AU Admission Checkout Recovery
+
+on:
+  push:
+    branches:
+      - staging/r318au-admission-av-v1
+    paths:
+      - '.github/workflows/r318au-admission-checkout-recovery.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r318au-admission-checkout-recovery
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout exact staging ref shallowly
+        uses: actions/checkout@v6
+        with:
+          ref: staging/r318au-admission-av-v1
+          fetch-depth: 1
+
+      - name: Repair builder checkout and self-remove
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Builder = '.github/workflows/r318au-admission-builder.yml'
+          $Recovery = '.github/workflows/r318au-admission-checkout-recovery.yml'
+          $Text = Get-Content -LiteralPath $Builder -Raw
+          $Old = '          fetch-depth: 0'
+          $New = '          fetch-depth: 1'
+          $Count = ([regex]::Matches($Text, [regex]::Escape($Old))).Count
+          if ($Count -ne 1) { throw "Expected one fetch-depth: 0 marker, found $Count" }
+          $Text = $Text.Replace($Old, $New)
+          Set-Content -LiteralPath $Builder -Value $Text -NoNewline
+          git rm $Recovery
+          git add $Builder
+          $Expected = @($Builder, $Recovery) | Sort-Object
+          $Actual = @(git diff --cached --name-only) | Sort-Object
+          $Delta = Compare-Object -ReferenceObject $Expected -DifferenceObject $Actual
+          if ($Delta) { $Delta | Out-String | Write-Host; throw 'Recovery scope drift' }
+          git config user.name 'MIMIR Admission Recovery'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Repair R3.18AU admission shallow checkout'
+          git push origin HEAD:staging/r318au-admission-av-v1
