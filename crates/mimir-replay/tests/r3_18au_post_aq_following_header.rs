@@ -419,7 +419,7 @@ fn r3_18au_exact_47_row_lane_preserves_seven_terminators_and_composes_forty_head
         }
 
         if !true_truncation_checked {
-            let bytes_needed_for_aq = usize::try_from((aq.stop_bit + 7) / 8).unwrap();
+            let bytes_needed_for_aq = usize::try_from(aq.stop_bit.div_ceil(8)).unwrap();
             if bytes_needed_for_aq * 8 < usize::try_from(got.stop_bit).unwrap() {
                 let truncated = &network[..bytes_needed_for_aq];
                 assert!(
