@@ -1,0 +1,671 @@
+name: R3.18AU Staging Builder
+
+on:
+  push:
+    branches:
+      - automation/r318au-builder-v1
+
+concurrency:
+  group: r318au-staging-builder-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v6
+        with:
+          ref: automation/r318au-builder-v1
+          fetch-depth: 0
+
+      - name: Materialize bounded R3.18AU source and focused test
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          lib_path = Path('crates/mimir-replay/src/lib.rs')
+          lib = lib_path.read_text(encoding='utf-8')
+          marker = '// R3.18AU PRE-ADMISSION BEGIN bounded post-AQ mixed-continuation following header'
+          if marker in lib:
+              raise SystemExit('R3.18AU production marker already exists; refusing duplicate append')
+
+          production = r'''
+
+// R3.18AU PRE-ADMISSION BEGIN bounded post-AQ mixed-continuation following header
+/// Bounded composition of one validated published R3.18AQ mixed control plus at most one
+/// R3.18AT-admitted following existing-actor property header.
+///
+/// A false R3.18AQ control is a successful terminator with `following_header == None` and
+/// stops exactly at the AQ control end. A true control replays exactly one stateless property
+/// header from the validated control coordinate, requires exact eight-field R3.18AT membership,
+/// and stops at that header's payload start. No payload or later control bit is consumed.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1 {
+    pub control: ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    pub following_header: Option<ReplayNetworkExistingActorFirstPropertyHeaderV1>,
+    pub context: ReplayNetworkK3DecodeContextV1,
+    pub stop_bit: u64,
+}
+
+fn network_existing_actor_post_aq_following_header_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-AQ following-header error: {category}: {}",
+        detail.into()
+    ))
+}
+
+fn r3_18at_post_aq_following_header_context_admitted_v1(
+    stream_id_bound: u32,
+    prop_id_bits: u8,
+    property_object_index: u32,
+    attribute_tag: ReplayNetworkAttributeTagV1,
+    context: ReplayNetworkK3DecodeContextV1,
+) -> bool {
+    matches!(
+        (
+            stream_id_bound,
+            prop_id_bits,
+            property_object_index,
+            attribute_tag,
+            context.version_major,
+            context.version_minor,
+            context.net_version,
+            context.is_rl_223,
+        ),
+        (110, 6, 49, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 106, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 107, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 113, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 115, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 117, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 122, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 130, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 131, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 134, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 144, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 60, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (60, 5, 69, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (67, 6, 81, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (72, 6, 84, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+            | (72, 6, 87, ReplayNetworkAttributeTagV1::Int, 868, 32, 10, false)
+    )
+}
+
+/// Compose exactly one R3.18AT-bounded following header after a validated published R3.18AQ
+/// mixed control result, preserving false as an exact terminator.
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    control: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+    an_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    aq_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1>{
+    let expected_aq = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+        network_bytes,
+        prior,
+        control,
+        lookup_plan,
+        context,
+        an_prior,
+    )?;
+    if expected_aq != *aq_prior {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "invalid-r3-18aq-prior",
+            "supplied R3.18AQ mixed-control result does not match recomputed authority",
+        ));
+    }
+
+    let expected_control_end = aq_prior
+        .property_present_start_bit
+        .checked_add(1)
+        .ok_or_else(|| {
+            network_existing_actor_post_aq_following_header_error(
+                "invalid-control-boundary",
+                "R3.18AQ control end overflows u64",
+            )
+        })?;
+    if aq_prior.property_present_end_bit != expected_control_end
+        || aq_prior.stop_bit != expected_control_end
+    {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "invalid-control-boundary",
+            format!(
+                "AQ start={} end={} stop={} expected_end={expected_control_end}",
+                aq_prior.property_present_start_bit,
+                aq_prior.property_present_end_bit,
+                aq_prior.stop_bit,
+            ),
+        ));
+    }
+
+    if !aq_prior.following_property_present {
+        return Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1 {
+            control: aq_prior.clone(),
+            following_header: None,
+            context,
+            stop_bit: aq_prior.stop_bit,
+        });
+    }
+
+    let actor_object_index = an_prior.header_composition.following_header.actor_object_index;
+    let following_header = decode_replay_network_existing_actor_first_property_header_v1(
+        network_bytes,
+        aq_prior.property_present_start_bit,
+        actor_object_index,
+        lookup_plan,
+    )?;
+
+    if !following_header.property_present {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "control-header-mismatch",
+            "R3.18AQ reported true but the stateless following-header primitive reported absent",
+        ));
+    }
+    if following_header.property_present_start_bit != aq_prior.property_present_start_bit
+        || following_header.property_present_end_bit != aq_prior.property_present_end_bit
+        || aq_prior.stop_bit != following_header.property_present_end_bit
+    {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "control-header-boundary-mismatch",
+            format!(
+                "AQ bits [{}, {}) stop {}, header bits [{}, {})",
+                aq_prior.property_present_start_bit,
+                aq_prior.property_present_end_bit,
+                aq_prior.stop_bit,
+                following_header.property_present_start_bit,
+                following_header.property_present_end_bit,
+            ),
+        ));
+    }
+    if following_header.actor_object_index != actor_object_index {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "actor-mismatch",
+            format!(
+                "validated actor {actor_object_index} differs from following header actor {}",
+                following_header.actor_object_index,
+            ),
+        ));
+    }
+
+    let payload_start_bit = following_header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_post_aq_following_header_error(
+            "missing-payload-start",
+            "present R3.18AT following header has no payload start",
+        )
+    })?;
+    if following_header.stop_bit != payload_start_bit {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "payload-boundary-mismatch",
+            format!(
+                "following header stop {} differs from payload start {payload_start_bit}",
+                following_header.stop_bit,
+            ),
+        ));
+    }
+
+    let (
+        Some(stream_id_bound),
+        Some(prop_id_bits),
+        Some(property_object_index),
+        Some(attribute_tag),
+    ) = (
+        following_header.stream_id_bound,
+        following_header.prop_id_bits,
+        following_header.resolved_property_object_index,
+        following_header.resolved_attribute_tag,
+    )
+    else {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "incomplete-r3-18at-header-context",
+            "following header is missing one or more exact R3.18AT structural fields",
+        ));
+    };
+
+    if !r3_18at_post_aq_following_header_context_admitted_v1(
+        stream_id_bound,
+        prop_id_bits,
+        property_object_index,
+        attribute_tag,
+        context,
+    ) {
+        return Err(network_existing_actor_post_aq_following_header_error(
+            "unadmitted-r3-18at-header-context",
+            format!(
+                "R3.18AT exact tuple rejected bound={stream_id_bound} bits={prop_id_bits} object={property_object_index} tag={attribute_tag:?} version={}.{} net{} rl223={}",
+                context.version_major,
+                context.version_minor,
+                context.net_version,
+                context.is_rl_223,
+            ),
+        ));
+    }
+
+    Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1 {
+        control: aq_prior.clone(),
+        following_header: Some(following_header),
+        context,
+        stop_bit: payload_start_bit,
+    })
+}
+// R3.18AU PRE-ADMISSION END bounded post-AQ mixed-continuation following header
+
+#[cfg(test)]
+mod r3_18au_exact_contract_tests {
+    use super::*;
+
+    fn context(major: i32, minor: i32, net: i32, is_rl_223: bool) -> ReplayNetworkK3DecodeContextV1 {
+        ReplayNetworkK3DecodeContextV1 {
+            version_major: major,
+            version_minor: minor,
+            net_version: net,
+            is_rl_223,
+        }
+    }
+
+    #[test]
+    fn r3_18au_all_sixteen_exact_r3_18at_contexts_are_admitted() {
+        let admitted = [
+            (110, 6, 49),
+            (60, 5, 106),
+            (60, 5, 107),
+            (60, 5, 113),
+            (60, 5, 115),
+            (60, 5, 117),
+            (60, 5, 122),
+            (60, 5, 130),
+            (60, 5, 131),
+            (60, 5, 134),
+            (60, 5, 144),
+            (60, 5, 60),
+            (60, 5, 69),
+            (67, 6, 81),
+            (72, 6, 84),
+            (72, 6, 87),
+        ];
+        assert_eq!(admitted.len(), 16);
+        for (bound, bits, object) in admitted {
+            assert!(r3_18at_post_aq_following_header_context_admitted_v1(
+                bound,
+                bits,
+                object,
+                ReplayNetworkAttributeTagV1::Int,
+                context(868, 32, 10, false),
+            ));
+        }
+    }
+
+    #[test]
+    fn r3_18au_exact_membership_rejects_widening_cross_boundary_and_fabrication() {
+        let ctx = context(868, 32, 10, false);
+        assert!(!r3_18at_post_aq_following_header_context_admitted_v1(
+            60, 5, 106, ReplayNetworkAttributeTagV1::Boolean, ctx,
+        ));
+        assert!(!r3_18at_post_aq_following_header_context_admitted_v1(
+            67, 6, 107, ReplayNetworkAttributeTagV1::Int, ctx,
+        ));
+        assert!(!r3_18at_post_aq_following_header_context_admitted_v1(
+            60, 5, 38, ReplayNetworkAttributeTagV1::Int, ctx,
+        ));
+        assert!(!r3_18at_post_aq_following_header_context_admitted_v1(
+            60, 5, 39, ReplayNetworkAttributeTagV1::Int, ctx,
+        ));
+        assert!(!r3_18at_post_aq_following_header_context_admitted_v1(
+            60, 5, 106, ReplayNetworkAttributeTagV1::Int, context(868, 31, 10, false),
+        ));
+        assert!(!r3_18at_post_aq_following_header_context_admitted_v1(
+            60, 5, 106, ReplayNetworkAttributeTagV1::Int, context(868, 32, 9, false),
+        ));
+        assert!(!r3_18at_post_aq_following_header_context_admitted_v1(
+            60, 5, 106, ReplayNetworkAttributeTagV1::Int, context(868, 32, 10, true),
+        ));
+    }
+}
+'''
+          if not lib.endswith('\n'):
+              lib += '\n'
+          lib_path.write_text(lib + production.lstrip('\n'), encoding='utf-8', newline='\n')
+
+          aq_path = Path('crates/mimir-replay/tests/r3_18aq_post_an_payload_control.rs')
+          aq_source = aq_path.read_text(encoding='utf-8')
+          match = re.search(
+              r'let cases: \[\(&str, u64, u32, u64\); 47\] = \[\n(.*?)\n    \];',
+              aq_source,
+              re.S,
+          )
+          if not match:
+              raise SystemExit('could not freeze the exact 47-row AQ case list')
+          cases = match.group(1)
+
+          test_template = r'''include!("r3_18aq_post_an_payload_control.rs");
+
+use mimir_replay::{
+    ReplayNetworkAttributeTagV1,
+    ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1,
+};
+use std::collections::BTreeMap;
+
+fn au_cases() -> [(&'static str, u64, u32, u64); 47] {
+    [
+__CASES__
+    ]
+}
+
+#[test]
+fn r3_18au_exact_47_row_lane_preserves_seven_terminators_and_composes_forty_headers() {
+    let mut false_count = 0usize;
+    let mut true_count = 0usize;
+    let mut counts: BTreeMap<(u32, u8, u32), usize> = BTreeMap::new();
+    let mut false_isolation_checked = false;
+    let mut true_negative_checked = false;
+    let mut true_truncation_checked = false;
+
+    for (index, (path, first_start, actor_object, control_start)) in au_cases().into_iter().enumerate() {
+        let (network, plan) = frozen_network_and_plan(path, &format!("r318au_frozen_{index}"));
+        let (prior, control, an) = aq_from_frozen(&network, &plan, first_start, actor_object);
+        assert_eq!(an.stop_bit, control_start, "{path}");
+        let aq = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+            &network,
+            &prior,
+            &control,
+            &plan,
+            k3_context(),
+            &an,
+        )
+        .unwrap_or_else(|error| panic!("AQ frozen prerequisite row {index} {path}: {error}"));
+
+        let got: ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1 = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+            &network,
+            &prior,
+            &control,
+            &plan,
+            k3_context(),
+            &an,
+            &aq,
+        )
+        .unwrap_or_else(|error| panic!("AU frozen row {index} {path}: {error}"));
+
+        assert_eq!(got.control, aq, "{path}");
+        assert_eq!(got.context, k3_context(), "{path}");
+        let repeated = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+            &network,
+            &prior,
+            &control,
+            &plan,
+            k3_context(),
+            &an,
+            &aq,
+        )
+        .expect("repeat frozen R3.18AU");
+        assert_eq!(repeated, got, "{path}");
+
+        if !aq.following_property_present {
+            false_count += 1;
+            assert_eq!(got.following_header, None, "{path}");
+            assert_eq!(got.stop_bit, aq.stop_bit, "{path}");
+
+            if !false_isolation_checked {
+                let mut poisoned = network.clone();
+                let start = usize::try_from(aq.stop_bit).expect("AQ stop fits usize");
+                let total = poisoned.len() * 8;
+                for bit in start..usize::min(start + 32, total) {
+                    let old = ((poisoned[bit / 8] >> (bit % 8)) & 1) != 0;
+                    set_bit(&mut poisoned, bit, !old);
+                }
+                let after_poison = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                    &poisoned,
+                    &prior,
+                    &control,
+                    &plan,
+                    k3_context(),
+                    &an,
+                    &aq,
+                )
+                .expect("false terminator must ignore all post-AQ bits");
+                assert_eq!(after_poison, got);
+                false_isolation_checked = true;
+            }
+            continue;
+        }
+
+        true_count += 1;
+        let header = got
+            .following_header
+            .as_ref()
+            .expect("true AQ row must expose exactly one header");
+        assert!(header.property_present, "{path}");
+        assert_eq!(header.property_present_start_bit, aq.property_present_start_bit, "{path}");
+        assert_eq!(header.property_present_end_bit, aq.property_present_end_bit, "{path}");
+        assert_eq!(header.actor_object_index, an.header_composition.following_header.actor_object_index, "{path}");
+        assert_eq!(header.resolved_attribute_tag, Some(ReplayNetworkAttributeTagV1::Int), "{path}");
+        assert_eq!(header.payload_start_bit, Some(got.stop_bit), "{path}");
+        assert_eq!(header.stop_bit, got.stop_bit, "{path}");
+
+        let key = (
+            header.stream_id_bound.expect("AT bound"),
+            header.prop_id_bits.expect("AT prop bits"),
+            header.resolved_property_object_index.expect("AT object"),
+        );
+        *counts.entry(key).or_insert(0) += 1;
+
+        let mut poisoned = network.clone();
+        let poison_bit = usize::try_from(got.stop_bit).expect("payload start fits usize");
+        if poison_bit < poisoned.len() * 8 {
+            let old = ((poisoned[poison_bit / 8] >> (poison_bit % 8)) & 1) != 0;
+            set_bit(&mut poisoned, poison_bit, !old);
+            let after_poison = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                &poisoned,
+                &prior,
+                &control,
+                &plan,
+                k3_context(),
+                &an,
+                &aq,
+            )
+            .expect("payload poison must not affect AU header result");
+            assert_eq!(after_poison, got, "{path}");
+        }
+
+        if !true_truncation_checked {
+            let bytes_needed_for_aq = usize::try_from((aq.stop_bit + 7) / 8).unwrap();
+            if bytes_needed_for_aq * 8 < usize::try_from(got.stop_bit).unwrap() {
+                let truncated = &network[..bytes_needed_for_aq];
+                assert!(
+                    decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                        truncated,
+                        &prior,
+                        &control,
+                        &plan,
+                        k3_context(),
+                        &an,
+                        &aq,
+                    )
+                    .is_err(),
+                    "truncation inside true following header must reject: {path}",
+                );
+                true_truncation_checked = true;
+            }
+        }
+
+        if !true_negative_checked {
+            let mut wrong_an = an.clone();
+            wrong_an.header_composition.following_header.actor_object_index = u32::MAX;
+            assert!(
+                decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                    &network,
+                    &prior,
+                    &control,
+                    &plan,
+                    k3_context(),
+                    &wrong_an,
+                    &aq,
+                )
+                .is_err(),
+                "wrong actor authority must reject",
+            );
+
+            let mut wrong_version = k3_context();
+            wrong_version.version_minor -= 1;
+            assert!(
+                decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                    &network,
+                    &prior,
+                    &control,
+                    &plan,
+                    wrong_version,
+                    &an,
+                    &aq,
+                )
+                .is_err(),
+                "wrong exact replay version must reject",
+            );
+
+            let mut wrong_rl223 = k3_context();
+            wrong_rl223.is_rl_223 = true;
+            assert!(
+                decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                    &network,
+                    &prior,
+                    &control,
+                    &plan,
+                    wrong_rl223,
+                    &an,
+                    &aq,
+                )
+                .is_err(),
+                "RL223 false-to-true widening must reject",
+            );
+
+            let mut unresolved_plan = plan.clone();
+            let actor_index = usize::try_from(header.actor_object_index).unwrap();
+            let stream_id = header.stream_id.expect("true header stream id");
+            if let Some(lookup) = unresolved_plan
+                .object_lookups
+                .get_mut(actor_index)
+                .and_then(Option::as_mut)
+            {
+                lookup.properties.retain(|property| property.stream_id != stream_id);
+                assert!(
+                    decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                        &network,
+                        &prior,
+                        &control,
+                        &unresolved_plan,
+                        k3_context(),
+                        &an,
+                        &aq,
+                    )
+                    .is_err(),
+                    "unresolved following stream/property lookup must reject",
+                );
+            }
+            true_negative_checked = true;
+        }
+    }
+
+    let expected: BTreeMap<(u32, u8, u32), usize> = [
+        ((110, 6, 49), 1),
+        ((60, 5, 106), 4),
+        ((60, 5, 107), 19),
+        ((60, 5, 113), 1),
+        ((60, 5, 115), 2),
+        ((60, 5, 117), 1),
+        ((60, 5, 122), 1),
+        ((60, 5, 130), 2),
+        ((60, 5, 131), 1),
+        ((60, 5, 134), 1),
+        ((60, 5, 144), 1),
+        ((60, 5, 60), 1),
+        ((60, 5, 69), 2),
+        ((67, 6, 81), 1),
+        ((72, 6, 84), 1),
+        ((72, 6, 87), 1),
+    ]
+    .into_iter()
+    .collect();
+
+    assert_eq!(false_count, 7);
+    assert_eq!(true_count, 40);
+    assert_eq!(counts, expected);
+    assert!(false_isolation_checked);
+    assert!(true_negative_checked);
+    assert!(true_truncation_checked);
+}
+
+#[test]
+fn r3_18au_source_scope_is_one_header_call_and_zero_payload_or_loop_work() {
+    let source = include_str!("../src/lib.rs");
+    let begin = "// R3.18AU PRE-ADMISSION BEGIN bounded post-AQ mixed-continuation following header";
+    let end = "// R3.18AU PRE-ADMISSION END bounded post-AQ mixed-continuation following header";
+    let block = source
+        .split_once(begin)
+        .expect("AU begin marker")
+        .1
+        .split_once(end)
+        .expect("AU end marker")
+        .0;
+
+    assert_eq!(
+        block
+            .matches("decode_replay_network_existing_actor_first_property_header_v1(")
+            .count(),
+        1,
+    );
+    for forbidden in [
+        "decode_replay_network_primitive_scalar_v1(",
+        "decode_replay_network_k2_v1(",
+        "NetworkBitCursor",
+        "loop {",
+        "while ",
+    ] {
+        assert_eq!(block.matches(forbidden).count(), 0, "forbidden AU source token: {forbidden}");
+    }
+}
+'''
+          test_path = Path('crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs')
+          if test_path.exists():
+              raise SystemExit('focused AU test already exists; refusing overwrite')
+          test_path.write_text(test_template.replace('__CASES__', cases), encoding='utf-8', newline='\n')
+          PY
+
+      - name: Format only staged Rust changes
+        shell: bash
+        run: cargo fmt --all
+
+      - name: Focused R3.18AU validation
+        shell: bash
+        run: cargo test -p mimir-replay --test r3_18au_post_aq_following_header -- --nocapture
+
+      - name: Diff guard and stage clean result
+        shell: bash
+        run: |
+          git diff --check
+          changed="$(git diff --name-only | sort)"
+          expected=$'crates/mimir-replay/src/lib.rs\ncrates/mimir-replay/tests/r3_18au_post_aq_following_header.rs'
+          if [ "$changed" != "$expected" ]; then
+            printf 'Unexpected staged paths:\n%s\n' "$changed"
+            exit 1
+          fi
+          git rm .github/workflows/r318au-builder.yml
+          git add crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs
+          git diff --cached --check
+
+      - name: Commit staging result
+        shell: bash
+        run: |
+          git config user.name 'MIMIR AU Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Stage R3.18AU bounded post-AQ following header'
+          git push origin HEAD:automation/r318au-builder-v1
