@@ -1,0 +1,613 @@
+name: R3.18AU Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - staging/r318au-admission-av-v1
+    paths:
+      - '.github/workflows/r318au-admission-builder.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r318au-continuity-admission-builder
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v6
+        with:
+          ref: staging/r318au-admission-av-v1
+          fetch-depth: 0
+
+      - name: Verify frozen production base
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ExpectedMain = '6a9f456c78ffccab177823234a8d9fe4ba59a850'
+          git fetch origin main --quiet
+          $Main = (git rev-parse origin/main).Trim()
+          if ($Main -ne $ExpectedMain) { throw "main drift: $Main" }
+
+      - name: Materialize AU admission and AV spec
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+          import re
+          import textwrap
+
+          PROD = "6a9f456c78ffccab177823234a8d9fe4ba59a850"
+          TREE = "cbda5db96e88cc208f872c2237cf4741b8fcfaef"
+          PARENT = "7068884bd1982a99ea68647156addc5b381f9613"
+          PARENT_TREE = "c87e7ac1cca37cb1b569fbaf78181149e75881c6"
+          LIB_BLOB = "d7b18acd7ea832acc73e94921b994fa1b341e006"
+          TEST_BLOB = "5455121b2f0eafad09e031a66aa70178691c28fe"
+          AU_SPEC_BLOB = "48e78daa50cb2724691fce09514d535a739f124f"
+          CANDIDATE_RUN = 32976370318
+          CANDIDATE_JOB = 98201978533
+          PUBLISHED_RUN = 32977973145
+          PUBLISHED_JOB = 98207283247
+          AT_SHA = "3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5"
+          AS_HEAD = "475650fea59332f74b9f69da50e3e4471622ab7e"
+          AS_ARTIFACT = 9603335255
+          AS_ARTIFACT_SHA = "0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45"
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected exactly one marker, found {count}")
+              return text.replace(old, new, 1)
+
+          def write(path: str, content: str) -> None:
+              Path(path).write_text(content, encoding="utf-8", newline="\n")
+
+          # Root continuity handbook.
+          p = Path("MIMIR_CONTINUE_HERE.md")
+          s = p.read_text(encoding="utf-8")
+          s = replace_once(
+              s,
+              "LAST_PRODUCTION_CODE_SHA:\n  e1ccbef95c8424b689dee7d77fd8fde2af3e0204\n\nLAST_PRODUCTION_MILESTONE:\n  R3.18AQ — bounded post-AN mixed following-control production",
+              f"LAST_PRODUCTION_CODE_SHA:\n  {PROD}\n\nLAST_PRODUCTION_MILESTONE:\n  R3.18AU — bounded post-AQ mixed-continuation following-header production",
+              "continue production state",
+          )
+          s = replace_once(
+              s,
+              "CURRENT_PASS:\n  R3.18AU — bounded post-AQ mixed-continuation following-header production\n\nCURRENT_PASS_TYPE:\n  bounded production implementation / validate-recompute one published R3.18AQ mixed control; false remains a no-header terminator; true may compose exactly one stateless following header only under exact R3.18AT eight-field membership; stop at payload_start with payload/second-control consumption zero",
+              "CURRENT_PASS:\n  R3.18AV — published-R3.18AU mixed following-header differential\n\nCURRENT_PASS_TYPE:\n  read-only published-production differential / replay the immutable 47-row AS/AT authority against published R3.18AU; preserve false=7 no-header terminators and true=40 exact one-header results; verify exact AT membership/boundaries and zero following-payload/second-control consumption; production mutation forbidden",
+              "continue current pass",
+          )
+          s = replace_once(
+              s,
+              "  R3.18AU ACTIVE bounded production: false AQ prior remains a no-header terminator; true prior may compose exactly one stateless following header only under exact R3.18AT membership and stop at payload_start\n  NO following payload or second later property-control bit after the R3.18AU header boundary, header on false terminators, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted",
+              f"  R3.18AU PRODUCTION at {PROD}: validates/recomputes one exact published R3.18AQ mixed control; false returns a successful no-header terminator with zero post-AQ reads; true composes exactly one stateless following header under exact R3.18AT membership and stops at payload_start\n  R3.18AV ACTIVE read-only differential: compare published R3.18AU against the immutable 47-row AS/AT authority; require false=7, true=40, exact true headers 40/40, exact AT contexts/multiplicities, mismatch 0, and payload/second-control consumption 0/0\n  NO following payload or second later property-control bit after published R3.18AU, header on false terminators, contexts outside exact R3.18AT membership, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted",
+              "continue hard stop",
+          )
+          closure = f"""R3_18AU_PRODUCTION_CLOSURE:
+          Outcome A / production {PROD} / tree {TREE}
+          parent: {PARENT} / parent tree {PARENT_TREE}
+          lib/test blobs: {LIB_BLOB} / {TEST_BLOB}
+          execution spec blob: {AU_SPEC_BLOB}
+          exact clean-candidate CI: {CANDIDATE_RUN}/{CANDIDATE_JOB} SUCCESS
+          published-main CI: {PUBLISHED_RUN}/{PUBLISHED_JOB} SUCCESS
+          R3.18AT contract: sha256:{AT_SHA} / exact_tuple_only / 16 eight-field contexts / multiplicity sum 40 / 7 false terminators outside membership
+          R3.18AS source authority: {AS_HEAD} / artifact {AS_ARTIFACT} / sha256:{AS_ARTIFACT_SHA}
+          frozen lane 47/47 / false terminators 7/7 no-header / true one-header rows 40/40 / Int=40 / exact contexts 16 / source-authority mismatch 0
+          false post-AQ reads 0 / following payload bits 0 / second later control bits 0 / generalized loop-cursor 0
+          clean production scope: crates/mimir-replay/src/lib.rs + crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs only / Cargo-doc-workflow-fixture-corpus-support mutation 0/0/0/0/0/0
+          fresh-main ancestry + force=false publication + exact SHA/tree readback PASS
+          next exact pass: R3.18AV published-production differential; production mutation forbidden; no following payload or later control
+
+          """
+          if "R3_18AU_PRODUCTION_CLOSURE:" in s:
+              raise SystemExit("continue AU closure already present")
+          s = replace_once(s, "R3_18AT_CONTRACT_CLOSURE:\n", closure + "R3_18AT_CONTRACT_CLOSURE:\n", "continue closure insertion")
+          write(str(p), s)
+
+          # Knowledge graph current frontier, reading order, and AU/AV sections.
+          p = Path("MIMIR_KNOWLEDGE_GRAPH.md")
+          s = p.read_text(encoding="utf-8")
+          s = replace_once(
+              s,
+              "R3.18AU bounded post-AQ mixed-continuation following-header production / ACTIVE                              |",
+              "R3.18AU bounded post-AQ mixed-continuation following-header production / PRODUCTION CLOSED                   |\nR3.18AV published-R3.18AU mixed following-header differential / ACTIVE                                      |",
+              "graph frontier",
+          )
+          old_order = """128. `docs/continuity/MIMIR_R3_18AT_EXECUTION_SPEC.md`
+          129. `docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json`
+          130. `docs/continuity/MIMIR_R3_18AT_DECISION.md`
+          131. `docs/continuity/MIMIR_R3_18AU_EXECUTION_SPEC.md`
+          132. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+          133. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+          134. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+          135. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+          136. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+          137. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+          138. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`"""
+          new_order = """128. `docs/continuity/MIMIR_R3_18AT_EXECUTION_SPEC.md`
+          129. `docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json`
+          130. `docs/continuity/MIMIR_R3_18AT_DECISION.md`
+          131. `docs/continuity/MIMIR_R3_18AU_EXECUTION_SPEC.md`
+          132. `docs/continuity/MIMIR_R3_18AU_DECISION.md`
+          133. `docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md`
+          134. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+          135. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+          136. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+          137. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+          138. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+          139. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+          140. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`"""
+          s = replace_once(s, textwrap.dedent(old_order), textwrap.dedent(new_order), "graph reading order")
+          old_au = """### R3.18AU bounded post-AQ mixed-continuation following-header production: ACTIVE
+          - validate/recompute exactly one published R3.18AQ mixed control prior
+          - false prior remains a successful no-header terminator with zero post-AQ reads
+          - true prior may invoke the existing stateless following-header primitive exactly once
+          - require exact R3.18AT eight-field membership; stop exactly at `payload_start`
+          - following payload, second later control, generalized/repeated loop/cursor and wider semantic/runtime layers remain closed"""
+          new_au = f"""### R3.18AU bounded post-AQ mixed-continuation following-header production: PRODUCTION / CLOSED
+          - production `{PROD}` / tree `{TREE}` / parent `{PARENT}`
+          - lib/test blobs `{LIB_BLOB}` / `{TEST_BLOB}`; execution spec blob `{AU_SPEC_BLOB}`
+          - exact clean-candidate CI `{CANDIDATE_RUN}/{CANDIDATE_JOB}` SUCCESS; published-main CI `{PUBLISHED_RUN}/{PUBLISHED_JOB}` SUCCESS
+          - immutable 47-row lane preserved: false terminators 7/7 with zero post-AQ reads; true one-header rows 40/40 under exact R3.18AT membership; Int=40; 16 exact contexts
+          - true path stops exactly at `payload_start`; following payload/second-control 0/0; generalized/repeated cursor 0
+          - clean scope is only `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs`
+
+          ### R3.18AV published-R3.18AU mixed following-header differential: ACTIVE
+          - read-only on the immutable 47-row AS/AT authority; production remains `{PROD}`
+          - require published AU exact 47/47, false=7 no-header, true=40 exact headers, AT context/multiplicity equality, mismatch 0 and witness reselection 0
+          - following payload and second later control remain unread; production/Cargo/fixture/corpus/support mutation forbidden
+          - only Outcome A may open a separate R3.18AW one-following-payload evidence pass on the exact 40 true rows"""
+          s = replace_once(s, textwrap.dedent(old_au), textwrap.dedent(new_au), "graph AU section")
+          write(str(p), s)
+
+          # Boundary locks current override only; historical sections remain intact.
+          p = Path("docs/continuity/MIMIR_BOUNDARY_LOCKS.md")
+          s = p.read_text(encoding="utf-8")
+          new_override = f"""# 0. Current override — R3.18AU production / R3.18AV active
+
+          This current override supersedes older status wording later in this historical lock file.
+
+          ## PRODUCTION — R3.18AU
+          - `{PROD}` / `{TREE}` is canonical production; parent `{PARENT}`;
+          - exact clean-candidate CI `{CANDIDATE_RUN}/{CANDIDATE_JOB}` and published-main CI `{PUBLISHED_RUN}/{PUBLISHED_JOB}` are SUCCESS;
+          - validates/recomputes one exact published R3.18AQ mixed control;
+          - false stays a successful no-header terminator with zero post-AQ reads;
+          - true composes exactly one stateless following header only under exact R3.18AT membership and stops at `payload_start`;
+          - immutable behavior remains false=7 / true=40; true headers exact 40/40; Int=40; 16 exact contexts.
+
+          ## CLOSED EVIDENCE — R3.18AS Outcome A
+          - evidence `{AS_HEAD}` / artifact `{AS_ARTIFACT}` / `sha256:{AS_ARTIFACT_SHA}`;
+          - frozen rows 47/47; false terminators 7/7; true headers exact 40/40; native/oracle mismatch 0;
+          - unique exact contexts 16; tags Int=40; witness reselection 0; payload/second-control consumption 0/0.
+
+          ## CLOSED CONTRACT — R3.18AT Outcome A
+          - contract `docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json` / `sha256:{AT_SHA}`;
+          - membership `exact_tuple_only`; 16 complete eight-field tuples; exact observed multiplicities sum 40;
+          - `is_rl_223` is required; all 7 false AQ rows remain outside header membership;
+          - AJ/Z/P inheritance, tag/component/Cartesian/versionless/RL223-drop-or-flip/fabricated membership are rejected.
+
+          ## ACTIVE DIFFERENTIAL GATE — R3.18AV
+          - compare published R3.18AU against exactly the immutable 47-row AS/AT authority;
+          - require false=7 no-header terminators and true=40 exact one-header results;
+          - require exact header identity, boundaries, AT context/multiplicity equality, mismatch 0 and witness reselection 0;
+          - production mutation is forbidden; following payload and second later property-control bit remain unread.
+
+          ## CLOSED
+          - any following-header success on the 7 false terminator rows;
+          - any following-header context outside exact R3.18AT membership;
+          - following payload after the R3.18AU true header `payload_start`;
+          - second later property-control bit after R3.18AU;
+          - repeated/generalized property loop or generic cursor;
+          - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+          ---
+
+          # 1. Status vocabulary"""
+          pattern = r"# 0\. Current override .*?\n---\n\n# 1\. Status vocabulary"
+          s2, n = re.subn(pattern, textwrap.dedent(new_override), s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit(f"boundary override marker count={n}")
+          write(str(p), s2)
+
+          # Machine-readable continuity state.
+          p = Path("docs/continuity/MIMIR_CONTINUITY_STATE.json")
+          state = json.loads(p.read_text(encoding="utf-8"))
+          if state.get("current_pass") != "R3.18AU" or state.get("last_production_code_sha") != "e1ccbef95c8424b689dee7d77fd8fde2af3e0204":
+              raise SystemExit("continuity JSON base drift")
+          state["updated_date"] = "2026-08-26"
+          state["last_production_code_sha"] = PROD
+          state["last_production_milestone"] = "R3.18AU"
+          state["last_production_milestone_name"] = "bounded post-AQ mixed-continuation following-header production"
+          state["current_pass"] = "R3.18AV"
+          state["current_pass_kind"] = "read-only published-production differential / published R3.18AU mixed following-header"
+          state["current_pass_goal"] = "Compare published R3.18AU against exactly the immutable 47-row R3.18AS/R3.18AT authority. Preserve 7 false no-header terminators and 40 true exact one-header results, exact AT context/multiplicity equality, mismatch zero, witness reselection zero, and zero following-payload/second-control consumption."
+          state["current_pass_stop_boundary"] = "Read-only. False rows stop at the published AQ/AU terminator boundary; true rows stop at the published AU following-header payload_start. No following payload, second later control, generalized cursor, production mutation, actor/frame/lifecycle/raw-state/event/skill/runtime widening."
+          paths = state["next_files_to_read"]
+          anchor = "docs/continuity/MIMIR_R3_18AU_EXECUTION_SPEC.md"
+          if anchor not in paths:
+              raise SystemExit("continuity JSON AU spec anchor missing")
+          for extra in ["docs/continuity/MIMIR_R3_18AU_DECISION.md", "docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md"]:
+              if extra in paths:
+                  raise SystemExit(f"continuity JSON path already present: {extra}")
+          i = paths.index(anchor) + 1
+          paths[i:i] = ["docs/continuity/MIMIR_R3_18AU_DECISION.md", "docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md"]
+          state["r3_18au"] = {
+              "outcome": "A — admitted / published bounded mixed following-header production",
+              "production_source_changed": True,
+              "canonical_main_before_production": PARENT,
+              "canonical_tree_before_production": PARENT_TREE,
+              "production_sha": PROD,
+              "production_tree": TREE,
+              "production_parent": PARENT,
+              "production_lib_blob": LIB_BLOB,
+              "production_focused_test_blob": TEST_BLOB,
+              "execution_spec_blob": AU_SPEC_BLOB,
+              "candidate_ci_run": CANDIDATE_RUN,
+              "candidate_ci_job": CANDIDATE_JOB,
+              "published_main_ci_run": PUBLISHED_RUN,
+              "published_main_ci_job": PUBLISHED_JOB,
+              "contract_pass": "R3.18AT",
+              "contract_sha256": AT_SHA,
+              "source_evidence_pass": "R3.18AS",
+              "source_evidence_head": AS_HEAD,
+              "source_artifact_id": AS_ARTIFACT,
+              "source_artifact_sha256": AS_ARTIFACT_SHA,
+              "frozen_lane_rows": 47,
+              "false_terminators": 7,
+              "true_header_rows": 40,
+              "true_headers_exact": 40,
+              "unique_exact_contexts": 16,
+              "observed_tag_counts": {"Int": 40},
+              "false_post_aq_reads": 0,
+              "following_payload_bits_consumed": 0,
+              "second_later_control_bits_consumed": 0,
+              "generalized_property_loop_or_cursor": False,
+              "clean_production_files": ["crates/mimir-replay/src/lib.rs", "crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs"],
+              "production_cargo_docs_workflow_fixture_corpus_support_mutation": "0/0/0/0/0/0",
+              "next_pass": "R3.18AV"
+          }
+          write(str(p), json.dumps(state, indent=2, ensure_ascii=False) + "\n")
+
+          current_state = f"""# MIMIR — Current Canonical State
+
+          **Continuity date:** 2026-08-26
+          **Repository:** `Naveax/MIMIR`
+          **Canonical production SHA:** `{PROD}`
+          **Production tree:** `{TREE}`
+          **Production milestone:** `R3.18AU — bounded post-AQ mixed-continuation following-header production`
+          **Last read-only evidence:** `R3.18AS — Outcome A / false terminators 7/7 / true headers exact 40/40 / 16 exact eight-field contexts / Int=40 / artifact {AS_ARTIFACT}`
+          **Last completed contract:** `R3.18AT — exact_tuple_only / 16 eight-field contexts / multiplicity 40 / 7 false terminators outside membership / sha256:{AT_SHA}`
+          **Current exact pass:** `R3.18AV — published-R3.18AU mixed following-header differential`
+
+          ## Truthful boundary
+
+          R3.18AU is canonical production. It validates/recomputes one published AQ mixed-control prior. The exact seven false rows remain successful no-header terminators with zero post-AQ reads. The exact forty true rows compose one stateless following header only under R3.18AT exact membership and stop at `payload_start`.
+
+          ```text
+          production SHA/tree                    {PROD} / {TREE}
+          production parent                      {PARENT}
+          lib / focused-test blobs               {LIB_BLOB} / {TEST_BLOB}
+          clean-candidate CI                     {CANDIDATE_RUN}/{CANDIDATE_JOB} SUCCESS
+          published-main CI                      {PUBLISHED_RUN}/{PUBLISHED_JOB} SUCCESS
+          AT contract                            sha256:{AT_SHA}
+          frozen rows                            47/47
+          false no-header terminators            7/7
+          true exact one-header rows             40/40
+          true tag distribution                  Int=40
+          exact AT contexts                      16
+          false post-AQ reads                    0
+          following payload / second control     0/0
+          generalized property loop/cursor       0
+          production scope                       lib.rs + r3_18au_post_aq_following_header.rs only
+          ```
+
+          ## Current gate
+
+          R3.18AV is read-only. Recompute the immutable 47-row authority and compare the published R3.18AU result exactly: false=7 with no header, true=40 with exact header identity/boundaries and exact R3.18AT context/multiplicity membership. Production mutation, witness reselection, following payload access and second later control access are forbidden.
+
+          ## Hard stop
+
+          Do not decode the following payload, read a second later control, admit a context outside R3.18AT, synthesize a header for a false terminator, create a generalized/repeated property cursor, or widen actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export behavior.
+          """
+          write("docs/continuity/MIMIR_CURRENT_STATE.md", textwrap.dedent(current_state))
+
+          handoff = f"""# MIMIR — Next Chat Handoff
+
+          Canonical production is **R3.18AU** at `{PROD}` / `{TREE}` with parent `{PARENT}`. Exact clean-candidate CI `{CANDIDATE_RUN}/{CANDIDATE_JOB}` and published-main CI `{PUBLISHED_RUN}/{PUBLISHED_JOB}` are SUCCESS. The clean production scope is only `crates/mimir-replay/src/lib.rs` plus `crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs`.
+
+          R3.18AU Outcome A preserves the immutable 47-row lane: the exact 7 AQ-false rows remain successful no-header terminators with zero post-AQ reads; the exact 40 AQ-true rows compose exactly one stateless following header under the R3.18AT exact eight-field contract and stop at `payload_start`. R3.18AT remains `sha256:{AT_SHA}` with 16 contexts and multiplicity sum 40. R3.18AS remains the source evidence authority at `{AS_HEAD}` / artifact `{AS_ARTIFACT}` / `sha256:{AS_ARTIFACT_SHA}`.
+
+          The active pass is **R3.18AV read-only published-production differential**. On exactly the immutable 47 witnesses, reconstruct the required published prerequisites, call published R3.18AU, require false=7/no-header and true=40/exact-header, exact AT context and multiplicity equality, mismatch 0, witness reselection 0, and following-payload/second-control consumption 0/0.
+
+          Do not mutate production, decode the following payload, read another control bit, admit contexts outside exact R3.18AT, synthesize a header on false terminators, or create a generic/repeated property loop. Before any workflow dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.
+          """
+          write("docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md", textwrap.dedent(handoff))
+
+          decision = f"""# MIMIR R3.18AU — Bounded Post-AQ Mixed-Continuation Following-Header Production Decision
+
+          **Date:** 2026-08-26
+          **Outcome:** **A — ADMITTED / PUBLISHED**
+          **Canonical production:** `{PROD}` / `{TREE}`
+          **Parent:** `{PARENT}`
+
+          ## Decision
+
+          R3.18AU closes Outcome A. On the immutable 47-row R3.18AS/R3.18AT authority lane, the published production boundary preserves all seven AQ-false rows as successful no-header terminators with zero post-AQ reads. On all forty AQ-true rows it composes exactly one stateless following header, requires exact R3.18AT eight-field membership, exposes the exact header boundary, and stops at `payload_start` without consuming the following payload or a second later property-control bit.
+
+          This admission is boundary-specific. It does not admit a following payload, second later control, header synthesis on false terminators, context outside R3.18AT, generalized/repeated property cursor, or wider actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export behavior.
+
+          ## Exact authority
+
+          ```text
+          canonical main before production       {PARENT} / {PARENT_TREE}
+          production SHA/tree                    {PROD} / {TREE}
+          lib / focused-test blobs               {LIB_BLOB} / {TEST_BLOB}
+          AU execution spec blob                 {AU_SPEC_BLOB}
+          clean-candidate CI                     {CANDIDATE_RUN}/{CANDIDATE_JOB} SUCCESS
+          published-main CI                      {PUBLISHED_RUN}/{PUBLISHED_JOB} SUCCESS
+          R3.18AT contract                       sha256:{AT_SHA}
+          R3.18AS evidence head                  {AS_HEAD}
+          R3.18AS artifact                       {AS_ARTIFACT} / sha256:{AS_ARTIFACT_SHA}
+          pinned Boxcars                         c70e77df7af81b436cb545d070bb90c82f562d0b
+          ```
+
+          ## Admitted production behavior
+
+          ```text
+          frozen rows                            47/47
+          AQ false terminators                   7/7
+          false-path following header            none 7/7
+          false post-AQ reads                    0
+          AQ true continuations                  40/40
+          true following headers                 exact 40/40
+          exact R3.18AT contexts                 16
+          observed true-header tag               Int=40
+          following payload bits consumed        0
+          second later control bits consumed     0
+          generalized/repeated cursor            0
+          ```
+
+          The focused `r3_18au_post_aq_following_header` target passed 12/12 on the exact candidate and again through the full repository verifier. The frozen mixed-lane test exercises all 47 witnesses, false-path post-AQ poison isolation, true-path payload poison isolation, true-header truncation, exact membership rejection and source-scope guards. Workspace check/test and Clippy with warnings denied passed on the exact candidate and on published `main`.
+
+          ## Clean publication
+
+          The production commit contains only:
+          - `crates/mimir-replay/src/lib.rs`;
+          - `crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs`.
+
+          No Cargo/dependency, documentation, workflow, fixture, corpus, support, raw-state, event, skill, runtime or export mutation entered the production commit. Fresh-main ancestry was rechecked immediately before publication; `main` was advanced with `force=false`; exact SHA/tree readback matched; published-main CI succeeded.
+
+          ## Hard stop
+
+          No following payload after the one admitted true-path header, no second later property-control bit, no header on the seven false terminators, no context outside exact R3.18AT membership, no generalized/repeated property loop/cursor, and no next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+          ## Next gate
+
+          R3.18AV is a separate read-only published-production differential. It must compare published R3.18AU against exactly the immutable 47-row AS/AT authority, preserve false=7 and true=40, require exact true-header identity/boundaries and AT context/multiplicity equality, keep mismatch and witness reselection at zero, and consume no following payload or second later control. Only AV Outcome A may open a separate R3.18AW one-following-payload evidence pass on the exact forty true rows.
+          """
+          decision_path = Path("docs/continuity/MIMIR_R3_18AU_DECISION.md")
+          if decision_path.exists():
+              raise SystemExit("AU decision already exists")
+          write(str(decision_path), textwrap.dedent(decision))
+
+          av_spec = f"""# MIMIR R3.18AV — Published R3.18AU Mixed Following-Header Differential
+
+          **Status:** ACTIVE
+          **Pass type:** read-only published-production differential
+          **Production authority:** R3.18AU `{PROD}` / `{TREE}`
+          **Production mutation:** forbidden
+          **Following payload:** forbidden
+          **Second later property-control bit:** forbidden
+          **Witness reselection:** forbidden
+
+          ## Goal
+
+          Validate the published R3.18AU mixed following-header API against exactly the immutable 47-row R3.18AS/R3.18AT authority lane.
+
+          - The exact 7 AQ-false rows must remain successful no-header terminators and stop at the already-published AQ/AU terminator boundary with zero post-AQ reads.
+          - The exact 40 AQ-true rows must return exactly one following header matching the frozen R3.18AS header identity/boundaries and exact R3.18AT eight-field membership, then stop exactly at `payload_start`.
+          - No following payload or second later control may be consumed.
+
+          ## Frozen authority
+
+          ```text
+          production SHA/tree                    {PROD} / {TREE}
+          parent                                 {PARENT}
+          lib / focused-test blobs               {LIB_BLOB} / {TEST_BLOB}
+          AU execution spec blob                 {AU_SPEC_BLOB}
+          AU clean-candidate CI                  {CANDIDATE_RUN}/{CANDIDATE_JOB} SUCCESS
+          AU published-main CI                   {PUBLISHED_RUN}/{PUBLISHED_JOB} SUCCESS
+          AS evidence head                       {AS_HEAD}
+          AS artifact                            {AS_ARTIFACT} / sha256:{AS_ARTIFACT_SHA}
+          AT contract                            sha256:{AT_SHA}
+          AT membership                          exact_tuple_only / 16 eight-field tuples / multiplicity 40
+          immutable mixed lane                   47 rows / false=7 / true=40
+          observed true-header tags              Int=40
+          pinned Boxcars                         c70e77df7af81b436cb545d070bb90c82f562d0b
+          ```
+
+          R3.18AS and R3.18AT are immutable authorities. R3.18AV may not reselect witnesses, infer a larger tuple set, or inherit R3.18AJ/Z/P membership.
+
+          ## Exact differential lane
+
+          For every exact frozen witness:
+
+          1. reconstruct the exact valid published prerequisites through R3.18AQ;
+          2. call published R3.18AU once;
+          3. require the returned embedded control to equal the exact recomputed AQ result;
+          4. on false, require `following_header == None` and AU stop equal AQ stop;
+          5. on true, require one header whose stream/property/tag/context coordinates and boundary equal frozen R3.18AS authority;
+          6. require every true header to be an exact R3.18AT member and exact context multiplicities to sum to 40;
+          7. require true AU stop equal the frozen header `payload_start`;
+          8. repeat and require bit-exact identical result;
+          9. stop without payload or later-control access.
+
+          Expected totals:
+
+          ```text
+          rows                         47/47
+          false no-header              7
+          true exact header            40
+          exact AT contexts            16/16
+          AT multiplicity sum          40
+          tag distribution             Int=40
+          mismatch                     0
+          witness reselection          0
+          following payload            0 bits
+          second later control         0 bits
+          ```
+
+          ## Required negative controls
+
+          At minimum:
+          - false-row poison beginning at AQ/AU stop leaves the false terminator result unchanged;
+          - truncate a true row after AQ but inside its following header -> reject atomically;
+          - poison at true-row `payload_start` -> published AU header result unchanged;
+          - wrong actor object -> reject;
+          - unresolved lookup -> reject;
+          - wrong exact version/context -> reject;
+          - corrupt or mismatched published prerequisite -> reject;
+          - flip/drop `is_rl_223` -> reject unless the complete resulting tuple is independently an exact AT member;
+          - tag-only/component-only/Cartesian/versionless membership -> reject;
+          - AJ-valid but AT-absent tuple -> reject;
+          - fabricated seventeenth tuple -> reject;
+          - source-scope guard -> at most one following-header primitive, zero payload decoders, no generalized/repeated loop.
+
+          ## Validation
+
+          Require:
+          - frozen witness identity 47/47;
+          - published AU exact 47/47;
+          - false=7 / true=40;
+          - true frozen header identity/boundary exact 40/40;
+          - exact AT context identity 16/16 and multiplicity sum 40;
+          - mismatch 0 and witness reselection 0;
+          - repeatability PASS;
+          - all negative controls PASS;
+          - following payload / second later control 0/0;
+          - focused AU regressions PASS;
+          - full mimir-replay/workspace fmt/check/test/clippy and repository verifier PASS;
+          - same-head normal CI SUCCESS;
+          - production/Cargo/fixture/corpus/support mutation 0/0/0/0/0;
+          - privacy scan PASS.
+
+          Before any dispatch/rerun, inspect queued/waiting/in-progress equivalent runs. Reuse an existing exact run if present. Rerun is never polling.
+
+          ## Hard stop
+
+          No following payload, no second later control, no context outside exact R3.18AT, no header on false terminators, no generalized/repeated property loop/cursor, no next actor/frame/lifecycle mutation, no raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+          ## Outcome gate
+
+          ### Outcome A
+          Published R3.18AU matches all 47 immutable AS/AT witnesses exactly: false=7 no-header, true=40 exact header, exact contexts/multiplicity preserved, mismatch 0, witness reselection 0, all negative/full validations PASS, and following-payload/second-control consumption 0/0. A separate R3.18AW evidence pass may then inspect exactly one following payload on the exact forty true rows only.
+
+          ### Outcome B
+          A bounded differential mismatch or narrower safe subset is isolated. Record only the exact supported subset and keep following-payload evidence closed.
+
+          ### Outcome C
+          Authority/witness drift, false-terminator header access, true-header mismatch, AT membership widening, adjacent payload/later-control access, production mutation, generic chaining or privacy failure. Stop without widening.
+          """
+          av_path = Path("docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md")
+          if av_path.exists():
+              raise SystemExit("AV spec already exists")
+          write(str(av_path), textwrap.dedent(av_spec))
+
+          ledger_path = Path("docs/continuity/MIMIR_PROGRESS_LEDGER.md")
+          ledger = ledger_path.read_text(encoding="utf-8")
+          if "## 2026-08-26 — R3.18AU — Bounded Post-AQ Mixed-Continuation Following-Header Production" in ledger:
+              raise SystemExit("AU ledger entry already exists")
+          ledger_entry = f"""
+
+          ## 2026-08-26 — R3.18AU — Bounded Post-AQ Mixed-Continuation Following-Header Production
+
+          Production base SHA: `{PARENT}`
+          Production commit SHA: `{PROD}`
+          Production tree: `{TREE}`
+          Pass type: bounded production implementation
+          Outcome: **A — ADMITTED / PUBLISHED**
+
+          What changed:
+          - added one boundary-specific mixed following-header composition after published R3.18AQ;
+          - preserved all 7 false rows as successful no-header terminators with zero post-AQ reads;
+          - composed exactly one following header on all 40 true rows under exact R3.18AT membership;
+          - stopped true rows exactly at `payload_start` and consumed zero following-payload/second-control bits;
+          - kept generalized/repeated property looping closed.
+
+          Authority:
+          - canonical main before production `{PARENT}` / tree `{PARENT_TREE}`;
+          - R3.18AT contract `sha256:{AT_SHA}`;
+          - R3.18AS evidence `{AS_HEAD}` / artifact `{AS_ARTIFACT}` / `sha256:{AS_ARTIFACT_SHA}`;
+          - clean-candidate CI `{CANDIDATE_RUN}/{CANDIDATE_JOB}` SUCCESS;
+          - published-main CI `{PUBLISHED_RUN}/{PUBLISHED_JOB}` SUCCESS;
+          - lib/test blobs `{LIB_BLOB}` / `{TEST_BLOB}`.
+
+          Validation:
+          - frozen mixed lane 47/47;
+          - false terminators 7/7, following header none, post-AQ reads 0;
+          - true headers exact 40/40; Int=40; exact AT contexts 16;
+          - truncation/wrong actor/unresolved lookup/wrong version-context/RL223/Cartesian/fabricated/post-stop poison/source-scope negatives PASS;
+          - focused AU target 12/12 PASS;
+          - full repository verifier and Clippy warnings-denied PASS on candidate and published main;
+          - clean production scope exactly `lib.rs` + `r3_18au_post_aq_following_header.rs`.
+
+          Boundaries opened:
+          - published production can return one exact following header on AQ-true under R3.18AT while preserving AQ-false as a no-header terminator.
+
+          Boundaries still closed:
+          - following payload; second later property control; context outside exact AT membership; header on false terminators; generalized/repeated property loop/cursor; wider semantic/runtime layers.
+
+          Next exact pass:
+          - `R3.18AV — published-R3.18AU mixed following-header differential`.
+          """
+          write(str(ledger_path), ledger.rstrip() + textwrap.dedent(ledger_entry) + "\n")
+
+          # Final semantic guards before staging.
+          root = Path("MIMIR_CONTINUE_HERE.md").read_text(encoding="utf-8")
+          graph = Path("MIMIR_KNOWLEDGE_GRAPH.md").read_text(encoding="utf-8")
+          machine = json.loads(Path("docs/continuity/MIMIR_CONTINUITY_STATE.json").read_text(encoding="utf-8"))
+          if f"LAST_PRODUCTION_CODE_SHA:\n  {PROD}" not in root or "CURRENT_PASS:\n  R3.18AV" not in root:
+              raise SystemExit("root continuity postcondition failed")
+          if "R3.18AV published-R3.18AU mixed following-header differential / ACTIVE" not in graph:
+              raise SystemExit("knowledge graph frontier postcondition failed")
+          if machine["last_production_code_sha"] != PROD or machine["current_pass"] != "R3.18AV":
+              raise SystemExit("machine state postcondition failed")
+
+      - name: Verify knowledge archive and JSON
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-Content -LiteralPath docs/continuity/MIMIR_CONTINUITY_STATE.json -Raw | ConvertFrom-Json | Out-Null
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Scope guard, remove helper, commit staging output
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git rm .github/workflows/r318au-admission-builder.yml
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18AU_DECISION.md docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md
+          $Expected = @(
+            '.github/workflows/r318au-admission-builder.yml',
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md',
+            'docs/continuity/MIMIR_R3_18AU_DECISION.md',
+            'docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          $Actual = @(git diff --cached --name-only) | Sort-Object
+          $Delta = Compare-Object -ReferenceObject $Expected -DifferenceObject $Actual
+          if ($Delta) { $Delta | Out-String | Write-Host; throw 'Admission staging scope drift' }
+          git config user.name 'MIMIR Admission Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Stage R3.18AU admission and R3.18AV frontier'
+          git push origin HEAD:staging/r318au-admission-av-v1
