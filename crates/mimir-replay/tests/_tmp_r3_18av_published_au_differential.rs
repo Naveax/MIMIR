@@ -43,8 +43,16 @@ fn av_opt_i32(value: &str) -> Option<i32> {
     (!value.is_empty()).then(|| value.parse().expect("valid optional i32"))
 }
 
+fn av_parse_bool(value: &str) -> bool {
+    match value {
+        "0" | "false" => false,
+        "1" | "true" => true,
+        other => panic!("invalid authority bool: {other}"),
+    }
+}
+
 fn av_opt_bool(value: &str) -> Option<bool> {
-    (!value.is_empty()).then(|| value.parse().expect("valid optional bool"))
+    (!value.is_empty()).then(|| av_parse_bool(value))
 }
 
 fn av_expected_rows() -> Vec<AvExpected> {
@@ -68,11 +76,7 @@ fn av_expected_rows() -> Vec<AvExpected> {
                 first_start: fields[4].parse().expect("first_start"),
                 control_start: fields[5].parse().expect("control_start"),
                 control_end: fields[6].parse().expect("control_end"),
-                control_value: match fields[7] {
-                    "0" | "false" => false,
-                    "1" | "true" => true,
-                    other => panic!("invalid control_value: {other}"),
-                },
+                control_value: av_parse_bool(fields[7]),
                 stream_start: av_opt_u64(fields[8]),
                 stream_end: av_opt_u64(fields[9]),
                 stream_id: av_opt_u32(fields[10]),
@@ -89,6 +93,14 @@ fn av_expected_rows() -> Vec<AvExpected> {
             }
         })
         .collect()
+}
+
+#[test]
+fn r3_18av_authority_bool_parser_accepts_numeric_and_textual_forms() {
+    assert!(!av_parse_bool("0"));
+    assert!(!av_parse_bool("false"));
+    assert!(av_parse_bool("1"));
+    assert!(av_parse_bool("true"));
 }
 
 #[test]
