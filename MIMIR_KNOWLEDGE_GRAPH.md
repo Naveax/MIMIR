@@ -77,7 +77,8 @@ R3.18AQ bounded post-AN following-control production / PRODUCTION CLOSED
 R3.18AR published-R3.18AQ mixed following-control differential / Outcome A CLOSED
 R3.18AS one following-property-header evidence after published AQ mixed control / Outcome A CLOSED
 R3.18AT post-AQ mixed-continuation following-header exact-context contract / Outcome A CLOSED               |
-R3.18AU bounded post-AQ mixed-continuation following-header production / ACTIVE                              |
+R3.18AU bounded post-AQ mixed-continuation following-header production / PRODUCTION CLOSED                   |
+R3.18AV published-R3.18AU mixed following-header differential / ACTIVE                                      |
         |                               |
         +---------------+---------------+
                         |
@@ -227,13 +228,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 129. `docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json`
 130. `docs/continuity/MIMIR_R3_18AT_DECISION.md`
 131. `docs/continuity/MIMIR_R3_18AU_EXECUTION_SPEC.md`
-132. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-133. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-134. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-135. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-136. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-137. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-138. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+132. `docs/continuity/MIMIR_R3_18AU_DECISION.md`
+133. `docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md`
+134. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+135. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+136. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+137. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+138. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+139. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+140. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -314,12 +317,19 @@ scripts/verify_mimir_knowledge_archive.ps1
 - AS evidence `475650fea59332f74b9f69da50e3e4471622ab7e`; artifact `9603335255`; production remains R3.18AQ
 - AJ/Z/P cross-boundary inheritance false; following payload/second-control access 0/0; production mutation 0
 
-### R3.18AU bounded post-AQ mixed-continuation following-header production: ACTIVE
-- validate/recompute exactly one published R3.18AQ mixed control prior
-- false prior remains a successful no-header terminator with zero post-AQ reads
-- true prior may invoke the existing stateless following-header primitive exactly once
-- require exact R3.18AT eight-field membership; stop exactly at `payload_start`
-- following payload, second later control, generalized/repeated loop/cursor and wider semantic/runtime layers remain closed
+### R3.18AU bounded post-AQ mixed-continuation following-header production: PRODUCTION / CLOSED
+- production `6a9f456c78ffccab177823234a8d9fe4ba59a850` / tree `cbda5db96e88cc208f872c2237cf4741b8fcfaef` / parent `7068884bd1982a99ea68647156addc5b381f9613`
+- lib/test blobs `d7b18acd7ea832acc73e94921b994fa1b341e006` / `5455121b2f0eafad09e031a66aa70178691c28fe`; execution spec blob `48e78daa50cb2724691fce09514d535a739f124f`
+- exact clean-candidate CI `32976370318/98201978533` SUCCESS; published-main CI `32977973145/98207283247` SUCCESS
+- immutable 47-row lane preserved: false terminators 7/7 with zero post-AQ reads; true one-header rows 40/40 under exact R3.18AT membership; Int=40; 16 exact contexts
+- true path stops exactly at `payload_start`; following payload/second-control 0/0; generalized/repeated cursor 0
+- clean scope is only `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs`
+
+### R3.18AV published-R3.18AU mixed following-header differential: ACTIVE
+- read-only on the immutable 47-row AS/AT authority; production remains `6a9f456c78ffccab177823234a8d9fe4ba59a850`
+- require published AU exact 47/47, false=7 no-header, true=40 exact headers, AT context/multiplicity equality, mismatch 0 and witness reselection 0
+- following payload and second later control remain unread; production/Cargo/fixture/corpus/support mutation forbidden
+- only Outcome A may open a separate R3.18AW one-following-payload evidence pass on the exact 40 true rows
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
 - production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`
 - lib/test blobs `db923ebcb419d278f4ab0144fe7ed15b298b60fa` / `3f3e1c8f3f6deb7f2558862a1032f8a102131443`; spec `90180dcaddd30ed9a187a0d4332a105d153488d7`

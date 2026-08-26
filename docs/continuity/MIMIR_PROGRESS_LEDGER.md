@@ -1324,3 +1324,45 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18AU — bounded post-AQ mixed-continuation following-header production`.
+
+## 2026-08-26 — R3.18AU — Bounded Post-AQ Mixed-Continuation Following-Header Production
+
+Production base SHA: `7068884bd1982a99ea68647156addc5b381f9613`
+Production commit SHA: `6a9f456c78ffccab177823234a8d9fe4ba59a850`
+Production tree: `cbda5db96e88cc208f872c2237cf4741b8fcfaef`
+Pass type: bounded production implementation
+Outcome: **A — ADMITTED / PUBLISHED**
+
+What changed:
+- added one boundary-specific mixed following-header composition after published R3.18AQ;
+- preserved all 7 false rows as successful no-header terminators with zero post-AQ reads;
+- composed exactly one following header on all 40 true rows under exact R3.18AT membership;
+- stopped true rows exactly at `payload_start` and consumed zero following-payload/second-control bits;
+- kept generalized/repeated property looping closed.
+
+Authority:
+- canonical main before production `7068884bd1982a99ea68647156addc5b381f9613` / tree `c87e7ac1cca37cb1b569fbaf78181149e75881c6`;
+- R3.18AT contract `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`;
+- R3.18AS evidence `475650fea59332f74b9f69da50e3e4471622ab7e` / artifact `9603335255` / `sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45`;
+- clean-candidate CI `32976370318/98201978533` SUCCESS;
+- published-main CI `32977973145/98207283247` SUCCESS;
+- lib/test blobs `d7b18acd7ea832acc73e94921b994fa1b341e006` / `5455121b2f0eafad09e031a66aa70178691c28fe`.
+
+Validation:
+- frozen mixed lane 47/47;
+- false terminators 7/7, following header none, post-AQ reads 0;
+- true headers exact 40/40; Int=40; exact AT contexts 16;
+- truncation/wrong actor/unresolved lookup/wrong version-context/RL223/Cartesian/fabricated/post-stop poison/source-scope negatives PASS;
+- focused AU target 12/12 PASS;
+- full repository verifier and Clippy warnings-denied PASS on candidate and published main;
+- clean production scope exactly `lib.rs` + `r3_18au_post_aq_following_header.rs`.
+
+Boundaries opened:
+- published production can return one exact following header on AQ-true under R3.18AT while preserving AQ-false as a no-header terminator.
+
+Boundaries still closed:
+- following payload; second later property control; context outside exact AT membership; header on false terminators; generalized/repeated property loop/cursor; wider semantic/runtime layers.
+
+Next exact pass:
+- `R3.18AV — published-R3.18AU mixed following-header differential`.
+
