@@ -23,6 +23,10 @@ jobs:
           ref: automation/r318au-builder-v1
           fetch-depth: 0
 
+      - name: Install exact Rust 1.85 toolchain
+        shell: bash
+        run: rustup toolchain install 1.85.0 --profile minimal --component rustfmt
+
       - name: Relocate complete AU suffix before W function
         shell: bash
         run: |
