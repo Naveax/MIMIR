@@ -1,0 +1,86 @@
+name: R3.18AU Admission Materializer Driver
+
+on:
+  push:
+    branches:
+      - staging/r318au-admission-av-v1
+    paths:
+      - '.github/workflows/r318au-admission-materializer-driver.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r318au-admission-materializer-driver
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout exact staging ref shallowly
+        uses: actions/checkout@v6
+        with:
+          ref: staging/r318au-admission-av-v1
+          fetch-depth: 1
+
+      - name: Verify frozen production base
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ExpectedMain = '6a9f456c78ffccab177823234a8d9fe4ba59a850'
+          git fetch --depth=1 origin main --quiet
+          $Main = (git rev-parse FETCH_HEAD).Trim()
+          if ($Main -ne $ExpectedMain) { throw "main drift: $Main" }
+
+      - name: Execute embedded canonical materializer
+        shell: python
+        run: |
+          from pathlib import Path
+          import textwrap
+
+          source = Path('.github/workflows/r318au-admission-builder.yml').read_text(encoding='utf-8')
+          begin_marker = "      - name: Materialize AU admission and AV spec\n        shell: python\n        run: |\n"
+          end_marker = "\n      - name: Verify knowledge archive and JSON"
+          if source.count(begin_marker) != 1 or source.count(end_marker) != 1:
+              raise SystemExit('embedded materializer markers drifted')
+          block = source.split(begin_marker, 1)[1].split(end_marker, 1)[0]
+          code = textwrap.dedent(block)
+          compile(code, '<r318au-embedded-materializer>', 'exec')
+          exec(code, {'__name__': '__main__'})
+
+      - name: Verify knowledge archive and JSON
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-Content -LiteralPath docs/continuity/MIMIR_CONTINUITY_STATE.json -Raw | ConvertFrom-Json | Out-Null
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Scope guard and commit only canonical continuity output
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Expected = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md',
+            'docs/continuity/MIMIR_R3_18AU_DECISION.md',
+            'docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md'
+          ) | Sort-Object
+          git add -- $Expected
+          $Actual = @(git diff --cached --name-only) | Sort-Object
+          $Delta = Compare-Object -ReferenceObject $Expected -DifferenceObject $Actual
+          if ($Delta) { $Delta | Out-String | Write-Host; throw 'Admission output scope drift' }
+          $Untracked = @(git ls-files --others --exclude-standard)
+          $Unexpected = @($Untracked | Where-Object { $_ -notin $Expected })
+          if ($Unexpected.Count -ne 0) { throw "Unexpected untracked paths: $($Unexpected -join ', ')" }
+          git config user.name 'MIMIR Admission Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Stage R3.18AU admission and R3.18AV frontier'
+          git push origin HEAD:staging/r318au-admission-av-v1
