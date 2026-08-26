@@ -1,43 +1,37 @@
 # MIMIR — Current Canonical State
 
-**Continuity date:** 2026-08-25
+**Continuity date:** 2026-08-26
 **Repository:** `Naveax/MIMIR`
 **Canonical production SHA:** `e1ccbef95c8424b689dee7d77fd8fde2af3e0204`
 **Production tree:** `4e7100625096594bcc5c5b4c6a8054c283643b13`
 **Production milestone:** `R3.18AQ — bounded post-AN mixed following-control production`
-**Last read-only evidence:** `R3.18AP — Outcome A / exact 47/47 / false=7 / true=40 / mismatch 0 / artifact 9526988237`
+**Last read-only evidence:** `R3.18AR — Outcome A / published AQ exact 47/47 / false=7 / true=40 / mismatch 0 / artifact 9599823813`
 **Last contract:** `R3.18AJ — Outcome A / exact_tuple_only / 17 contexts / multiplicity 47 / sha256:cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c`
-**Current exact pass:** `R3.18AR — published-R3.18AQ mixed following-control differential`
+**Current exact pass:** `R3.18AS — one following-property-header evidence after published AQ mixed control`
 
 ## Truthful boundary
 
-R3.18AQ is now published production. It revalidates one exact R3.18AN Int/32 payload composition, reads exactly one following `property_present` bit, accepts both AP-observed values, and stops exactly one bit later. The immutable lane distribution remains **false=7 / true=40**.
+R3.18AQ remains canonical production. R3.18AR independently validated it on exactly the immutable AP 47-row lane. Published AQ and the published AN prerequisite were exact 47/47, with false=7 / true=40, mismatch 0 and witness reselection 0.
 
 ```text
-production SHA/tree                  e1ccbef95c8424b689dee7d77fd8fde2af3e0204 / 4e7100625096594bcc5c5b4c6a8054c283643b13
-parent                               ec2d6c29f90863d9e312856043d01fb98a0c2d2d
-lib / focused-test blobs             b886c58400de0efe0a6a6113d79e6f78e751a213 / 983cbda666f40cbc739b250eac87bc4ce0c9eb99
-builder run/job                      32860339919/97842469079 SUCCESS
-builder receipt                      9568109670 / sha256:1d865740559cb0748f840b3cca3d4ab9c627ac251bc15f6f99dbabb20c2e3afe
-validation-only PR                   #197 closed unmerged
-exact-head PR CI                     32861522922/97846413853 SUCCESS
-published-main CI                    32861924684/97847764026 SUCCESS
-clean production scope               2 files / 657 insertions
-frozen rows                          47
-false / true                         7 / 40
-new control reads                    1
+AR evidence head/tree                 7dfe2a0fc451a40d4c750dd2e401a2f0aa36dd9d / 85a48eebc2d3292c524f482b5c131156fa8d7931
+AR authority run/job                  32949846799/98118570100 SUCCESS
+AR same-head natural CI               32949846724/98118570114 SUCCESS / count=1 / rerun=0
+AR artifact                           9599823813 / 9680 bytes
+AR artifact SHA-256                   20c7edce0ea6cc2d47168e9cb9bcc517cdad9b9bde78dcf7caa472403e525326
+AR inner manifest                     10/10 PASS
+published AQ exact                    47/47
+published AN prerequisite exact       47/47
+false / true                          7 / 40
+mismatch / witness reselection        0 / 0
 adjacent stream/header/payload/control 0/0/0/0
-force=false publication/readback     PASS
+production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
 ```
 
 ## Current gate
 
-R3.18AR is read-only. It must reuse exactly the immutable R3.18AP 47-row witnesses and prove published R3.18AQ equals the AP control authority on value/start/end/stop for all rows. Both false and true remain valid published results.
-
-## Continuation split
-
-The seven false rows are terminators. A future following-header evidence pass may only be considered on the exact 40 true continuation rows, and only after R3.18AR closes Outcome A.
+R3.18AS is read-only. Preserve the exact 7 false / 40 true AR split. The false rows terminate at AQ stop. Only the exact 40 true rows may be passed to the existing stateless property-header primitive and compared with pinned Boxcars through `payload_start`.
 
 ## Hard stop
 
-AR may not read or resolve a following stream/header/payload, may not read a second later control bit, may not mutate production, and may not create a generalized property loop/cursor or widen actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export behavior.
+Do not pre-assume the 40-row header tag/context distribution. AS may not decode a following payload, read a second later control, publish a following-header production composition, create a generalized property loop/cursor, or widen actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export behavior.

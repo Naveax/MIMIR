@@ -6,32 +6,35 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AQ closed / R3.18AR active
+# 0. Current override — R3.18AR closed / R3.18AS active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AQ
-- `e1ccbef95c8424b689dee7d77fd8fde2af3e0204` / `4e7100625096594bcc5c5b4c6a8054c283643b13` is canonical production; parent `ec2d6c29f90863d9e312856043d01fb98a0c2d2d`;
-- validates/recomputes one exact published R3.18AN prior through its admitted Int/32 payload end;
-- consumes exactly one following LSB-first `property_present` bit at the AN stop;
-- accepts both AP-observed boolean values: false=7 / true=40 on the immutable lane;
-- stops exactly one bit later and consumes no following stream/header/payload/second-control bits.
+- `e1ccbef95c8424b689dee7d77fd8fde2af3e0204` / `4e7100625096594bcc5c5b4c6a8054c283643b13` remains canonical production; parent `ec2d6c29f90863d9e312856043d01fb98a0c2d2d`;
+- validates/recomputes one exact R3.18AN prior, consumes exactly one AP-admitted mixed `property_present` bit, accepts false and true, and stops one bit later;
+- immutable published behavior remains false=7 / true=40.
 
-## CLOSED EVIDENCE — R3.18AP Outcome A
-- immutable 47-row lane; published R3.18AN exact 47/47; oracle-native exact 47/47; mismatch 0; witness reselection 0;
-- exact next `property_present` distribution false=7 / true=40;
-- artifact `9526988237` / `sha256:b50b01bd87c0b61ca2e407abe43ac5db9fb15290f7cd3e908332d2ac2a26c4cc`; adjacent consumption 0/0/0/0.
+## CLOSED DIFFERENTIAL — R3.18AR Outcome A
+- evidence `7dfe2a0fc451a40d4c750dd2e401a2f0aa36dd9d` / `85a48eebc2d3292c524f482b5c131156fa8d7931`; run/job `32949846799/98118570100` SUCCESS; same-head CI `32949846724/98118570114` SUCCESS;
+- artifact `9599823813` / `sha256:20c7edce0ea6cc2d47168e9cb9bcc517cdad9b9bde78dcf7caa472403e525326` / inner manifest 10/10 PASS;
+- frozen rows 47/47; published AQ exact 47/47; published AN prerequisite exact 47/47;
+- false=7 / true=40; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0.
 
-## ACTIVE READ-ONLY GATE — R3.18AR
-- differentially validate the published R3.18AQ API on exactly the same 47 AP witnesses;
-- require published value/start/end/stop equality 47/47 and false=7 / true=40;
-- both booleans remain valid data; no witness reselection or production mutation;
-- stop at the AQ one-control boundary with adjacent stream/header/payload/second-control consumption 0/0/0/0.
+## ACTIVE READ-ONLY GATE — R3.18AS
+- preserve all 47 AR identities and the exact 7 false / 40 true split;
+- false rows terminate at AQ stop and may not perform following-header lookup;
+- only the exact 40 true rows may observe one following property header;
+- stop every positive row exactly at that header's `payload_start`;
+- classify actual header object/tag/context distribution without pre-admission;
+- consume zero following-payload bits and zero second-later-control bits.
 
 ## CLOSED
-- following stream/header/payload after the R3.18AQ/AR one-control result;
-- header evidence on any of the 7 false terminator rows;
-- a second later property-control bit, alternate payload widening, repeated/generalized property loop or cursor;
+- any following-header observation on the 7 false terminator rows;
+- following payload after the R3.18AS header `payload_start`;
+- second later property-control bit after the R3.18AS header;
+- production following-header composition before separate evidence/contract admission;
+- repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 ---

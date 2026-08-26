@@ -74,7 +74,8 @@ R3.18AN bounded post-AK one-following-payload production / CLOSED
 R3.18AO published-AN one-following-payload differential / CLOSED
 R3.18AP next property-control bit evidence after published AN payload / Outcome A CLOSED
 R3.18AQ bounded post-AN following-control production / PRODUCTION CLOSED
-R3.18AR published-R3.18AQ mixed following-control differential / ACTIVE                             |
+R3.18AR published-R3.18AQ mixed following-control differential / Outcome A CLOSED
+R3.18AS one following-property-header evidence after published AQ mixed control / ACTIVE                |
         |                               |
         +---------------+---------------+
                         |
@@ -217,13 +218,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 122. `docs/continuity/MIMIR_R3_18AQ_EXECUTION_SPEC.md`
 123. `docs/continuity/MIMIR_R3_18AQ_DECISION.md`
 124. `docs/continuity/MIMIR_R3_18AR_EXECUTION_SPEC.md`
-125. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-126. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-127. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-128. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-129. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-130. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-131. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+125. `docs/continuity/MIMIR_R3_18AR_DECISION.md`
+126. `docs/continuity/MIMIR_R3_18AS_EXECUTION_SPEC.md`
+127. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+128. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+129. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+130. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+131. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+132. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+133. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
@@ -277,13 +280,23 @@ scripts/verify_mimir_knowledge_archive.ps1
 - wrong actor / unresolved lookup / truncation / corrupt prior / wrong context / repeatability / post-stop poison negatives PASS
 - next stream/header/payload/second-control consumption 0/0/0/0; force=false publication/readback PASS
 
-### R3.18AR published-R3.18AQ mixed following-control differential: ACTIVE
-- reuse exactly the immutable R3.18AP 47-row witnesses; witness reselection forbidden
-- reconstruct published AQ and require exact start/value/end/stop equality with AP on all 47 rows
-- expected immutable distribution false=7 / true=40; both are successful published AQ results
-- false rows are terminators; no following-header claim is permitted from them
-- AR consumes no following stream/header/payload/second-control and mutates no production
-- only after AR Outcome A may a separate later pass investigate one following header on the exact 40 true continuation rows
+### R3.18AR published-R3.18AQ mixed following-control differential: OUTCOME A / CLOSED
+- evidence `7dfe2a0fc451a40d4c750dd2e401a2f0aa36dd9d` / tree `85a48eebc2d3292c524f482b5c131156fa8d7931`; run/job `32949846799/98118570100` SUCCESS
+- same-head natural CI `32949846724/98118570114` SUCCESS / count=1 / rerun=0
+- artifact `9599823813` / `9680` bytes / `sha256:20c7edce0ea6cc2d47168e9cb9bcc517cdad9b9bde78dcf7caa472403e525326`; downloaded ZIP digest exact / inner manifest 10/10 PASS
+- frozen AP identities 47/47; published AQ exact 47/47; published AN prerequisite exact 47/47
+- false=7 / true=40; mismatch 0; witness reselection 0; repeatability 47/47
+- truncation/wrong-actor/unresolved-lookup/wrong-context/corrupt-prior/post-stop-poison/source-scope negatives PASS
+- adjacent stream/header/payload/second-control 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS
+
+### R3.18AS one following-property-header evidence after published AQ mixed control: ACTIVE
+- reuse exactly the 47 AR/AP identities and their control split; witness reselection forbidden
+- the exact 7 false rows are terminators and must expose no following-header fields
+- only the exact 40 true rows may observe one following property header using the existing stateless header primitive
+- compare property-present/header stream/object/tag/payload_start exactly with pinned Boxcars and stop at payload_start
+- do not pre-assume header tag/context distribution; classify what the 40 frozen rows actually contain
+- following payload and second later control consumption remain 0/0; production mutation forbidden
+- a later contract/production step requires separate admission after AS Outcome A
 
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
 - production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`

@@ -1207,3 +1207,42 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - `R3.18AR — published-R3.18AQ mixed following-control differential` on exactly the immutable 47 AP witnesses.
+
+---
+
+## 2026-08-26 — R3.18AR — Published R3.18AQ Mixed Following-Control Differential
+
+Production base SHA: `e1ccbef95c8424b689dee7d77fd8fde2af3e0204`
+Production commit SHA: unchanged
+Pass type: read-only published-production differential
+Outcome: **A — ADMITTED / COMPLETE**
+
+What changed:
+- no production Rust changed;
+- reused exactly the immutable R3.18AP 47-row witness identities;
+- reconstructed the published R3.18AQ result and compared value/start/end/stop against AP authority;
+- preserved the exact terminator/continuation split.
+
+Evidence:
+- evidence head `7dfe2a0fc451a40d4c750dd2e401a2f0aa36dd9d` / tree `85a48eebc2d3292c524f482b5c131156fa8d7931`;
+- authority `32949846799/98118570100` SUCCESS;
+- same-head natural CI `32949846724/98118570114` SUCCESS / count=1 / rerun=0;
+- artifact `9599823813` / `9680` bytes / `sha256:20c7edce0ea6cc2d47168e9cb9bcc517cdad9b9bde78dcf7caa472403e525326`;
+- independently downloaded ZIP digest exact / inner manifest 10/10 PASS;
+- published AQ exact 47/47; published AN prerequisite exact 47/47;
+- false=7 / true=40; mismatch 0 / witness reselection 0 / repeatability 47/47;
+- adjacent stream/header/payload/second-control consumption 0/0/0/0.
+
+Validation:
+- truncation, wrong actor, unresolved lookup, wrong exact context, corrupt AN prior, post-stop poison and one-read/no-loop source-scope negatives PASS;
+- focused AQ suite, fmt, workspace check/test/clippy with warnings denied, repository verifier, diff-check and clean-worktree gates PASS;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Boundaries opened:
+- read-only investigation of exactly one following header on only the exact 40 true continuation rows.
+
+Boundaries still closed:
+- any following header on the 7 false terminator rows; following payload; second later property control; production following-header composition; generalized/repeated property loop/cursor; wider semantic/runtime layers.
+
+Next exact pass:
+- `R3.18AS — one following-property-header evidence after published R3.18AQ mixed control`.

@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AQ — bounded post-AN mixed following-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AP — next property-control bit evidence after published R3.18AN payload / Outcome A / 47/47 / false=7 / true=40 / mismatch 0 / artifact 9526988237
+  R3.18AR — published-R3.18AQ mixed following-control differential / Outcome A / 47/47 / false=7 / true=40 / mismatch 0 / artifact 9599823813
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AJ — post-AG following-header exact-context contract / Outcome A / 17 exact tuples / 47 multiplicities / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AP — exact one-control observation 47/47 / false=7 / true=40 / oracle-native exact 47/47 / mismatch 0 / adjacent consumption 0/0/0/0 / artifact 9526988237
+  R3.18AR — published AQ exact 47/47 / published AN prerequisite exact 47/47 / false=7 / true=40 / mismatch 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / artifact 9599823813
 
 CURRENT_PASS:
-  R3.18AR — published-R3.18AQ mixed following-control differential
+  R3.18AS — one following-property-header evidence after published R3.18AQ mixed control
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / reuse exactly the immutable R3.18AP 47-row lane, reconstruct the published R3.18AQ result, require exact false=7 true=40 start/value/end/stop equality, and consume zero following stream/header/payload/second-control bits
+  read-only boundary evidence / preserve the exact R3.18AR split, observe one following property header only on the exact 40 true continuation rows, keep all 7 false rows terminated, and stop every positive row exactly at header payload_start with payload/second-control consumption zero
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -121,8 +121,23 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AO CLOSED Outcome A: published-R3.18AN/frozen-R3.18AM/direct-native-oracle exact 47/47; Int=47; width32=47; semantic range 1..415; mismatch 0; witness reselection 0; next-control consumption 0; artifact 9522750814
   R3.18AP CLOSED Outcome A: exact one next property_present bit on the frozen 47-row lane; false=7 true=40; published AN exact 47/47; oracle-native exact 47/47; mismatch 0; witness reselection 0; adjacent consumption 0/0/0/0; artifact 9526988237
   R3.18AQ PRODUCTION at e1ccbef95c8424b689dee7d77fd8fde2af3e0204: validates/recomputes one exact R3.18AN prior, consumes exactly one AP-admitted property_present bit, accepts both false and true, and stops one bit later
-  R3.18AR ACTIVE read-only differential: prove published R3.18AQ exact on the immutable AP 47-row lane with false=7 / true=40 and adjacent consumption 0/0/0/0
-  NO following stream/header/payload after the R3.18AQ/AR one-control boundary, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AR CLOSED Outcome A: published R3.18AQ exact 47/47 on the immutable AP lane; published AN prerequisite exact 47/47; false=7 true=40; mismatch/reselection 0/0; adjacent consumption 0/0/0/0
+  R3.18AS ACTIVE read-only header evidence: only the exact 40 true continuation rows may observe one following property header through payload_start; all 7 false rows terminate at AQ stop
+  NO following payload or second later property-control bit after the R3.18AS header boundary, no header on false terminators, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AR_EVIDENCE_CLOSURE:
+Outcome A / read-only published-production differential / production unchanged at e1ccbef95c8424b689dee7d77fd8fde2af3e0204
+canonical continuity base: 5bf20063a829526cc090ada8c4221d6b42ae5655 / tree 8fa16095e28b418d12c3050c69462ecae64ba880
+evidence head/tree: 7dfe2a0fc451a40d4c750dd2e401a2f0aa36dd9d / 85a48eebc2d3292c524f482b5c131156fa8d7931
+authority run/job: 32949846799/98118570100 SUCCESS
+same-head natural CI: 32949846724/98118570114 SUCCESS / count=1 / rerun=0
+artifact: 9599823813 / 9680 bytes / sha256:20c7edce0ea6cc2d47168e9cb9bcc517cdad9b9bde78dcf7caa472403e525326; independently downloaded ZIP digest exact / inner manifest 10/10 PASS
+frozen rows 47/47 / published R3.18AQ exact 47/47 / published R3.18AN prerequisite exact 47/47
+control distribution: false=7 / true=40 / mismatch=0 / witness reselection=0
+truncation / wrong actor / unresolved lookup / wrong exact context / corrupt AN prior / repeatability / post-stop poison / one-read-no-loop negatives PASS
+focused AQ + fmt + workspace check/test/clippy -D warnings + repository verifier + diff-check + clean worktree PASS
+next stream/header/payload/second-control consumption 0/0/0/0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0 / privacy PASS
+next exact pass: R3.18AS read-only one-following-header evidence on exactly the 40 true continuation rows; 7 false rows remain terminators; payload remains closed
 
 R3_18AQ_PRODUCTION_CLOSURE:
 Outcome A / production / published exact mixed following-control boundary
