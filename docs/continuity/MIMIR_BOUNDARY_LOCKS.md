@@ -6,7 +6,7 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AS closed / R3.18AT active
+# 0. Current override — R3.18AT closed / R3.18AU active
 
 This current override supersedes older status wording later in this historical lock file.
 
@@ -16,23 +16,29 @@ This current override supersedes older status wording later in this historical l
 - immutable published behavior remains false=7 / true=40.
 
 ## CLOSED EVIDENCE — R3.18AS Outcome A
-- evidence `475650fea59332f74b9f69da50e3e4471622ab7e` / `1303071ad3031f4095e29d775afd243286a67b64`; run/job `32959321642/98147938829` SUCCESS; same-head CI `32959321531/98147938016` SUCCESS / count=1 / rerun=0;
+- evidence `475650fea59332f74b9f69da50e3e4471622ab7e` / `1303071ad3031f4095e29d775afd243286a67b64`; run/job `32959321642/98147938829` SUCCESS; same-head CI `32959321531/98147938016` SUCCESS;
 - artifact `9603335255` / `sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45` / inner manifest 13/13 PASS;
 - frozen rows 47/47; false terminators 7/7; true headers exact 40/40; native/oracle mismatch 0;
 - unique exact contexts 16; tags Int=40; witness reselection 0; payload/second-control consumption 0/0.
 
-## ACTIVE CONTRACT GATE — R3.18AT
-- contract-only; no production or wire decode mutation;
-- freeze exactly the 16 AS-observed complete eight-field header-context tuples and exact multiplicities summing to 40;
-- preserve `is_rl_223` as an explicit tuple field rather than inheriting older seven-field contract shape;
-- all 7 false AQ rows remain terminators outside header membership;
-- tag-only, component-only, Cartesian-product, versionless, RL223-less/flip, older-contract inheritance and any seventeenth tuple remain closed.
+## CLOSED CONTRACT — R3.18AT Outcome A
+- contract `docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json` / `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`;
+- membership `exact_tuple_only`; 16 complete eight-field tuples; exact observed multiplicities sum 40;
+- `is_rl_223` is an explicit required field; all 7 false AQ rows remain outside header membership;
+- AJ/Z/P inheritance, tag/component/Cartesian/versionless/RL223-drop-or-flip/fabricated membership are rejected.
+
+## ACTIVE PRODUCTION GATE — R3.18AU
+- validate/recompute one exact published R3.18AQ mixed-control prior;
+- false remains a successful no-header terminator and may perform zero following-header/post-AQ reads;
+- true may compose exactly one stateless following header only under exact R3.18AT membership;
+- stop true path exactly at `payload_start`;
+- consume zero following-payload bits and zero second-later-control bits.
 
 ## CLOSED
-- production following-header composition before R3.18AT contract admission;
 - any following-header success on the 7 false terminator rows;
-- following payload after the R3.18AS header `payload_start`;
-- second later property-control bit after the R3.18AS header;
+- any following-header context outside exact R3.18AT membership;
+- following payload after the R3.18AU true header `payload_start`;
+- second later property-control bit after the R3.18AU header;
 - repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

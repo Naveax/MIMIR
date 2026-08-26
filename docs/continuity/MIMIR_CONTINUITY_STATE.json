@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.18AQ",
   "last_production_milestone_name": "bounded post-AN mixed following-control production",
   "last_completed_read_only_audit": "R3.18AS",
-  "current_pass": "R3.18AT",
-  "current_pass_kind": "contract-only exact-context admission / immutable 40 true R3.18AS following headers; 7 false rows remain terminators",
-  "current_pass_goal": "Freeze exactly the 16 complete eight-field structural/context tuples and their exact multiplicities observed on the immutable 40 true R3.18AS continuation headers. Preserve the 7 false AQ rows as non-header terminators. No older contract inheritance, Cartesian widening, production mutation, payload decode or later-control access.",
-  "current_pass_stop_boundary": "Contract-only. No network bits are newly consumed. Production remains R3.18AQ. A later production pass may be proposed only after exact R3.18AT contract admission.",
+  "current_pass": "R3.18AU",
+  "current_pass_kind": "bounded production implementation / mixed post-AQ following-header composition under exact R3.18AT contract",
+  "current_pass_goal": "Validate/recompute one published R3.18AQ prior. Preserve false as a no-header terminator with zero post-AQ reads. On true only, compose exactly one following header using the existing stateless primitive, require exact R3.18AT eight-field membership, and stop at payload_start.",
+  "current_pass_stop_boundary": "False stops at the existing AQ boundary. True stops exactly at following-header payload_start. No following payload, second later control, generic/repeated cursor, actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -120,11 +120,15 @@
     "following payload after the one R3.18AS header payload_start",
     "second later property control bit after R3.18AS",
     "generalized/repeated property loop or generic cursor after R3.18AS",
-    "production following-header composition before R3.18AT exact-context contract admission",
     "header contexts outside the exact R3.18AT evidence-supported eight-field set",
     "R3.18AJ/R3.18Z/R3.18P cross-boundary header-context inheritance at R3.18AT",
     "dropping or flipping is_rl_223 in R3.18AT membership",
-    "following payload after the R3.18AS one-header payload_start"
+    "following payload after the R3.18AS one-header payload_start",
+    "post-AQ following-header contexts outside exact R3.18AT membership",
+    "following-header success on any R3.18AQ false terminator",
+    "following payload after the one R3.18AU following header payload_start",
+    "second later property control bit after R3.18AU",
+    "generalized/repeated property loop or generic cursor after R3.18AU"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -267,6 +271,9 @@
     "docs/continuity/MIMIR_R3_18AS_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AS_DECISION.md",
     "docs/continuity/MIMIR_R3_18AT_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json",
+    "docs/continuity/MIMIR_R3_18AT_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AU_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -275,9 +282,9 @@
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
     "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
   ],
-  "last_completed_evidence_pass": "R3.18AM",
-  "last_completed_evidence_outcome": "A — one post-AK Int payload exact 47/47; width 32 on 47/47; semantic Int range 1..415; native-oracle mismatch 0; witness reselection 0; another-control bits 0; artifact 9443581172.",
-  "last_completed_contract_pass": "R3.18AJ",
+  "last_completed_evidence_pass": "R3.18AS",
+  "last_completed_evidence_outcome": "A — frozen 47-row mixed lane preserved; false terminators 7/7; true following headers exact 40/40; 16 exact eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9603335255.",
+  "last_completed_contract_pass": "R3.18AT",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -784,7 +791,7 @@
     "receipt_manifest_sha256": "400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc",
     "next_pass": "R3.17F"
   },
-  "last_completed_contract_outcome": "A — exact_tuple_only post-W following-header contract / 18 complete seven-field tuples / multiplicity sum 47 / R3.18P inheritance false.",
+  "last_completed_contract_outcome": "A — exact_tuple_only 16 complete eight-field contexts; multiplicity sum 40; 7 false terminators outside membership; contract sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5.",
   "r3_17f": {
     "outcome": "A — admitted / contract complete",
     "production_source_changed": false,
@@ -2619,5 +2626,35 @@
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
     "negative_controls": "PASS",
     "privacy": "PASS"
+  },
+  "r3_18at": {
+    "outcome": "A — admitted / boundary-specific exact-eight-field contract",
+    "production_source_changed": false,
+    "canonical_main_before_admission": "b8e9bb465bd49974ca23e00c42ea29d59beecb39",
+    "canonical_tree_before_admission": "7480a997259b5f77a88e1326da2ccfbebe801f80",
+    "production_sha": "e1ccbef95c8424b689dee7d77fd8fde2af3e0204",
+    "production_tree": "4e7100625096594bcc5c5b4c6a8054c283643b13",
+    "source_evidence_pass": "R3.18AS",
+    "source_evidence_head": "475650fea59332f74b9f69da50e3e4471622ab7e",
+    "source_artifact_id": 9603335255,
+    "source_artifact_sha256": "0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45",
+    "contract_file": "docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json",
+    "contract_sha256": "3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5",
+    "membership_policy": "exact_tuple_only",
+    "tuple_field_count": 8,
+    "frozen_lane_rows": 47,
+    "false_terminators": 7,
+    "observed_header_rows": 40,
+    "unique_exact_contexts": 16,
+    "observed_multiplicity_sum": 40,
+    "observed_tag_counts": {
+      "Int": 40
+    },
+    "is_rl_223_required": true,
+    "older_contract_inheritance": false,
+    "production_mutation": false,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0,
+    "next_pass": "R3.18AU"
   }
 }

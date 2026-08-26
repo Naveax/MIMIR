@@ -1285,3 +1285,42 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18AT — post-AQ mixed-continuation following-header exact-context contract`.
+
+## 2026-08-26 — R3.18AT — Post-AQ Mixed-Continuation Following-Header Exact-Context Contract
+
+Production base SHA: `e1ccbef95c8424b689dee7d77fd8fde2af3e0204`
+Production commit SHA: unchanged
+Pass type: contract-only admission
+Outcome: **A — ADMITTED / COMPLETE**
+
+What changed:
+- no production Rust changed;
+- converted the immutable R3.18AS following-header observation into one boundary-specific exact membership contract;
+- admitted exactly 16 complete eight-field tuples with exact observed multiplicities summing to 40;
+- preserved all 7 false R3.18AQ rows as terminators outside header membership;
+- retained `is_rl_223` as an explicit required tuple field.
+
+Authority:
+- canonical main before admission `b8e9bb465bd49974ca23e00c42ea29d59beecb39` / tree `7480a997259b5f77a88e1326da2ccfbebe801f80`;
+- AS evidence `475650fea59332f74b9f69da50e3e4471622ab7e` / run/job `32959321642/98147938829` SUCCESS;
+- AS artifact `9603335255` / `sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45` / manifest 13/13 PASS;
+- AS canonical publication `32967201830/98172273710` SUCCESS / receipt `9606191056`;
+- contract `docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json`;
+- contract SHA-256 `3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`.
+
+Validation:
+- exact tuple equality PASS 16/16;
+- exact multiplicity equality PASS 16/16 / sum 40;
+- 7/7 false terminators remain outside membership;
+- tag-only, component-only, Cartesian, versionless, RL223-drop/flip, fabricated seventeenth and AJ-valid-but-AT-absent membership reject;
+- AJ/Z/P cross-boundary inheritance false;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+Boundaries opened:
+- bounded production composition of exactly one following header on an AQ-true result under exact R3.18AT membership; false remains a no-header terminator.
+
+Boundaries still closed:
+- following payload; second later property control; contexts outside exact AT membership; header synthesis on false terminators; generalized/repeated property loop/cursor; wider semantic/runtime layers.
+
+Next exact pass:
+- `R3.18AU — bounded post-AQ mixed-continuation following-header production`.

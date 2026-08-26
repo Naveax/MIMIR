@@ -55,16 +55,16 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18AS — one following-property-header evidence after published R3.18AQ mixed control / Outcome A / 47 frozen / false terminators 7 / true headers exact 40 / 16 exact contexts / Int=40 / mismatch 0 / artifact 9603335255
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.18AJ — post-AG following-header exact-context contract / Outcome A / 17 exact tuples / 47 multiplicities / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
+  R3.18AT — post-AQ mixed-continuation following-header exact-context contract / Outcome A / 16 exact eight-field tuples / multiplicity 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
   R3.18AS — 47/47 frozen split preserved / false terminators 7/7 / true following headers exact 40/40 / 16 exact eight-field contexts / Int=40 / native-oracle mismatch 0 / witness reselection 0 / payload/second-control consumption 0/0 / artifact 9603335255
 
 CURRENT_PASS:
-  R3.18AT — post-AQ mixed-continuation following-header exact-context contract
+  R3.18AU — bounded post-AQ mixed-continuation following-header production
 
 CURRENT_PASS_TYPE:
-  contract-only admission / freeze exactly the 16 complete eight-field structural-context tuples and exact multiplicities observed on the immutable 40 true R3.18AS continuation headers; keep the 7 false rows as terminators outside header membership; production mutation and payload/control access forbidden
+  bounded production implementation / validate-recompute one published R3.18AQ mixed control; false remains a no-header terminator; true may compose exactly one stateless following header only under exact R3.18AT eight-field membership; stop at payload_start with payload/second-control consumption zero
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -123,8 +123,23 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AQ PRODUCTION at e1ccbef95c8424b689dee7d77fd8fde2af3e0204: validates/recomputes one exact R3.18AN prior, consumes exactly one AP-admitted property_present bit, accepts both false and true, and stops one bit later
   R3.18AR CLOSED Outcome A: published R3.18AQ exact 47/47 on the immutable AP lane; published AN prerequisite exact 47/47; false=7 true=40; mismatch/reselection 0/0; adjacent consumption 0/0/0/0
   R3.18AS CLOSED Outcome A: frozen split exact 47/47; 7/7 false terminators; 40/40 true one-header observations exact through payload_start; 16 complete eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0
-  R3.18AT ACTIVE contract-only: freeze only those exact 16 eight-field tuples and their exact multiplicities on the 40 true rows; false terminators remain outside header membership
-  NO production following-header composition before AT contract admission, following payload, second later property-control bit, header on false terminators, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AT CLOSED Outcome A: exact_tuple_only 16 complete eight-field contexts / multiplicity sum 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
+  R3.18AU ACTIVE bounded production: false AQ prior remains a no-header terminator; true prior may compose exactly one stateless following header only under exact R3.18AT membership and stop at payload_start
+  NO following payload or second later property-control bit after the R3.18AU header boundary, header on false terminators, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AT_CONTRACT_CLOSURE:
+Outcome A / contract-only admission / production unchanged at e1ccbef95c8424b689dee7d77fd8fde2af3e0204
+canonical main before admission: b8e9bb465bd49974ca23e00c42ea29d59beecb39 / tree 7480a997259b5f77a88e1326da2ccfbebe801f80
+AS evidence head/tree: 475650fea59332f74b9f69da50e3e4471622ab7e / 1303071ad3031f4095e29d775afd243286a67b64
+AS authority run/job: 32959321642/98147938829 SUCCESS / same-head CI 32959321531/98147938016 SUCCESS
+AS artifact: 9603335255 / 13250 bytes / sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45 / manifest 13/13 PASS
+AS canonical publication: 32967201830/98172273710 SUCCESS / receipt 9606191056 / sha256:1d35bd5228d9a186b99eb93c0cd60a86b3714521c7a56c15feb28934656b72e6
+contract: docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json / sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5
+membership exact_tuple_only / tuple fields bound, prop-width, object, tag, version-major/minor, net-version, is_rl_223
+frozen rows 47 / false terminators 7 outside membership / true header rows 40 / exact contexts 16 / multiplicity sum 40 / Int=40
+exact tuple + multiplicity equality PASS / tag-only, component-only, Cartesian, versionless, RL223-drop/flip, fabricated-17th, AJ-valid-AT-absent negatives REJECT
+production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+next exact pass: R3.18AU bounded post-AQ mixed-continuation following-header production; no payload or later control
 
 R3_18AS_EVIDENCE_CLOSURE:
 Outcome A / read-only one-following-header evidence / production unchanged at e1ccbef95c8424b689dee7d77fd8fde2af3e0204
