@@ -1,0 +1,130 @@
+name: R3.18AS Force-Free Continuity Publication
+
+on:
+  push:
+    branches:
+      - automation/r318as-publication-v1
+    paths:
+      - .github/workflows/_tmp_r318as_publication_trigger.txt
+
+concurrency:
+  group: r318as-force-free-publication-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      BASE_SHA: 34897d5c7c24bd6ecba526fb3e951681a69d18c6
+      BASE_TREE: bb2e1ba77432af772f15f32a85c334f1dc2e6bf9
+      CANDIDATE_SHA: b8e9bb465bd49974ca23e00c42ea29d59beecb39
+      CANDIDATE_TREE: 7480a997259b5f77a88e1326da2ccfbebe801f80
+      CANDIDATE_BRANCH: continuity/r318as-admit-at-v1
+      VALIDATION_PR: '202'
+      CI_RUN: '32964061182'
+      CI_JOB: '98162565473'
+      KA_RUN: '32964061186'
+      KA_JOB: '98162565365'
+      BUILDER_RUN: '32963816322'
+      BUILDER_JOB: '98161812501'
+      BUILDER_ARTIFACT: '9604910222'
+      BUILDER_DIGEST: sha256:19fc013be74854fa9af60059c2872bf431148f258e1edaa0b8a04e079682be3d
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout publication helper
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Freeze exact admission authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          test "$(gh api "repos/$repo/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$repo/git/commits/$BASE_SHA" --jq .tree.sha)" = "$BASE_TREE"
+          test "$(gh api "repos/$repo/git/commits/$CANDIDATE_SHA" --jq .tree.sha)" = "$CANDIDATE_TREE"
+          test "$(gh api "repos/$repo/git/commits/$CANDIDATE_SHA" --jq .parents[0].sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$repo/branches/$CANDIDATE_BRANCH" --jq .commit.sha)" = "$CANDIDATE_SHA"
+
+          pr="$(gh api "repos/$repo/pulls/$VALIDATION_PR")"
+          test "$(jq -r .state <<<"$pr")" = closed
+          test "$(jq -r .merged_at <<<"$pr")" = null
+          test "$(jq -r .head.sha <<<"$pr")" = "$CANDIDATE_SHA"
+          test "$(jq -r .base.sha <<<"$pr")" = "$BASE_SHA"
+
+          for pair in "$CI_RUN:$CI_JOB" "$KA_RUN:$KA_JOB" "$BUILDER_RUN:$BUILDER_JOB"; do
+            run="${pair%%:*}"; job="${pair##*:}"
+            test "$(gh api "repos/$repo/actions/runs/$run" --jq .conclusion)" = success
+            test "$(gh api "repos/$repo/actions/jobs/$job" --jq .conclusion)" = success
+          done
+          test "$(gh api "repos/$repo/actions/runs/$CI_RUN" --jq .head_sha)" = "$CANDIDATE_SHA"
+          test "$(gh api "repos/$repo/actions/runs/$KA_RUN" --jq .head_sha)" = "$CANDIDATE_SHA"
+          test "$(gh api "repos/$repo/actions/artifacts/$BUILDER_ARTIFACT" --jq .digest)" = "$BUILDER_DIGEST"
+          test "$(gh api "repos/$repo/actions/artifacts/$BUILDER_ARTIFACT" --jq .expired)" = false
+          echo R3_18AS_PUBLICATION_AUTHORITY_FREEZE=PASS
+
+      - name: Force-free fast-forward main and read back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=2 origin "$CANDIDATE_SHA"
+          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse FETCH_HEAD^)" = "$BASE_SHA"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "$CANDIDATE_SHA:refs/heads/main"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$CANDIDATE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$CANDIDATE_SHA" --jq .tree.sha)" = "$CANDIDATE_TREE"
+          echo R3_18AS_FORCE_FALSE_FAST_FORWARD=PASS
+
+      - name: Validate exact published main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin main
+          git reset --hard FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$CANDIDATE_TREE"
+          git diff --check "$BASE_SHA" "$CANDIDATE_SHA"
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$CANDIDATE_SHA"
+          echo R3_18AS_PUBLISHED_MAIN_VALIDATION=PASS
+
+      - name: Write publication receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/r318as-publication-receipt"
+          {
+            echo R3_18AS_PUBLICATION=PASS
+            echo "base_sha=$BASE_SHA"
+            echo "candidate_sha=$CANDIDATE_SHA"
+            echo "candidate_tree=$CANDIDATE_TREE"
+            echo "validation_pr=$VALIDATION_PR/closed-unmerged"
+            echo "candidate_ci=$CI_RUN/$CI_JOB/SUCCESS"
+            echo "candidate_knowledge_archive=$KA_RUN/$KA_JOB/SUCCESS"
+            echo "builder=$BUILDER_RUN/$BUILDER_JOB/SUCCESS"
+            echo "builder_artifact=$BUILDER_ARTIFACT/$BUILDER_DIGEST"
+            echo "main_readback=$CANDIDATE_SHA"
+            echo "force=false"
+            echo "published_archive_verifier=PASS"
+            echo "published_repository_verifier=PASS"
+            echo "current_pass=R3.18AT"
+          } > "$RUNNER_TEMP/r318as-publication-receipt/receipt.txt"
+
+      - name: Upload publication receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318as-force-free-publication-receipt
+          path: ${{ runner.temp }}/r318as-publication-receipt
+          if-no-files-found: error
+          retention-days: 30
