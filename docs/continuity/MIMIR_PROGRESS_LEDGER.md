@@ -1246,3 +1246,42 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18AS — one following-property-header evidence after published R3.18AQ mixed control`.
+
+---
+
+## 2026-08-26 — R3.18AS — One Following-Property-Header Evidence After Published AQ Mixed Control
+
+Production base SHA: `e1ccbef95c8424b689dee7d77fd8fde2af3e0204`
+Production commit SHA: unchanged
+Pass type: read-only boundary evidence
+Outcome: **A — ADMITTED / COMPLETE**
+
+What changed:
+- no production Rust changed;
+- preserved exactly the immutable R3.18AR 47-row witness identity set and false=7 / true=40 split;
+- kept all 7 false rows as terminators;
+- observed exactly one following header only on the exact 40 true rows and stopped at `payload_start`.
+
+Evidence:
+- evidence head `475650fea59332f74b9f69da50e3e4471622ab7e` / tree `1303071ad3031f4095e29d775afd243286a67b64`;
+- authority `32959321642/98147938829` SUCCESS;
+- same-head natural CI `32959321531/98147938016` SUCCESS / count=1 / rerun=0;
+- artifact `9603335255` / `13250` bytes / `sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45`;
+- independently downloaded ZIP digest exact / inner manifest 13/13 PASS;
+- false terminators exact 7/7; true headers exact 40/40;
+- native/oracle mismatch 0; unclassified 0; unique exact contexts 16; Int=40; witness reselection 0;
+- following-payload/second-control consumption 0/0.
+
+Validation:
+- true-header truncation, wrong actor, unresolved lookup, wrong upstream exact context, repeatability, post-payload-start poison, false-terminator no-header, zero-payload-decoder and no-generalized-loop negatives PASS;
+- focused AQ, native 40-row header probe, 7-row terminator probe, Boxcars ordinal-5 oracle, fmt, workspace check/test/clippy with warnings denied, repository verifier, diff-check and clean-worktree PASS;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Boundaries opened:
+- contract-only admission of the exact 16 complete AS header-context tuples and multiplicities.
+
+Boundaries still closed:
+- production following-header composition; any header on the 7 false terminators; following payload; second later property control; generalized/repeated property loop/cursor; wider semantic/runtime layers.
+
+Next exact pass:
+- `R3.18AT — post-AQ mixed-continuation following-header exact-context contract`.

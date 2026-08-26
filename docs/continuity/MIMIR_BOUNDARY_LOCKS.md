@@ -6,7 +6,7 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AR closed / R3.18AS active
+# 0. Current override — R3.18AS closed / R3.18AT active
 
 This current override supersedes older status wording later in this historical lock file.
 
@@ -15,25 +15,24 @@ This current override supersedes older status wording later in this historical l
 - validates/recomputes one exact R3.18AN prior, consumes exactly one AP-admitted mixed `property_present` bit, accepts false and true, and stops one bit later;
 - immutable published behavior remains false=7 / true=40.
 
-## CLOSED DIFFERENTIAL — R3.18AR Outcome A
-- evidence `7dfe2a0fc451a40d4c750dd2e401a2f0aa36dd9d` / `85a48eebc2d3292c524f482b5c131156fa8d7931`; run/job `32949846799/98118570100` SUCCESS; same-head CI `32949846724/98118570114` SUCCESS;
-- artifact `9599823813` / `sha256:20c7edce0ea6cc2d47168e9cb9bcc517cdad9b9bde78dcf7caa472403e525326` / inner manifest 10/10 PASS;
-- frozen rows 47/47; published AQ exact 47/47; published AN prerequisite exact 47/47;
-- false=7 / true=40; mismatch 0; witness reselection 0; adjacent stream/header/payload/second-control 0/0/0/0.
+## CLOSED EVIDENCE — R3.18AS Outcome A
+- evidence `475650fea59332f74b9f69da50e3e4471622ab7e` / `1303071ad3031f4095e29d775afd243286a67b64`; run/job `32959321642/98147938829` SUCCESS; same-head CI `32959321531/98147938016` SUCCESS / count=1 / rerun=0;
+- artifact `9603335255` / `sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45` / inner manifest 13/13 PASS;
+- frozen rows 47/47; false terminators 7/7; true headers exact 40/40; native/oracle mismatch 0;
+- unique exact contexts 16; tags Int=40; witness reselection 0; payload/second-control consumption 0/0.
 
-## ACTIVE READ-ONLY GATE — R3.18AS
-- preserve all 47 AR identities and the exact 7 false / 40 true split;
-- false rows terminate at AQ stop and may not perform following-header lookup;
-- only the exact 40 true rows may observe one following property header;
-- stop every positive row exactly at that header's `payload_start`;
-- classify actual header object/tag/context distribution without pre-admission;
-- consume zero following-payload bits and zero second-later-control bits.
+## ACTIVE CONTRACT GATE — R3.18AT
+- contract-only; no production or wire decode mutation;
+- freeze exactly the 16 AS-observed complete eight-field header-context tuples and exact multiplicities summing to 40;
+- preserve `is_rl_223` as an explicit tuple field rather than inheriting older seven-field contract shape;
+- all 7 false AQ rows remain terminators outside header membership;
+- tag-only, component-only, Cartesian-product, versionless, RL223-less/flip, older-contract inheritance and any seventeenth tuple remain closed.
 
 ## CLOSED
-- any following-header observation on the 7 false terminator rows;
+- production following-header composition before R3.18AT contract admission;
+- any following-header success on the 7 false terminator rows;
 - following payload after the R3.18AS header `payload_start`;
 - second later property-control bit after the R3.18AS header;
-- production following-header composition before separate evidence/contract admission;
 - repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

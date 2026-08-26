@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AQ — bounded post-AN mixed following-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AR — published-R3.18AQ mixed following-control differential / Outcome A / 47/47 / false=7 / true=40 / mismatch 0 / artifact 9599823813
+  R3.18AS — one following-property-header evidence after published R3.18AQ mixed control / Outcome A / 47 frozen / false terminators 7 / true headers exact 40 / 16 exact contexts / Int=40 / mismatch 0 / artifact 9603335255
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AJ — post-AG following-header exact-context contract / Outcome A / 17 exact tuples / 47 multiplicities / contract cc85f9330b6d4190817d61c094d97bd00afbce770cb743170c195499d5bbc55c / R3.18Z-R3.18P inheritance false
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AR — published AQ exact 47/47 / published AN prerequisite exact 47/47 / false=7 / true=40 / mismatch 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / artifact 9599823813
+  R3.18AS — 47/47 frozen split preserved / false terminators 7/7 / true following headers exact 40/40 / 16 exact eight-field contexts / Int=40 / native-oracle mismatch 0 / witness reselection 0 / payload/second-control consumption 0/0 / artifact 9603335255
 
 CURRENT_PASS:
-  R3.18AS — one following-property-header evidence after published R3.18AQ mixed control
+  R3.18AT — post-AQ mixed-continuation following-header exact-context contract
 
 CURRENT_PASS_TYPE:
-  read-only boundary evidence / preserve the exact R3.18AR split, observe one following property header only on the exact 40 true continuation rows, keep all 7 false rows terminated, and stop every positive row exactly at header payload_start with payload/second-control consumption zero
+  contract-only admission / freeze exactly the 16 complete eight-field structural-context tuples and exact multiplicities observed on the immutable 40 true R3.18AS continuation headers; keep the 7 false rows as terminators outside header membership; production mutation and payload/control access forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -122,8 +122,24 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AP CLOSED Outcome A: exact one next property_present bit on the frozen 47-row lane; false=7 true=40; published AN exact 47/47; oracle-native exact 47/47; mismatch 0; witness reselection 0; adjacent consumption 0/0/0/0; artifact 9526988237
   R3.18AQ PRODUCTION at e1ccbef95c8424b689dee7d77fd8fde2af3e0204: validates/recomputes one exact R3.18AN prior, consumes exactly one AP-admitted property_present bit, accepts both false and true, and stops one bit later
   R3.18AR CLOSED Outcome A: published R3.18AQ exact 47/47 on the immutable AP lane; published AN prerequisite exact 47/47; false=7 true=40; mismatch/reselection 0/0; adjacent consumption 0/0/0/0
-  R3.18AS ACTIVE read-only header evidence: only the exact 40 true continuation rows may observe one following property header through payload_start; all 7 false rows terminate at AQ stop
-  NO following payload or second later property-control bit after the R3.18AS header boundary, no header on false terminators, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AS CLOSED Outcome A: frozen split exact 47/47; 7/7 false terminators; 40/40 true one-header observations exact through payload_start; 16 complete eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0
+  R3.18AT ACTIVE contract-only: freeze only those exact 16 eight-field tuples and their exact multiplicities on the 40 true rows; false terminators remain outside header membership
+  NO production following-header composition before AT contract admission, following payload, second later property-control bit, header on false terminators, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+
+R3_18AS_EVIDENCE_CLOSURE:
+Outcome A / read-only one-following-header evidence / production unchanged at e1ccbef95c8424b689dee7d77fd8fde2af3e0204
+canonical continuity base: 34897d5c7c24bd6ecba526fb3e951681a69d18c6 / tree bb2e1ba77432af772f15f32a85c334f1dc2e6bf9
+evidence head/tree: 475650fea59332f74b9f69da50e3e4471622ab7e / 1303071ad3031f4095e29d775afd243286a67b64
+authority run/job: 32959321642/98147938829 SUCCESS
+same-head natural CI: 32959321531/98147938016 SUCCESS / count=1 / rerun=0
+artifact: 9603335255 / 13250 bytes / sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45; independently downloaded ZIP digest exact / inner manifest 13/13 PASS
+frozen rows 47/47 / false terminators 7/7 / true continuation headers exact 40/40
+native-oracle mismatch 0 / unclassified 0 / unique exact contexts 16 / observed tags Int=40 / witness reselection 0
+tuple identity fields: stream_id_bound, prop_id_bits, property_object_index, attribute_tag, version_major, version_minor, net_version, is_rl_223
+truncation / wrong actor / unresolved lookup / wrong exact upstream context / repeatability / post-payload-start poison / false-terminator-no-header / zero-payload-decoder / no-loop negatives PASS
+focused AQ + native true-header probe + false-terminator probe + pinned Boxcars ordinal-5 oracle + fmt + workspace check/test/clippy -D warnings + repository verifier + diff-check + clean worktree PASS
+following payload / second later control consumption 0/0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0 / privacy PASS
+next exact pass: R3.18AT contract-only exact-context admission over the immutable 40 true header rows; 7 false rows remain terminators; production remains R3.18AQ
 
 R3_18AR_EVIDENCE_CLOSURE:
 Outcome A / read-only published-production differential / production unchanged at e1ccbef95c8424b689dee7d77fd8fde2af3e0204
