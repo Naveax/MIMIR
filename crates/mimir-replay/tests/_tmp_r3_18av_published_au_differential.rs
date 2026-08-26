@@ -68,7 +68,11 @@ fn av_expected_rows() -> Vec<AvExpected> {
                 first_start: fields[4].parse().expect("first_start"),
                 control_start: fields[5].parse().expect("control_start"),
                 control_end: fields[6].parse().expect("control_end"),
-                control_value: fields[7].parse().expect("control_value"),
+                control_value: match fields[7] {
+                    "0" | "false" => false,
+                    "1" | "true" => true,
+                    other => panic!("invalid control_value: {other}"),
+                },
                 stream_start: av_opt_u64(fields[8]),
                 stream_end: av_opt_u64(fields[9]),
                 stream_id: av_opt_u32(fields[10]),
