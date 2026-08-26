@@ -1,0 +1,100 @@
+name: R3.18AU Preserve W Doc Adjacency
+
+on:
+  push:
+    branches:
+      - automation/r318au-builder-v1
+
+concurrency:
+  group: r318au-doc-adjacency-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v6
+        with:
+          ref: automation/r318au-builder-v1
+          fetch-depth: 0
+
+      - name: Install exact Rust 1.85 toolchain
+        shell: bash
+        run: rustup toolchain install 1.85.0 --profile minimal --component rustfmt
+
+      - name: Move AU block before W function documentation
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('crates/mimir-replay/src/lib.rs')
+          source = path.read_text(encoding='utf-8')
+          au = '// R3.18AU PRE-ADMISSION BEGIN bounded post-AQ mixed-continuation following header'
+          w_doc = '/// Read exactly one R3.18V-admitted control bit after a valid R3.18T following payload.'
+          w_fn = 'pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_v1('
+          au_pos = source.find(au)
+          doc_pos = source.find(w_doc)
+          fn_pos = source.find(w_fn)
+          if not (0 <= doc_pos < au_pos < fn_pos):
+              raise SystemExit(f'unexpected ordering doc={doc_pos} au={au_pos} fn={fn_pos}')
+          block = source[au_pos:fn_pos].rstrip() + '\n\n'
+          without = source[:au_pos] + source[fn_pos:]
+          repaired = without[:doc_pos] + block + without[doc_pos:]
+          if repaired.count(au) != 1:
+              raise SystemExit('AU marker count drift')
+          if not (repaired.find(au) < repaired.find(w_doc) < repaired.find(w_fn)):
+              raise SystemExit('final AU/W documentation ordering invalid')
+          between = repaired[repaired.find(w_doc):repaired.find(w_fn)]
+          if au in between:
+              raise SystemExit('AU still splits W documentation from W function')
+          path.write_text(repaired, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Rust formatting
+        shell: bash
+        run: cargo +1.85.0 fmt --all
+
+      - name: AU W AQ AN AK focused regressions
+        shell: bash
+        run: |
+          cargo +1.85.0 test -p mimir-replay --test r3_18au_post_aq_following_header -- --nocapture
+          cargo +1.85.0 test -p mimir-replay --test r3_18w_following_payload_control -- --nocapture
+          cargo +1.85.0 test -p mimir-replay --test r3_18aq_post_an_payload_control -- --nocapture
+          cargo +1.85.0 test -p mimir-replay --test r3_18an_post_ak_payload -- --nocapture
+          cargo +1.85.0 test -p mimir-replay --test r3_18ak_post_ag_following_header -- --nocapture
+
+      - name: Scope and adjacency guard
+        shell: bash
+        run: |
+          git diff --check
+          changed="$(git diff --name-only | sort)"
+          test "$changed" = 'crates/mimir-replay/src/lib.rs'
+          python3 - <<'PY'
+          from pathlib import Path
+          s = Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          au = '// R3.18AU PRE-ADMISSION BEGIN bounded post-AQ mixed-continuation following header'
+          w_doc = '/// Read exactly one R3.18V-admitted control bit after a valid R3.18T following payload.'
+          w_fn = 'pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_v1('
+          assert s.find(au) < s.find(w_doc) < s.find(w_fn)
+          function = s[s.find(w_fn):]
+          assert 'decode_replay_network_existing_actor_first_property_header_v1(' not in function
+          assert 'lookup_plan' not in function
+          assert au not in s[s.find(w_doc):s.find(w_fn)]
+          PY
+
+      - name: Remove helper and commit staging output
+        shell: bash
+        run: |
+          git rm .github/workflows/r318au-doc-adjacency.yml
+          git add crates/mimir-replay/src/lib.rs
+          git diff --cached --check
+          git config user.name 'MIMIR AU Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'Stage R3.18AU with preserved W documentation adjacency'
+          git push origin HEAD:automation/r318au-builder-v1
