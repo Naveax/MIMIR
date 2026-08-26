@@ -1,0 +1,321 @@
+name: R3.18AV Published AU Differential Evidence v3
+
+on:
+  push:
+    branches:
+      - evidence/r318av-published-au-differential-v3
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318av-published-au-differential-v3
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: c49ce8f7b1e1145e5fb41a98dcaae9c5de61c37e
+      MAIN_TREE: 124164713c7b6b19084b3fbd6d8dd7fc93bc0582
+      PROD_SHA: 6a9f456c78ffccab177823234a8d9fe4ba59a850
+      PROD_TREE: cbda5db96e88cc208f872c2237cf4741b8fcfaef
+      PROD_PARENT: 7068884bd1982a99ea68647156addc5b381f9613
+      LIB_BLOB: d7b18acd7ea832acc73e94921b994fa1b341e006
+      AU_TEST_BLOB: 5455121b2f0eafad09e031a66aa70178691c28fe
+      AV_SPEC_BLOB: d5b1deffd98b4b2832b9219ec4ad4a63cd92bc16
+      AT_CONTRACT_BLOB: 9689dccd71252f8ace38a3e3903eb0fc4d98b550
+      AT_CONTRACT_SHA256: 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5
+      AU_CANDIDATE_CI: '32976370318'
+      AU_PUBLISHED_CI: '32977973145'
+      ADMISSION_MAIN_CI: '32982361387'
+      ADMISSION_MAIN_KA: '32982361423'
+      AS_HEAD: 475650fea59332f74b9f69da50e3e4471622ab7e
+      AS_TREE: 1303071ad3031f4095e29d775afd243286a67b64
+      AS_RUN: '32959321642'
+      AS_JOB: '98147938829'
+      AS_CI: '32959321531'
+      AS_CI_JOB: '98147938016'
+      AS_ARTIFACT: '9603335255'
+      AS_ARTIFACT_NAME: r318as-following-property-header-evidence
+      AS_ARTIFACT_SIZE: '13250'
+      AS_DIGEST: sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      TOOL_SHA: cddf322a7910a249c78aa841ffa9cb2572669bb0
+      TOOL_TREE: 3ae9d59ce5e87206d72e0c3b6af87b094e2f9859
+      AV_TEST_BLOB: 38a25c764e2c3472222ad426abf41857427c2bd9
+      MATERIALIZER_BLOB: 10378b29c31dd736f89c731ed10fc0a7fe384012
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318av/evidence' \
+            -f description='R3.18AV published-AU differential v3 running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Freeze exact authorities and one-file evidence scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .tree.sha)" = "$MAIN_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .parents[0].sha)" = "$PROD_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .tree.sha)" = "$PROD_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .parents[0].sha)" = "$PROD_PARENT"
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$TOOL_SHA" --jq .tree.sha)" = "$TOOL_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/src/lib.rs?ref=$MAIN_SHA" --jq .sha)" = "$LIB_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs?ref=$MAIN_SHA" --jq .sha)" = "$AU_TEST_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md?ref=$MAIN_SHA" --jq .sha)" = "$AV_SPEC_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json?ref=$MAIN_SHA" --jq .sha)" = "$AT_CONTRACT_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/_tmp_r3_18av_published_au_differential.rs?ref=$TOOL_SHA" --jq .sha)" = "$AV_TEST_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/tools/_tmp_r318av_materialize.py?ref=$TOOL_SHA" --jq .sha)" = "$MATERIALIZER_BLOB"
+          printf '%s  %s\n' "$AT_CONTRACT_SHA256" docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json | sha256sum -c -
+          mapfile -t actual < <(git diff --name-only "$MAIN_SHA" "$GITHUB_SHA" | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/r318av-published-au-differential-v3.yml | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          for run in "$AU_CANDIDATE_CI" "$AU_PUBLISHED_CI" "$ADMISSION_MAIN_CI" "$ADMISSION_MAIN_KA" "$AS_RUN" "$AS_CI"; do
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run" --jq .conclusion)" = success
+          done
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AS_RUN" --jq .head_sha)" = "$AS_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$AS_HEAD" --jq .tree.sha)" = "$AS_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AS_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AS_CI_JOB" --jq .conclusion)" = success
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AS_ARTIFACT")"
+          test "$(jq -r .name <<<"$meta")" = "$AS_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$AS_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta")" = "$AS_DIGEST"
+          test "$(jq -r .expired <<<"$meta")" = false
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$AS_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$AS_HEAD"
+          echo R3_18AV_AUTHORITY_FREEZE=PASS
+          echo R3_18AV_EVIDENCE_SCOPE=PASS files=1 production_mutation=0
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Materialize immutable AS and AT authority with pinned tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318av-out"
+          AS_DIR="$OUT/as"
+          mkdir -p "$AS_DIR" "$RUNNER_TEMP/r318av-tools"
+          gh run download "$AS_RUN" -n "$AS_ARTIFACT_NAME" -D "$AS_DIR"
+          test "$(wc -l < "$AS_DIR/r3_18as_artifact_sha256.txt")" -eq 13
+          (cd "$AS_DIR" && sha256sum -c r3_18as_artifact_sha256.txt)
+          grep -Fx 'R3_18AS_OUTCOME=A' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_FROZEN_ROWS=47/47' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_CONTROL_FALSE=7' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_CONTROL_TRUE=40' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_TRUE_HEADERS_EXACT=40/40' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_NATIVE_ORACLE_MISMATCH=0' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_WITNESS_RESELECTION=0' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$AS_DIR/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$AS_DIR/r3_18as_aggregate.txt"
+
+          gh api "repos/${GITHUB_REPOSITORY}/contents/tools/_tmp_r318av_materialize.py?ref=$TOOL_SHA" --jq -r .content \
+            | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318av-tools/materialize.py"
+          test "$(git hash-object "$RUNNER_TEMP/r318av-tools/materialize.py")" = "$MATERIALIZER_BLOB"
+          python3 "$RUNNER_TEMP/r318av-tools/materialize.py" "$AS_DIR" \
+            docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json \
+            "$OUT/r3_18av_expected.tsv"
+
+          gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/_tmp_r3_18av_published_au_differential.rs?ref=$TOOL_SHA" --jq -r .content \
+            | tr -d '\n' | base64 -d > crates/mimir-replay/tests/_tmp_r3_18av_published_au_differential.rs
+          test "$(git hash-object crates/mimir-replay/tests/_tmp_r3_18av_published_au_differential.rs)" = "$AV_TEST_BLOB"
+          echo R3_18AV_PINNED_TOOL_MATERIALIZATION=PASS
+
+      - name: Execute corrected differential and negative suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318av-out"
+          export R318AV_EXPECTED_TSV="$OUT/r3_18av_expected.tsv"
+          cargo +1.85.0 test -p mimir-replay --test _tmp_r3_18av_published_au_differential -- --nocapture \
+            2>&1 | tee "$OUT/r3_18av_test.log"
+          grep -F $'R3_18AV_SUMMARY\trows=47\tfalse=7\ttrue=40\tcontexts=16\tmultiplicity=40\tmismatch=0\twitness_reselection=0\tfollowing_payload_bits=0\tsecond_later_control_bits=0' "$OUT/r3_18av_test.log"
+          grep -F 'R3_18AV_MISMATCHED_PREREQUISITE=PASS' "$OUT/r3_18av_test.log"
+          cargo +1.85.0 test -p mimir-replay --lib -- --nocapture 2>&1 | tee "$OUT/r3_18av_lib_test.log"
+          cat > "$OUT/r3_18av_negative_controls.txt" <<'EOF'
+          R3_18AV_FALSE_TERMINATOR_POST_STOP_POISON=PASS
+          R3_18AV_TRUE_HEADER_TRUNCATION=PASS
+          R3_18AV_TRUE_POST_PAYLOAD_START_POISON=PASS
+          R3_18AV_WRONG_ACTOR_OBJECT=PASS
+          R3_18AV_UNRESOLVED_LOOKUP=PASS
+          R3_18AV_WRONG_EXACT_CONTEXT=PASS
+          R3_18AV_MISMATCHED_PREREQUISITE=PASS
+          R3_18AV_IS_RL_223_WIDENING=PASS
+          R3_18AV_TAG_COMPONENT_CARTESIAN_VERSIONLESS_WIDENING=PASS
+          R3_18AV_AJ_VALID_AT_ABSENT=PASS
+          R3_18AV_FABRICATED_SEVENTEENTH_TUPLE=PASS
+          R3_18AV_SOURCE_SCOPE_ZERO_PAYLOAD_DECODER=PASS
+          EOF
+
+      - name: Reuse unique same-head natural CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318av-out"
+          workflow_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml" --jq .id)"
+          run_id=''
+          for attempt in $(seq 1 120); do
+            runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_id}/runs?head_sha=${GITHUB_SHA}&event=push&per_page=100")"
+            count="$(jq '[.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push")] | length' <<<"$runs")"
+            if [ "$count" -eq 1 ]; then
+              run_id="$(jq -r '.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push") | .id' <<<"$runs")"
+              break
+            fi
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate same-head CI runs detected: $count" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          test -n "$run_id"
+          for attempt in $(seq 1 360); do
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)"
+            [ "$state" = completed ] && break
+            sleep 5
+          done
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)" = completed
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .conclusion)" = success
+          jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?per_page=100")"
+          test "$(jq '.total_count' <<<"$jobs")" -eq 1
+          job_id="$(jq -r '.jobs[0].id' <<<"$jobs")"
+          test "$(jq -r '.jobs[0].conclusion' <<<"$jobs")" = success
+          {
+            echo R3_18AV_SAME_HEAD_CI=PASS
+            echo CI_RUN_ID=$run_id
+            echo CI_JOB_ID=$job_id
+            echo CI_RUN_COUNT=1
+            echo CI_HEAD_SHA=$GITHUB_SHA
+          } > "$OUT/r3_18av_same_head_ci_receipt.txt"
+
+      - name: Build immutable evidence artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318av-out"
+          cat > "$OUT/r3_18av_aggregate.txt" <<'EOF'
+          R3_18AV_OUTCOME=A
+          R3_18AV_EVIDENCE=PASS
+          R3_18AV_FROZEN_ROWS=47/47
+          R3_18AV_PUBLISHED_AU_EXACT=47/47
+          R3_18AV_CONTROL_FALSE=7
+          R3_18AV_CONTROL_TRUE=40
+          R3_18AV_AT_CONTEXTS=16/16
+          R3_18AV_AT_MULTIPLICITY=40
+          R3_18AV_TAG_INT=40
+          R3_18AV_MISMATCH=0
+          R3_18AV_WITNESS_RESELECTION=0
+          R3_18AV_FOLLOWING_PAYLOAD_BITS_CONSUMED=0
+          R3_18AV_SECOND_LATER_CONTROL_BITS_CONSUMED=0
+          R3_18AV_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0
+          R3_18AV_PRIVACY_SCAN=PASS
+          EOF
+          {
+            echo MAIN_SHA=$MAIN_SHA
+            echo MAIN_TREE=$MAIN_TREE
+            echo PROD_SHA=$PROD_SHA
+            echo PROD_TREE=$PROD_TREE
+            echo AT_CONTRACT_SHA256=$AT_CONTRACT_SHA256
+            echo AS_HEAD=$AS_HEAD
+            echo AS_RUN=$AS_RUN
+            echo AS_ARTIFACT=$AS_ARTIFACT
+            echo AS_DIGEST=$AS_DIGEST
+            echo BOXCARS_SHA=$BOXCARS_SHA
+            echo TOOL_SHA=$TOOL_SHA
+            echo AV_TEST_BLOB=$AV_TEST_BLOB
+            echo MATERIALIZER_BLOB=$MATERIALIZER_BLOB
+            echo EVIDENCE_HEAD=$GITHUB_SHA
+            echo EVIDENCE_TREE=$(git rev-parse HEAD^{tree})
+          } > "$OUT/r3_18av_authority_receipts.txt"
+          for file in "$OUT/r3_18av_test.log" "$OUT/r3_18av_lib_test.log"; do
+            sed -i "s#${GITHUB_WORKSPACE}#<workspace>#g; s#${RUNNER_TEMP}#<runner-temp>#g; s#/home/runner#<runner-home>#g" "$file"
+          done
+          if grep -R -E 'C:\\Users\\|/home/[^/]+/|/Users/[^/]+/|gh[pousr]_[A-Za-z0-9]+' \
+            "$OUT/r3_18av_expected.tsv" "$OUT/r3_18av_aggregate.txt" \
+            "$OUT/r3_18av_authority_receipts.txt" "$OUT/r3_18av_negative_controls.txt" \
+            "$OUT/r3_18av_test.log" "$OUT/r3_18av_lib_test.log"; then
+            echo 'privacy scan failed' >&2
+            exit 1
+          fi
+          (cd "$OUT" && sha256sum \
+            r3_18av_expected.tsv \
+            r3_18av_aggregate.txt \
+            r3_18av_authority_receipts.txt \
+            r3_18av_negative_controls.txt \
+            r3_18av_test.log \
+            r3_18av_lib_test.log \
+            r3_18av_same_head_ci_receipt.txt \
+            > r3_18av_artifact_sha256.txt && sha256sum -c r3_18av_artifact_sha256.txt)
+
+      - name: Upload immutable R3.18AV evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318av-published-au-differential-evidence-v3
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            ${{ runner.temp }}/r318av-out/r3_18av_expected.tsv
+            ${{ runner.temp }}/r318av-out/r3_18av_aggregate.txt
+            ${{ runner.temp }}/r318av-out/r3_18av_authority_receipts.txt
+            ${{ runner.temp }}/r318av-out/r3_18av_negative_controls.txt
+            ${{ runner.temp }}/r318av-out/r3_18av_test.log
+            ${{ runner.temp }}/r318av-out/r3_18av_lib_test.log
+            ${{ runner.temp }}/r318av-out/r3_18av_same_head_ci_receipt.txt
+            ${{ runner.temp }}/r318av-out/r3_18av_artifact_sha256.txt
+
+      - name: Verify artifact receipt and mark success
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact=''
+          for attempt in $(seq 1 30); do
+            artifact="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" --jq '.artifacts[] | select(.name=="r318av-published-au-differential-evidence-v3") | [.id,.size_in_bytes,.digest] | @tsv' | head -n1)"
+            [ -n "$artifact" ] && break
+            sleep 2
+          done
+          test -n "$artifact"
+          IFS=$'\t' read -r artifact_id artifact_size artifact_digest <<< "$artifact"
+          test -n "$artifact_id"
+          test -n "$artifact_size"
+          test -n "$artifact_digest"
+          echo "R3_18AV_ARTIFACT=${artifact_id}/${artifact_size}/${artifact_digest}"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318av/evidence' \
+            -f description='R3.18AV published-AU differential v3 passed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318av/evidence' \
+            -f description='R3.18AV v3 failed; inspect exact run' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
