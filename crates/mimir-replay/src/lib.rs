@@ -11366,11 +11366,6 @@ fn network_existing_actor_after_following_payload_control_error(
     ))
 }
 
-/// Read exactly one R3.18V-admitted control bit after a valid R3.18T following payload.
-///
-/// Only `true` is evidence-admitted at this exact boundary. `false` fails closed. The
-/// function validates the nested R3.18T payload-end relationship before touching the
-/// next bit and consumes no stream id, header, payload, additional control, or loop.
 // R3.18AU PRE-ADMISSION BEGIN bounded post-AQ mixed-continuation following header
 /// Bounded composition of one validated published R3.18AQ mixed control plus at most one
 /// R3.18AT-admitted following existing-actor property header.
@@ -11831,6 +11826,11 @@ mod r3_18au_exact_contract_tests {
     }
 }
 
+/// Read exactly one R3.18V-admitted control bit after a valid R3.18T following payload.
+///
+/// Only `true` is evidence-admitted at this exact boundary. `false` fails closed. The
+/// function validates the nested R3.18T payload-end relationship before touching the
+/// next bit and consumes no stream id, header, payload, additional control, or loop.
 pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_v1(
     network_bytes: &[u8],
     prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadV1,
