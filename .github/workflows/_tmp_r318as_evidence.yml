@@ -1,0 +1,226 @@
+name: R3.18AS One Following Header Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318as-following-header-v1
+    paths:
+      - .github/workflows/_tmp_r318as_trigger.txt
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318as-following-header-evidence-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 34897d5c7c24bd6ecba526fb3e951681a69d18c6
+      BASE_TREE: bb2e1ba77432af772f15f32a85c334f1dc2e6bf9
+      PROD_SHA: e1ccbef95c8424b689dee7d77fd8fde2af3e0204
+      PROD_TREE: 4e7100625096594bcc5c5b4c6a8054c283643b13
+      PROD_PARENT: ec2d6c29f90863d9e312856043d01fb98a0c2d2d
+      LIB_BLOB: b886c58400de0efe0a6a6113d79e6f78e751a213
+      AQ_TEST_BLOB: 983cbda666f40cbc739b250eac87bc4ce0c9eb99
+      AS_SPEC_BLOB: 4b69c75012a7a358522b3399c1e943d537339838
+      AR_DECISION_BLOB: 8591566a6f375df58b3a83a35e27a0eec65083c6
+      AR_HEAD: 7dfe2a0fc451a40d4c750dd2e401a2f0aa36dd9d
+      AR_TREE: 85a48eebc2d3292c524f482b5c131156fa8d7931
+      AR_RUN: '32949846799'
+      AR_JOB: '98118570100'
+      AR_CI: '32949846724'
+      AR_CI_JOB: '98118570114'
+      AR_ARTIFACT: '9599823813'
+      AR_ARTIFACT_NAME: r318ar-published-aq-differential-evidence
+      AR_ARTIFACT_SIZE: '9680'
+      AR_DIGEST: sha256:20c7edce0ea6cc2d47168e9cb9bcc517cdad9b9bde78dcf7caa472403e525326
+      AR_VALIDATION_PR: '201'
+      AR_PR_CI: '32956669213'
+      AR_PR_CI_JOB: '98139725416'
+      AR_PR_KA: '32956669303'
+      AR_PR_KA_JOB: '98139725726'
+      AR_PUB_CI: '32957061812'
+      AR_PUB_CI_JOB: '98140959220'
+      AR_PUB_KA: '32957061959'
+      AR_PUB_KA_JOB: '98140959371'
+      R318C_HEAD: a4b71ad43e5cf55c44c9518b24622ce29214acd2
+      R318C_PATCH_BLOB: eb61cca0c080733aa36856dbb69f4c36642a5cda
+      AI_HEAD: 9d424dae2ed8cc7a0a6868111805a48763131196
+      AI_EXT_BLOB: 467283224dfa51404f0819208149f963f24d8810
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      BOXCARS_FRAME_BLOB: 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+      BOXCARS_ATTR_BLOB: 5e2d5bc1cd8187af30c3ea95193ad987645cb76e
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318as/evidence' \
+            -f description='R3.18AS one-following-header evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Execute deterministic R3.18AS evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/_tmp_r318as_run.sh
+
+      - name: Reuse and verify unique same-head natural CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml" --jq .id)"
+          run_id=''
+          for attempt in $(seq 1 90); do
+            runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_id}/runs?head_sha=${GITHUB_SHA}&event=push&per_page=100")"
+            count="$(jq '[.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push")] | length' <<<"$runs")"
+            if [ "$count" -eq 1 ]; then
+              run_id="$(jq -r '.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push") | .id' <<<"$runs")"
+              break
+            fi
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate same-head CI runs detected: $count" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          test -n "$run_id"
+          for attempt in $(seq 1 180); do
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)"
+            [ "$state" = completed ] && break
+            sleep 5
+          done
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)" = completed
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .head_sha)" = "$GITHUB_SHA"
+          jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?per_page=100")"
+          test "$(jq '.total_count' <<<"$jobs")" -eq 1
+          job_id="$(jq -r '.jobs[0].id' <<<"$jobs")"
+          test "$(jq -r '.jobs[0].conclusion' <<<"$jobs")" = success
+          {
+            echo R3_18AS_SAME_HEAD_CI=PASS
+            echo CI_RUN_ID=$run_id
+            echo CI_JOB_ID=$job_id
+            echo CI_RUN_COUNT=1
+            echo CI_HEAD_SHA=$GITHUB_SHA
+          } > "$RUNNER_TEMP/r318as-out/r3_18as_same_head_ci_receipt.txt"
+
+      - name: Finalize artifact manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/r318as-out"
+          sha256sum \
+            r3_18as_source_scope.txt \
+            r3_18as_replay_identity.tsv \
+            r3_18as_frozen_control_rows.tsv \
+            r3_18as_continuation_targets.tsv \
+            r3_18as_terminator_rows.tsv \
+            r3_18as_boxcars_instrumentation_sha256.txt \
+            r3_18as_header_rows.json \
+            r3_18as_header_summary.json \
+            r3_18as_negative_controls.txt \
+            r3_18as_validation.txt \
+            r3_18as_aggregate.txt \
+            r3_18as_upstream_receipts.txt \
+            r3_18as_same_head_ci_receipt.txt \
+            > r3_18as_artifact_sha256.txt
+          test "$(wc -l < r3_18as_artifact_sha256.txt)" -eq 13
+          sha256sum -c r3_18as_artifact_sha256.txt
+
+      - name: Upload immutable R3.18AS evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318as-following-property-header-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            ${{ runner.temp }}/r318as-out/r3_18as_source_scope.txt
+            ${{ runner.temp }}/r318as-out/r3_18as_replay_identity.tsv
+            ${{ runner.temp }}/r318as-out/r3_18as_frozen_control_rows.tsv
+            ${{ runner.temp }}/r318as-out/r3_18as_continuation_targets.tsv
+            ${{ runner.temp }}/r318as-out/r3_18as_terminator_rows.tsv
+            ${{ runner.temp }}/r318as-out/r3_18as_boxcars_instrumentation_sha256.txt
+            ${{ runner.temp }}/r318as-out/r3_18as_header_rows.json
+            ${{ runner.temp }}/r318as-out/r3_18as_header_summary.json
+            ${{ runner.temp }}/r318as-out/r3_18as_negative_controls.txt
+            ${{ runner.temp }}/r318as-out/r3_18as_validation.txt
+            ${{ runner.temp }}/r318as-out/r3_18as_aggregate.txt
+            ${{ runner.temp }}/r318as-out/r3_18as_upstream_receipts.txt
+            ${{ runner.temp }}/r318as-out/r3_18as_same_head_ci_receipt.txt
+            ${{ runner.temp }}/r318as-out/r3_18as_artifact_sha256.txt
+
+      - name: Verify immutable receipt and mark success
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r '.workflow_run.id' <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r '.workflow_run.head_sha' <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r '.expired' <<<"$meta")" = false
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$(jq -r '.digest' <<<"$meta")")" = "$(norm "$ARTIFACT_DIGEST")"
+          agg="$RUNNER_TEMP/r318as-out/r3_18as_aggregate.txt"
+          grep -Fx 'R3_18AS_OUTCOME=A' "$agg"
+          grep -Fx 'R3_18AS_EVIDENCE=PASS' "$agg"
+          grep -Fx 'R3_18AS_FROZEN_ROWS=47/47' "$agg"
+          grep -Fx 'R3_18AS_CONTROL_FALSE=7' "$agg"
+          grep -Fx 'R3_18AS_CONTROL_TRUE=40' "$agg"
+          grep -Fx 'R3_18AS_FALSE_TERMINATORS_EXACT=7/7' "$agg"
+          grep -Fx 'R3_18AS_TRUE_HEADERS_EXACT=40/40' "$agg"
+          grep -Fx 'R3_18AS_NATIVE_ORACLE_MISMATCH=0' "$agg"
+          grep -Fx 'R3_18AS_UNCLASSIFIED=0' "$agg"
+          grep -Fx 'R3_18AS_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$agg"
+          grep -Fx 'R3_18AS_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$agg"
+          grep -Fx 'R3_18AS_PRIVACY_SCAN=PASS' "$agg"
+          grep -Fx 'R3_18AS_SAME_HEAD_CI=PASS' "$RUNNER_TEMP/r318as-out/r3_18as_same_head_ci_receipt.txt"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318as/evidence' \
+            -f description='R3.18AS Outcome A one-header evidence PASS' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo "R3_18AS_EVIDENCE_HEAD=$(git rev-parse HEAD)"
+          echo "R3_18AS_EVIDENCE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "R3_18AS_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18AS_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18AS_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          cat "$agg"
+
+      - name: Mark evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure \
+            -f context='r318as/evidence' \
+            -f description='R3.18AS evidence failed; inspect exact run' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null || true
