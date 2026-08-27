@@ -1556,3 +1556,48 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18BB — published-R3.18BA mixed following-control differential` on exactly the immutable forty AX witnesses.
+
+## 2026-08-27 — R3.18BB — Published R3.18BA mixed following-control differential
+
+Production base SHA: `5d2bca711f528ab1bb607104379af503ff175697`
+Production commit SHA: unchanged / `5d2bca711f528ab1bb607104379af503ff175697`
+Pass type: read-only published-production differential
+Outcome: **A — CLOSED**
+
+What changed:
+- no production source changed;
+- published R3.18BA was checked against exactly the immutable forty R3.18AX one-bit witnesses;
+- the frozen mixed split remains false=37 / true=3;
+- a separate R3.18BC one-header evidence lane is opened only for the exact three true witnesses.
+
+Evidence:
+- evidence head/tree `91595db2970ad395ec048ebd9326cfa97b01b38a` / `40672cd1b546bca2b73ca252d727aa88ca9faec1`;
+- authority run/job `33104207616/98629573433` SUCCESS;
+- same-head natural CI `33104207621/98629573926` SUCCESS;
+- artifact `9659874105` / 9295 bytes / `sha256:0e5bc329e1fc89068243ad0846356ed4dbfc2ade245623385b8e84d21b4f138e`;
+- downloaded ZIP exact; inner manifest 11/11 PASS;
+- published BA exact 40/40; AY prerequisite exact 40/40; false=37 / true=3; mismatch 0; witness reselection 0;
+- repeatability/post-stop poison 40/40; authority/context/lookup negatives PASS;
+- carrier truncation fail-closed PASS; exact pre-control truncation inherited from AX PASS 40/40;
+- adjacent stream/header/payload/second-control consumption 0/0/0/0;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Important negative facts / anti-regressions:
+- `a8ed349204d2a72f404ade717aba58fdbdfde815` / `33103836525` is superseded helper-only non-authority: science/focused semantics passed, but the helper lacked the Rust 1.85 `rustfmt` component before full validation;
+- failure receipt `9659612921` explicitly records no scientific authority; the failed SHA was not rerun.
+
+Boundaries opened:
+- read-only R3.18BC one-following-property-header evidence on exactly three frozen true witnesses, stopping at `payload_start`.
+
+Boundaries still closed:
+- header access on 37 false terminators;
+- following payload;
+- second later control;
+- production following-header composition before an exact-context contract;
+- generalized/repeated property cursor;
+- next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Next exact pass:
+- `R3.18BC — one following-property-header evidence after published BA mixed control`.
+
+---

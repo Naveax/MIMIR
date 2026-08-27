@@ -6,11 +6,11 @@
   "last_production_code_sha": "5d2bca711f528ab1bb607104379af503ff175697",
   "last_production_milestone": "R3.18BA",
   "last_production_milestone_name": "bounded post-AY mixed following-control production",
-  "last_completed_read_only_audit": "R3.18AZ",
-  "current_pass": "R3.18BB",
-  "current_pass_kind": "read-only published-production differential / exact R3.18BA mixed following-control validation",
-  "current_pass_goal": "Replay exactly the immutable R3.18AX forty-row control authority against published R3.18BA; require exact start/value/end/stop 40/40, false=37 true=3, mismatch 0, witness reselection 0.",
-  "current_pass_stop_boundary": "No following stream/header/payload or second later control; no generalized cursor; no access on seven upstream AU false terminators; no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
+  "last_completed_read_only_audit": "R3.18BB",
+  "current_pass": "R3.18BC",
+  "current_pass_kind": "read-only one-following-property-header evidence on exact three R3.18BB true continuation witnesses",
+  "current_pass_goal": "Preserve the immutable BB 40-row lane; stop 37 false rows at BA and observe exactly one following header through payload_start on only the exact 3 true rows, with native/Boxcars equality and complete context classification.",
+  "current_pass_stop_boundary": "No following payload decode, no second later control, no production header composition, no generalized cursor, and no header access on the 37 false terminators.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -144,7 +144,11 @@
     "generalized/repeated property loop or generic cursor after R3.18BA",
     "following stream/header/payload during R3.18BB published-production differential",
     "second later property-control bit after published R3.18BA",
-    "following-header evidence/production before R3.18BB differential closure"
+    "following-header evidence/production before R3.18BB differential closure",
+    "following-header access on any of the 37 R3.18BB false terminator rows",
+    "following payload after the R3.18BC one-header evidence boundary",
+    "second later property-control bit after R3.18BC",
+    "production following-header composition before R3.18BC evidence and a later exact-context contract close"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -308,9 +312,11 @@
     "MIMIR_ALL_SOURCES_SUPERBOOK.md",
     "docs/chatgpt-archive/SOURCE_REGISTRY.md",
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
-    "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
+    "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md",
+    "docs/continuity/MIMIR_R3_18BB_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BC_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18AZ",
+  "last_completed_evidence_pass": "R3.18BB",
   "last_completed_evidence_outcome": "A — frozen 47-row mixed lane preserved; false terminators 7/7; true following headers exact 40/40; 16 exact eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9603335255.",
   "last_completed_contract_pass": "R3.18AT",
   "r3_14a": {
@@ -2780,5 +2786,41 @@
       "crates/mimir-replay/src/lib.rs",
       "crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs"
     ]
+  },
+  "r3_18bb": {
+    "outcome": "A",
+    "production_sha_unchanged": "5d2bca711f528ab1bb607104379af503ff175697",
+    "continuity_base_sha": "2bb5c48b3f627d6fe4f8ae6cb2eb2ea87408342e",
+    "evidence_head": "91595db2970ad395ec048ebd9326cfa97b01b38a",
+    "evidence_tree": "40672cd1b546bca2b73ca252d727aa88ca9faec1",
+    "authority_run": 33104207616,
+    "authority_job": 98629573433,
+    "same_head_ci_run": 33104207621,
+    "same_head_ci_job": 98629573926,
+    "artifact_id": 9659874105,
+    "artifact_size": 9295,
+    "artifact_sha256": "0e5bc329e1fc89068243ad0846356ed4dbfc2ade245623385b8e84d21b4f138e",
+    "artifact_manifest_sha256": "469e5e09e4299dad9d5c7990a8672b931530de68504b29a083d0dd50535d3894",
+    "frozen_rows": 40,
+    "published_ba_exact": 40,
+    "ay_prerequisite_exact": 40,
+    "control_false": 37,
+    "control_true": 3,
+    "mismatch": 0,
+    "witness_reselection": 0,
+    "adjacent_consumption": {
+      "stream": 0,
+      "header": 0,
+      "payload": 0,
+      "second_control": 0
+    },
+    "production_cargo_fixture_corpus_support_mutation": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "privacy": "PASS"
   }
 }
