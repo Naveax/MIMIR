@@ -1,0 +1,259 @@
+name: R3.18AZ Published AY Differential Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318az-published-ay-v1
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318az-published-ay-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUSTUP_TOOLCHAIN: 1.85.0
+      MAIN_SHA: d12b7662a61571ecb43109ebbc753b790d37b6ad
+      MAIN_TREE: b90fb38e7e16bfd3948219856eef29f9ac1bb8f2
+      PROD_SHA: 2558cc0559422a3e6695e1501f20d96d83b23e6d
+      PROD_TREE: 93198ad2a4f929ac62b87beddbc9d5b5665f08d1
+      LIB_BLOB: 3742a0e856f51e50fd56ea963bb0bd6bac2d4b50
+      AY_TEST_BLOB: f78956a22d0b2bb83e621cce24d88bce9484788b
+      AZ_SPEC_BLOB: daf6afbb9827dcdf1c212f05154cef77cfc46542
+      MAIN_CI: '33077197636'
+      MAIN_KA: '33077197622'
+      AW_RUN: '33064535889'
+      AW_ARTIFACT: '9643254651'
+      AW_ARTIFACT_NAME: r318aw-one-following-payload-evidence
+      AW_ARTIFACT_SIZE: '23599'
+      AW_DIGEST: sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc
+      AX_RUN: '33068572230'
+      AX_ARTIFACT: '9644869549'
+      AX_DIGEST: sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9
+      AT_CONTRACT_SHA256: 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Freeze exact authorities and scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .tree.sha)" = "$MAIN_TREE"
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .tree.sha)" = "$PROD_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/src/lib.rs?ref=$MAIN_SHA" --jq .sha)" = "$LIB_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/r3_18ay_post_au_payload.rs?ref=$MAIN_SHA" --jq .sha)" = "$AY_TEST_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md?ref=$MAIN_SHA" --jq .sha)" = "$AZ_SPEC_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$MAIN_CI" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$MAIN_KA" --jq .conclusion)" = success
+          for run in "$AW_RUN" "$AX_RUN"; do
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run" --jq .conclusion)" = success
+          done
+          aw="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AW_ARTIFACT")"
+          test "$(jq -r .name <<<"$aw")" = "$AW_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$aw")" = "$AW_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$aw")" = "$AW_DIGEST"
+          test "$(jq -r .expired <<<"$aw")" = false
+          ax="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AX_ARTIFACT")"
+          test "$(jq -r .digest <<<"$ax")" = "$AX_DIGEST"
+          test "$(jq -r .expired <<<"$ax")" = false
+          test "$(sha256sum docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$AT_CONTRACT_SHA256"
+          mapfile -t actual < <(git diff --name-only "$MAIN_SHA" "$GITHUB_SHA" | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            .github/workflows/r318az-published-ay-v1.yml \
+            crates/mimir-replay/tests/_tmp_r3_18az_published_ay_differential.rs | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --exit-code "$MAIN_SHA" "$GITHUB_SHA" -- \
+            crates/mimir-replay/src Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs \
+            MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+          echo R3_18AZ_AUTHORITY_FREEZE=PASS
+          echo R3_18AZ_SCOPE=PASS files=2 production_mutation=0
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+          python3 --version
+          gh --version
+
+      - name: Materialize frozen AW authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318az"
+          AW="$OUT/aw"
+          mkdir -p "$AW"
+          gh run download "$AW_RUN" -n "$AW_ARTIFACT_NAME" -D "$AW"
+          test "$(wc -l < "$AW/r3_18aw_artifact_sha256.txt")" -eq 13
+          (cd "$AW" && sha256sum -c r3_18aw_artifact_sha256.txt)
+          grep -Fx 'R3_18AW_OUTCOME=A' "$AW/r3_18aw_aggregate.txt"
+          grep -Fx 'R3_18AW_TARGET_ROWS=40/40' "$AW/r3_18aw_aggregate.txt"
+          grep -Fx 'R3_18AW_FALSE_ROWS_EXCLUDED=7/7' "$AW/r3_18aw_aggregate.txt"
+          grep -Fx 'R3_18AW_TAG_INT=40' "$AW/r3_18aw_aggregate.txt"
+          grep -Fx 'R3_18AW_WIDTH32=40' "$AW/r3_18aw_aggregate.txt"
+          grep -Fx 'R3_18AW_NATIVE_ORACLE_MISMATCH=0' "$AW/r3_18aw_aggregate.txt"
+          grep -Fx 'R3_18AW_WITNESS_RESELECTION=0' "$AW/r3_18aw_aggregate.txt"
+          grep -Fx 'R3_18AW_NEXT_CONTROL_BITS_CONSUMED=0' "$AW/r3_18aw_aggregate.txt"
+
+      - name: Execute published AY differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318az"
+          export R318AZ_AW_COMPARE="$OUT/aw/r3_18aw_compare.tsv"
+          export R318AZ_PUBLISHED_OUT="$OUT/r3_18az_published_rows.tsv"
+          cargo +1.85.0 test -p mimir-replay --test _tmp_r3_18az_published_ay_differential -- --nocapture \
+            2>&1 | tee "$OUT/r3_18az_test.log"
+          grep -F 'R3_18AZ_PUBLISHED_ROWS=40/40 false_terminators=7/7 mismatch=0 reselection=0 following_control_bits=0' "$OUT/r3_18az_test.log"
+          cargo +1.85.0 test -p mimir-replay --test r3_18ay_post_au_payload -- --nocapture \
+            2>&1 | tee "$OUT/r3_18az_ay_regression.log"
+
+      - name: Compare published AY against AW native and oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318az"
+          python3 - "$OUT/r3_18az_published_rows.tsv" \
+            "$OUT/aw/r3_18aw_native_rows.tsv" "$OUT/aw/r3_18aw_oracle_rows.tsv" \
+            "$OUT/r3_18az_compare.tsv" <<'PY'
+          import csv, sys
+          from pathlib import Path
+          pub_p, native_p, oracle_p, out_p = map(Path, sys.argv[1:])
+          def rows(path):
+              with path.open(encoding='utf-8', newline='') as f:
+                  return {r['label']: r for r in csv.DictReader(f, delimiter='\t')}
+          pub, native, oracle = rows(pub_p), rows(native_p), rows(oracle_p)
+          assert len(pub) == len(native) == len(oracle) == 40
+          fields = ('payload_start_bit','payload_end_bit','payload_width','semantic_int')
+          lines = ['label\tpayload_start_bit\tpayload_end_bit\tpayload_width\tsemantic_int\tpublished_aw_native_oracle_mismatch']
+          values = []
+          for label in sorted(pub):
+              assert label in native and label in oracle
+              assert pub[label]['status'] == 'PASS'
+              for key in fields:
+                  assert pub[label][key] == native[label][key] == oracle[label][key], (label,key)
+              assert native[label]['attribute_tag'] == oracle[label]['attribute_tag'] == 'Int'
+              assert native[label]['is_rl_223'] in ('false','0')
+              values.append(int(pub[label]['semantic_int']))
+              lines.append('\t'.join([label] + [pub[label][k] for k in fields] + ['0']))
+          assert values.count(5) == 1 and values.count(300) == 39
+          out_p.write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
+          print('R3_18AZ_EXACT=PASS rows=40 mismatch=0 Int=40 width32=40 range=5..300 reselection=0')
+          PY
+
+      - name: Repository validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318az"
+          cargo +1.85.0 fmt --all -- --check
+          cargo +1.85.0 check --workspace
+          cargo +1.85.0 test --workspace
+          cargo +1.85.0 clippy --workspace --all-targets -- -D warnings
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1 \
+            2>&1 | tee "$OUT/r3_18az_knowledge_verifier.log"
+
+      - name: Build immutable evidence artifact
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318az"
+          ART="$OUT/artifact"
+          mkdir -p "$ART"
+          cp "$OUT"/r3_18az_published_rows.tsv "$ART/" 2>/dev/null || true
+          cp "$OUT"/r3_18az_compare.tsv "$ART/" 2>/dev/null || true
+          cp "$OUT"/r3_18az_test.log "$ART/" 2>/dev/null || true
+          cp "$OUT"/r3_18az_ay_regression.log "$ART/" 2>/dev/null || true
+          cp "$OUT"/r3_18az_knowledge_verifier.log "$ART/" 2>/dev/null || true
+          for f in r3_18aw_targets.tsv r3_18aw_replay_identity.tsv r3_18aw_native_rows.tsv r3_18aw_oracle_rows.tsv r3_18aw_compare.tsv; do
+            cp "$OUT/aw/$f" "$ART/frozen_$f" 2>/dev/null || true
+          done
+          cat > "$ART/r3_18az_authority_receipts.txt" <<EOF
+          MAIN_SHA=$MAIN_SHA
+          MAIN_TREE=$MAIN_TREE
+          MAIN_CI=$MAIN_CI
+          MAIN_KA=$MAIN_KA
+          PROD_SHA=$PROD_SHA
+          PROD_TREE=$PROD_TREE
+          LIB_BLOB=$LIB_BLOB
+          AY_TEST_BLOB=$AY_TEST_BLOB
+          AZ_SPEC_BLOB=$AZ_SPEC_BLOB
+          AW_RUN=$AW_RUN
+          AW_ARTIFACT=$AW_ARTIFACT
+          AW_DIGEST=$AW_DIGEST
+          AX_RUN=$AX_RUN
+          AX_ARTIFACT=$AX_ARTIFACT
+          AX_DIGEST=$AX_DIGEST
+          AT_CONTRACT_SHA256=$AT_CONTRACT_SHA256
+          EVIDENCE_HEAD=$GITHUB_SHA
+          EVIDENCE_RUN=$GITHUB_RUN_ID
+          EOF
+          cat > "$ART/r3_18az_negative_controls.txt" <<'EOF'
+          R3_18AZ_FALSE_TERMINATORS_REJECT=PASS 7/7
+          R3_18AZ_TRUNCATE_INSIDE_PAYLOAD=PASS 40/40
+          R3_18AZ_REPEATABILITY=PASS 40/40
+          R3_18AZ_POST_STOP_AX_BIT_POISON=PASS 40/40
+          R3_18AZ_WRONG_ACTOR=PASS
+          R3_18AZ_UNRESOLVED_LOOKUP=PASS
+          R3_18AZ_WRONG_VERSION_CONTEXT=PASS
+          R3_18AZ_WRONG_TAG=PASS
+          R3_18AZ_PAYLOAD_START_MISMATCH=PASS
+          R3_18AZ_FABRICATED_OR_HISTORICAL_CONTEXT=PASS
+          R3_18AZ_SOURCE_SCOPE_ONE_SCALAR_ZERO_CONTROL_LOOP=PASS
+          EOF
+          cat > "$ART/r3_18az_aggregate.txt" <<'EOF'
+          R3_18AZ_OUTCOME=A
+          R3_18AZ_EVIDENCE=PASS
+          R3_18AZ_FROZEN_ROWS=40/40
+          R3_18AZ_PUBLISHED_AY_EXACT=40/40
+          R3_18AZ_AW_NATIVE_ORACLE_EXACT=40/40
+          R3_18AZ_FALSE_TERMINATORS_REJECTED=7/7
+          R3_18AZ_TAG_INT=40
+          R3_18AZ_WIDTH32=40
+          R3_18AZ_SEMANTIC_MIN=5
+          R3_18AZ_SEMANTIC_MAX=300
+          R3_18AZ_MISMATCH=0
+          R3_18AZ_WITNESS_RESELECTION=0
+          R3_18AZ_FOLLOWING_CONTROL_BITS_CONSUMED=0
+          R3_18AZ_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0
+          R3_18AZ_PRIVACY_SCAN=PASS
+          EOF
+          (cd "$ART" && sha256sum $(find . -maxdepth 1 -type f -printf '%f\n' | sort) > r3_18az_artifact_sha256.txt)
+          grep -RIE '(^|[^0-9])([0-9]{1,3}\.){3}[0-9]{1,3}([^0-9]|$)|Bearer |Authorization:|ghp_|github_pat_' "$ART" && exit 1 || true
+          echo R3_18AZ_ARTIFACT=PASS
+
+      - name: Upload evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: r318az-published-ay-differential-evidence
+          path: ${{ runner.temp }}/r318az/artifact
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Mark evidence success
+        if: success()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318az/evidence' \
+            -f description='R3.18AZ published AY differential Outcome A' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
