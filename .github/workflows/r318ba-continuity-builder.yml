@@ -59,7 +59,6 @@ jobs:
 
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BUILDER_RUN" --jq .conclusion)" = success
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BUILDER_JOB" --jq .conclusion)" = success
-
           test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$VALIDATION_PR" --jq .state)" = closed
           test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$VALIDATION_PR" --jq '.merged_at // ""')" = ""
           test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$VALIDATION_PR" --jq .head.sha)" = "$PROD_SHA"
@@ -73,7 +72,6 @@ jobs:
           done
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PUBLISHED_CI_RUN" --jq .head_branch)" = main
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PUBLISHED_CI_RUN" --jq .event)" = push
-
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AX_RUN" --jq .conclusion)" = success
           test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AX_JOB" --jq .conclusion)" = success
           ax_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AX_ARTIFACT")"
@@ -99,7 +97,7 @@ jobs:
           docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md
           EOF
           sed -i 's/^          //' "$RUNNER_TEMP/expected.txt"
-          git diff --name-only | sort > "$RUNNER_TEMP/actual.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/actual.txt"
           sort "$RUNNER_TEMP/expected.txt" -o "$RUNNER_TEMP/expected.txt"
           diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
           test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
