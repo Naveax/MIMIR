@@ -1,0 +1,412 @@
+name: R3.18AZ Continuity Builder
+
+on:
+  push:
+    branches:
+      - continuity/r318az-admit-open-r318ba
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r318az-continuity-builder
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event.head_commit.message == 'Add R3.18AZ continuity builder'
+    runs-on: ubuntu-24.04
+    env:
+      MAIN_SHA: d12b7662a61571ecb43109ebbc753b790d37b6ad
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Verify base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+      - name: Build canonical continuity update
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import json, re
+
+          main_sha = "d12b7662a61571ecb43109ebbc753b790d37b6ad"
+          prod_sha = "2558cc0559422a3e6695e1501f20d96d83b23e6d"
+          prod_tree = "93198ad2a4f929ac62b87beddbc9d5b5665f08d1"
+          evidence_head = "f46479faa2b230f7fde474f7f7696a1024420879"
+          evidence_tree = "0d022d27fda2275de9512d96231979e1d016491e"
+          evidence_run = 33086674062
+          evidence_job = 98568084290
+          same_head_ci = 33086674797
+          same_head_job = 98568087263
+          artifact = 9652520412
+          artifact_size = 18151
+          artifact_digest = "558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4"
+
+          decision = f'''# MIMIR R3.18AZ — Published R3.18AY One-Following-Payload Differential Decision
+
+**Date:** 2026-08-27
+**Outcome:** **A — ADMITTED / READ-ONLY PUBLISHED-PRODUCTION DIFFERENTIAL**
+**Production mutation:** none
+**Canonical production remains:** `{prod_sha}` / `{prod_tree}`
+
+## Decision
+
+R3.18AZ closes Outcome A. Exactly the immutable forty R3.18AW payload witnesses were rematerialized without witness reselection and compared against published R3.18AY plus the admitted AW direct-native/Boxcars payload identities. Published R3.18AY matched tag, payload start, payload end, width and signed Int value on 40/40 rows with mismatch zero. All seven upstream AU false terminators remained outside the AY/AZ payload lane and were rejected before payload decode.
+
+Every admitted payload is `Int/32`; the observed semantic range is 5..300, with one value 5 and thirty-nine values 300. Deterministic repeatability, truncation, post-stop poison isolation and prerequisite/context negatives pass. R3.18AZ consumed zero R3.18AX following-control bits and changed no production source, Cargo metadata, fixtures, corpus or support code.
+
+## Exact authority
+
+```text
+canonical main/tree                    {main_sha} / b90fb38e7e16bfd3948219856eef29f9ac1bb8f2
+canonical production/tree              {prod_sha} / {prod_tree}
+evidence head/tree                     {evidence_head} / {evidence_tree}
+authority run/job                      {evidence_run} / {evidence_job} SUCCESS
+same-head natural CI                   {same_head_ci} / {same_head_job} SUCCESS
+artifact                               {artifact} / {artifact_size} bytes
+artifact digest / downloaded ZIP       sha256:{artifact_digest}
+inner manifest                         13/13 PASS
+R3.18AW artifact                       9643254651 / sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc
+R3.18AX artifact                       9644869549 / sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9
+R3.18AT contract                       sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5
+```
+
+The downloaded artifact ZIP SHA-256 equals GitHub's artifact digest exactly. The ZIP contains 14 files; its SHA-256 manifest covers and verifies all 13 payload files.
+
+## Frozen result
+
+```text
+frozen AW payload rows                 40/40
+published AY exact                     40/40
+AW native/oracle exact                 40/40
+AU false terminators rejected          7/7
+payload tag                            Int=40
+payload width                          32 bits on 40/40
+semantic range                         5..300
+mismatch                               0
+witness reselection                    0
+following AX control bits consumed     0
+production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+privacy                                PASS
+```
+
+## Required negatives
+
+```text
+payload truncation                     PASS 40/40
+repeatability                          PASS 40/40
+post-stop AX-bit poison                PASS 40/40
+wrong actor                            PASS
+unresolved lookup                      PASS
+wrong exact version context            PASS
+wrong tag                              PASS
+payload-start mismatch                 PASS
+fabricated/historical context          PASS
+source scope: one scalar / zero control-loop widening PASS
+```
+
+## Superseded scaffolding attempts
+
+Earlier evidence SHAs were not scientific authority: `8d9043e7...` failed harness compilation; `7bd7e434...` reached the full 40/40 scientific differential but failed formatting; `2c5357e0...` exposed shallow-checkout ancestry and normal-CI evidence-environment isolation defects. None was rerun. The immutable authority is `{evidence_head}` and the success receipts above.
+
+## Hard stop
+
+R3.18AZ does not produce the R3.18AX-observed following control bit. It does not permit payload/control access on the seven false terminators, next stream/header/payload consumption, a second later control, a generalized/repeated property cursor, actor/frame/lifecycle advance, raw-state/event/replay-slice/skill/counterfactual/runtime/export widening, or historical boundary/value inheritance.
+
+## Next gate
+
+R3.18BA is a separate bounded production pass. It may validate/recompute exactly one valid published R3.18AY payload composition, begin exactly at that payload end, consume exactly one R3.18AX-admitted `property_present` bit, preserve the mixed false=37 / true=3 semantics, and stop exactly one bit later. It may not resolve a following stream, header or payload, read a second later control bit, or create a generalized property loop/cursor.
+'''
+          Path("docs/continuity/MIMIR_R3_18AZ_DECISION.md").write_text(decision, encoding="utf-8", newline="\n")
+
+          ba = f'''# MIMIR R3.18BA — Bounded Post-AY Mixed Following-Control Production
+
+**Status:** ACTIVE
+**Pass type:** bounded production implementation
+**Production authority before pass:** R3.18AY `{prod_sha}` / `{prod_tree}`
+**Published-production differential authority:** R3.18AZ Outcome A / `{evidence_head}` / run `{evidence_run}` / artifact `{artifact}` / `sha256:{artifact_digest}`
+**Control evidence authority:** R3.18AX Outcome A / artifact `9644869549` / false=37 true=3 / oracle-native exact 40/40
+**Frozen production lane:** exactly 40 valid R3.18AY payload rows; the 7 upstream AU false terminators remain outside the lane
+
+## 1. Goal
+
+Publish exactly one boundary-specific composition after a valid R3.18AY Int/32 payload. The API must validate/recompute the supplied AY authority instead of trusting an arbitrary cursor, begin exactly at the validated AY payload end, consume exactly one `property_present` bit, represent both R3.18AX-observed boolean values, and stop one bit later.
+
+No following stream ID, header, payload or second later property-control bit may be consumed.
+
+## 2. Frozen semantics
+
+```text
+AY payload rows                        40
+upstream AU false terminators          7 / excluded before AY/BA
+AX false                               37
+AX true                                3
+published AY exact by AZ               40/40
+AW/direct-native/oracle exact by AZ    40/40
+AZ mismatch / reselection              0 / 0
+AZ following-control consumption       0
+```
+
+**Critical rule:** both false and true are admitted. R3.18BA must not inherit the true-only behavior of R3.18M, R3.18W or R3.18AG. The closest production methodology reference is R3.18AQ's mixed-control composition, but BA must recompute the current R3.18AY boundary and must not inherit historical coordinates or values.
+
+## 3. Production contract
+
+The new boundary-specific API must:
+
+1. accept enough upstream authority to recompute one exact R3.18AY payload composition;
+2. reject all seven upstream AU false terminators before any BA control read because no valid AY payload exists for them;
+3. validate/recompute the supplied AY result and require exact equality of header composition, Int/32 payload identity and AY stop boundary;
+4. initialize the private native bit cursor exactly at the validated AY `stop_bit`;
+5. consume exactly one LSB-first control bit;
+6. return a boundary-specific typed result retaining the validated AY payload composition plus `following_property_present`, exact control start/end and final stop;
+7. accept both false and true, with no expected runtime-frequency promise beyond the frozen evidence;
+8. require final `stop_bit == ay.stop_bit + 1`;
+9. consume zero next stream ID bits, zero following-header bits, zero following-payload bits and zero second-control bits;
+10. fail atomically on truncation, corrupt/mismatched AY authority, wrong actor/lookup/context, or boundary drift.
+
+No generic or repeatedly-chainable property cursor is admitted.
+
+## 4. Required focused tests
+
+At minimum:
+
+- exactly the 40 frozen AY/AZ payload witnesses reproduce before control consumption;
+- observed BA control distribution is exactly false=37 / true=3 on that frozen lane, with no reselection;
+- all seven upstream AU false terminators remain outside BA and never invoke a BA control read;
+- exact control start/end/stop equality on 40/40;
+- deterministic repeatability 40/40;
+- truncate exactly before the BA control bit -> atomic reject;
+- corrupt/mismatch the supplied AY prior -> reject before BA advancement;
+- wrong actor, unresolved lookup and wrong exact version context reject through AY prerequisite recomputation;
+- false path succeeds and stops before any stream/header lookup;
+- true path also stops before any stream/header lookup;
+- poison bits beginning at BA control end -> BA result unchanged;
+- next stream/header/payload/second-control consumption remains `0/0/0/0`;
+- source-scope guard proves one AY recomputation, exactly one new `cursor.read_bit()`, no `read_bits_le`, no bounded stream ID, no header/payload decoder and no loop/cursor widening.
+
+## 5. Clean candidate
+
+Expected clean production scope is only:
+
+- `crates/mimir-replay/src/lib.rs`;
+- one focused `crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs` integration test.
+
+No workflow/helper/evidence artifact, Cargo/dependency, fixture/corpus, continuity, raw-state/event/skill/runtime/export or unrelated cleanup enters the production commit.
+
+## 6. Validation and publication
+
+Require Rust 1.85 formatting, focused BA tests, directly affected AY/AU/AQ prerequisite regressions, workspace check/test, Clippy with warnings denied, repository verifier, exact clean-candidate natural CI, fresh-main ancestry verification, force=false publication, exact published-main SHA/tree readback and published-main validation.
+
+Before any dispatch/rerun, inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.
+
+## 7. Hard stop
+
+No following stream ID, property object/header, payload, second later control, generalized/repeated property loop/cursor, next actor/frame/lifecycle advance, raw-state/event/replay-slice/skill/counterfactual/runtime/export widening. The seven upstream false terminators remain no-payload/no-BA-control terminators.
+
+## 8. Outcome gate
+
+### Outcome A
+
+Publish exactly one mixed false/true control bit after a validated R3.18AY payload, with all forty frozen rows exact, false=37 / true=3 preserved, all focused/negative/full validations PASS and adjacent consumption `0/0/0/0`. Then open a separate published-production differential before any following-header production/evidence is considered.
+
+### Outcome B
+
+Only a narrower safe result representation can be implemented without violating the current AY/AX/AZ authority. Publish only that narrower representation and rewrite the next differential to the actual production contract.
+
+### Outcome C
+
+Authority drift, rejection of an AX-admitted boolean class, upstream false-terminator access, adjacent-bit access, generic chaining, production-scope drift or validation contradiction. Stop without publication.
+'''
+          Path("docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md").write_text(ba, encoding="utf-8", newline="\n")
+
+          # Current compact state.
+          current = f'''# MIMIR — Current Canonical State
+
+**Continuity date:** 2026-08-27
+**Repository:** `Naveax/MIMIR`
+**Canonical production SHA:** `{prod_sha}`
+**Production tree:** `{prod_tree}`
+**Production milestone:** `R3.18AY — bounded post-AU one-following-payload production`
+**Last read-only evidence/audit:** `R3.18AZ — Outcome A / published AY exact 40/40 / AW-native-oracle exact 40/40 / false terminators 7/7 / mismatch 0 / reselection 0 / following-control consumption 0 / artifact {artifact}`
+**Last completed contract:** `R3.18AT — exact_tuple_only / 16 eight-field contexts / multiplicity 40 / 7 false terminators outside membership / sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`
+**Current exact pass:** `R3.18BA — bounded post-AY mixed following-control production`
+
+## Truthful boundary
+
+R3.18AY remains canonical production. It validates/recomputes one exact R3.18AU true-header authority, decodes one R3.18AW-admitted Int/32 payload and stops at payload end. Seven upstream AU false terminators are rejected before payload decode. R3.18AZ independently validated published AY on the immutable forty-row lane with exact 40/40 equality and mismatch/reselection 0/0. R3.18AX's next-bit distribution false=37 / true=3 is now the evidence authority for the active R3.18BA bounded production pass; production has not consumed that bit yet.
+
+```text
+production SHA/tree                    {prod_sha} / {prod_tree}
+AZ evidence head/tree                  {evidence_head} / {evidence_tree}
+AZ run/job                             {evidence_run}/{evidence_job} SUCCESS
+AZ same-head natural CI                {same_head_ci}/{same_head_job} SUCCESS
+AZ artifact                            {artifact} / {artifact_size} / sha256:{artifact_digest}
+AZ inner manifest                      13/13 PASS
+published AY exact                     40/40
+AW native/oracle exact                 40/40
+AU false terminators rejected          7/7
+payload tag / width                    Int=40 / width32=40
+semantic range                         5..300
+mismatch / reselection                 0 / 0
+AX control distribution                false=37 / true=3 evidence authority for BA
+production following-control consumption 0
+```
+
+## Current gate
+
+R3.18BA may compose exactly one mixed `property_present` bit after recomputing a valid R3.18AY payload. It must accept both false and true, stop one bit later, and consume no following stream/header/payload/second-control bits.
+
+## Hard stop
+
+No BA control access on the seven upstream false terminators, no following stream/header/payload, no second later control, no generalized/repeated property cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+'''
+          Path("docs/continuity/MIMIR_CURRENT_STATE.md").write_text(current, encoding="utf-8", newline="\n")
+
+          handoff = f'''# MIMIR — Next Chat Handoff
+
+Canonical production remains **R3.18AY** at `{prod_sha}` / `{prod_tree}`. R3.18AZ is now **CLOSED / Outcome A**: evidence `{evidence_head}` / run `{evidence_run}/{evidence_job}` SUCCESS, same-head natural CI `{same_head_ci}/{same_head_job}` SUCCESS, artifact `{artifact}` / `sha256:{artifact_digest}`, downloaded digest exact and inner manifest 13/13 PASS.
+
+R3.18AZ proves published AY exact on the immutable 40-row AW payload lane: published AY 40/40, AW native/oracle 40/40, Int=40, width32=40, semantic range 5..300, mismatch 0, witness reselection 0, and AX following-control consumption 0. The seven upstream AU false terminators remain outside the payload lane.
+
+The active pass is **R3.18BA bounded post-AY mixed following-control production**. Recompute one valid AY payload, consume exactly one AX-admitted `property_present` bit at AY stop, preserve both false=37 and true=3, and stop one bit later. No following stream/header/payload or second control is open.
+
+Before any dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.
+'''
+          Path("docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md").write_text(handoff, encoding="utf-8", newline="\n")
+
+          # Machine continuity state.
+          state_path = Path("docs/continuity/MIMIR_CONTINUITY_STATE.json")
+          state = json.loads(state_path.read_text(encoding="utf-8"))
+          state["updated_date"] = "2026-08-27"
+          state["last_completed_read_only_audit"] = "R3.18AZ"
+          state["last_completed_evidence_pass"] = "R3.18AZ"
+          state["current_pass"] = "R3.18BA"
+          state["current_pass_kind"] = "bounded production implementation / exactly one mixed following property-control bit after validated R3.18AY payload"
+          state["current_pass_goal"] = "Validate/recompute one exact R3.18AY payload, consume exactly one R3.18AX-admitted property_present bit at AY stop, preserve false=37 and true=3, and stop one bit later."
+          state["current_pass_stop_boundary"] = "No following stream/header/payload or second later control; no generalized cursor; no BA access on seven upstream false terminators; no actor/frame/lifecycle/raw-state/event/skill/runtime widening."
+          state["r3_18az"] = {
+              "status": "closed_outcome_a",
+              "evidence_head": evidence_head,
+              "evidence_tree": evidence_tree,
+              "run": evidence_run,
+              "job": evidence_job,
+              "same_head_ci_run": same_head_ci,
+              "same_head_ci_job": same_head_job,
+              "artifact_id": artifact,
+              "artifact_size": artifact_size,
+              "artifact_sha256": artifact_digest,
+              "inner_manifest_entries": 13,
+              "frozen_rows": 40,
+              "published_ay_exact": 40,
+              "aw_native_oracle_exact": 40,
+              "false_terminators_rejected": 7,
+              "tag_int": 40,
+              "width32": 40,
+              "semantic_min": 5,
+              "semantic_max": 300,
+              "mismatch": 0,
+              "witness_reselection": 0,
+              "following_control_bits_consumed": 0,
+              "production_mutation": False,
+          }
+          state["r3_18ba"] = {
+              "status": "active",
+              "class": "bounded_production_implementation",
+              "input_rows": 40,
+              "upstream_false_terminators_excluded": 7,
+              "evidence_false": 37,
+              "evidence_true": 3,
+              "bits_to_consume": 1,
+              "adjacent_stream_header_payload_second_control_open": False,
+          }
+          closed = state.setdefault("closed_now", [])
+          for item in [
+              "following stream/header/payload after the one R3.18BA control bit",
+              "second later property-control bit after R3.18BA",
+              "BA control access on the seven upstream AU false terminators",
+              "generalized/repeated property loop or generic cursor after R3.18BA",
+          ]:
+              if item not in closed:
+                  closed.append(item)
+          nfr = state.setdefault("next_files_to_read", [])
+          for name in ["docs/continuity/MIMIR_R3_18AZ_DECISION.md", "docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md"]:
+              if name not in nfr:
+                  try:
+                      idx = nfr.index("docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md") + 1
+                  except ValueError:
+                      idx = len(nfr)
+                  nfr.insert(idx, name)
+          state_path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+
+          # Master continuation header + durable override.
+          root_path = Path("MIMIR_CONTINUE_HERE.md")
+          root = root_path.read_text(encoding="utf-8")
+          root, n1 = re.subn(r"LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3\.18AX —[^\n]*", f"LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18AZ — published AY exact 40/40 / AW-native-oracle exact 40/40 / false terminators 7/7 / mismatch 0 / witness reselection 0 / following-control consumption 0 / artifact {artifact}", root, count=1)
+          root, n2 = re.subn(r"LAST_COMPLETED_EVIDENCE_PASS:\n  R3\.18AX —[^\n]*", f"LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18AZ — published R3.18AY differential Outcome A / exact 40/40 / Int=40 / width32=40 / range 5..300 / mismatch 0 / reselection 0 / same-head CI {same_head_ci} / artifact {artifact}", root, count=1)
+          root, n3 = re.subn(r"CURRENT_PASS:\n  R3\.18AZ —[^\n]*", "CURRENT_PASS:\n  R3.18BA — bounded post-AY mixed following-control production", root, count=1)
+          root, n4 = re.subn(r"CURRENT_PASS_TYPE:\n  [^\n]*", "CURRENT_PASS_TYPE:\n  bounded production implementation / validate-recompute one exact R3.18AY payload, consume exactly one AX-admitted mixed property_present bit (false=37 true=3), stop one bit later, and consume no following stream/header/payload/second-control bits", root, count=1)
+          assert (n1, n2, n3, n4) == (1, 1, 1, 1), (n1,n2,n3,n4)
+          override = f'''\n\n---\n\n## CURRENT OVERRIDE — R3.18AZ CLOSED / R3.18BA ACTIVE — 2026-08-27\n\n- R3.18AZ Outcome A authority: `{evidence_head}` / `{evidence_run}/{evidence_job}` SUCCESS; same-head CI `{same_head_ci}/{same_head_job}` SUCCESS; artifact `{artifact}` / `sha256:{artifact_digest}`; downloaded digest exact / inner manifest 13/13 PASS.\n- Published R3.18AY is exact 40/40 against immutable AW native/oracle payload authority; Int=40, width32=40, range 5..300, mismatch/reselection 0/0, seven upstream false terminators excluded 7/7, following-control consumption 0.\n- Canonical production remains R3.18AY `{prod_sha}`.\n- First incomplete canonical pass is R3.18BA. It may validate/recompute one exact AY payload, consume exactly one AX-admitted mixed control bit, accept false=37 and true=3, and stop one bit later.\n- Still closed: following stream/header/payload, second later control, BA access on upstream false terminators, generic/repeated property cursor, actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening.\n'''
+          if "## CURRENT OVERRIDE — R3.18AZ CLOSED / R3.18BA ACTIVE" not in root:
+              root += override
+          root_path.write_text(root, encoding="utf-8", newline="\n")
+
+          # Knowledge graph: current graph, mandatory order, and durable node summary.
+          kg_path = Path("MIMIR_KNOWLEDGE_GRAPH.md")
+          kg = kg_path.read_text(encoding="utf-8")
+          old_graph = "R3.18AZ published-R3.18AY one-following-payload differential / ACTIVE"
+          assert old_graph in kg
+          kg = kg.replace(old_graph, "R3.18AZ published-R3.18AY one-following-payload differential / Outcome A CLOSED\nR3.18BA bounded post-AY mixed following-control production / ACTIVE", 1)
+          old_tail = '''141. `docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md`\n142. `docs/continuity/MIMIR_PASS_PROTOCOL.md`\n143. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`\n144. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`\n145. `MIMIR_ALL_SOURCES_SUPERBOOK.md`\n146. `docs/chatgpt-archive/SOURCE_REGISTRY.md`\n147. `docs/chatgpt-archive/VALIDATION_MATRIX.md`\n148. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`'''
+          new_tail = '''141. `docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md`\n142. `docs/continuity/MIMIR_R3_18AZ_DECISION.md`\n143. `docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md`\n144. `docs/continuity/MIMIR_PASS_PROTOCOL.md`\n145. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`\n146. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`\n147. `MIMIR_ALL_SOURCES_SUPERBOOK.md`\n148. `docs/chatgpt-archive/SOURCE_REGISTRY.md`\n149. `docs/chatgpt-archive/VALIDATION_MATRIX.md`\n150. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`'''
+          assert old_tail in kg
+          kg = kg.replace(old_tail, new_tail, 1)
+          kg_override = f'''\n\n### R3.18AZ published-AY payload differential: OUTCOME A / CLOSED\n- authority `{evidence_head}` / tree `{evidence_tree}`; run/job `{evidence_run}/{evidence_job}` SUCCESS; same-head natural CI `{same_head_ci}/{same_head_job}` SUCCESS\n- artifact `{artifact}` / `{artifact_size}` bytes / `sha256:{artifact_digest}`; downloaded ZIP digest exact / inner manifest 13/13 PASS\n- frozen AW payload rows 40/40; published AY exact 40/40; AW native/oracle exact 40/40; false terminators excluded 7/7\n- Int=40 / width32=40 / semantic range 5..300 / mismatch 0 / witness reselection 0 / following-control consumption 0\n- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS\n\n### R3.18BA bounded post-AY mixed following-control production: ACTIVE\n- production parent remains R3.18AY `{prod_sha}`; exact input lane is the 40 AZ-validated AY payload rows\n- AX evidence authority false=37 / true=3; both boolean classes must remain admitted\n- consume exactly one `property_present` bit at validated AY stop and stop one bit later\n- following stream/header/payload/second-control, upstream false-terminator access and generalized cursor remain closed\n'''
+          if "### R3.18AZ published-AY payload differential: OUTCOME A / CLOSED" not in kg:
+              kg += kg_override
+          kg_path.write_text(kg, encoding="utf-8", newline="\n")
+
+          # Replace top current boundary override only; preserve historical lock sections.
+          locks_path = Path("docs/continuity/MIMIR_BOUNDARY_LOCKS.md")
+          locks = locks_path.read_text(encoding="utf-8")
+          new_lock = f'''# 0. Current override — R3.18AZ closed / R3.18BA active production gate\n\nThis current override supersedes older status wording later in this historical lock file.\n\n## PRODUCTION — R3.18AY\n- `{prod_sha}` / `{prod_tree}` remains canonical production; exactly one AW-admitted Int/32 payload after valid AU authority, stopping at payload end.\n- all seven upstream AU false terminators remain outside the payload lane.\n\n## CLOSED DIFFERENTIAL — R3.18AZ Outcome A\n- authority `{evidence_head}` / `{evidence_run}/{evidence_job}` SUCCESS; same-head CI `{same_head_ci}/{same_head_job}` SUCCESS; artifact `{artifact}` / `sha256:{artifact_digest}`; manifest 13/13 PASS.\n- published AY exact 40/40; AW native/oracle exact 40/40; Int=40 / width32=40 / range 5..300; mismatch/reselection 0/0; following-control reads 0.\n\n## ACTIVE PRODUCTION GATE — R3.18BA\n- only the exact 40 valid AY payload rows may enter BA; the seven upstream false terminators remain outside.\n- validate/recompute AY, consume exactly one AX-admitted `property_present` bit, preserve false=37 / true=3, and stop one bit later.\n- false and true are both valid at this boundary; true-only historical policies are not inherited.\n\n## CLOSED\n- following stream/header/payload after BA;\n- second later property-control bit;\n- BA access on upstream false terminators;\n- repeated/generalized property loop or generic cursor;\n- actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.\n'''
+          locks, count = re.subn(r"# 0\. Current override.*?(?=\n# 1\. Status vocabulary)", new_lock.rstrip()+"\n", locks, count=1, flags=re.S)
+          assert count == 1
+          locks_path.write_text(locks, encoding="utf-8", newline="\n")
+
+          # Append-only progress ledger.
+          ledger_path = Path("docs/continuity/MIMIR_PROGRESS_LEDGER.md")
+          ledger = ledger_path.read_text(encoding="utf-8")
+          entry = f'''\n\n---\n\n## 2026-08-27 — R3.18AZ — Published R3.18AY one-following-payload differential\nProduction base SHA: `{prod_sha}`\nProduction commit SHA: unchanged; evidence-only pass\nPass type: read-only published-production differential\nOutcome: **A — ADMITTED / CLOSED**\n\nWhat changed:\n- no production Rust/Cargo/fixture/corpus/support mutation;\n- published AY was differentially checked against the immutable forty-row AW payload authority and direct-native/oracle identity.\n\nEvidence:\n- evidence `{evidence_head}` / tree `{evidence_tree}`;\n- run/job `{evidence_run}/{evidence_job}` SUCCESS; same-head natural CI `{same_head_ci}/{same_head_job}` SUCCESS;\n- artifact `{artifact}` / `{artifact_size}` bytes / `sha256:{artifact_digest}`; downloaded digest exact / inner manifest 13/13 PASS;\n- 40/40 published AY exact; 40/40 AW native/oracle exact; 7/7 upstream false terminators excluded; Int=40; width32=40; semantic range 5..300; mismatch/reselection 0/0.\n\nValidation:\n- repeatability/truncation/post-stop poison 40/40 PASS; authority/context/source-scope negatives PASS; privacy PASS; following-control consumption 0.\n\nBoundaries opened:\n- R3.18BA may implement exactly one mixed AX-admitted control bit after validated AY payload.\n\nBoundaries still closed:\n- following stream/header/payload, second later control, upstream false-terminator BA access, generalized cursor and all actor/frame/semantic/runtime widening.\n\nImportant negative facts / anti-regressions:\n- AX distribution is false=37 / true=3; BA must accept both values and must not inherit historical true-only control semantics.\n\nNext exact pass:\n- `R3.18BA — bounded post-AY mixed following-control production`.\n'''
+          if "## 2026-08-27 — R3.18AZ — Published R3.18AY one-following-payload differential" not in ledger:
+              ledger += entry
+          ledger_path.write_text(ledger, encoding="utf-8", newline="\n")
+          PY
+
+          git rm .github/workflows/r318az-continuity-builder.yml
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity
+          git diff --cached --check
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git commit -m 'Admit R3.18AZ and open R3.18BA'
+          mapfile -t changed < <(git diff --name-only "$MAIN_SHA" HEAD | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AZ_DECISION.md \
+            docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${changed[@]}")
+          git push origin HEAD:continuity/r318az-admit-open-r318ba
