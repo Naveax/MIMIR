@@ -1,6 +1,5 @@
 from pathlib import Path
 import subprocess
-import textwrap
 
 MAIN_SHA = "d12b7662a61571ecb43109ebbc753b790d37b6ad"
 BRANCH = "continuity/r318az-admit-open-r318ba"
@@ -15,14 +14,15 @@ def run(*args: str, capture: bool = False) -> str:
 
 run("git", "fetch", "origin", "main")
 assert run("git", "rev-parse", "origin/main", capture=True) == MAIN_SHA
-assert run("git", "rev-parse", "HEAD^", capture=True) == "53c9624b91219a412da7ab96a7581ab1adac84ca"
+assert run("git", "rev-parse", "HEAD^^", capture=True) == "53c9624b91219a412da7ab96a7581ab1adac84ca"
 
-old = run("git", "show", f"HEAD^:{WORKFLOW}", capture=True)
+old = run("git", "show", f"HEAD^^:{WORKFLOW}", capture=True)
 start_marker = "          python3 <<'PY'\n"
 end_marker = "\n          PY\n"
 start = old.index(start_marker) + len(start_marker)
 end = old.index(end_marker, start)
-code = textwrap.dedent(old[start:end])
+segment = old[start:end]
+code = "\n".join(line[10:] if line.startswith("          ") else line for line in segment.splitlines())
 exec(compile(code, "r318az_embedded_builder.py", "exec"), {})
 
 run("git", "rm", WORKFLOW, SCRIPT)
