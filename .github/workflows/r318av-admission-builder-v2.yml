@@ -1,0 +1,152 @@
+name: R3.18AV Admission Builder v2
+
+on:
+  push:
+    branches:
+      - automation/r318av-admission-builder-v2
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318av-admission-builder-v2
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: c49ce8f7b1e1145e5fb41a98dcaae9c5de61c37e
+      AV_HEAD: fcbabd6953b4bade41f49b767f0dd73524e190d8
+      AV_TREE: 922e7fb45de33b1803027e6cdcbbe55467a1bc2e
+      AV_RUN: '33057596762'
+      AV_JOB: '98468171016'
+      AV_CI: '33057596712'
+      AV_CI_JOB: '98468756735'
+      AV_ARTIFACT: '9640472993'
+      AV_ARTIFACT_NAME: r318av-published-au-differential-evidence-v4
+      AV_ARTIFACT_SIZE: '10256'
+      AV_DIGEST: sha256:26082be08c8644a17076d9df2138128df110bbf39b4b3bceefdc823a9492d456
+      GENERATOR_COMMIT: 21a32b6688712349b306f0f50f1cbc920c0b41c7
+      GENERATOR_BLOB: b0813ffa78d7f9a58eb7a7cd626a7f69d1500c56
+      TARGET_BRANCH: continuity/r318av-admit-aw
+
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Freeze helper, AV authority, and pinned generator
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          test "$(git diff --name-only "$MAIN_SHA" "$GITHUB_SHA")" = '.github/workflows/r318av-admission-builder-v2.yml'
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AV_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AV_RUN" --jq .head_sha)" = "$AV_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$AV_HEAD" --jq .tree.sha)" = "$AV_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AV_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AV_CI" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AV_CI" --jq .head_sha)" = "$AV_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AV_CI_JOB" --jq .conclusion)" = success
+
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AV_ARTIFACT")"
+          test "$(jq -r .name <<<"$meta")" = "$AV_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$AV_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta")" = "$AV_DIGEST"
+          test "$(jq -r .expired <<<"$meta")" = false
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$AV_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$AV_HEAD"
+
+          rm -rf "$RUNNER_TEMP/av-artifact"
+          mkdir -p "$RUNNER_TEMP/av-artifact"
+          gh run download "$AV_RUN" -n "$AV_ARTIFACT_NAME" -D "$RUNNER_TEMP/av-artifact"
+          (cd "$RUNNER_TEMP/av-artifact" && sha256sum -c r3_18av_artifact_sha256.txt)
+          grep -Fx 'R3_18AV_OUTCOME=A' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_EVIDENCE=PASS' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_FROZEN_ROWS=47/47' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_PUBLISHED_AU_EXACT=47/47' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_CONTROL_FALSE=7' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_CONTROL_TRUE=40' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_AT_CONTEXTS=16/16' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_AT_MULTIPLICITY=40' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_TAG_INT=40' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_MISMATCH=0' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_WITNESS_RESELECTION=0' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_PRIVACY_SCAN=PASS' "$RUNNER_TEMP/av-artifact/r3_18av_aggregate.txt"
+          grep -Fx 'R3_18AV_SAME_HEAD_CI=PASS' "$RUNNER_TEMP/av-artifact/r3_18av_same_head_ci_receipt.txt"
+          grep -Fx "CI_RUN_ID=$AV_CI" "$RUNNER_TEMP/av-artifact/r3_18av_same_head_ci_receipt.txt"
+          grep -Fx "CI_JOB_ID=$AV_CI_JOB" "$RUNNER_TEMP/av-artifact/r3_18av_same_head_ci_receipt.txt"
+          grep -Fx 'CI_RUN_COUNT=1' "$RUNNER_TEMP/av-artifact/r3_18av_same_head_ci_receipt.txt"
+          grep -Fx "CI_HEAD_SHA=$AV_HEAD" "$RUNNER_TEMP/av-artifact/r3_18av_same_head_ci_receipt.txt"
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/tools/_tmp_r318av_admission_generate.py?ref=$GENERATOR_COMMIT" --jq .sha)" = "$GENERATOR_BLOB"
+          gh api "repos/${GITHUB_REPOSITORY}/contents/tools/_tmp_r318av_admission_generate.py?ref=$GENERATOR_COMMIT" --jq .content \
+            | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318av_admission_generate.py"
+          test "$(git hash-object "$RUNNER_TEMP/r318av_admission_generate.py")" = "$GENERATOR_BLOB"
+          echo R3_18AV_ADMISSION_V2_AUTHORITY_FREEZE=PASS
+
+      - name: Generate exact docs-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/$TARGET_BRANCH" >/dev/null 2>&1; then
+            echo "Candidate already exists; refusing duplicate generation: $TARGET_BRANCH" >&2
+            exit 1
+          fi
+          git reset --hard "$MAIN_SHA"
+          python3 "$RUNNER_TEMP/r318av_admission_generate.py"
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+
+          mapfile -t actual < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AV_DECISION.md \
+            docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+
+          test ! -n "$(printf '%s\n' "${actual[@]}" | grep -E '^(crates/|Cargo|external_fixtures/|test_corpus/|scripts/|\.github/)' || true)"
+          grep -F 'R3.18AW — one following primitive payload evidence' MIMIR_CONTINUE_HERE.md
+          grep -F 'R3.18AV published-R3.18AU mixed following-header differential / Outcome A CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '"current_pass": "R3.18AW"' docs/continuity/MIMIR_CONTINUITY_STATE.json
+          grep -F '**Outcome:** **A — CLOSED / READ-ONLY ADMITTED**' docs/continuity/MIMIR_R3_18AV_DECISION.md
+          grep -F '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md
+          echo R3_18AV_ADMISSION_V2_SCOPE=PASS files=9 production_mutation=0
+
+      - name: Publish clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          git config user.name Naveax
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git switch -c "$TARGET_BRANCH"
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AV_DECISION.md \
+            docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18AV and open R3.18AW'
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          echo "R3_18AV_ADMISSION_CANDIDATE=$(git rev-parse HEAD)"
