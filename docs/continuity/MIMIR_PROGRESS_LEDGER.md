@@ -1411,3 +1411,17 @@ Important negative facts / anti-regressions:
 Next exact pass:
 - R3.18AW — one following primitive payload evidence on exact forty AV-true rows only.
 
+---
+
+## R3.18AW — one following primitive payload evidence — Outcome A CLOSED
+
+- Canonical production unchanged: `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef`.
+- Evidence head/tree: `5f1d983a7b67f84293f337f23b7e7c25fee48795` / `63cbbb752100ef6944b1ecf366e89854e0f2376a`.
+- Evidence run/job `33064535889/98491267256` SUCCESS; same-head natural CI `33064535850/98491266948` SUCCESS / count 1 / rerun 0.
+- Artifact `9643254651` / 23599 bytes / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`; downloaded ZIP digest exact and inner manifest 13/13 PASS.
+- Exact AV-true rows 40/40; AV-false excluded 7/7; Int=40; width32=40; semantic range 5..300; native/Boxcars mismatch 0; witness reselection 0; next-control consumption 0.
+- MIMIR exact contract `is_rl_223=false` on 40/40. Boxcars' distinct build-derived RL223 flag observed true=34 false=6; pinned Boxcars `Int` decoder has zero dependency on that flag.
+- Production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`; privacy PASS.
+
+Next exact pass:
+- `R3.18AX — next property-control bit evidence after exact AW payload end` on exactly the same forty admitted payload rows; no expected boolean distribution; stop one bit later.

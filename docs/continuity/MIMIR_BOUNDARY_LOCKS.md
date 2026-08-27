@@ -6,36 +6,38 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AU production / R3.18AV closed / R3.18AW active
+# 0. Current override — R3.18AU production / R3.18AW closed / R3.18AX active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AU
 - `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef` remains canonical production;
-- false stays a successful no-header terminator on the exact seven rows; true composes exactly one stateless following header under exact R3.18AT membership and stops at `payload_start`;
-- no production mutation occurred in R3.18AV.
+- false remains a successful no-header terminator on the exact seven AQ/AV-false rows; true composes exactly one following header under exact R3.18AT membership and stops at `payload_start`;
+- R3.18AW is evidence only and does not publish payload composition.
 
-## CLOSED EVIDENCE — R3.18AV Outcome A
-- evidence `fcbabd6953b4bade41f49b767f0dd73524e190d8` / tree `922e7fb45de33b1803027e6cdcbbe55467a1bc2e` / run-job `33057596762/98468171016` SUCCESS;
-- same-head natural CI `33057596712/98468756735` SUCCESS / count=1 / rerun=0;
-- artifact `9640472993` / `10256` bytes / `sha256:26082be08c8644a17076d9df2138128df110bbf39b4b3bceefdc823a9492d456` / independently verified inner manifest;
-- published AU exact 47/47; false=7 no-header; true=40 exact headers; exact AT contexts 16/16 / multiplicity 40 / Int=40;
-- mismatch/reselection 0/0; following payload/second-control 0/0; negative controls and privacy PASS.
+## CLOSED EVIDENCE — R3.18AW Outcome A
+- evidence `5f1d983a7b67f84293f337f23b7e7c25fee48795` / tree `63cbbb752100ef6944b1ecf366e89854e0f2376a` / run-job `33064535889/98491267256` SUCCESS;
+- same-head natural CI `33064535850/98491266948` SUCCESS / count=1 / rerun=0;
+- artifact `9643254651` / `23599` bytes / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`, downloaded ZIP and inner manifest 13/13 verified;
+- exact 40 AV-true rows yielded Int/32 payloads with semantic range 5..300 and native/Boxcars mismatch 0; all seven AV-false terminators were excluded before payload decoding;
+- MIMIR exact contract `is_rl_223=false` on 40/40; Boxcars build-derived flag true=34 false=6; Int decoding has zero dependency on that Boxcars flag;
+- witness reselection 0; next-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 
 ## CLOSED CONTRACT — R3.18AT Outcome A
 - contract `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`; exact_tuple_only / 16 complete eight-field tuples / multiplicity 40;
 - all seven false rows remain outside header membership; AJ/Z/P inheritance and RL223 widening remain rejected.
 
-## ACTIVE EVIDENCE GATE — R3.18AW
-- exact input set is only the 40 AV-true rows rematerialized from the admitted AV artifact;
-- all seven AV-false terminators are excluded before payload decoding;
-- inspect exactly one current primitive scalar and compare native vs pinned Boxcars tag/start/end/width/lossless value;
-- stop exactly at payload end with zero next-control access; production mutation forbidden.
+## ACTIVE EVIDENCE GATE — R3.18AX
+- exact input set is only the 40 admitted AW payload rows; all seven AV-false terminators remain excluded;
+- reconstruct the exact AW payload end first, then inspect exactly one next `property_present` bit;
+- pinned Boxcars and an independent native one-bit observation must match start/value/end exactly; no expected false/true distribution is inherited;
+- stop exactly one bit later with next stream/header/payload/second-control consumption `0/0/0/0`; production mutation forbidden.
 
 ## CLOSED
 - following-payload production composition after R3.18AU;
-- any payload access on the seven AV-false terminator rows;
-- next property-control bit after the one R3.18AW payload evidence boundary;
+- any payload/control access on the seven AV-false terminator rows;
+- next stream ID/header/payload after the one R3.18AX control-bit evidence boundary;
+- second later property-control bit after R3.18AX;
 - context/value/boundary inheritance from historical R3.18AM/R3.18AN;
 - repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.

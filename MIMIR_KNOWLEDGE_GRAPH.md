@@ -79,7 +79,8 @@ R3.18AS one following-property-header evidence after published AQ mixed control 
 R3.18AT post-AQ mixed-continuation following-header exact-context contract / Outcome A CLOSED               |
 R3.18AU bounded post-AQ mixed-continuation following-header production / PRODUCTION CLOSED                   |
 R3.18AV published-R3.18AU mixed following-header differential / Outcome A CLOSED                           |
-R3.18AW one following primitive payload evidence on exact AV-true rows / ACTIVE                                 |
+R3.18AW one following primitive payload evidence on exact AV-true rows / Outcome A CLOSED                    |
+R3.18AX next property-control bit evidence after exact AW payload end / ACTIVE                                  |
         |                               |
         +---------------+---------------+
                         |
@@ -233,13 +234,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 133. `docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md`
 134. `docs/continuity/MIMIR_R3_18AV_DECISION.md`
 135. `docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md`
-136. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-137. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-138. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-139. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-140. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-141. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-142. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+136. `docs/continuity/MIMIR_R3_18AW_DECISION.md`
+137. `docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md`
+138. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+139. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+140. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+141. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+142. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+143. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+144. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1079,3 +1082,16 @@ next                        R3.18M true-only one-bit production composition
 - 47/47 frozen rows; false=0 / true=47; published AD exact 47/47; native-oracle mismatch 0; witness reselection 0
 - Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b` / observation patch `de5fecb234e4a53798ce8e59b728078c7719ae04ef5fa2966b2c3b67072e7adf`; negatives PASS; next stream/header/payload/second-control 0/0/0/0; privacy PASS
 - next exact pass: R3.18AG bounded true-only one-bit production after valid published AD result; false remains fail-closed
+
+### R3.18AW one following primitive payload evidence: OUTCOME A / CLOSED
+- evidence `5f1d983a7b67f84293f337f23b7e7c25fee48795` / tree `63cbbb752100ef6944b1ecf366e89854e0f2376a`; run/job `33064535889/98491267256` SUCCESS
+- same-head CI `33064535850/98491266948` SUCCESS / count=1 / rerun=0; artifact `9643254651` / `23599` / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`; ZIP and 13-file inner manifest verified
+- exact AV-true rows 40/40; false terminators excluded 7/7; Int=40; width32=40; semantic range 5..300; native/Boxcars mismatch 0; next-control bits 0
+- RL223 provenance separated: MIMIR AT/AV contract false=40; Boxcars build-derived flag true=34 false=6; pinned Boxcars Int decoder does not consume that build flag
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; production remains R3.18AU
+
+### R3.18AX next property-control bit evidence: ACTIVE
+- exact lane is the same 40 admitted AW payload rows; all seven AV-false terminators remain outside the lane
+- reconstruct each exact AW payload end and observe exactly one following `property_present` bit with pinned Boxcars plus independent native LSB-first evidence logic
+- no expected false/true distribution is inherited; record the complete observed distribution
+- stop one bit later; next stream/header/payload, second later control, generalized cursor and production mutation remain closed
