@@ -6,11 +6,11 @@
   "last_production_code_sha": "2558cc0559422a3e6695e1501f20d96d83b23e6d",
   "last_production_milestone": "R3.18AY",
   "last_production_milestone_name": "bounded post-AU one-following-payload production",
-  "last_completed_read_only_audit": "R3.18AX",
-  "current_pass": "R3.18AZ",
-  "current_pass_kind": "read-only published-production differential / exact immutable 40-row R3.18AW payload authority against published R3.18AY",
-  "current_pass_goal": "Compare published R3.18AY against exactly the immutable 40-row R3.18AW payload authority and direct-native/oracle identity; require exact Int/32 tag/start/end/width/value, deterministic repeatability, mismatch and witness reselection zero, and stop at payload end.",
-  "current_pass_stop_boundary": "Read-only differential. Production mutation forbidden. Consume zero R3.18AX following-control bits. No payload/control success on the seven AU false terminators, no next stream/header/payload, no second later control, no generalized cursor, and no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
+  "last_completed_read_only_audit": "R3.18AZ",
+  "current_pass": "R3.18BA",
+  "current_pass_kind": "bounded production implementation / exactly one mixed following property-control bit after validated R3.18AY payload",
+  "current_pass_goal": "Validate/recompute one exact R3.18AY payload, consume exactly one R3.18AX-admitted property_present bit at AY stop, preserve false=37 and true=3, and stop one bit later.",
+  "current_pass_stop_boundary": "No following stream/header/payload or second later control; no generalized cursor; no BA access on seven upstream false terminators; no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -137,7 +137,11 @@
     "payload or control access on the seven R3.18AV false terminator rows",
     "production consumption of the R3.18AX-observed following control bit",
     "next stream/header/payload after the future post-AY control boundary",
-    "second later property-control bit after the future post-AY control boundary"
+    "second later property-control bit after the future post-AY control boundary",
+    "following stream/header/payload after the one R3.18BA control bit",
+    "second later property-control bit after R3.18BA",
+    "BA control access on the seven upstream AU false terminators",
+    "generalized/repeated property loop or generic cursor after R3.18BA"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -293,6 +297,8 @@
     "docs/continuity/MIMIR_R3_18AY_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AY_DECISION.md",
     "docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AZ_DECISION.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -301,7 +307,7 @@
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
     "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md"
   ],
-  "last_completed_evidence_pass": "R3.18AS",
+  "last_completed_evidence_pass": "R3.18AZ",
   "last_completed_evidence_outcome": "A — frozen 47-row mixed lane preserved; false terminators 7/7; true following headers exact 40/40; 16 exact eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9603335255.",
   "last_completed_contract_pass": "R3.18AT",
   "r3_14a": {
@@ -2715,5 +2721,40 @@
     ],
     "production_cargo_docs_workflow_fixture_corpus_support_mutation": "0/0/0/0/0/0",
     "next_pass": "R3.18AV"
+  },
+  "r3_18az": {
+    "status": "closed_outcome_a",
+    "evidence_head": "f46479faa2b230f7fde474f7f7696a1024420879",
+    "evidence_tree": "0d022d27fda2275de9512d96231979e1d016491e",
+    "run": 33086674062,
+    "job": 98568084290,
+    "same_head_ci_run": 33086674797,
+    "same_head_ci_job": 98568087263,
+    "artifact_id": 9652520412,
+    "artifact_size": 18151,
+    "artifact_sha256": "558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4",
+    "inner_manifest_entries": 13,
+    "frozen_rows": 40,
+    "published_ay_exact": 40,
+    "aw_native_oracle_exact": 40,
+    "false_terminators_rejected": 7,
+    "tag_int": 40,
+    "width32": 40,
+    "semantic_min": 5,
+    "semantic_max": 300,
+    "mismatch": 0,
+    "witness_reselection": 0,
+    "following_control_bits_consumed": 0,
+    "production_mutation": false
+  },
+  "r3_18ba": {
+    "status": "active",
+    "class": "bounded_production_implementation",
+    "input_rows": 40,
+    "upstream_false_terminators_excluded": 7,
+    "evidence_false": 37,
+    "evidence_true": 3,
+    "bits_to_consume": 1,
+    "adjacent_stream_header_payload_second_control_open": false
   }
 }

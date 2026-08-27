@@ -1,11 +1,9 @@
 # MIMIR — Next Chat Handoff
 
-Canonical production is **R3.18AY** at `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1`, parent `dae58bc2d27aef2daac02b626ae37dbd309706bc`. The production commit is exact two-file scope: `crates/mimir-replay/src/lib.rs` plus `crates/mimir-replay/tests/r3_18ay_post_au_payload.rs`.
+Canonical production remains **R3.18AY** at `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1`. R3.18AZ is now **CLOSED / Outcome A**: evidence `f46479faa2b230f7fde474f7f7696a1024420879` / run `33086674062/98568084290` SUCCESS, same-head natural CI `33086674797/98568087263` SUCCESS, artifact `9652520412` / `sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4`, downloaded digest exact and inner manifest 13/13 PASS.
 
-R3.18AY closure receipts: builder `33074574884/98525314306` SUCCESS; builder-head CI `33074574882/98525439235` SUCCESS; validation-only PR #206 closed unmerged after exact candidate CI `33075136792/98527244393` SUCCESS; published-main CI `33075583682/98528794945` SUCCESS. Fresh-main ancestry, force=false publication and exact SHA/tree readback passed.
+R3.18AZ proves published AY exact on the immutable 40-row AW payload lane: published AY 40/40, AW native/oracle 40/40, Int=40, width32=40, semantic range 5..300, mismatch 0, witness reselection 0, and AX following-control consumption 0. The seven upstream AU false terminators remain outside the payload lane.
 
-The admitted behavior is deliberately narrow: exactly the 40 AW true payload rows decode one Int/32 payload and stop at payload end; all seven AU false terminators are rejected before payload decoding. R3.18AX's later one-bit distribution false=37 / true=3 remains evidence-only and production consumes zero of those control bits.
-
-The active pass is **R3.18AZ published-R3.18AY one-following-payload differential**. Reuse exactly the immutable forty-row R3.18AW authority, compare published AY against AW plus direct-native/oracle identity, require exact tag/start/end/width/value and deterministic repeatability, and stop at payload end. Production mutation and AX control consumption are forbidden.
+The active pass is **R3.18BA bounded post-AY mixed following-control production**. Recompute one valid AY payload, consume exactly one AX-admitted `property_present` bit at AY stop, preserve both false=37 and true=3, and stop one bit later. No following stream/header/payload or second control is open.
 
 Before any dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.

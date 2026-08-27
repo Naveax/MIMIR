@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AY — bounded post-AU one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AX — next property-control bit evidence after exact AW payload end / Outcome A / AW payload exact 40/40 / AV-false excluded 7/7 / false=37 true=3 / oracle-native exact 40/40 / mismatch 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / artifact 9644869549
+  R3.18AZ — published AY exact 40/40 / AW-native-oracle exact 40/40 / false terminators 7/7 / mismatch 0 / witness reselection 0 / following-control consumption 0 / artifact 9652520412
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AT — post-AQ mixed-continuation following-header exact-context contract / Outcome A / 16 exact eight-field tuples / multiplicity 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AX — exact AW payload reconstruction 40/40 / false rows excluded 7/7 / one next property_present bit false=37 true=3 / pinned Boxcars-native exact 40/40 / mismatch 0 / expected distribution inherited 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / same-head CI 33068572200 / artifact 9644869549
+  R3.18AZ — published R3.18AY differential Outcome A / exact 40/40 / Int=40 / width32=40 / range 5..300 / mismatch 0 / reselection 0 / same-head CI 33086674797 / artifact 9652520412
 
 CURRENT_PASS:
-  R3.18AZ — published-R3.18AY one-following-payload differential
+  R3.18BA — bounded post-AY mixed following-control production
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / compare published R3.18AY against exactly the immutable 40-row R3.18AW payload authority, require exact Int/32 boundary and value identity with mismatch 0 and deterministic repeatability, and stop at payload end with zero R3.18AX following-control consumption; production mutation forbidden
+  bounded production implementation / validate-recompute one exact R3.18AY payload, consume exactly one AX-admitted mixed property_present bit (false=37 true=3), stop one bit later, and consume no following stream/header/payload/second-control bits
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4089,3 +4089,14 @@ clean production scope: crates/mimir-replay/src/lib.rs + crates/mimir-replay/tes
 focused target 15/15 PASS / exact AW true rows 40/40 / AU false terminators rejected 7/7 / deterministic repeatability PASS / post-payload poison including AX control isolated
 fresh-main ancestry + force=false publication + exact SHA/tree readback PASS / source-only production publish Knowledge Archive count 0 by path filter
 next exact pass: R3.18AZ published-R3.18AY one-following-payload differential; production mutation forbidden; AX control remains unread
+
+
+---
+
+## CURRENT OVERRIDE — R3.18AZ CLOSED / R3.18BA ACTIVE — 2026-08-27
+
+- R3.18AZ Outcome A authority: `f46479faa2b230f7fde474f7f7696a1024420879` / `33086674062/98568084290` SUCCESS; same-head CI `33086674797/98568087263` SUCCESS; artifact `9652520412` / `sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4`; downloaded digest exact / inner manifest 13/13 PASS.
+- Published R3.18AY is exact 40/40 against immutable AW native/oracle payload authority; Int=40, width32=40, range 5..300, mismatch/reselection 0/0, seven upstream false terminators excluded 7/7, following-control consumption 0.
+- Canonical production remains R3.18AY `2558cc0559422a3e6695e1501f20d96d83b23e6d`.
+- First incomplete canonical pass is R3.18BA. It may validate/recompute one exact AY payload, consume exactly one AX-admitted mixed control bit, accept false=37 and true=3, and stop one bit later.
+- Still closed: following stream/header/payload, second later control, BA access on upstream false terminators, generic/repeated property cursor, actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening.

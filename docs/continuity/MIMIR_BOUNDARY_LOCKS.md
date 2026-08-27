@@ -6,45 +6,29 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AY production / R3.18AZ active differential
+# 0. Current override — R3.18AZ closed / R3.18BA active production gate
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AY
-- `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1` is canonical production; parent `dae58bc2d27aef2daac02b626ae37dbd309706bc`;
-- validates/recomputes exact R3.18AU true-header authority and rejects all seven AU false terminators before payload decode;
-- decodes exactly one R3.18AW-admitted Int/32 payload and stops exactly at payload end;
-- exact clean-candidate CI `33075136792/98527244393` and published-main CI `33075583682/98528794945` are SUCCESS;
-- production consumption of the R3.18AX-observed next control bit remains zero.
+- `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1` remains canonical production; exactly one AW-admitted Int/32 payload after valid AU authority, stopping at payload end.
+- all seven upstream AU false terminators remain outside the payload lane.
 
-## CLOSED EVIDENCE — R3.18AW Outcome A
-- exact 40 AV-true rows yielded one Int/32 payload with semantic range 5..300 and native/Boxcars mismatch 0; seven AV-false terminators were excluded;
-- artifact `9643254651` / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`; production mutation 0.
+## CLOSED DIFFERENTIAL — R3.18AZ Outcome A
+- authority `f46479faa2b230f7fde474f7f7696a1024420879` / `33086674062/98568084290` SUCCESS; same-head CI `33086674797/98568087263` SUCCESS; artifact `9652520412` / `sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4`; manifest 13/13 PASS.
+- published AY exact 40/40; AW native/oracle exact 40/40; Int=40 / width32=40 / range 5..300; mismatch/reselection 0/0; following-control reads 0.
 
-## CLOSED EVIDENCE — R3.18AX Outcome A
-- evidence `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / artifact `9644869549` / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`;
-- exact AW payload reconstruction 40/40; next one-bit distribution false=37 / true=3; oracle/native mismatch 0;
-- the observed bit remains evidence-only and is not an R3.18AY production capability.
-
-## CLOSED CONTRACT — R3.18AT Outcome A
-- contract `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`; exact_tuple_only / 16 complete eight-field tuples / multiplicity 40;
-- all seven false rows remain outside header membership; AJ/Z/P inheritance and RL223 widening remain rejected.
-
-## ACTIVE READ-ONLY GATE — R3.18AZ
-- compare published R3.18AY against exactly the immutable 40-row R3.18AW payload authority;
-- require exact Int/32 tag/start/end/width/value identity, deterministic repeatability and mismatch/reselection 0/0;
-- verify post-payload poison isolation and zero R3.18AX following-control reads;
-- production mutation is forbidden.
+## ACTIVE PRODUCTION GATE — R3.18BA
+- only the exact 40 valid AY payload rows may enter BA; the seven upstream false terminators remain outside.
+- validate/recompute AY, consume exactly one AX-admitted `property_present` bit, preserve false=37 / true=3, and stop one bit later.
+- false and true are both valid at this boundary; true-only historical policies are not inherited.
 
 ## CLOSED
-- production consumption of the AX-observed following control bit;
-- payload/control success on the seven AV-false terminator rows;
-- next stream/header/payload after the AX control boundary;
+- following stream/header/payload after BA;
 - second later property-control bit;
-- context/value/boundary inheritance from historical R3.18AM/R3.18AN;
+- BA access on upstream false terminators;
 - repeated/generalized property loop or generic cursor;
-- next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
----
+- actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 # 1. Status vocabulary
 
