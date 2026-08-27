@@ -1,0 +1,210 @@
+name: R3.18BB Published BA Differential
+
+on:
+  push:
+    branches:
+      - evidence/r318bb-published-ba-v2
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 2bb5c48b3f627d6fe4f8ae6cb2eb2ea87408342e
+      BASE_TREE: 7958e09ee5756d826307ac8b122fd748f43b8a23
+      PROD_SHA: 5d2bca711f528ab1bb607104379af503ff175697
+      PROD_TREE: 6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a
+      PROD_PARENT: 109bad258d43963fd5432317503f99a7e1b8aa1b
+      LIB_BLOB: fe232760e63c3c1b46711084c70049f456ef345b
+      BA_TEST_BLOB: 41ef1c2c087cc52bf2bcf0fa65c911a31a6ffc13
+      BA_DECISION_BLOB: 56e6e3b06b60186cf9c771ba283b15a88ac61034
+      BB_SPEC_BLOB: 031a17dffe9e2da026e78fe1703fbed8d940cca3
+      BA_BUILDER_RUN: "33091339939"
+      BA_BUILDER_JOB: "98584661482"
+      BA_PR_CI_RUN: "33091594385"
+      BA_PR_CI_JOB: "98585555551"
+      BA_CANDIDATE_CI_RUN: "33091611038"
+      BA_CANDIDATE_CI_JOB: "98585614713"
+      BA_PUBLISHED_CI_RUN: "33092084628"
+      BA_PUBLISHED_CI_JOB: "98587299347"
+      CONTINUITY_CI_RUN: "33099963003"
+      CONTINUITY_CI_JOB: "98614709672"
+      CONTINUITY_KA_RUN: "33099962914"
+      CONTINUITY_KA_JOB: "98614708992"
+      AX_HEAD: 465a3f2fc71e5eed6f00c16a04738031bef8d82c
+      AX_RUN: "33068572230"
+      AX_JOB: "98504703417"
+      AX_ARTIFACT: "9644869549"
+      AX_ARTIFACT_NAME: r318ax-next-property-control-evidence
+      AX_ARTIFACT_SIZE: "18070"
+      AX_DIGEST: sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Freeze authorities and receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$PROD_SHA^")" = "$PROD_PARENT"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs")" = "$BA_TEST_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BA_DECISION.md")" = "$BA_DECISION_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md")" = "$BB_SPEC_BLOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$BASE_SHA"
+
+          check_success_run() {
+            local run_id="$1" expected_sha="$2"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .head_sha)" = "$expected_sha"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .status)" = completed
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .conclusion)" = success
+          }
+          check_success_run "$BA_PUBLISHED_CI_RUN" "$PROD_SHA"
+          check_success_run "$CONTINUITY_CI_RUN" "$BASE_SHA"
+          check_success_run "$CONTINUITY_KA_RUN" "$BASE_SHA"
+          check_success_run "$AX_RUN" "$AX_HEAD"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AX_ARTIFACT" --jq .name)" = "$AX_ARTIFACT_NAME"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AX_ARTIFACT" --jq .size_in_bytes)" = "$AX_ARTIFACT_SIZE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$AX_ARTIFACT" --jq .digest)" = "$AX_DIGEST"
+          echo R3_18BB_AUTHORITY_FREEZE=PASS
+
+      - name: Run published BA differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x tools/_tmp_r318bb_run.sh
+          tools/_tmp_r318bb_run.sh
+
+      - name: Classify truncation and same-head CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bb-out"
+          AX_DIR="$RUNNER_TEMP/r318bb-ax"
+
+          grep -Fx 'R3_18AX_TRUNCATION_BEFORE_CONTROL=PASS 40/40' "$AX_DIR/r3_18ax_negative_controls.txt"
+          sed -i 's/^R3_18BB_TRUNCATION_FAIL_CLOSED=PASS$/R3_18BB_CARRIER_TRUNCATION_FAIL_CLOSED=PASS/' "$OUT/r3_18bb_negative_controls.txt"
+          cat >> "$OUT/r3_18bb_negative_controls.txt" <<'EOF'
+          R3_18BB_EXACT_PRECONTROL_TRUNCATION_INHERITED_FROM_AX=PASS 40/40
+          EOF
+          cat >> "$OUT/r3_18bb_aggregate.txt" <<'EOF'
+          R3_18BB_CARRIER_TRUNCATION_FAIL_CLOSED=PASS
+          R3_18BB_EXACT_PRECONTROL_TRUNCATION_INHERITED_FROM_AX=PASS 40/40
+          EOF
+
+          tree_sha="$(git rev-parse 'HEAD^{tree}')"
+          workflow_blob="$(git rev-parse 'HEAD:.github/workflows/r318bb-published-ba-v1.yml')"
+          runner_blob="$(git rev-parse 'HEAD:tools/_tmp_r318bb_run.sh')"
+          cat > "$OUT/r3_18bb_evidence_identity.txt" <<EOF
+          R3_18BB_EVIDENCE_HEAD=$GITHUB_SHA
+          R3_18BB_EVIDENCE_TREE=$tree_sha
+          R3_18BB_WORKFLOW_BLOB=$workflow_blob
+          R3_18BB_RUNNER_BLOB=$runner_blob
+          R3_18BB_BASE=$BASE_SHA/$BASE_TREE
+          EOF
+
+          ci_json="$RUNNER_TEMP/r318bb_ci.json"
+          found=0
+          for _ in $(seq 1 60); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=20" > "$ci_json"
+            count="$(python3 - "$ci_json" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1], encoding='utf-8'))
+          rows=[r for r in data['workflow_runs'] if r['name']=='CI' and r['event']=='push' and r['head_sha']==r['head_commit']['id']]
+          print(len(rows))
+          PY
+          )"
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate same-head CI runs: $count" >&2
+              exit 1
+            fi
+            if [ "$count" -eq 1 ]; then
+              status="$(python3 - "$ci_json" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1], encoding='utf-8'))
+          row=next(r for r in data['workflow_runs'] if r['name']=='CI' and r['event']=='push')
+          print(row['status'])
+          PY
+          )"
+              if [ "$status" = completed ]; then
+                found=1
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$found" -eq 1
+          python3 - "$ci_json" "$OUT/r3_18bb_same_head_ci_receipt.txt" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1], encoding='utf-8'))
+          rows=[r for r in data['workflow_runs'] if r['name']=='CI' and r['event']=='push']
+          if len(rows)!=1: raise SystemExit(f"same-head CI count={len(rows)}")
+          r=rows[0]
+          if r['status']!='completed' or r['conclusion']!='success':
+              raise SystemExit(f"same-head CI {r['id']} {r['status']}/{r['conclusion']}")
+          open(sys.argv[2],'w',encoding='utf-8').write(
+              f"R3_18BB_SAME_HEAD_CI={r['id']}\nR3_18BB_SAME_HEAD_CI_STATUS=SUCCESS\nR3_18BB_SAME_HEAD_SHA={r['head_sha']}\n")
+          PY
+
+          if grep -R -nE '/home/|/Users/|[A-Za-z]:\\Users\\|@gmail\.com|@hotmail\.com' "$OUT"; then
+            echo 'privacy-sensitive path/email found after receipts' >&2
+            exit 1
+          fi
+
+          (
+            cd "$OUT"
+            sha256sum r3_18bb_source_scope.txt r3_18bb_replay_identity.tsv r3_18bb_frozen_ax.tsv \
+              r3_18bb_summary.json r3_18bb_comparison.tsv r3_18bb_negative_controls.txt \
+              r3_18bb_validation.txt r3_18bb_upstream_receipts.txt r3_18bb_aggregate.txt \
+              r3_18bb_evidence_identity.txt r3_18bb_same_head_ci_receipt.txt \
+              > r3_18bb_artifact_sha256.txt
+          )
+          echo R3_18BB_SAME_HEAD_AND_TRUNCATION_CLASSIFICATION=PASS
+
+      - name: Upload authoritative evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bb-published-ba-differential-evidence
+          path: ${{ runner.temp }}/r318bb-out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload non-authority failure receipt
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/r318bb-failure"
+          cat > "$RUNNER_TEMP/r318bb-failure/r3_18bb_failure_receipt.txt" <<EOF
+          R3_18BB_OUTCOME=NOT_ADMITTED
+          R3_18BB_SCIENTIFIC_AUTHORITY=NONE
+          R3_18BB_HEAD=$GITHUB_SHA
+          R3_18BB_BASE=$BASE_SHA
+          EOF
+
+      - name: Upload failure receipt
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bb-non-authority-failure-receipt
+          path: ${{ runner.temp }}/r318bb-failure/
+          if-no-files-found: error
+          retention-days: 30
