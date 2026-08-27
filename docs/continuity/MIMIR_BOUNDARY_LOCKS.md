@@ -6,27 +6,25 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AZ closed / R3.18BA active production gate
+# 0. Current override — R3.18BA production closed / R3.18BB active differential
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18AY
-- `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1` remains canonical production; exactly one AW-admitted Int/32 payload after valid AU authority, stopping at payload end.
-- all seven upstream AU false terminators remain outside the payload lane.
+## PRODUCTION — R3.18BA
+- `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a` is canonical production, parent `109bad258d43963fd5432317503f99a7e1b8aa1b`.
+- exactly 40 valid AY rows enter BA; seven upstream AU false terminators remain outside.
+- BA recomputes AY, consumes exactly one mixed AX-admitted control bit, accepts false=37 / true=3, and stops one bit later.
+- adjacent stream/header/payload/second-control consumption remains 0/0/0/0.
 
-## CLOSED DIFFERENTIAL — R3.18AZ Outcome A
-- authority `f46479faa2b230f7fde474f7f7696a1024420879` / `33086674062/98568084290` SUCCESS; same-head CI `33086674797/98568087263` SUCCESS; artifact `9652520412` / `sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4`; manifest 13/13 PASS.
-- published AY exact 40/40; AW native/oracle exact 40/40; Int=40 / width32=40 / range 5..300; mismatch/reselection 0/0; following-control reads 0.
-
-## ACTIVE PRODUCTION GATE — R3.18BA
-- only the exact 40 valid AY payload rows may enter BA; the seven upstream false terminators remain outside.
-- validate/recompute AY, consume exactly one AX-admitted `property_present` bit, preserve false=37 / true=3, and stop one bit later.
-- false and true are both valid at this boundary; true-only historical policies are not inherited.
+## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BB
+- immutable authority is the AX forty-row lane / artifact `9644869549` / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`.
+- compare published BA start/value/end/stop plus AY prerequisite exactly; mismatch/reselection must remain 0/0.
+- 37 false rows terminate; 3 true rows are continuation candidates only.
 
 ## CLOSED
-- following stream/header/payload after BA;
+- following stream/header/payload during BB, including on the three true rows;
 - second later property-control bit;
-- BA access on upstream false terminators;
+- BA/BB access on seven upstream AU false terminators;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

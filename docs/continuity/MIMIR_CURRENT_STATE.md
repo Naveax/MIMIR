@@ -2,38 +2,36 @@
 
 **Continuity date:** 2026-08-27
 **Repository:** `Naveax/MIMIR`
-**Canonical production SHA:** `2558cc0559422a3e6695e1501f20d96d83b23e6d`
-**Production tree:** `93198ad2a4f929ac62b87beddbc9d5b5665f08d1`
-**Production milestone:** `R3.18AY — bounded post-AU one-following-payload production`
-**Last read-only evidence/audit:** `R3.18AZ — Outcome A / published AY exact 40/40 / AW-native-oracle exact 40/40 / false terminators 7/7 / mismatch 0 / reselection 0 / following-control consumption 0 / artifact 9652520412`
-**Last completed contract:** `R3.18AT — exact_tuple_only / 16 eight-field contexts / multiplicity 40 / 7 false terminators outside membership / sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`
-**Current exact pass:** `R3.18BA — bounded post-AY mixed following-control production`
+**Canonical production SHA:** `5d2bca711f528ab1bb607104379af503ff175697`
+**Production tree:** `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`
+**Production milestone:** `R3.18BA — bounded post-AY mixed following-control production`
+**Last read-only evidence/audit:** `R3.18AZ — Outcome A / published AY exact 40/40 / mismatch 0 / reselection 0 / artifact 9652520412`
+**Last completed contract:** `R3.18AT — exact_tuple_only / 16 eight-field contexts / multiplicity 40 / 7 false terminators outside membership`
+**Current exact pass:** `R3.18BB — published R3.18BA mixed following-control differential`
 
 ## Truthful boundary
 
-R3.18AY remains canonical production. It validates/recomputes one exact R3.18AU true-header authority, decodes one R3.18AW-admitted Int/32 payload and stops at payload end. Seven upstream AU false terminators are rejected before payload decode. R3.18AZ independently validated published AY on the immutable forty-row lane with exact 40/40 equality and mismatch/reselection 0/0. R3.18AX's next-bit distribution false=37 / true=3 is now the evidence authority for the active R3.18BA bounded production pass; production has not consumed that bit yet.
+R3.18BA is canonical production. Exactly forty valid R3.18AY payload rows may enter BA; seven upstream R3.18AU false terminators remain outside the lane. BA recomputes AY, begins at AY payload end, consumes exactly one R3.18AX-admitted LSB-first `property_present` bit, accepts both false and true, and stops one bit later. The frozen distribution is false=37 / true=3. Production consumes no following stream/header/payload or second later control bit.
 
 ```text
-production SHA/tree                    2558cc0559422a3e6695e1501f20d96d83b23e6d / 93198ad2a4f929ac62b87beddbc9d5b5665f08d1
-AZ evidence head/tree                  f46479faa2b230f7fde474f7f7696a1024420879 / 0d022d27fda2275de9512d96231979e1d016491e
-AZ run/job                             33086674062/98568084290 SUCCESS
-AZ same-head natural CI                33086674797/98568087263 SUCCESS
-AZ artifact                            9652520412 / 18151 / sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4
-AZ inner manifest                      13/13 PASS
-published AY exact                     40/40
-AW native/oracle exact                 40/40
-AU false terminators rejected          7/7
-payload tag / width                    Int=40 / width32=40
-semantic range                         5..300
-mismatch / reselection                 0 / 0
-AX control distribution                false=37 / true=3 evidence authority for BA
-production following-control consumption 0
+production SHA/tree                    5d2bca711f528ab1bb607104379af503ff175697 / 6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a
+parent                                 109bad258d43963fd5432317503f99a7e1b8aa1b
+lib/test blobs                         fe232760e63c3c1b46711084c70049f456ef345b / 41ef1c2c087cc52bf2bcf0fa65c911a31a6ffc13
+builder                                33091339939/98584661482 SUCCESS
+validation PR                          #208 CLOSED UNMERGED
+PR CI                                  33091594385/98585555551 SUCCESS
+candidate push CI                      33091611038/98585614713 SUCCESS
+published-main CI                      33092084628/98587299347 SUCCESS
+valid BA rows                          40/40
+upstream false terminators excluded    7/7
+control distribution                   false=37 / true=3
+adjacent stream/header/payload/second  0/0/0/0
 ```
 
 ## Current gate
 
-R3.18BA may compose exactly one mixed `property_present` bit after recomputing a valid R3.18AY payload. It must accept both false and true, stop one bit later, and consume no following stream/header/payload/second-control bits.
+R3.18BB is read-only. It must validate published BA against exactly the immutable R3.18AX forty-row authority with mismatch/reselection zero and no adjacent consumption. It may not decode a following header, including on the three true rows.
 
 ## Hard stop
 
-No BA control access on the seven upstream false terminators, no following stream/header/payload, no second later control, no generalized/repeated property cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+No following stream/header/payload, second later control, generalized property cursor, actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
