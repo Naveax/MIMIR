@@ -85,7 +85,8 @@ R3.18AY bounded post-AU one-following-payload production / PRODUCTION CLOSED    
 R3.18AZ published-R3.18AY one-following-payload differential / Outcome A CLOSED
 R3.18BA bounded post-AY mixed following-control production / PRODUCTION CLOSED
 R3.18BB published-R3.18BA mixed following-control differential / Outcome A CLOSED
-R3.18BC one following-property-header evidence after published BA mixed control / ACTIVE
+R3.18BC one following-property-header evidence after published BA mixed control / Outcome A CLOSED
+R3.18BD exact following-header context contract / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -251,13 +252,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 145. `docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md`
 146. `docs/continuity/MIMIR_R3_18BB_DECISION.md`
 147. `docs/continuity/MIMIR_R3_18BC_EXECUTION_SPEC.md`
-148. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-149. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-150. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-151. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-152. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-153. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-154. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+148. `docs/continuity/MIMIR_R3_18BC_DECISION.md`
+149. `docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md`
+150. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+151. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+152. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+153. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+154. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+155. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+156. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1178,3 +1181,18 @@ next                        R3.18M true-only one-bit production composition
 - only the exact three true rows may observe one header through `payload_start`
 - discover exact header contexts/tags; do not pre-freeze or inherit older context contracts
 - following payload, second later control, production composition, generalized loop/cursor and semantic/runtime widening remain closed
+
+
+### R3.18BC one following-property-header evidence: OUTCOME A / CLOSED
+- evidence `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / tree `a198866dc3f18ffbd5cb16e32d39dada5f4116fc`; run/job `33122152803/98691409657` SUCCESS
+- same-head natural CI `33122152793/98691409674` SUCCESS
+- artifact `9666964713` / 7795 bytes / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`; inner manifest 14/14 PASS
+- BB/BA partition exact 40/40; 37 false terminators / 3 true headers; native/Boxcars exact 3/3; unique contexts 3
+- mismatch/reselection 0/0; payload/second-control 0/0; mutation 0/0/0/0/0; privacy PASS
+- exact observed contexts are `(72,6,92,Boolean,868,32,10,false)`, `(72,6,94,Boolean,868,32,10,false)`, `(110,6,58,Float,868,32,10,false)`, each x1
+
+### R3.18BD exact following-header context contract: ACTIVE
+- contract-only; freeze exact eight-field membership from R3.18BC
+- 37 false terminators remain outside membership
+- no tag/component/Cartesian/older-contract/RL223 widening
+- production remains R3.18BA; following payload and second later control remain closed

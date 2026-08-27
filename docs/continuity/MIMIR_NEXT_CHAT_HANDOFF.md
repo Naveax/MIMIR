@@ -2,10 +2,15 @@
 
 Canonical production remains **R3.18BA** at `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`.
 
-R3.18BB is now **Outcome A / CLOSED**. Evidence head `91595db2970ad395ec048ebd9326cfa97b01b38a`, authority `33104207616/98629573433` SUCCESS, same-head CI `33104207621/98629573926` SUCCESS, artifact `9659874105` / 9295 bytes / `sha256:0e5bc329e1fc89068243ad0846356ed4dbfc2ade245623385b8e84d21b4f138e`, internal manifest 11/11 PASS. Published BA and AY prerequisite are exact 40/40; false=37 / true=3; mismatch/reselection 0/0; adjacent stream/header/payload/second-control 0/0/0/0; mutation 0/0/0/0/0; privacy PASS.
+R3.18BC is **Outcome A / CLOSED**. Authority is `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` SUCCESS, same-head CI `33122152793/98691409674` SUCCESS, artifact `9666964713` / 7795 bytes / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`, inner manifest 14/14 PASS. The immutable partition is 40/40 with 37 false terminators and 3 true headers. Native/Boxcars header equality is 3/3, unique exact contexts=3, mismatch/reselection=0/0, payload/second-control=0/0, mutation=0/0/0/0/0, privacy PASS.
 
-The first BB helper head `a8ed349204d2a72f404ade717aba58fdbdfde815` / run `33103836525` is non-authority. Its science passed but Rust 1.85 lacked the `rustfmt` component; it was not rerun. v2 corrected only toolchain components on a fresh sibling SHA.
+Exact contexts, each observed once:
+- `(72,6,92,Boolean,868,32,10,false)`
+- `(72,6,94,Boolean,868,32,10,false)`
+- `(110,6,58,Float,868,32,10,false)`
 
-The active pass is **R3.18BC — one following-property-header evidence after published BA mixed control**. Preserve all 40 BB witnesses. Exactly 37 false rows terminate at BA. Only these three true rows may enter the header lane: `external_fixtures/sample_002.replay` (BA stop 11224), `external_fixtures/sample_003.replay` (7808), and `test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay` (3160). Observe one header through `payload_start`, compare with pinned Boxcars, discover exact contexts/tags, and decode no following payload or second control.
+The superseded `a285ee75c8974f18edad1ef271897a63ea51e311` / `33120199300` run is non-authority: science passed but final artifact digest representation seal failed. It was not rerun; the authoritative sibling retained all science helper blobs unchanged and normalized only the seal.
 
-Before any dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.
+The active pass is **R3.18BD — exact following-header context contract**. It is contract-only: freeze complete eight-field exact membership for exactly the three BC contexts, keep all 37 false terminators outside membership, and mutate no production code. Following payload, second later control and production following-header composition remain closed.
+
+Before any dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse the existing exact run. Rerun is never polling.

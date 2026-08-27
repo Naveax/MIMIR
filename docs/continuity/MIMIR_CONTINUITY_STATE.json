@@ -6,11 +6,11 @@
   "last_production_code_sha": "5d2bca711f528ab1bb607104379af503ff175697",
   "last_production_milestone": "R3.18BA",
   "last_production_milestone_name": "bounded post-AY mixed following-control production",
-  "last_completed_read_only_audit": "R3.18BB",
-  "current_pass": "R3.18BC",
-  "current_pass_kind": "read-only one-following-property-header evidence on exact three R3.18BB true continuation witnesses",
-  "current_pass_goal": "Preserve the immutable BB 40-row lane; stop 37 false rows at BA and observe exactly one following header through payload_start on only the exact 3 true rows, with native/Boxcars equality and complete context classification.",
-  "current_pass_stop_boundary": "No following payload decode, no second later control, no production header composition, no generalized cursor, and no header access on the 37 false terminators.",
+  "last_completed_read_only_audit": "R3.18BC",
+  "current_pass": "R3.18BD",
+  "current_pass_kind": "contract-only exact following-header context admission from R3.18BC",
+  "current_pass_goal": "Freeze exactly the three R3.18BC evidence-supported complete eight-field header contexts, preserve 37 false terminators outside membership, and admit no production composition or payload decode.",
+  "current_pass_stop_boundary": "No production following-header composition, no following payload, no second later control, no generalized cursor, and no membership outside exact R3.18BC-supported tuples.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -148,7 +148,12 @@
     "following-header access on any of the 37 R3.18BB false terminator rows",
     "following payload after the R3.18BC one-header evidence boundary",
     "second later property-control bit after R3.18BC",
-    "production following-header composition before R3.18BC evidence and a later exact-context contract close"
+    "production following-header composition before R3.18BC evidence and a later exact-context contract close",
+    "following-header contexts outside exact R3.18BD evidence-supported eight-field membership",
+    "R3.18AT/R3.18AJ/R3.18Z/R3.18P cross-boundary header-context inheritance at R3.18BD",
+    "dropping or flipping is_rl_223 in R3.18BD membership",
+    "production following-header composition before R3.18BD contract closure",
+    "following payload after the R3.18BC one-header payload_start"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -314,9 +319,11 @@
     "docs/chatgpt-archive/VALIDATION_MATRIX.md",
     "docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md",
     "docs/continuity/MIMIR_R3_18BB_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BC_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BC_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BC_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18BB",
+  "last_completed_evidence_pass": "R3.18BC",
   "last_completed_evidence_outcome": "A — frozen 47-row mixed lane preserved; false terminators 7/7; true following headers exact 40/40; 16 exact eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9603335255.",
   "last_completed_contract_pass": "R3.18AT",
   "r3_14a": {
@@ -2814,6 +2821,41 @@
       "payload": 0,
       "second_control": 0
     },
+    "production_cargo_fixture_corpus_support_mutation": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "privacy": "PASS"
+  },
+  "r3_18bc": {
+    "outcome": "A",
+    "production_sha_unchanged": "5d2bca711f528ab1bb607104379af503ff175697",
+    "continuity_base_sha": "2296eb7eb93ac4946bb5b7152f5bc76ff4bf09d8",
+    "evidence_head": "0f4d07f5caf77ec53f5e8b512867ad17b5835ca1",
+    "evidence_tree": "a198866dc3f18ffbd5cb16e32d39dada5f4116fc",
+    "authority_run": 33122152803,
+    "authority_job": 98691409657,
+    "same_head_ci_run": 33122152793,
+    "same_head_ci_job": 98691409674,
+    "artifact_id": 9666964713,
+    "artifact_size": 7795,
+    "artifact_sha256": "88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e",
+    "artifact_manifest_sha256": "d9e92e840f1b33b02dec1626dd1337a8bbf1b464656341c1ecb8dd26661ebcaf",
+    "frozen_rows": 40,
+    "false_terminators": 37,
+    "true_headers": 3,
+    "unique_exact_contexts": 3,
+    "observed_tags": {
+      "Boolean": 2,
+      "Float": 1
+    },
+    "native_oracle_mismatch": 0,
+    "witness_reselection": 0,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0,
     "production_cargo_fixture_corpus_support_mutation": [
       0,
       0,

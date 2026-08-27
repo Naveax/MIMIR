@@ -6,40 +6,34 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BA production closed / R3.18BB differential closed / R3.18BC active evidence
+# 0. Current override — R3.18BA production / R3.18BC evidence closed / R3.18BD contract active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BA
-- `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a` remains canonical production.
-- one exact R3.18AY payload authority is recomputed and validated;
-- exactly one following LSB-first `property_present` bit is consumed at AY stop;
-- both frozen classes are admitted: false=37 / true=3;
-- the boundary stops exactly one bit later;
-- all seven upstream AU false terminators remain outside BA.
+- canonical production remains `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`;
+- one exact R3.18AY payload authority is recomputed, followed by exactly one LSB-first `property_present` bit;
+- false=37 / true=3 and all seven upstream AU false terminators stay outside BA.
 
-## CLOSED READ-ONLY DIFFERENTIAL — R3.18BB Outcome A
-- evidence `91595db2970ad395ec048ebd9326cfa97b01b38a` / `33104207616/98629573433` SUCCESS;
-- same-head CI `33104207621/98629573926` SUCCESS;
-- artifact `9659874105` / `sha256:0e5bc329e1fc89068243ad0846356ed4dbfc2ade245623385b8e84d21b4f138e`;
-- published BA and AY prerequisite exact 40/40;
-- false=37 / true=3; mismatch/reselection 0/0;
-- adjacent stream/header/payload/second-control 0/0/0/0;
-- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+## CLOSED EVIDENCE — R3.18BC Outcome A
+- authority `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` SUCCESS;
+- same-head CI `33122152793/98691409674` SUCCESS;
+- artifact `9666964713` / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`;
+- exact 40-row partition; 37 false terminators; exact one header on 3/3 true rows;
+- exact contexts: `(72,6,92,Boolean,868,32,10,false)`, `(72,6,94,Boolean,868,32,10,false)`, `(110,6,58,Float,868,32,10,false)`;
+- mismatch/reselection 0/0; following payload/second-control 0/0; mutation 0/0/0/0/0; privacy PASS.
 
-## ACTIVE EVIDENCE-ONLY — R3.18BC
-- preserve all forty BB witness identities;
-- all 37 false rows terminate at BA with zero following-header access;
-- only the exact three frozen true rows may observe one following property header;
-- compare native structure with pinned Boxcars through `payload_start`;
-- discover exact header tags/contexts without older-contract inheritance;
-- stop at `payload_start`.
+## ACTIVE CONTRACT-ONLY — R3.18BD
+- admit only exact complete eight-field tuples observed by R3.18BC;
+- all 37 false rows remain terminators and cannot acquire header membership;
+- exact tuple equality only; multiplicity is provenance, not a runtime frequency promise;
+- reject tag-only, component-only, Cartesian, versionless, RL223-drop/flip, older-contract inheritance, and fabricated fourth tuples.
 
 ## CLOSED
-- header access on any of the 37 BB false terminators;
-- following payload consumption during R3.18BC;
-- second later property-control bit;
-- production following-header composition before evidence + exact-context contract closure;
+- production following-header composition before R3.18BD contract closure;
+- following payload and second later control;
+- header membership for any of the 37 false terminators;
+- contexts outside exact R3.18BD evidence-supported set;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

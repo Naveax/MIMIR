@@ -1601,3 +1601,51 @@ Next exact pass:
 - `R3.18BC — one following-property-header evidence after published BA mixed control`.
 
 ---
+
+## 2026-08-27 — R3.18BC — One following-property-header evidence
+
+Production base SHA: `5d2bca711f528ab1bb607104379af503ff175697`
+Production commit SHA: unchanged / `5d2bca711f528ab1bb607104379af503ff175697`
+Pass type: read-only boundary evidence
+Outcome: **A — CLOSED**
+
+What changed:
+- no production source changed;
+- all 40 immutable BB rows were reconstructed against published BA;
+- 37 false rows remained terminators with zero following-header access;
+- exactly three true rows observed exactly one following header through `payload_start`;
+- native MIMIR and pinned Boxcars matched 3/3;
+- three complete exact contexts were discovered for a later contract-only pass.
+
+Evidence:
+- head/tree `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `a198866dc3f18ffbd5cb16e32d39dada5f4116fc`;
+- authority `33122152803/98691409657` SUCCESS;
+- same-head CI `33122152793/98691409674` SUCCESS;
+- artifact `9666964713` / 7795 bytes / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`;
+- inner manifest 14/14 PASS, manifest SHA-256 `d9e92e840f1b33b02dec1626dd1337a8bbf1b464656341c1ecb8dd26661ebcaf`;
+- partition 40/40; false=37; true-header=3/3; unique contexts=3; mismatch/reselection=0/0;
+- all required negatives PASS; payload/second-control bits 0/0; mutation 0/0/0/0/0; privacy PASS.
+
+Exact contexts:
+- `(72,6,92,Boolean,868,32,10,false)` x1;
+- `(72,6,94,Boolean,868,32,10,false)` x1;
+- `(110,6,58,Float,868,32,10,false)` x1.
+
+Superseded non-authority:
+- `a285ee75c8974f18edad1ef271897a63ea51e311` / run `33120199300`: science and upload passed, final metadata seal failed because API/upload digest representations differed by `sha256:` prefix; no rerun.
+
+Boundaries opened:
+- R3.18BD contract-only exact membership for the three evidence-supported eight-field tuples.
+
+Boundaries still closed:
+- production following-header composition before contract closure;
+- following payload;
+- second later control;
+- membership for 37 false terminators;
+- component/tag/Cartesian/older-contract/RL223 widening;
+- generalized property cursor and semantic/runtime widening.
+
+Next exact pass:
+- `R3.18BD — exact following-header context contract`.
+
+---
