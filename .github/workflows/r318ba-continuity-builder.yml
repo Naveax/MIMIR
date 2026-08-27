@@ -1,0 +1,137 @@
+name: R3.18BA Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - builder/r318ba-continuity-v1
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318ba-continuity-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      PROD_SHA: 5d2bca711f528ab1bb607104379af503ff175697
+      PROD_TREE: 6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a
+      PROD_PARENT: 109bad258d43963fd5432317503f99a7e1b8aa1b
+      LIB_BLOB: fe232760e63c3c1b46711084c70049f456ef345b
+      TEST_BLOB: 41ef1c2c087cc52bf2bcf0fa65c911a31a6ffc13
+      BA_SPEC_BLOB: 3db94f3d559de1a7152a55fa08f7cb4b50d50d74
+      BUILDER_RUN: '33091339939'
+      BUILDER_JOB: '98584661482'
+      VALIDATION_PR: '208'
+      PR_CI_RUN: '33091594385'
+      PR_CI_JOB: '98585555551'
+      CANDIDATE_CI_RUN: '33091611038'
+      CANDIDATE_CI_JOB: '98585614713'
+      PUBLISHED_CI_RUN: '33092084628'
+      PUBLISHED_CI_JOB: '98587299347'
+      AX_RUN: '33068572230'
+      AX_JOB: '98504703417'
+      AX_ARTIFACT: '9644869549'
+      AX_DIGEST: sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout exact scaffold head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Freeze BA publication authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$PROD_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .tree.sha)" = "$PROD_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .parents[0].sha)" = "$PROD_PARENT"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/src/lib.rs?ref=$PROD_SHA" --jq .sha)" = "$LIB_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs?ref=$PROD_SHA" --jq .sha)" = "$TEST_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md?ref=$PROD_SHA" --jq .sha)" = "$BA_SPEC_BLOB"
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BUILDER_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BUILDER_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$VALIDATION_PR" --jq .state)" = closed
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$VALIDATION_PR" --jq '.merged_at // ""')" = ""
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$VALIDATION_PR" --jq .head.sha)" = "$PROD_SHA"
+
+          for pair in "$PR_CI_RUN:$PR_CI_JOB" "$CANDIDATE_CI_RUN:$CANDIDATE_CI_JOB" "$PUBLISHED_CI_RUN:$PUBLISHED_CI_JOB"; do
+            run_id="${pair%%:*}"
+            job_id="${pair##*:}"
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id" --jq .head_sha)" = "$PROD_SHA"
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id" --jq .conclusion)" = success
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$job_id" --jq .conclusion)" = success
+          done
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PUBLISHED_CI_RUN" --jq .head_branch)" = main
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PUBLISHED_CI_RUN" --jq .event)" = push
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$AX_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$AX_JOB" --jq .conclusion)" = success
+          ax_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$AX_ARTIFACT")"
+          test "$(jq -r .expired <<<"$ax_meta")" = false
+          test "$(jq -r .digest <<<"$ax_meta")" = "$AX_DIGEST"
+          echo R3_18BA_AUTHORITY_FREEZE=PASS
+
+      - name: Apply bounded continuity patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/r318ba_continuity.py
+
+          cat > "$RUNNER_TEMP/expected.txt" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BA_DECISION.md
+          docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/expected.txt"
+          git diff --name-only | sort > "$RUNNER_TEMP/actual.txt"
+          sort "$RUNNER_TEMP/expected.txt" -o "$RUNNER_TEMP/expected.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -F 'R3.18BB — published R3.18BA mixed following-control differential' docs/continuity/MIMIR_CURRENT_STATE.md
+          grep -F 'R3.18BA bounded post-AY mixed following-control production / PRODUCTION CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'R3.18BB published-R3.18BA mixed following-control differential / ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '144. `docs/continuity/MIMIR_R3_18BA_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '145. `docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'CURRENT_PASS:' MIMIR_CONTINUE_HERE.md
+          grep -F '  R3.18BB — published R3.18BA mixed following-control differential' MIMIR_CONTINUE_HERE.md
+          git diff --check
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BA_CONTINUITY_VALIDATION=PASS
+
+      - name: Commit continuity candidate on builder branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BA_DECISION.md \
+            docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git commit -m 'Admit R3.18BA and open R3.18BB'
+          git push origin HEAD:builder/r318ba-continuity-v1
