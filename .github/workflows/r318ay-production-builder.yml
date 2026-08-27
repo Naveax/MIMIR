@@ -17,15 +17,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Checkout frozen canonical main
+      - name: Checkout builder control
         uses: actions/checkout@v6
         with:
-          ref: main
           fetch-depth: 0
+
+      - name: Preserve helper and checkout frozen canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .github/workflows/r318ay_production_builder.py "$RUNNER_TEMP/r318ay_production_builder.py"
+          git checkout --force origin/main
+          test "$(git rev-parse HEAD)" = "dae58bc2d27aef2daac02b626ae37dbd309706bc"
+          test "$(git rev-parse HEAD^{tree})" = "06f5cb02daa94be784e7ab31aac101493bc8e959"
 
       - name: Authority freeze and materialize AY patch
         shell: bash
-        run: python .github/workflows/r318ay_production_builder.py
+        run: python "$RUNNER_TEMP/r318ay_production_builder.py"
 
       - name: Install Rust 1.85 validation toolchain
         shell: bash
