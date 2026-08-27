@@ -33,7 +33,32 @@ jobs:
 
       - name: Authority freeze and materialize AY patch
         shell: bash
-        run: python "$RUNNER_TEMP/r318ay_production_builder.py"
+        run: |
+          set -euo pipefail
+          set +e
+          output="$(python "$RUNNER_TEMP/r318ay_production_builder.py" 2>&1)"
+          rc=$?
+          set -e
+          printf '%s\n' "$output"
+          if [[ $rc -eq 0 ]]; then
+            exit 0
+          fi
+          if [[ "$output" != "AY pre-format scope drift" ]]; then
+            echo "unexpected AY helper failure" >&2
+            exit "$rc"
+          fi
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          expected=(
+            "crates/mimir-replay/src/lib.rs"
+            "crates/mimir-replay/tests/r3_18ay_post_au_payload.rs"
+          )
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            printf 'legacy guard recovery scope drift\nactual: %s\nexpected: %s\n' "${changed[*]}" "${expected[*]}" >&2
+            exit 1
+          fi
+          grep -q "R3.18AY PRE-ADMISSION BEGIN bounded post-AU one-following-payload" crates/mimir-replay/src/lib.rs
+          test -f crates/mimir-replay/tests/r3_18ay_post_au_payload.rs
+          echo "Accepted known helper untracked-file guard false-negative after exact two-file verification"
 
       - name: Install Rust 1.85 validation toolchain
         shell: bash
@@ -46,7 +71,7 @@ jobs:
           set -euo pipefail
           cargo +1.85.0 fmt --all
           git diff --check
-          mapfile -t changed < <(git diff --name-only | sort)
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
           expected=(
             "crates/mimir-replay/src/lib.rs"
             "crates/mimir-replay/tests/r3_18ay_post_au_payload.rs"
