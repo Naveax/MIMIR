@@ -72,31 +72,39 @@ jobs:
           lib = lib_path.read_text()
           test = test_path.read_text()
 
+          begin = "// R3.18AY PRE-ADMISSION BEGIN bounded post-AU one-following-payload"
+          end = "// R3.18AY PRE-ADMISSION END bounded post-AU one-following-payload"
+          if lib.count(begin) != 1 or lib.count(end) != 1:
+              raise SystemExit("AY marker authority drift")
+          prefix, rest = lib.split(begin, 1)
+          block, suffix = rest.split(end, 1)
+
           parameter = "    aq_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,\n"
-          if lib.count(parameter) != 1:
-              raise SystemExit(f"AY aq_prior parameter authority drift: {lib.count(parameter)}")
-          lib = lib.replace(parameter, "", 1)
+          if block.count(parameter) != 1:
+              raise SystemExit(f"AY scoped aq_prior parameter authority drift: {block.count(parameter)}")
+          block = block.replace(parameter, "", 1)
 
           recompute = "context, an_prior, aq_prior)?;"
-          if lib.count(recompute) != 1:
-              raise SystemExit(f"AY AU recompute authority drift: {lib.count(recompute)}")
-          lib = lib.replace(recompute, "context, an_prior, &au_prior.control)?;", 1)
-
-          decode_call_aq = ",&aq,&"
-          if test.count(decode_call_aq) != 14:
-              raise SystemExit(f"AY focused decode-call authority drift: {test.count(decode_call_aq)}")
-          test = test.replace(decode_call_aq, ",&")
-
-          if "aq_prior:" in lib:
-              raise SystemExit("AY redundant aq_prior parameter remained")
-          if lib.count("&au_prior.control") != 1:
+          if block.count(recompute) != 1:
+              raise SystemExit(f"AY scoped AU recompute authority drift: {block.count(recompute)}")
+          block = block.replace(recompute, "context, an_prior, &au_prior.control)?;", 1)
+          if "aq_prior:" in block:
+              raise SystemExit("AY redundant aq_prior parameter remained in scoped block")
+          if block.count("&au_prior.control") != 1:
               raise SystemExit("AY embedded AQ authority count mismatch")
-          if test.count(decode_call_aq) != 0:
-              raise SystemExit("AY focused calls still pass redundant AQ input")
+          lib = prefix + begin + block + end + suffix
+
+          decode_calls = test.count("decode_ay(")
+          redundant = test.count(",&aq,&")
+          if decode_calls == 0 or redundant != decode_calls:
+              raise SystemExit(f"AY focused decode-call authority drift: calls={decode_calls} redundant={redundant}")
+          test = test.replace(",&aq,&", ",&")
+          if test.count(",&aq,&") != 0 or test.count("decode_ay(") != decode_calls:
+              raise SystemExit("AY focused-call normalization drift")
 
           lib_path.write_text(lib)
           test_path.write_text(test)
-          print("R3.18AY API normalized to seven arguments using AU-embedded AQ authority")
+          print(f"R3.18AY API normalized to seven arguments; focused decode calls={decode_calls}")
           PY
 
       - name: Install Rust 1.85 validation toolchain
