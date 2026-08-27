@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BA — bounded post-AY mixed following-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BB — published R3.18BA mixed following-control differential Outcome A / exact 40/40 / false=37 true=3 / mismatch 0 / reselection 0 / same-head CI 33104207621 / artifact 9659874105
+  R3.18BC — one following-property-header evidence Outcome A / 40-row partition exact / false=37 true=3 / one-header=3/3 / contexts=3 / mismatch 0 / reselection 0 / artifact 9666964713
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AT — post-AQ mixed-continuation following-header exact-context contract / Outcome A / 16 exact eight-field tuples / multiplicity 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BB — published R3.18BA differential Outcome A / exact 40/40 / false=37 true=3 / mismatch 0 / reselection 0 / same-head CI 33104207621 / artifact 9659874105
+  R3.18BC — one following-property-header evidence Outcome A / exact 3/3 native-Boxcars headers / contexts=3 / payload=0 / second-control=0 / artifact 9666964713
 
 CURRENT_PASS:
-  R3.18BC — one following-property-header evidence after published R3.18BA mixed control
+  R3.18BD — exact following-header context contract after R3.18BC
 
 CURRENT_PASS_TYPE:
-  read-only boundary evidence / preserve BB 40-row split, stop 37 false rows at BA, observe exactly one following header through payload_start on only the exact 3 true rows, and decode no following payload or second control
+  contract-only admission / freeze exactly three BC-supported eight-field header contexts, preserve 37 false terminators outside membership, and mutate no production code
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
