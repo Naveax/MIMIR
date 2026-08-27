@@ -1,0 +1,167 @@
+name: R3.18AY Continuity Admission AZ Builder
+
+on:
+  push:
+    branches:
+      - builder/r318ay-admission-az-v1
+    paths:
+      - .github/workflows/r318ay-admission-az-builder.yml
+      - .github/workflows/r318ay_admission_builder.py
+
+concurrency:
+  group: r318ay-admission-az-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+jobs:
+  build-admission:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      MAIN_SHA: 2558cc0559422a3e6695e1501f20d96d83b23e6d
+      MAIN_TREE: 93198ad2a4f929ac62b87beddbc9d5b5665f08d1
+      PROD_SHA: 2558cc0559422a3e6695e1501f20d96d83b23e6d
+      PROD_TREE: 93198ad2a4f929ac62b87beddbc9d5b5665f08d1
+      PARENT_SHA: dae58bc2d27aef2daac02b626ae37dbd309706bc
+      PARENT_TREE: 06f5cb02daa94be784e7ab31aac101493bc8e959
+      BUILDER_RUN: '33074574884'
+      BUILDER_JOB: '98525314306'
+      BUILDER_CI_RUN: '33074574882'
+      BUILDER_CI_JOB: '98525439235'
+      CANDIDATE_CI_RUN: '33075136792'
+      CANDIDATE_CI_JOB: '98527244393'
+      PUBLISHED_CI_RUN: '33075583682'
+      PUBLISHED_CI_JOB: '98528794945'
+      HELPER_BLOB: 7f621944d94c0359b7bc3220ab1db7d1530a1b22
+      CANDIDATE_BRANCH: candidate/r318ay-admission-az-v1
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout builder control
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze production and validation authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object .github/workflows/r318ay_admission_builder.py)" = "$HELPER_BLOB"
+          cp .github/workflows/r318ay_admission_builder.py "$RUNNER_TEMP/r318ay_admission_builder.py"
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .tree.sha)" = "$MAIN_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .parents[0].sha)" = "$PARENT_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PARENT_SHA" --jq .tree.sha)" = "$PARENT_TREE"
+
+          for pair in \
+            "$BUILDER_RUN:$BUILDER_JOB" \
+            "$BUILDER_CI_RUN:$BUILDER_CI_JOB" \
+            "$CANDIDATE_CI_RUN:$CANDIDATE_CI_JOB" \
+            "$PUBLISHED_CI_RUN:$PUBLISHED_CI_JOB"
+          do
+            run="${pair%%:*}"
+            job="${pair##*:}"
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run" --jq .conclusion)" = success
+            test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$job" --jq .conclusion)" = success
+          done
+
+          pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/206")"
+          test "$(jq -r .state <<<"$pr")" = closed
+          test "$(jq -r .merged_at <<<"$pr")" = null
+          test "$(jq -r .head.sha <<<"$pr")" = "$PROD_SHA"
+          test "$(jq -r .base.sha <<<"$pr")" = "$PARENT_SHA"
+
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=$PROD_SHA&per_page=100")"
+          test "$(jq '[.workflow_runs[] | select(.name=="CI")] | length' <<<"$runs")" -eq 2
+          test "$(jq '[.workflow_runs[] | select(.name=="Knowledge Archive")] | length' <<<"$runs")" -eq 0
+          test "$(jq -r '[.workflow_runs[] | select(.name=="CI" and .conclusion=="success")] | length' <<<"$runs")" -eq 2
+
+          if gh api "repos/${GITHUB_REPOSITORY}/branches/${CANDIDATE_BRANCH}" >/dev/null 2>&1; then
+            echo "candidate branch already exists; refusing duplicate" >&2
+            exit 1
+          fi
+
+          git checkout --detach "$MAIN_SHA"
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$MAIN_TREE"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "3742a0e856f51e50fd56ea963bb0bd6bac2d4b50"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18ay_post_au_payload.rs")" = "f78956a22d0b2bb83e621cce24d88bce9484788b"
+          test "$(git rev-parse "$PARENT_SHA:docs/continuity/MIMIR_R3_18AY_EXECUTION_SPEC.md")" = "d636344a63854b25f2be89540cf3dbf672a28b5c"
+
+      - name: Materialize exact AY closure and AZ spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$RUNNER_TEMP/r318ay_admission_builder.py"
+          git diff --check
+
+          mapfile -t actual < <({ git diff --name-only "$MAIN_SHA"; git ls-files --others --exclude-standard; } | sort -u)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AY_DECISION.md \
+            docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+
+          git diff --exit-code "$MAIN_SHA" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts MIMIR_ALL_SOURCES_SUPERBOOK.md .github
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+          grep -Fx '  R3.18AZ — published-R3.18AY one-following-payload differential' MIMIR_CONTINUE_HERE.md
+          grep -F 'R3.18AZ published-R3.18AY one-following-payload differential / ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -Fx '**Outcome:** **A — ADMITTED / PUBLISHED**' docs/continuity/MIMIR_R3_18AY_DECISION.md
+          grep -Fx '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md
+
+      - name: Publish one clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          if gh api "repos/${GITHUB_REPOSITORY}/branches/${CANDIDATE_BRANCH}" >/dev/null 2>&1; then
+            echo "candidate branch appeared during build; refusing duplicate publication" >&2
+            exit 1
+          fi
+
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git switch -c "$CANDIDATE_BRANCH"
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AY_DECISION.md \
+            docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md
+
+          mapfile -t staged < <(git diff --cached --name-only | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AY_DECISION.md \
+            docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${staged[@]}")
+
+          git commit -m "Admit R3.18AY and open R3.18AZ"
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          test "$(git diff --name-only "$MAIN_SHA" HEAD | wc -l)" -eq 9
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "admission_candidate_sha=$(git rev-parse HEAD)"
+          echo "admission_candidate_tree=$(git rev-parse HEAD^{tree})"
