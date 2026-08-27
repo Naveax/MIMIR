@@ -3,14 +3,14 @@
   "updated_date": "2026-08-27",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "2558cc0559422a3e6695e1501f20d96d83b23e6d",
-  "last_production_milestone": "R3.18AY",
-  "last_production_milestone_name": "bounded post-AU one-following-payload production",
+  "last_production_code_sha": "5d2bca711f528ab1bb607104379af503ff175697",
+  "last_production_milestone": "R3.18BA",
+  "last_production_milestone_name": "bounded post-AY mixed following-control production",
   "last_completed_read_only_audit": "R3.18AZ",
-  "current_pass": "R3.18BA",
-  "current_pass_kind": "bounded production implementation / exactly one mixed following property-control bit after validated R3.18AY payload",
-  "current_pass_goal": "Validate/recompute one exact R3.18AY payload, consume exactly one R3.18AX-admitted property_present bit at AY stop, preserve false=37 and true=3, and stop one bit later.",
-  "current_pass_stop_boundary": "No following stream/header/payload or second later control; no generalized cursor; no BA access on seven upstream false terminators; no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
+  "current_pass": "R3.18BB",
+  "current_pass_kind": "read-only published-production differential / exact R3.18BA versus immutable R3.18AX mixed-control authority",
+  "current_pass_goal": "Validate published R3.18BA on exactly 40 frozen AX rows: AY prerequisite and control start/value/end/stop exact 40/40, false=37, true=3, mismatch/reselection 0/0.",
+  "current_pass_stop_boundary": "No following stream/header/payload or second later control; no generalized cursor; seven upstream AU false terminators remain outside; no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -141,7 +141,10 @@
     "following stream/header/payload after the one R3.18BA control bit",
     "second later property-control bit after R3.18BA",
     "BA control access on the seven upstream AU false terminators",
-    "generalized/repeated property loop or generic cursor after R3.18BA"
+    "generalized/repeated property loop or generic cursor after R3.18BA",
+    "following stream/header/payload during R3.18BB",
+    "second later property-control bit after R3.18BA/R3.18BB",
+    "following-header evidence before R3.18BB Outcome A"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -298,6 +301,8 @@
     "docs/continuity/MIMIR_R3_18AY_DECISION.md",
     "docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BA_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AZ_DECISION.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
@@ -2748,13 +2753,32 @@
     "production_mutation": false
   },
   "r3_18ba": {
-    "status": "active",
-    "class": "bounded_production_implementation",
-    "input_rows": 40,
+    "status": "production_closed",
+    "sha": "5d2bca711f528ab1bb607104379af503ff175697",
+    "tree": "6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a",
+    "parent": "109bad258d43963fd5432317503f99a7e1b8aa1b",
+    "lib_blob": "fe232760e63c3c1b46711084c70049f456ef345b",
+    "test_blob": "41ef1c2c087cc52bf2bcf0fa65c911a31a6ffc13",
+    "rows": 40,
     "upstream_false_terminators_excluded": 7,
-    "evidence_false": 37,
-    "evidence_true": 3,
-    "bits_to_consume": 1,
-    "adjacent_stream_header_payload_second_control_open": false
+    "false": 37,
+    "true": 3,
+    "adjacent_consumption": "0/0/0/0",
+    "builder_run": 33091339939,
+    "builder_job": 98584661482,
+    "validation_pr": 208,
+    "pr_ci_run": 33091594385,
+    "candidate_ci_run": 33091611038,
+    "published_main_ci_run": 33092084628
+  },
+  "r3_18bb": {
+    "status": "active_read_only_differential",
+    "frozen_rows": 40,
+    "authority": "R3.18AX",
+    "artifact": 9644869549,
+    "artifact_digest": "sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9",
+    "expected_false": 37,
+    "expected_true": 3,
+    "following_header_open": false
   }
 }

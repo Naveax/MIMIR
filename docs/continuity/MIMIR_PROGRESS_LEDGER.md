@@ -1510,3 +1510,34 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - `R3.18BA — bounded post-AY mixed following-control production`.
+
+
+---
+
+## 2026-08-27 — R3.18BA — Bounded post-AY mixed following-control production
+Production base SHA: `109bad258d43963fd5432317503f99a7e1b8aa1b`
+Production commit SHA: `5d2bca711f528ab1bb607104379af503ff175697` / tree `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`
+Pass type: bounded production implementation
+Outcome: **A — ADMITTED / PUBLISHED**
+
+What changed:
+- Added one boundary-specific production composition after an exact valid R3.18AY payload.
+- Recomputes AY, consumes exactly one AX-admitted LSB-first `property_present` bit, accepts false and true, and stops one bit later.
+- Clean scope is exactly `lib.rs` + `r3_18ba_post_ay_payload_control.rs`; no Cargo/docs/workflow/fixture/corpus/support mutation entered production.
+
+Evidence and validation:
+- R3.18AX authority `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / `33068572230/98504703417` / artifact `9644869549` / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`; 40 rows; false=37 / true=3; mismatch/reselection 0/0; adjacent 0/0/0/0.
+- Builder `33091339939/98584661482` SUCCESS; focused BA/prerequisite target 18/18 PASS; check + Clippy `-D warnings` PASS.
+- Validation-only PR #208 closed unmerged; PR CI `33091594385/98585555551` SUCCESS.
+- Exact candidate push CI `33091611038/98585614713` SUCCESS.
+- Published-main CI `33092084628/98587299347` SUCCESS.
+- Fresh-main ancestry and force=false publication PASS.
+
+Boundaries opened:
+- Exactly one mixed false/true control bit after validated AY payload.
+
+Boundaries still closed:
+- Following stream/header/payload, second later control, BA access on seven upstream false terminators, generalized cursor and all actor/frame/semantic/runtime widening.
+
+Next exact pass:
+- `R3.18BB — published R3.18BA mixed following-control differential` on exactly the immutable forty-row AX authority.
