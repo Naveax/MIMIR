@@ -1,0 +1,39 @@
+name: R3.18BA Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - continuity/r318ba-admit-open-r318bb
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r318ba-continuity-admission-builder
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event.head_commit.message == 'Add R3.18BA continuity admission builder'
+    runs-on: ubuntu-24.04
+    env:
+      MAIN_SHA: 5d2bca711f528ab1bb607104379af503ff175697
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify fresh-main authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+
+      - name: Build clean BA closure and BB admission candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/r318ba_continuity_builder.py
