@@ -60,6 +60,45 @@ jobs:
           test -f crates/mimir-replay/tests/r3_18ay_post_au_payload.rs
           echo "Accepted known helper untracked-file guard false-negative after exact two-file verification"
 
+      - name: Normalize AY API to seven arguments
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          lib_path = Path("crates/mimir-replay/src/lib.rs")
+          test_path = Path("crates/mimir-replay/tests/r3_18ay_post_au_payload.rs")
+          lib = lib_path.read_text()
+          test = test_path.read_text()
+
+          parameter = "    aq_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,\n"
+          if lib.count(parameter) != 1:
+              raise SystemExit(f"AY aq_prior parameter authority drift: {lib.count(parameter)}")
+          lib = lib.replace(parameter, "", 1)
+
+          recompute = "context, an_prior, aq_prior)?;"
+          if lib.count(recompute) != 1:
+              raise SystemExit(f"AY AU recompute authority drift: {lib.count(recompute)}")
+          lib = lib.replace(recompute, "context, an_prior, &au_prior.control)?;", 1)
+
+          decode_call_aq = ",&aq,&"
+          if test.count(decode_call_aq) != 14:
+              raise SystemExit(f"AY focused decode-call authority drift: {test.count(decode_call_aq)}")
+          test = test.replace(decode_call_aq, ",&")
+
+          if "aq_prior:" in lib:
+              raise SystemExit("AY redundant aq_prior parameter remained")
+          if lib.count("&au_prior.control") != 1:
+              raise SystemExit("AY embedded AQ authority count mismatch")
+          if test.count(decode_call_aq) != 0:
+              raise SystemExit("AY focused calls still pass redundant AQ input")
+
+          lib_path.write_text(lib)
+          test_path.write_text(test)
+          print("R3.18AY API normalized to seven arguments using AU-embedded AQ authority")
+          PY
+
       - name: Install Rust 1.85 validation toolchain
         shell: bash
         run: |
