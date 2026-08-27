@@ -1,0 +1,134 @@
+name: R3.18AW Continuity Admission Builder v3
+
+on:
+  push:
+    branches:
+      - builder/r318aw-admission-v1
+    paths:
+      - .github/workflows/_tmp_r318aw_admission_builder_v3.yml
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318aw-continuity-admission-builder-v3
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: b745b7eebdea325015d006ecf84efe1d14f4e827
+      MAIN_TREE: 46271056bc2563cf0cf66a0076bf3849816d2cec
+      V1_BLOB: 0f88f2c647050d519711fe5c749d3de8f07b48c3
+      EVIDENCE_HEAD: 5f1d983a7b67f84293f337f23b7e7c25fee48795
+      EVIDENCE_TREE: 63cbbb752100ef6944b1ecf366e89854e0f2376a
+      EVIDENCE_RUN: '33064535889'
+      EVIDENCE_JOB: '98491267256'
+      SAME_HEAD_CI: '33064535850'
+      SAME_HEAD_CI_JOB: '98491266948'
+      ARTIFACT_ID: '9643254651'
+      ARTIFACT_SIZE: '23599'
+      ARTIFACT_DIGEST: sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc
+      CANDIDATE_BRANCH: candidate/r318aw-admission-v1
+
+    steps:
+      - name: Checkout builder source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 5
+
+      - name: Freeze builder and canonical authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object .github/workflows/_tmp_r318aw_admission_builder.yml)" = "$V1_BLOB"
+          cp .github/workflows/_tmp_r318aw_admission_builder.yml "$RUNNER_TEMP/r318aw-builder-v1.yml"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .tree.sha)" = "$MAIN_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$EVIDENCE_HEAD" --jq .tree.sha)" = "$EVIDENCE_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$EVIDENCE_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$EVIDENCE_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$SAME_HEAD_CI" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$SAME_HEAD_CI_JOB" --jq .conclusion)" = success
+          art="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$ARTIFACT_ID")"
+          test "$(jq -r .size_in_bytes <<<"$art")" = "$ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$art")" = "$ARTIFACT_DIGEST"
+          if gh api "repos/${GITHUB_REPOSITORY}/branches/${CANDIDATE_BRANCH}" >/dev/null 2>&1; then
+            echo "candidate branch already exists; refusing duplicate candidate" >&2
+            exit 1
+          fi
+          git checkout --detach "$MAIN_SHA"
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+
+      - name: Build exact docs with corrected extractor and scope enumeration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/r318aw-builder-v1.yml" "$RUNNER_TEMP/r318aw-build.py" <<'PY'
+          from pathlib import Path
+          import sys
+          src = Path(sys.argv[1]).read_text(encoding='utf-8')
+          begin_marker = "          python3 <<'PY'\n"
+          end_marker = "\n          PY\n\n          git diff --check"
+          start = src.index(begin_marker) + len(begin_marker)
+          end = src.index(end_marker, start)
+          lines = src[start:end].splitlines()
+          out = []
+          for line in lines:
+              if line == '':
+                  out.append('')
+              elif line.startswith('          '):
+                  out.append(line[10:])
+              else:
+                  raise SystemExit(f'unexpected builder indentation: {line!r}')
+          Path(sys.argv[2]).write_text('\n'.join(out) + '\n', encoding='utf-8', newline='\n')
+          print(f'R3_18AW_BUILDER_REUSE=PASS lines={len(out)}')
+          PY
+          python3 "$RUNNER_TEMP/r318aw-build.py"
+          git diff --check
+          mapfile -t actual < <({ git diff --name-only "$MAIN_SHA"; git ls-files --others --exclude-standard; } | sort -u)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AW_DECISION.md \
+            docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --exit-code "$MAIN_SHA" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -Fx '  R3.18AX — next property-control bit evidence after exact AW payload end' MIMIR_CONTINUE_HERE.md
+          grep -F 'R3.18AW one following primitive payload evidence on exact AV-true rows / Outcome A CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'R3.18AX next property-control bit evidence after exact AW payload end / ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -Fx '**Outcome:** **A — ADMITTED / READ-ONLY PAYLOAD EVIDENCE**' docs/continuity/MIMIR_R3_18AW_DECISION.md
+          grep -Fx '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md
+
+      - name: Create clean candidate from canonical parent
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AW_DECISION.md \
+            docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18AW and open R3.18AX'
+          candidate="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          test "$(git diff --name-only "$MAIN_SHA" "$candidate" | wc -l)" -eq 9
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18AW_ADMISSION_CANDIDATE=$candidate"
