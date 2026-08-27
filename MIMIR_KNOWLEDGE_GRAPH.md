@@ -81,7 +81,8 @@ R3.18AU bounded post-AQ mixed-continuation following-header production / PRODUCT
 R3.18AV published-R3.18AU mixed following-header differential / Outcome A CLOSED                           |
 R3.18AW one following primitive payload evidence on exact AV-true rows / Outcome A CLOSED                    |
 R3.18AX next property-control bit evidence after exact AW payload end / Outcome A CLOSED                      |
-R3.18AY bounded post-AU one-following-payload production / ACTIVE                                              |
+R3.18AY bounded post-AU one-following-payload production / PRODUCTION CLOSED                                  |
+R3.18AZ published-R3.18AY one-following-payload differential / ACTIVE                                            |
         |                               |
         +---------------+---------------+
                         |
@@ -239,13 +240,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 137. `docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md`
 138. `docs/continuity/MIMIR_R3_18AX_DECISION.md`
 139. `docs/continuity/MIMIR_R3_18AY_EXECUTION_SPEC.md`
-140. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-141. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-142. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-143. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-144. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-145. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-146. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+140. `docs/continuity/MIMIR_R3_18AY_DECISION.md`
+141. `docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md`
+142. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+143. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+144. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+145. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+146. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+147. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+148. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1110,3 +1113,18 @@ next                        R3.18M true-only one-bit production composition
 - all seven AU/AQ false terminators remain outside payload composition
 - validate/recompute exact AU header authority, require Int and exact payload_start, decode one 32-bit scalar with existing primitive machinery, and stop at payload_end
 - the AX-observed next control distribution false=37/true=3 is evidence for a later pass only; R3.18AY must consume zero following-control bits
+
+### R3.18AY bounded post-AU one-following-payload production: PRODUCTION / CLOSED
+- production `2558cc0559422a3e6695e1501f20d96d83b23e6d` / tree `93198ad2a4f929ac62b87beddbc9d5b5665f08d1` / parent `dae58bc2d27aef2daac02b626ae37dbd309706bc`
+- lib/test blobs `3742a0e856f51e50fd56ea963bb0bd6bac2d4b50` / `f78956a22d0b2bb83e621cce24d88bce9484788b`; execution spec blob `d636344a63854b25f2be89540cf3dbf672a28b5c`
+- builder `33074574884/98525314306` SUCCESS; builder-head CI `33074574882/98525439235` SUCCESS
+- validation-only PR #206 closed unmerged; exact clean-candidate CI `33075136792/98527244393` SUCCESS; published-main CI `33075583682/98528794945` SUCCESS
+- exact clean scope only `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18ay_post_au_payload.rs`; 293 additions; Cargo/docs/workflow/fixture/corpus/support mutation 0
+- exact AW true payload lane 40/40; Int=40; width32=40; semantic range 5..300; all seven AU false terminators rejected before payload decode
+- stop exactly at payload end; post-stop poison including AX control leaves result unchanged; AX following-control consumption 0; generalized/repeated cursor 0
+
+### R3.18AZ published-R3.18AY one-following-payload differential: ACTIVE
+- read-only on exactly the immutable 40-row R3.18AW payload authority; production remains `2558cc0559422a3e6695e1501f20d96d83b23e6d`
+- require published AY / AW / direct-native-oracle exact payload boundary and value identity 40/40, Int=40, width32=40, mismatch 0, witness reselection 0 and deterministic repeatability
+- all seven AU false terminators remain outside the payload differential except fail-closed rejection checks; do not reinterpret them as payload rows
+- R3.18AX false=37/true=3 remains evidence-only; consume zero following-control bits; production/Cargo/fixture/corpus/support mutation forbidden

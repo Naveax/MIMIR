@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  6a9f456c78ffccab177823234a8d9fe4ba59a850
+  2558cc0559422a3e6695e1501f20d96d83b23e6d
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18AU — bounded post-AQ mixed-continuation following-header production
+  R3.18AY — bounded post-AU one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18AX — next property-control bit evidence after exact AW payload end / Outcome A / AW payload exact 40/40 / AV-false excluded 7/7 / false=37 true=3 / oracle-native exact 40/40 / mismatch 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / artifact 9644869549
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18AX — exact AW payload reconstruction 40/40 / false rows excluded 7/7 / one next property_present bit false=37 true=3 / pinned Boxcars-native exact 40/40 / mismatch 0 / expected distribution inherited 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / same-head CI 33068572200 / artifact 9644869549
 
 CURRENT_PASS:
-  R3.18AY — bounded post-AU one-following-payload production
+  R3.18AZ — published-R3.18AY one-following-payload differential
 
 CURRENT_PASS_TYPE:
-  bounded production implementation / from one exact R3.18AU true following-header result under R3.18AT membership, validate/recompute the header authority, decode exactly one R3.18AW-admitted Int/32 payload with existing primitive scalar machinery, and stop exactly at payload end; the R3.18AX-observed following control remains evidence-only and must not be consumed
+  read-only published-production differential / compare published R3.18AY against exactly the immutable 40-row R3.18AW payload authority, require exact Int/32 boundary and value identity with mismatch 0 and deterministic repeatability, and stop at payload end with zero R3.18AX following-control consumption; production mutation forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -128,7 +128,8 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AV CLOSED Outcome A: published R3.18AU exact 47/47 on immutable AS/AT authority; false=7 no-header; true=40 exact headers; AT contexts 16/16; multiplicity 40; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9640472993
   R3.18AW CLOSED Outcome A: exact one Int/32 payload on all 40 admitted AV-true rows; seven AV-false terminators excluded; native/Boxcars mismatch 0; semantic range 5..300; MIMIR contract RL223 false=40 while Boxcars build-derived RL223 true=34 false=6 and Int decoding is independent of that build flag; next-control consumption 0; artifact 9643254651
   R3.18AX CLOSED Outcome A: exact AW payload reconstruction 40/40; one next property_present bit false=37 true=3; pinned Boxcars/native exact 40/40; mismatch 0; expected distribution inherited 0; witness reselection 0; adjacent stream/header/payload/second-control consumption 0/0/0/0; artifact 9644869549
-  R3.18AY ACTIVE bounded production: after one exact R3.18AU true following-header result, validate/recompute AU/AT authority, decode exactly one AW-admitted Int/32 payload, and stop at payload end with following-control consumption 0
+  R3.18AY PRODUCTION at 2558cc0559422a3e6695e1501f20d96d83b23e6d: validates/recomputes exact R3.18AU true-header authority, decodes exactly one R3.18AW-admitted Int/32 payload, stops exactly at payload end, rejects all seven AU false terminators before payload decode, and consumes zero R3.18AX control bits
+  R3.18AZ ACTIVE read-only differential: compare published R3.18AY against exactly the 40 immutable AW payload witnesses; require exact Int/32 boundary/value identity, mismatch/reselection 0/0, repeatability PASS, and AX control consumption 0
   NO production consumption of the AX-observed control bit, payload/control access on AV-false rows, next stream/header/payload, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 
 R3_18AU_PRODUCTION_CLOSURE:
@@ -4072,3 +4073,19 @@ exact rows: AW payload exact 40/40 / AV-false excluded 7/7 / next control false=
 expected distribution inherited 0 / witness reselection 0 / adjacent stream-header-payload-second-control consumption 0/0/0/0 / privacy PASS
 production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
 next exact pass: R3.18AY bounded post-AU one-following-payload production; AX control remains evidence-only and closed to production consumption
+
+R3_18AY_PRODUCTION_CLOSURE:
+Outcome A / production 2558cc0559422a3e6695e1501f20d96d83b23e6d / tree 93198ad2a4f929ac62b87beddbc9d5b5665f08d1
+parent: dae58bc2d27aef2daac02b626ae37dbd309706bc / parent tree 06f5cb02daa94be784e7ab31aac101493bc8e959
+lib/test blobs: 3742a0e856f51e50fd56ea963bb0bd6bac2d4b50 / f78956a22d0b2bb83e621cce24d88bce9484788b
+execution spec blob: d636344a63854b25f2be89540cf3dbf672a28b5c
+builder: 33074574884/98525314306 SUCCESS / builder-head CI 33074574882/98525439235 SUCCESS
+validation-only PR #206 CLOSED UNMERGED / exact clean-candidate CI 33075136792/98527244393 SUCCESS / exact pre-publish candidate CI count 1 / rerun 0
+published-main CI: 33075583682/98528794945 SUCCESS
+R3.18AT contract: sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / exact_tuple_only / 16 eight-field contexts / multiplicity 40 / 7 false terminators outside membership
+R3.18AW authority: 5f1d983a7b67f84293f337f23b7e7c25fee48795 / artifact 9643254651 / sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc / exact payload rows 40 / Int=40 / width32=40 / semantic range 5..300
+R3.18AX evidence: 465a3f2fc71e5eed6f00c16a04738031bef8d82c / artifact 9644869549 / sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9 / false=37 true=3 / evidence-only / AY control consumption 0
+clean production scope: crates/mimir-replay/src/lib.rs + crates/mimir-replay/tests/r3_18ay_post_au_payload.rs only / Cargo-doc-workflow-fixture-corpus-support mutation 0/0/0/0/0/0
+focused target 15/15 PASS / exact AW true rows 40/40 / AU false terminators rejected 7/7 / deterministic repeatability PASS / post-payload poison including AX control isolated
+fresh-main ancestry + force=false publication + exact SHA/tree readback PASS / source-only production publish Knowledge Archive count 0 by path filter
+next exact pass: R3.18AZ published-R3.18AY one-following-payload differential; production mutation forbidden; AX control remains unread

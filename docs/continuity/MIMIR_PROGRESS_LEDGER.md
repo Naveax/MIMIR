@@ -1439,3 +1439,40 @@ Next exact pass:
 
 Next exact pass:
 - `R3.18AY — bounded post-AU one-following-payload production`. Publish only one AW-admitted Int/32 payload through payload end; consume zero AX control bits.
+
+## 2026-08-27 — R3.18AY — Bounded post-AU one-following-payload production
+Production base SHA: `dae58bc2d27aef2daac02b626ae37dbd309706bc`
+Production commit SHA: `2558cc0559422a3e6695e1501f20d96d83b23e6d`
+Pass type: bounded production implementation
+Outcome: A — ADMITTED / PUBLISHED
+
+What changed:
+- Added one boundary-specific production composition after an exact R3.18AU true following header.
+- Recomputes and validates AU authority, decodes exactly one R3.18AW-admitted Int/32 payload, and stops at payload end.
+- Rejects all seven AU false terminators before payload decode and consumes zero R3.18AX following-control bits.
+
+Evidence:
+- R3.18AW head `5f1d983a7b67f84293f337f23b7e7c25fee48795` / artifact `9643254651` / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`.
+- Exact payload lane 40/40, Int=40, width32=40, semantic range 5..300.
+- R3.18AX control evidence remains false=37 / true=3 and evidence-only.
+
+Validation:
+- Builder `33074574884/98525314306` SUCCESS; builder-head CI `33074574882/98525439235` SUCCESS.
+- Validation-only PR #206 closed unmerged; exact candidate CI `33075136792/98527244393` SUCCESS.
+- Published-main CI `33075583682/98528794945` SUCCESS.
+- Fresh-main ancestry, force=false publication and exact SHA/tree readback PASS.
+
+Boundaries opened:
+- Exactly one published Int/32 payload composition after valid AU/AT true-header authority.
+
+Boundaries still closed:
+- R3.18AX following-control production.
+- Payload/control success on seven AU false terminators.
+- Next stream/header/payload, second later control, generalized cursor and wider semantic/runtime layers.
+
+Important negative facts / anti-regressions:
+- Production commit scope is exactly two files; Cargo/docs/workflow/fixture/corpus/support mutation 0.
+- Post-payload poison including the AX control bit does not alter the AY result.
+
+Next exact pass:
+- R3.18AZ read-only published-production payload differential on exactly the forty immutable AW payload witnesses.

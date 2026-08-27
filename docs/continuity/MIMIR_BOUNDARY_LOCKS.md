@@ -6,46 +6,44 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AU production / R3.18AW+AX closed / R3.18AY active
+# 0. Current override — R3.18AY production / R3.18AZ active differential
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18AU
-- `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef` remains canonical production;
-- false remains a successful no-header terminator on the exact seven AQ/AV-false rows; true composes exactly one following header under exact R3.18AT membership and stops at `payload_start`;
-- neither AW payload evidence nor AX control evidence is production capability.
+## PRODUCTION — R3.18AY
+- `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1` is canonical production; parent `dae58bc2d27aef2daac02b626ae37dbd309706bc`;
+- validates/recomputes exact R3.18AU true-header authority and rejects all seven AU false terminators before payload decode;
+- decodes exactly one R3.18AW-admitted Int/32 payload and stops exactly at payload end;
+- exact clean-candidate CI `33075136792/98527244393` and published-main CI `33075583682/98528794945` are SUCCESS;
+- production consumption of the R3.18AX-observed next control bit remains zero.
 
 ## CLOSED EVIDENCE — R3.18AW Outcome A
 - exact 40 AV-true rows yielded one Int/32 payload with semantic range 5..300 and native/Boxcars mismatch 0; seven AV-false terminators were excluded;
 - artifact `9643254651` / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`; production mutation 0.
 
 ## CLOSED EVIDENCE — R3.18AX Outcome A
-- evidence `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / tree `b164a8566c6ac57ddee1aed0a7edbf9f44250488` / run-job `33068572230/98504703417` SUCCESS;
-- same-head CI `33068572200/98504703614` SUCCESS / count=1 / rerun=0;
-- artifact `9644869549` / `18070` bytes / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`; downloaded ZIP digest exact / inner manifest 15/15 PASS;
-- AW payload exact 40/40; AV-false excluded 7/7; exactly one next control bit false=37 true=3; oracle/native exact 40/40; mismatch 0; expected distribution inherited 0;
-- witness reselection 0; next stream/header/payload/second-control consumption `0/0/0/0`; production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.
+- evidence `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / artifact `9644869549` / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`;
+- exact AW payload reconstruction 40/40; next one-bit distribution false=37 / true=3; oracle/native mismatch 0;
+- the observed bit remains evidence-only and is not an R3.18AY production capability.
 
 ## CLOSED CONTRACT — R3.18AT Outcome A
 - contract `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`; exact_tuple_only / 16 complete eight-field tuples / multiplicity 40;
 - all seven false rows remain outside header membership; AJ/Z/P inheritance and RL223 widening remain rejected.
 
-## ACTIVE PRODUCTION GATE — R3.18AY
-- input authority is only one exact R3.18AU true following-header result under R3.18AT membership; all seven false terminators remain outside the payload lane;
-- validate/recompute the exact AU header result and require its resolved tag to be Int;
-- decode exactly one AW-admitted 32-bit Int at the validated payload_start using existing primitive scalar machinery;
-- stop exactly at payload_end; following `property_present` consumption must remain zero;
-- AX false=37/true=3 is recorded evidence only and does not authorize control-bit production in AY.
+## ACTIVE READ-ONLY GATE — R3.18AZ
+- compare published R3.18AY against exactly the immutable 40-row R3.18AW payload authority;
+- require exact Int/32 tag/start/end/width/value identity, deterministic repeatability and mismatch/reselection 0/0;
+- verify post-payload poison isolation and zero R3.18AX following-control reads;
+- production mutation is forbidden.
 
 ## CLOSED
 - production consumption of the AX-observed following control bit;
-- payload or control access on the seven AV-false terminator rows;
-- next stream/header/payload after the future one-control boundary;
+- payload/control success on the seven AV-false terminator rows;
+- next stream/header/payload after the AX control boundary;
 - second later property-control bit;
 - context/value/boundary inheritance from historical R3.18AM/R3.18AN;
 - repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
-
 ---
 
 # 1. Status vocabulary
