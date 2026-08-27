@@ -1649,3 +1649,52 @@ Next exact pass:
 - `R3.18BD — exact following-header context contract`.
 
 ---
+
+## 2026-08-28 — R3.18BD — Exact following-header context contract after R3.18BC
+
+Production base SHA: `5d2bca711f528ab1bb607104379af503ff175697`
+Production commit SHA: unchanged / `5d2bca711f528ab1bb607104379af503ff175697`
+Pass type: contract-only admission
+Outcome: **A — CLOSED**
+
+What changed:
+- no production source changed;
+- the exact three R3.18BC complete eight-field header contexts were frozen under `exact_tuple_only`;
+- all 37 false R3.18BA terminators remain outside header membership;
+- R3.18BE is opened as a separate bounded production pass.
+
+Authority:
+- canonical base `387e1693279dec062d3ef565cc5bc597de3a5a13` / `a0dedfb8de603cc4e000a1777ed074eaed1c3163`;
+- published-base CI `33124420075` SUCCESS and Knowledge Archive `33124420084` SUCCESS;
+- BC evidence `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` SUCCESS;
+- BC same-head CI `33122152793/98691409674` SUCCESS;
+- artifact `9666964713` / 7795 / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`;
+- contract sha256 `33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`.
+
+Admitted membership:
+- `(72,6,92,Boolean,868,32,10,false)` x1;
+- `(72,6,94,Boolean,868,32,10,false)` x1;
+- `(110,6,58,Float,868,32,10,false)` x1;
+- multiplicity sum 3; false terminators 37 outside membership.
+
+Anti-widening:
+- tag-only REJECT;
+- component-only REJECT;
+- Cartesian REJECT;
+- versionless/version-drop REJECT;
+- RL223 drop/false->true REJECT;
+- fabricated fourth tuple REJECT;
+- AT/AJ/Z/P cross-boundary inheritance REJECT;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+Boundaries still closed:
+- following payload;
+- second later property control;
+- header synthesis on any false terminator;
+- generalized/repeated property cursor;
+- actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Next exact pass:
+- `R3.18BE — bounded post-BA mixed-continuation following-header production`.
+
+---

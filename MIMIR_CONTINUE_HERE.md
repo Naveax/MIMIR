@@ -55,16 +55,16 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BC — one following-property-header evidence Outcome A / 40-row partition exact / false=37 true=3 / one-header=3/3 / contexts=3 / mismatch 0 / reselection 0 / artifact 9666964713
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.18AT — post-AQ mixed-continuation following-header exact-context contract / Outcome A / 16 exact eight-field tuples / multiplicity 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
+  R3.18BD — post-BA mixed-continuation following-header exact-context contract / Outcome A / 3 exact eight-field tuples / multiplicity 3 / 37 false terminators outside membership / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27 / AT-AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BC — one following-property-header evidence Outcome A / exact 3/3 native-Boxcars headers / contexts=3 / payload=0 / second-control=0 / artifact 9666964713
 
 CURRENT_PASS:
-  R3.18BD — exact following-header context contract after R3.18BC
+  R3.18BE — bounded post-BA mixed-continuation following-header production
 
 CURRENT_PASS_TYPE:
-  contract-only admission / freeze exactly three BC-supported eight-field header contexts, preserve 37 false terminators outside membership, and mutate no production code
+  bounded production implementation / validate one exact published BA mixed control; false terminates with no header, true composes exactly one BD-admitted header and stops at payload_start
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays

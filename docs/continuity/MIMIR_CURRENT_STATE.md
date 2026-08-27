@@ -1,48 +1,30 @@
 # MIMIR — Current Canonical State
 
-**Continuity date:** 2026-08-27
+**Continuity date:** 2026-08-28
 **Repository:** `Naveax/MIMIR`
 **Canonical production SHA:** `5d2bca711f528ab1bb607104379af503ff175697`
 **Production tree:** `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`
 **Production milestone:** `R3.18BA — bounded post-AY mixed following-control production`
-**Last read-only evidence/audit:** `R3.18BC — Outcome A / one following header exact 3/3 / contexts=3 / artifact 9666964713`
-**Current exact pass:** `R3.18BD — exact following-header context contract`
+**Last evidence:** `R3.18BC — Outcome A / 37 false terminators + 3 exact following headers / contexts=3 / artifact 9666964713`
+**Last contract:** `R3.18BD — Outcome A / exact_tuple_only / 3 eight-field tuples / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`
+**Current exact pass:** `R3.18BE — bounded post-BA mixed-continuation following-header production`
 
 ## Truthful boundary
 
-R3.18BA remains canonical production. R3.18BC independently closed the next one-header evidence boundary without changing production.
+R3.18BA remains production. R3.18BC proved the immutable forty-row split exactly: 37 false terminators and three true rows, each with one native header matching pinned Boxcars through `payload_start`. R3.18BD freezes only the three observed complete eight-field contexts:
 
 ```text
-BC evidence head/tree                  0f4d07f5caf77ec53f5e8b512867ad17b5835ca1 / a198866dc3f18ffbd5cb16e32d39dada5f4116fc
-authority run/job                      33122152803 / 98691409657 SUCCESS
-same-head natural CI                   33122152793 / 98691409674 SUCCESS
-artifact                               9666964713 / 7795
-artifact SHA-256                       88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e
-inner manifest                         14/14 PASS
-source partition                       40/40
-false terminators / true headers       37 / 3
-native/Boxcars exact                   3/3
-unique exact contexts                  3
-mismatch / reselection                 0 / 0
-payload / second-control bits          0 / 0
-mutation                               0/0/0/0/0
-privacy                                PASS
+(72,  6, 92, Boolean, 868, 32, 10, false) x1
+(72,  6, 94, Boolean, 868, 32, 10, false) x1
+(110, 6, 58, Float,   868, 32, 10, false) x1
 ```
 
-Exact observed complete contexts, each x1:
-
-```text
-(72,  6, 92, Boolean, 868, 32, 10, false)
-(72,  6, 94, Boolean, 868, 32, 10, false)
-(110, 6, 58, Float,   868, 32, 10, false)
-```
-
-Tuple fields are `(stream_id_bound, prop_id_bits, property_object_index, attribute_tag, version_major, version_minor, net_version, is_rl_223)`.
+The contract is `exact_tuple_only`; the 37 false rows contribute no header membership. AT/AJ/Z/P contracts are history/methodology only and are not inherited.
 
 ## Current gate
 
-R3.18BD is contract-only. Freeze exact eight-field equality for only those three contexts and preserve all 37 false terminators outside membership. Reject component/tag/Cartesian/versionless/RL223/older-contract widening. Production remains R3.18BA.
+R3.18BE may validate/recompute one published BA mixed control. False must return a successful no-header terminator with zero following-header reads. True may compose exactly one existing-actor header with the stateless primitive, require exact R3.18BD membership, and stop at `payload_start`.
 
 ## Hard stop
 
-No production following-header composition, no following payload, no second later control, no generalized/repeated property cursor, and no next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+No following payload, second later control, false-row header synthesis, context outside exact BD membership, generalized cursor, or actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.

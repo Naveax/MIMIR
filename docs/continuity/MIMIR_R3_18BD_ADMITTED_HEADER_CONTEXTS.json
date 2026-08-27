@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "contract": "MIMIR_R3_18BD_POST_BA_MIXED_CONTINUATION_FOLLOWING_HEADER_CONTEXTS",
+  "status": "admitted",
+  "admission_date": "2026-08-28",
+  "boundary": "exactly one existing-actor following property header after a valid published R3.18BA true mixed control on the immutable R3.18BC continuation sublane; false controls terminate before header membership",
+  "membership_policy": "exact_tuple_only",
+  "tuple_fields": [
+    "stream_id_bound",
+    "prop_id_bits",
+    "property_object_index",
+    "attribute_tag",
+    "version_major",
+    "version_minor",
+    "net_version",
+    "is_rl_223"
+  ],
+  "frozen_lane_row_count": 40,
+  "false_terminator_count": 37,
+  "observed_header_row_count": 3,
+  "unique_exact_context_count": 3,
+  "authority": {
+    "canonical_main_sha": "387e1693279dec062d3ef565cc5bc597de3a5a13",
+    "canonical_main_tree": "a0dedfb8de603cc4e000a1777ed074eaed1c3163",
+    "canonical_main_ci_run": 33124420075,
+    "canonical_main_knowledge_archive_run": 33124420084,
+    "production_sha": "5d2bca711f528ab1bb607104379af503ff175697",
+    "production_tree": "6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a",
+    "r3_18bc_decision_blob": "7e864047299c6aacdaa7c990dffd1a2064ec7ff4",
+    "r3_18bd_execution_spec_blob": "b9065f3e7bfa9e3a7d68386c4b49ccb25d2c529f",
+    "r3_18bc_evidence_head": "0f4d07f5caf77ec53f5e8b512867ad17b5835ca1",
+    "r3_18bc_evidence_tree": "a198866dc3f18ffbd5cb16e32d39dada5f4116fc",
+    "r3_18bc_workflow_blob": "e2c926f05379ff164bb5d3bfdd6f48347817a5af",
+    "r3_18bc_runner_blob": "546f3fd6e08d73834c2d405b5d7ec7cae57aaa08",
+    "r3_18bc_analyzer_blob": "e2ebd01039af0d14f420ed2048beb158801cf658",
+    "r3_18bc_extender_blob": "06c84b5bfc4c4170e1d4268f72a62b09b09ff875",
+    "r3_18bc_run": 33122152803,
+    "r3_18bc_job": 98691409657,
+    "r3_18bc_same_head_ci_run": 33122152793,
+    "r3_18bc_same_head_ci_job": 98691409674,
+    "r3_18bc_artifact_id": 9666964713,
+    "r3_18bc_artifact_size": 7795,
+    "r3_18bc_artifact_sha256": "88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e",
+    "r3_18bc_manifest_sha256": "d9e92e840f1b33b02dec1626dd1337a8bbf1b464656341c1ecb8dd26661ebcaf",
+    "r3_18bc_header_rows_sha256": "131e8b3c964bb425d470a7036dcc8767f34783c002324bd644fff5749b086189",
+    "r3_18bc_header_summary_sha256": "fa0cd7467b48bc5a63e95b0245cf41d40cea26b028322d25f6074426c546ec46",
+    "r3_18bc_candidate_partition_sha256": "12a6de4ea98e2710ce01a02f19834e52433bd25e6e915aea6f871c3d06428300",
+    "r3_18bc_frozen_targets_sha256": "4f7ae0b8c2a898478ac2f50342129f308e9e2c273f9ceb7a0531fe6656e3148c",
+    "r3_18bc_negative_controls_sha256": "5714746e1bddbbdf67cd8cec322392644dc366ca05fee98ea87ba420989affee",
+    "r3_18bc_validation_sha256": "f7e09e08036d771c36716f5334ea47ec2c8b2cc9f242f57f9ff28bd3055265cf",
+    "r3_18bc_aggregate_sha256": "1a304054aff05137e21d2981df44d301e5c474da0374506b82cbd98ed5f57a95",
+    "pinned_boxcars_sha": "c70e77df7af81b436cb545d070bb90c82f562d0b",
+    "witness_reselection": 0,
+    "native_oracle_mismatch": 0,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0
+  },
+  "observed_tag_counts": {
+    "Boolean": 2,
+    "Float": 1
+  },
+  "observed_property_ordinal_counts": {
+    "6": 3
+  },
+  "admitted_contexts": [
+    {
+      "stream_id_bound": 72,
+      "prop_id_bits": 6,
+      "property_object_index": 92,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "is_rl_223": false,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 72,
+      "prop_id_bits": 6,
+      "property_object_index": 94,
+      "attribute_tag": "Boolean",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "is_rl_223": false,
+      "observed_count": 1
+    },
+    {
+      "stream_id_bound": 110,
+      "prop_id_bits": 6,
+      "property_object_index": 58,
+      "attribute_tag": "Float",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "is_rl_223": false,
+      "observed_count": 1
+    }
+  ],
+  "terminator_policy": {
+    "false_rows_are_terminators": true,
+    "false_terminator_count": 37,
+    "false_terminators_produce_header_membership": false
+  },
+  "anti_widening": {
+    "tag_only_membership": false,
+    "component_only_membership": false,
+    "cartesian_product_membership": false,
+    "versionless_membership": false,
+    "rl223_field_dropped_membership": false,
+    "rl223_false_to_true_membership": false,
+    "r3_18at_cross_boundary_inheritance": false,
+    "r3_18aj_cross_boundary_inheritance": false,
+    "r3_18z_cross_boundary_inheritance": false,
+    "r3_18p_cross_boundary_inheritance": false,
+    "false_terminator_header_synthesis": false,
+    "fabricated_fourth_tuple_admitted": false,
+    "multiplicity_is_runtime_frequency_promise": false,
+    "contexts_outside_exact_set_admitted": false
+  }
+}

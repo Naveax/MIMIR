@@ -86,7 +86,8 @@ R3.18AZ published-R3.18AY one-following-payload differential / Outcome A CLOSED
 R3.18BA bounded post-AY mixed following-control production / PRODUCTION CLOSED
 R3.18BB published-R3.18BA mixed following-control differential / Outcome A CLOSED
 R3.18BC one following-property-header evidence after published BA mixed control / Outcome A CLOSED
-R3.18BD exact following-header context contract / ACTIVE
+R3.18BD exact following-header context contract / Outcome A CLOSED
+R3.18BE bounded post-BA mixed-continuation following-header production / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -254,13 +255,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 147. `docs/continuity/MIMIR_R3_18BC_EXECUTION_SPEC.md`
 148. `docs/continuity/MIMIR_R3_18BC_DECISION.md`
 149. `docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md`
-150. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-151. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-152. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-153. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-154. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-155. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-156. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+150. `docs/continuity/MIMIR_R3_18BD_DECISION.md`
+151. `docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md`
+152. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+153. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+154. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+155. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+156. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+157. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+158. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1196,3 +1199,18 @@ next                        R3.18M true-only one-bit production composition
 - 37 false terminators remain outside membership
 - no tag/component/Cartesian/older-contract/RL223 widening
 - production remains R3.18BA; following payload and second later control remain closed
+
+
+### R3.18BD exact following-header context contract: OUTCOME A / CLOSED
+- contract `docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json` / sha256 `33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`
+- exact_tuple_only / 3 complete eight-field contexts / multiplicity 3 / Boolean=2 Float=1
+- full lane 40 rows; 37 false terminators outside header membership; exact true headers 3
+- BC authority `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` SUCCESS / artifact `9666964713`
+- anti-widening: tag/component/Cartesian/versionless/RL223-drop/AT-AJ-Z-P inheritance/fabricated-fourth all rejected
+- production unchanged at R3.18BA; payload/second-control remain 0/0
+
+### R3.18BE bounded post-BA mixed-continuation following-header production: ACTIVE
+- validate/recompute one exact published BA mixed control
+- false path: successful terminator, zero following-header access
+- true path: exactly one stateless header primitive call, exact R3.18BD membership, stop at `payload_start`
+- no following payload, second later control, generalized property cursor, or semantic/runtime widening

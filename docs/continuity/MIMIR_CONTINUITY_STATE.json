@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-08-27",
+  "updated_date": "2026-08-28",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "5d2bca711f528ab1bb607104379af503ff175697",
   "last_production_milestone": "R3.18BA",
   "last_production_milestone_name": "bounded post-AY mixed following-control production",
   "last_completed_read_only_audit": "R3.18BC",
-  "current_pass": "R3.18BD",
-  "current_pass_kind": "contract-only exact following-header context admission from R3.18BC",
-  "current_pass_goal": "Freeze exactly the three R3.18BC evidence-supported complete eight-field header contexts, preserve 37 false terminators outside membership, and admit no production composition or payload decode.",
-  "current_pass_stop_boundary": "No production following-header composition, no following payload, no second later control, no generalized cursor, and no membership outside exact R3.18BC-supported tuples.",
+  "current_pass": "R3.18BE",
+  "current_pass_kind": "bounded production composition of exactly one R3.18BD-admitted following header after a validated published R3.18BA mixed control",
+  "current_pass_goal": "Validate/recompute the exact published BA mixed control; preserve 37 false rows as no-header terminators and compose exactly one BD-admitted header on only the 3 true rows, stopping at payload_start.",
+  "current_pass_stop_boundary": "No following payload, no second later control, no header on a false terminator, no context outside exact R3.18BD membership, and no generalized cursor.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -153,7 +153,11 @@
     "R3.18AT/R3.18AJ/R3.18Z/R3.18P cross-boundary header-context inheritance at R3.18BD",
     "dropping or flipping is_rl_223 in R3.18BD membership",
     "production following-header composition before R3.18BD contract closure",
-    "following payload after the R3.18BC one-header payload_start"
+    "following payload after the R3.18BC one-header payload_start",
+    "following-header success on any of the 37 R3.18BA false terminator rows",
+    "following payload after the future R3.18BE one-header boundary",
+    "second later property-control bit after R3.18BE",
+    "generalized/repeated property loop or generic cursor after R3.18BE"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -321,11 +325,13 @@
     "docs/continuity/MIMIR_R3_18BB_DECISION.md",
     "docs/continuity/MIMIR_R3_18BC_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BC_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BD_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18BC",
   "last_completed_evidence_outcome": "A — frozen 47-row mixed lane preserved; false terminators 7/7; true following headers exact 40/40; 16 exact eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9603335255.",
-  "last_completed_contract_pass": "R3.18AT",
+  "last_completed_contract_pass": "R3.18BD",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -2864,5 +2870,28 @@
       0
     ],
     "privacy": "PASS"
+  },
+  "r3_18bd": {
+    "outcome": "A",
+    "canonical_base_sha": "387e1693279dec062d3ef565cc5bc597de3a5a13",
+    "canonical_base_tree": "a0dedfb8de603cc4e000a1777ed074eaed1c3163",
+    "production_sha_unchanged": "5d2bca711f528ab1bb607104379af503ff175697",
+    "contract_path": "docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json",
+    "contract_sha256": "33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27",
+    "membership_policy": "exact_tuple_only",
+    "frozen_rows": 40,
+    "false_terminators": 37,
+    "observed_header_rows": 3,
+    "exact_contexts": 3,
+    "observed_multiplicity_sum": 3,
+    "observed_tags": {
+      "Boolean": 2,
+      "Float": 1
+    },
+    "witness_reselection": 0,
+    "native_oracle_mismatch": 0,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0,
+    "earlier_contract_inheritance": false
   }
 }
