@@ -1476,3 +1476,37 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - R3.18AZ read-only published-production payload differential on exactly the forty immutable AW payload witnesses.
+
+
+---
+
+## 2026-08-27 — R3.18AZ — Published R3.18AY one-following-payload differential
+Production base SHA: `2558cc0559422a3e6695e1501f20d96d83b23e6d`
+Production commit SHA: unchanged; evidence-only pass
+Pass type: read-only published-production differential
+Outcome: **A — ADMITTED / CLOSED**
+
+What changed:
+- no production Rust/Cargo/fixture/corpus/support mutation;
+- published AY was differentially checked against the immutable forty-row AW payload authority and direct-native/oracle identity.
+
+Evidence:
+- evidence `f46479faa2b230f7fde474f7f7696a1024420879` / tree `0d022d27fda2275de9512d96231979e1d016491e`;
+- run/job `33086674062/98568084290` SUCCESS; same-head natural CI `33086674797/98568087263` SUCCESS;
+- artifact `9652520412` / `18151` bytes / `sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4`; downloaded digest exact / inner manifest 13/13 PASS;
+- 40/40 published AY exact; 40/40 AW native/oracle exact; 7/7 upstream false terminators excluded; Int=40; width32=40; semantic range 5..300; mismatch/reselection 0/0.
+
+Validation:
+- repeatability/truncation/post-stop poison 40/40 PASS; authority/context/source-scope negatives PASS; privacy PASS; following-control consumption 0.
+
+Boundaries opened:
+- R3.18BA may implement exactly one mixed AX-admitted control bit after validated AY payload.
+
+Boundaries still closed:
+- following stream/header/payload, second later control, upstream false-terminator BA access, generalized cursor and all actor/frame/semantic/runtime widening.
+
+Important negative facts / anti-regressions:
+- AX distribution is false=37 / true=3; BA must accept both values and must not inherit historical true-only control semantics.
+
+Next exact pass:
+- `R3.18BA — bounded post-AY mixed following-control production`.
