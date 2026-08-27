@@ -1425,3 +1425,17 @@ Next exact pass:
 
 Next exact pass:
 - `R3.18AX — next property-control bit evidence after exact AW payload end` on exactly the same forty admitted payload rows; no expected boolean distribution; stop one bit later.
+
+---
+
+## R3.18AX — next property-control bit evidence after exact AW payload end — Outcome A CLOSED
+
+- Canonical production unchanged: `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef`.
+- Evidence head/tree: `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / `b164a8566c6ac57ddee1aed0a7edbf9f44250488`.
+- Evidence run/job `33068572230/98504703417` SUCCESS; same-head natural CI `33068572200/98504703614` SUCCESS / count 1 / rerun 0.
+- Artifact `9644869549` / 18070 bytes / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`; independently downloaded ZIP digest exact and inner manifest 15/15 PASS.
+- Exact AW payload reconstruction 40/40; AV-false excluded 7/7; next control false=37 true=3; pinned Boxcars/native exact 40/40; mismatch 0; expected distribution inherited 0; witness reselection 0.
+- Next stream/header/payload/second-control consumption `0/0/0/0`; production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`; privacy PASS.
+
+Next exact pass:
+- `R3.18AY — bounded post-AU one-following-payload production`. Publish only one AW-admitted Int/32 payload through payload end; consume zero AX control bits.

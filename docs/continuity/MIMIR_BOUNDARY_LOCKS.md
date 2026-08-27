@@ -6,38 +6,42 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AU production / R3.18AW closed / R3.18AX active
+# 0. Current override — R3.18AU production / R3.18AW+AX closed / R3.18AY active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AU
 - `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef` remains canonical production;
 - false remains a successful no-header terminator on the exact seven AQ/AV-false rows; true composes exactly one following header under exact R3.18AT membership and stops at `payload_start`;
-- R3.18AW is evidence only and does not publish payload composition.
+- neither AW payload evidence nor AX control evidence is production capability.
 
 ## CLOSED EVIDENCE — R3.18AW Outcome A
-- evidence `5f1d983a7b67f84293f337f23b7e7c25fee48795` / tree `63cbbb752100ef6944b1ecf366e89854e0f2376a` / run-job `33064535889/98491267256` SUCCESS;
-- same-head natural CI `33064535850/98491266948` SUCCESS / count=1 / rerun=0;
-- artifact `9643254651` / `23599` bytes / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`, downloaded ZIP and inner manifest 13/13 verified;
-- exact 40 AV-true rows yielded Int/32 payloads with semantic range 5..300 and native/Boxcars mismatch 0; all seven AV-false terminators were excluded before payload decoding;
-- MIMIR exact contract `is_rl_223=false` on 40/40; Boxcars build-derived flag true=34 false=6; Int decoding has zero dependency on that Boxcars flag;
-- witness reselection 0; next-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+- exact 40 AV-true rows yielded one Int/32 payload with semantic range 5..300 and native/Boxcars mismatch 0; seven AV-false terminators were excluded;
+- artifact `9643254651` / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`; production mutation 0.
+
+## CLOSED EVIDENCE — R3.18AX Outcome A
+- evidence `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / tree `b164a8566c6ac57ddee1aed0a7edbf9f44250488` / run-job `33068572230/98504703417` SUCCESS;
+- same-head CI `33068572200/98504703614` SUCCESS / count=1 / rerun=0;
+- artifact `9644869549` / `18070` bytes / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`; downloaded ZIP digest exact / inner manifest 15/15 PASS;
+- AW payload exact 40/40; AV-false excluded 7/7; exactly one next control bit false=37 true=3; oracle/native exact 40/40; mismatch 0; expected distribution inherited 0;
+- witness reselection 0; next stream/header/payload/second-control consumption `0/0/0/0`; production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.
 
 ## CLOSED CONTRACT — R3.18AT Outcome A
 - contract `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`; exact_tuple_only / 16 complete eight-field tuples / multiplicity 40;
 - all seven false rows remain outside header membership; AJ/Z/P inheritance and RL223 widening remain rejected.
 
-## ACTIVE EVIDENCE GATE — R3.18AX
-- exact input set is only the 40 admitted AW payload rows; all seven AV-false terminators remain excluded;
-- reconstruct the exact AW payload end first, then inspect exactly one next `property_present` bit;
-- pinned Boxcars and an independent native one-bit observation must match start/value/end exactly; no expected false/true distribution is inherited;
-- stop exactly one bit later with next stream/header/payload/second-control consumption `0/0/0/0`; production mutation forbidden.
+## ACTIVE PRODUCTION GATE — R3.18AY
+- input authority is only one exact R3.18AU true following-header result under R3.18AT membership; all seven false terminators remain outside the payload lane;
+- validate/recompute the exact AU header result and require its resolved tag to be Int;
+- decode exactly one AW-admitted 32-bit Int at the validated payload_start using existing primitive scalar machinery;
+- stop exactly at payload_end; following `property_present` consumption must remain zero;
+- AX false=37/true=3 is recorded evidence only and does not authorize control-bit production in AY.
 
 ## CLOSED
-- following-payload production composition after R3.18AU;
-- any payload/control access on the seven AV-false terminator rows;
-- next stream ID/header/payload after the one R3.18AX control-bit evidence boundary;
-- second later property-control bit after R3.18AX;
+- production consumption of the AX-observed following control bit;
+- payload or control access on the seven AV-false terminator rows;
+- next stream/header/payload after the future one-control boundary;
+- second later property-control bit;
 - context/value/boundary inheritance from historical R3.18AM/R3.18AN;
 - repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.

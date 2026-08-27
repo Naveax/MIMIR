@@ -80,7 +80,8 @@ R3.18AT post-AQ mixed-continuation following-header exact-context contract / Out
 R3.18AU bounded post-AQ mixed-continuation following-header production / PRODUCTION CLOSED                   |
 R3.18AV published-R3.18AU mixed following-header differential / Outcome A CLOSED                           |
 R3.18AW one following primitive payload evidence on exact AV-true rows / Outcome A CLOSED                    |
-R3.18AX next property-control bit evidence after exact AW payload end / ACTIVE                                  |
+R3.18AX next property-control bit evidence after exact AW payload end / Outcome A CLOSED                      |
+R3.18AY bounded post-AU one-following-payload production / ACTIVE                                              |
         |                               |
         +---------------+---------------+
                         |
@@ -236,13 +237,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 135. `docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md`
 136. `docs/continuity/MIMIR_R3_18AW_DECISION.md`
 137. `docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md`
-138. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-139. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-140. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-141. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-142. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-143. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-144. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+138. `docs/continuity/MIMIR_R3_18AX_DECISION.md`
+139. `docs/continuity/MIMIR_R3_18AY_EXECUTION_SPEC.md`
+140. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+141. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+142. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+143. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+144. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+145. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+146. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1095,3 +1098,15 @@ next                        R3.18M true-only one-bit production composition
 - reconstruct each exact AW payload end and observe exactly one following `property_present` bit with pinned Boxcars plus independent native LSB-first evidence logic
 - no expected false/true distribution is inherited; record the complete observed distribution
 - stop one bit later; next stream/header/payload, second later control, generalized cursor and production mutation remain closed
+
+### R3.18AX next property-control bit evidence: OUTCOME A / CLOSED
+- evidence `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / tree `b164a8566c6ac57ddee1aed0a7edbf9f44250488`; run/job `33068572230/98504703417` SUCCESS
+- same-head CI `33068572200/98504703614` SUCCESS / count=1 / rerun=0; artifact `9644869549` / `18070` / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`; downloaded ZIP digest exact and inner manifest 15/15 PASS
+- exact AW payload reconstruction 40/40; AV-false excluded 7/7; next control false=37 true=3; pinned Boxcars/native exact 40/40; mismatch 0; expected distribution inherited 0
+- witness reselection 0; next stream/header/payload/second-control consumption 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+
+### R3.18AY bounded post-AU one-following-payload production: ACTIVE
+- canonical production remains R3.18AU; R3.18AY may publish only the AW-admitted Int/32 payload boundary on the exact AU/AT true-continuation lane
+- all seven AU/AQ false terminators remain outside payload composition
+- validate/recompute exact AU header authority, require Int and exact payload_start, decode one 32-bit scalar with existing primitive machinery, and stop at payload_end
+- the AX-observed next control distribution false=37/true=3 is evidence for a later pass only; R3.18AY must consume zero following-control bits

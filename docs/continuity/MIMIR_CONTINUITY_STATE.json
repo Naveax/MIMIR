@@ -6,11 +6,11 @@
   "last_production_code_sha": "6a9f456c78ffccab177823234a8d9fe4ba59a850",
   "last_production_milestone": "R3.18AU",
   "last_production_milestone_name": "bounded post-AQ mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18AW",
-  "current_pass": "R3.18AX",
-  "current_pass_kind": "read-only next-property-control-bit evidence / exact R3.18AW payload rows only",
-  "current_pass_goal": "Rematerialize exactly the 40 admitted R3.18AW payload rows, reconstruct each exact payload end, independently observe exactly one next property_present bit with pinned Boxcars and native LSB-first evidence logic, record the complete distribution without prior expectation, and stop one bit later.",
-  "current_pass_stop_boundary": "Read-only. Stop exactly one bit after each exact AW payload end. No next stream ID/header/payload, no second later property-control bit, no AV-false-row access, no generalized cursor, no production mutation, and no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
+  "last_completed_read_only_audit": "R3.18AX",
+  "current_pass": "R3.18AY",
+  "current_pass_kind": "bounded production implementation / exact R3.18AU true header plus R3.18AW Int/32 payload authority",
+  "current_pass_goal": "From one exact R3.18AU true following-header result under R3.18AT membership, validate or recompute the header authority, decode exactly one R3.18AW-admitted Int/32 payload with existing primitive scalar machinery, and stop exactly at payload end.",
+  "current_pass_stop_boundary": "Production pass. Consume zero R3.18AX following-control bits. No AV-false-row payload/control access, no next stream/header/payload, no second later control, no generalized cursor, and no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -134,7 +134,10 @@
     "historical R3.18AM/R3.18AN payload ordinal/value/boundary inheritance at R3.18AW",
     "next stream/header/payload after the one R3.18AX control-bit evidence boundary",
     "second later property-control bit after R3.18AX",
-    "payload or control access on the seven R3.18AV false terminator rows"
+    "payload or control access on the seven R3.18AV false terminator rows",
+    "production consumption of the R3.18AX-observed following control bit",
+    "next stream/header/payload after the future post-AY control boundary",
+    "second later property-control bit after the future post-AY control boundary"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -286,6 +289,8 @@
     "docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18AW_DECISION.md",
     "docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18AX_DECISION.md",
+    "docs/continuity/MIMIR_R3_18AY_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",

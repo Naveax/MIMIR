@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AU — bounded post-AQ mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AW — one following primitive payload evidence / Outcome A / AV-true 40/40 / AV-false excluded 7/7 / Int=40 / width32=40 / semantic range 5..300 / native-Boxcars mismatch 0 / MIMIR contract RL223 false=40 / Boxcars build RL223 true=34 false=6 / next-control 0 / artifact 9643254651
+  R3.18AX — next property-control bit evidence after exact AW payload end / Outcome A / AW payload exact 40/40 / AV-false excluded 7/7 / false=37 true=3 / oracle-native exact 40/40 / mismatch 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / artifact 9644869549
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AT — post-AQ mixed-continuation following-header exact-context contract / Outcome A / 16 exact eight-field tuples / multiplicity 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AW — exact AV-true payload 40/40 / false rows excluded 7/7 / Int=40 / width32=40 / semantic range 5..300 / native-oracle mismatch 0 / RL223 provenance separated / witness reselection 0 / next-control consumption 0 / same-head CI 33064535850 / artifact 9643254651
+  R3.18AX — exact AW payload reconstruction 40/40 / false rows excluded 7/7 / one next property_present bit false=37 true=3 / pinned Boxcars-native exact 40/40 / mismatch 0 / expected distribution inherited 0 / witness reselection 0 / adjacent consumption 0/0/0/0 / same-head CI 33068572200 / artifact 9644869549
 
 CURRENT_PASS:
-  R3.18AX — next property-control bit evidence after exact AW payload end
+  R3.18AY — bounded post-AU one-following-payload production
 
 CURRENT_PASS_TYPE:
-  read-only one-bit boundary evidence / rematerialize exactly the 40 admitted R3.18AW payload rows; reconstruct the exact AW payload end; independently observe exactly one next property_present bit with pinned Boxcars and standalone native LSB-first evidence logic; stop one bit later; stream/header/payload/second-control and production mutation forbidden
+  bounded production implementation / from one exact R3.18AU true following-header result under R3.18AT membership, validate/recompute the header authority, decode exactly one R3.18AW-admitted Int/32 payload with existing primitive scalar machinery, and stop exactly at payload end; the R3.18AX-observed following control remains evidence-only and must not be consumed
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -127,8 +127,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AU PRODUCTION at 6a9f456c78ffccab177823234a8d9fe4ba59a850: validates/recomputes one exact published R3.18AQ mixed control; false returns a successful no-header terminator with zero post-AQ reads; true composes exactly one stateless following header under exact R3.18AT membership and stops at payload_start
   R3.18AV CLOSED Outcome A: published R3.18AU exact 47/47 on immutable AS/AT authority; false=7 no-header; true=40 exact headers; AT contexts 16/16; multiplicity 40; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9640472993
   R3.18AW CLOSED Outcome A: exact one Int/32 payload on all 40 admitted AV-true rows; seven AV-false terminators excluded; native/Boxcars mismatch 0; semantic range 5..300; MIMIR contract RL223 false=40 while Boxcars build-derived RL223 true=34 false=6 and Int decoding is independent of that build flag; next-control consumption 0; artifact 9643254651
-  R3.18AX ACTIVE read-only evidence: reconstruct exactly the 40 AW payload ends and observe exactly one following property_present bit; stop one bit later with stream/header/payload/second-control consumption 0/0/0/0
-  NO following-payload production composition, stream/header/payload after the AX control bit, second later property-control bit, payload access on AV-false rows, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AX CLOSED Outcome A: exact AW payload reconstruction 40/40; one next property_present bit false=37 true=3; pinned Boxcars/native exact 40/40; mismatch 0; expected distribution inherited 0; witness reselection 0; adjacent stream/header/payload/second-control consumption 0/0/0/0; artifact 9644869549
+  R3.18AY ACTIVE bounded production: after one exact R3.18AU true following-header result, validate/recompute AU/AT authority, decode exactly one AW-admitted Int/32 payload, and stop at payload end with following-control consumption 0
+  NO production consumption of the AX-observed control bit, payload/control access on AV-false rows, next stream/header/payload, second later property-control bit, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 
 R3_18AU_PRODUCTION_CLOSURE:
 Outcome A / production 6a9f456c78ffccab177823234a8d9fe4ba59a850 / tree cbda5db96e88cc208f872c2237cf4741b8fcfaef
@@ -4060,3 +4061,14 @@ exact rows: AV-true payload 40/40 / AV-false excluded 7/7 / Int=40 / width32=40 
 RL223 provenance: MIMIR exact contract false=40/40; Boxcars build-derived true=34 false=6; pinned Boxcars Int decoder RL223 dependence=0
 witness reselection 0 / next-control bits 0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0 / privacy PASS
 next exact pass: R3.18AX one next property_present bit evidence on the exact forty AW payload ends; no expected boolean distribution inherited; stop one bit later
+
+R3_18AX_NEXT_CONTROL_EVIDENCE_CLOSURE:
+Outcome A / read-only / production unchanged at 6a9f456c78ffccab177823234a8d9fe4ba59a850 / tree cbda5db96e88cc208f872c2237cf4741b8fcfaef
+canonical evidence base: 7741e132df86877cc26cf451f296fd7b7e9cdf30 / tree 38c66911494625a5ec02f4633424c5a8068a8182
+evidence head/tree: 465a3f2fc71e5eed6f00c16a04738031bef8d82c / b164a8566c6ac57ddee1aed0a7edbf9f44250488
+evidence run/job: 33068572230/98504703417 SUCCESS / same-head natural CI 33068572200/98504703614 SUCCESS / count=1 / rerun=0
+artifact: 9644869549 / 18070 bytes / sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9 / downloaded ZIP digest exact / inner manifest 15/15 PASS
+exact rows: AW payload exact 40/40 / AV-false excluded 7/7 / next control false=37 true=3 / oracle-native exact 40/40 / mismatch 0
+expected distribution inherited 0 / witness reselection 0 / adjacent stream-header-payload-second-control consumption 0/0/0/0 / privacy PASS
+production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
+next exact pass: R3.18AY bounded post-AU one-following-payload production; AX control remains evidence-only and closed to production consumption
