@@ -11721,6 +11721,110 @@ pub fn decode_replay_network_existing_actor_after_first_primitive_second_propert
 }
 // R3.18AU PRE-ADMISSION END bounded post-AQ mixed-continuation following header
 
+// R3.18AY PRE-ADMISSION BEGIN bounded post-AU one-following-payload
+/// One validated R3.18AU true header plus exactly one R3.18AW-admitted signed Int/32 payload.
+/// The AU result is recomputed from published prerequisites and false terminators fail closed
+/// before payload decoding. `stop_bit` is payload end; the R3.18AX control bit is not consumed.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1 {
+    pub header_composition: ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    pub following_payload: ReplayNetworkPrimitiveScalarDecodeV1,
+    pub stop_bit: u64,
+}
+fn network_existing_actor_post_au_following_payload_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-AU following-payload error: {category}: {}",
+        detail.into()
+    ))
+}
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    control: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+    an_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    au_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1>{
+    let expected_au = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(network_bytes, prior, control, lookup_plan, context, an_prior, &au_prior.control)?;
+    if expected_au != *au_prior {
+        return Err(network_existing_actor_post_au_following_payload_error(
+            "invalid-r3-18au-prior",
+            "supplied AU result differs from recomputed authority",
+        ));
+    }
+    let header = au_prior.following_header.as_ref().ok_or_else(|| {
+        network_existing_actor_post_au_following_payload_error(
+            "unadmitted-false-terminator",
+            "AY excludes AU false terminators before payload decode",
+        )
+    })?;
+    if !header.property_present || au_prior.context != context {
+        return Err(network_existing_actor_post_au_following_payload_error(
+            "invalid-au-header",
+            "AY requires exact present AU header/context",
+        ));
+    }
+    let tag = header.resolved_attribute_tag.ok_or_else(|| {
+        network_existing_actor_post_au_following_payload_error(
+            "missing-resolved-attribute-tag",
+            "AU header has no resolved tag",
+        )
+    })?;
+    if tag != ReplayNetworkAttributeTagV1::Int {
+        return Err(network_existing_actor_post_au_following_payload_error(
+            "unsupported-payload-tag",
+            format!("AY admits only Int, got {tag:?}"),
+        ));
+    }
+    let start = header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_post_au_following_payload_error(
+            "missing-payload-start",
+            "AU header has no payload start",
+        )
+    })?;
+    if start != au_prior.stop_bit || start != header.stop_bit {
+        return Err(network_existing_actor_post_au_following_payload_error(
+            "header-stop-mismatch",
+            format!(
+                "start={start} AU_stop={} header_stop={}",
+                au_prior.stop_bit, header.stop_bit
+            ),
+        ));
+    }
+    let payload = decode_replay_network_primitive_scalar_v1(network_bytes, start, tag)?;
+    let end = start.checked_add(32).ok_or_else(|| {
+        network_existing_actor_post_au_following_payload_error(
+            "payload-end-overflow",
+            "Int32 end overflow",
+        )
+    })?;
+    if payload.attribute_tag != ReplayNetworkAttributeTagV1::Int
+        || payload.payload_start_bit != start
+        || payload.payload_width != 32
+        || payload.payload_end_bit != end
+        || payload.stop_bit != end
+        || !matches!(&payload.value, ReplayNetworkPrimitiveScalarValueV1::Int(_))
+    {
+        return Err(network_existing_actor_post_au_following_payload_error(
+            "int-boundary-mismatch",
+            format!(
+                "start={} end={} width={} stop={} value={:?}",
+                payload.payload_start_bit,
+                payload.payload_end_bit,
+                payload.payload_width,
+                payload.stop_bit,
+                payload.value
+            ),
+        ));
+    }
+    Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1 { header_composition: au_prior.clone(), following_payload: payload, stop_bit: end })
+}
+// R3.18AY PRE-ADMISSION END bounded post-AU one-following-payload
+
 #[cfg(test)]
 mod r3_18au_exact_contract_tests {
     use super::*;
