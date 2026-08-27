@@ -246,13 +246,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 141. `docs/continuity/MIMIR_R3_18AZ_EXECUTION_SPEC.md`
 142. `docs/continuity/MIMIR_R3_18AZ_DECISION.md`
 143. `docs/continuity/MIMIR_R3_18BA_EXECUTION_SPEC.md`
-144. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-145. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-146. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-147. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-148. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-149. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-150. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+144. `docs/continuity/MIMIR_R3_18BA_DECISION.md`
+145. `docs/continuity/MIMIR_R3_18BB_EXECUTION_SPEC.md`
+146. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+147. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+148. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+149. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+150. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+151. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+152. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1146,3 +1148,15 @@ next                        R3.18M true-only one-bit production composition
 - AX evidence authority false=37 / true=3; both boolean classes must remain admitted
 - consume exactly one `property_present` bit at validated AY stop and stop one bit later
 - following stream/header/payload/second-control, upstream false-terminator access and generalized cursor remain closed
+
+
+### R3.18BA bounded post-AY mixed following-control production: PRODUCTION / CLOSED
+- production `5d2bca711f528ab1bb607104379af503ff175697` / tree `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a` / parent `109bad258d43963fd5432317503f99a7e1b8aa1b`; exact clean scope two files.
+- builder `33091339939/98584661482`, PR CI `33091594385/98585555551`, candidate push CI `33091611038/98585614713`, published-main CI `33092084628/98587299347` SUCCESS; PR #208 closed unmerged; force=false publication.
+- exact 40-row AY/AX lane; false=37 / true=3; seven upstream false terminators excluded; adjacent consumption 0/0/0/0.
+- next exact pass: R3.18BB read-only published BA differential; no following header in BB.
+
+### R3.18BB published-R3.18BA mixed following-control differential: ACTIVE
+- immutable authority R3.18AX `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / `33068572230/98504703417` / artifact `9644869549` / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`.
+- require published BA exact 40/40, AY prerequisite exact 40/40, false=37 / true=3, mismatch/reselection 0/0, adjacent 0/0/0/0.
+- production mutation and following stream/header/payload/second-control access are forbidden.
