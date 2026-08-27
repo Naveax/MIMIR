@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18AU — bounded post-AQ mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AS — one following-property-header evidence after published R3.18AQ mixed control / Outcome A / 47 frozen / false terminators 7 / true headers exact 40 / 16 exact contexts / Int=40 / mismatch 0 / artifact 9603335255
+  R3.18AV — published-R3.18AU mixed following-header differential / Outcome A / 47 frozen / false terminators 7 / true headers exact 40 / 16 exact contexts / multiplicity 40 / Int=40 / mismatch 0 / witness reselection 0 / payload-second-control 0/0 / artifact 9640472993
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AT — post-AQ mixed-continuation following-header exact-context contract / Outcome A / 16 exact eight-field tuples / multiplicity 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AS — 47/47 frozen split preserved / false terminators 7/7 / true following headers exact 40/40 / 16 exact eight-field contexts / Int=40 / native-oracle mismatch 0 / witness reselection 0 / payload/second-control consumption 0/0 / artifact 9603335255
+  R3.18AV — published AU exact 47/47 / false terminators 7/7 / true following headers exact 40/40 / exact AT contexts 16/16 / multiplicity 40 / Int=40 / mismatch 0 / witness reselection 0 / payload/second-control consumption 0/0 / same-head CI 33057596712 / artifact 9640472993
 
 CURRENT_PASS:
-  R3.18AV — published-R3.18AU mixed following-header differential
+  R3.18AW — one following primitive payload evidence on exact AV-true rows
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / replay the immutable 47-row AS/AT authority against published R3.18AU; preserve false=7 no-header terminators and true=40 exact one-header results; verify exact AT membership/boundaries and zero following-payload/second-control consumption; production mutation forbidden
+  read-only one-payload boundary evidence / rematerialize exactly the 40 R3.18AV true rows from the admitted AV artifact; exclude all 7 false terminators before payload decode; compare exactly one current primitive scalar against pinned Boxcars; stop at payload end with zero next-control consumption; production mutation forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -125,8 +125,9 @@ CURRENT_PRODUCTION_HARD_STOP:
   R3.18AS CLOSED Outcome A: frozen split exact 47/47; 7/7 false terminators; 40/40 true one-header observations exact through payload_start; 16 complete eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0
   R3.18AT CLOSED Outcome A: exact_tuple_only 16 complete eight-field contexts / multiplicity sum 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
   R3.18AU PRODUCTION at 6a9f456c78ffccab177823234a8d9fe4ba59a850: validates/recomputes one exact published R3.18AQ mixed control; false returns a successful no-header terminator with zero post-AQ reads; true composes exactly one stateless following header under exact R3.18AT membership and stops at payload_start
-  R3.18AV ACTIVE read-only differential: compare published R3.18AU against the immutable 47-row AS/AT authority; require false=7, true=40, exact true headers 40/40, exact AT contexts/multiplicities, mismatch 0, and payload/second-control consumption 0/0
-  NO following payload or second later property-control bit after published R3.18AU, header on false terminators, contexts outside exact R3.18AT membership, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
+  R3.18AV CLOSED Outcome A: published R3.18AU exact 47/47 on immutable AS/AT authority; false=7 no-header; true=40 exact headers; AT contexts 16/16; multiplicity 40; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9640472993
+  R3.18AW ACTIVE read-only evidence: inspect exactly one following primitive payload on only the 40 admitted AV-true rows; all 7 false terminators are excluded before payload decode; require native/Boxcars exact equality and stop at payload end
+  NO following-payload production composition, next property-control bit after the AW payload, payload access on AV-false rows, context outside exact AV/AT authority, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted
 
 R3_18AU_PRODUCTION_CLOSURE:
 Outcome A / production 6a9f456c78ffccab177823234a8d9fe4ba59a850 / tree cbda5db96e88cc208f872c2237cf4741b8fcfaef
@@ -4037,3 +4038,14 @@ ACTIVE NEXT PASS     = R3.18Q — bounded following-property header production c
 [ ] Require production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 [ ] Outcome A may open only a separate post-AK following-payload evidence pass; R3.18AL itself changes no production Rust.
 ```
+
+
+R3_18AV_DIFFERENTIAL_CLOSURE:
+Outcome A / read-only / production unchanged at 6a9f456c78ffccab177823234a8d9fe4ba59a850 / tree cbda5db96e88cc208f872c2237cf4741b8fcfaef
+evidence head/tree: fcbabd6953b4bade41f49b767f0dd73524e190d8 / 922e7fb45de33b1803027e6cdcbbe55467a1bc2e
+evidence run/job: 33057596762/98468171016 SUCCESS / same-head natural CI 33057596712/98468756735 SUCCESS / count=1 / rerun=0
+artifact: 9640472993 / 10256 bytes / sha256:26082be08c8644a17076d9df2138128df110bbf39b4b3bceefdc823a9492d456 / downloaded ZIP inner manifest PASS
+published AU exact 47/47 / false=7 no-header / true=40 exact header / AT contexts 16/16 / multiplicity 40 / Int=40
+mismatch 0 / witness reselection 0 / following payload bits 0 / second later control bits 0 / privacy PASS
+negative controls PASS / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0
+next exact pass: R3.18AW one-following-primitive-payload evidence on exact forty AV-true rows only; all seven false rows excluded; next control remains closed

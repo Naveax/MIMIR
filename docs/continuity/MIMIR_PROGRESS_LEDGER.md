@@ -1366,3 +1366,48 @@ Boundaries still closed:
 Next exact pass:
 - `R3.18AV — published-R3.18AU mixed following-header differential`.
 
+---
+
+## 2026-08-27 — R3.18AV — Published R3.18AU mixed following-header differential
+Production base SHA: `6a9f456c78ffccab177823234a8d9fe4ba59a850`
+Production commit SHA: unchanged (`6a9f456c78ffccab177823234a8d9fe4ba59a850`)
+Pass type: read-only published-production differential
+Outcome: A / CLOSED
+
+What changed:
+- no production source changed;
+- published R3.18AU was replayed against exactly the immutable R3.18AS/R3.18AT 47-row authority;
+- false and true mixed-control branches were validated without witness reselection.
+
+Evidence:
+- evidence `fcbabd6953b4bade41f49b767f0dd73524e190d8` / tree `922e7fb45de33b1803027e6cdcbbe55467a1bc2e`;
+- run/job `33057596762/98468171016` SUCCESS;
+- same-head natural CI `33057596712/98468756735` SUCCESS / count 1 / rerun 0;
+- artifact `9640472993` / `10256` bytes / `sha256:26082be08c8644a17076d9df2138128df110bbf39b4b3bceefdc823a9492d456`; downloaded ZIP and inner manifest independently verified.
+
+Validation:
+- published AU exact 47/47;
+- false=7 successful no-header terminators;
+- true=40 exact one-header continuations;
+- exact AT contexts 16/16 / multiplicity 40 / Int=40;
+- mismatch 0 / witness reselection 0;
+- following payload / second later control 0/0;
+- negative controls, full library validation, same-head repository CI and privacy scan PASS.
+
+Boundaries opened:
+- read-only R3.18AW may inspect exactly one following primitive payload on only the 40 AV-true rows.
+
+Boundaries still closed:
+- payload access on the seven AV-false rows;
+- following-payload production composition;
+- next property-control bit after the AW payload;
+- generic/repeated property cursor and all wider semantic/runtime layers.
+
+Important negative facts / anti-regressions:
+- historical R3.18AM/R3.18AN payload ordinal, positions and values are not current AW authority;
+- R3.18AJ/Z/P context inheritance remains invalid at the AT/AV boundary;
+- production/Cargo/fixture/corpus/support mutation was 0/0/0/0/0.
+
+Next exact pass:
+- R3.18AW — one following primitive payload evidence on exact forty AV-true rows only.
+

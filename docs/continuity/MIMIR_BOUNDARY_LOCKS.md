@@ -6,40 +6,37 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AU production / R3.18AV active
+# 0. Current override — R3.18AU production / R3.18AV closed / R3.18AW active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18AU
-- `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef` is canonical production; parent `7068884bd1982a99ea68647156addc5b381f9613`;
-- exact clean-candidate CI `32976370318/98201978533` and published-main CI `32977973145/98207283247` are SUCCESS;
-- validates/recomputes one exact published R3.18AQ mixed control;
-- false stays a successful no-header terminator with zero post-AQ reads;
-- true composes exactly one stateless following header only under exact R3.18AT membership and stops at `payload_start`;
-- immutable behavior remains false=7 / true=40; true headers exact 40/40; Int=40; 16 exact contexts.
+- `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef` remains canonical production;
+- false stays a successful no-header terminator on the exact seven rows; true composes exactly one stateless following header under exact R3.18AT membership and stops at `payload_start`;
+- no production mutation occurred in R3.18AV.
 
-## CLOSED EVIDENCE — R3.18AS Outcome A
-- evidence `475650fea59332f74b9f69da50e3e4471622ab7e` / artifact `9603335255` / `sha256:0642a4c6c6e57edad8e23dc93bdff96f54ed9563633ebe63c332a8ecbac40a45`;
-- frozen rows 47/47; false terminators 7/7; true headers exact 40/40; native/oracle mismatch 0;
-- unique exact contexts 16; tags Int=40; witness reselection 0; payload/second-control consumption 0/0.
+## CLOSED EVIDENCE — R3.18AV Outcome A
+- evidence `fcbabd6953b4bade41f49b767f0dd73524e190d8` / tree `922e7fb45de33b1803027e6cdcbbe55467a1bc2e` / run-job `33057596762/98468171016` SUCCESS;
+- same-head natural CI `33057596712/98468756735` SUCCESS / count=1 / rerun=0;
+- artifact `9640472993` / `10256` bytes / `sha256:26082be08c8644a17076d9df2138128df110bbf39b4b3bceefdc823a9492d456` / independently verified inner manifest;
+- published AU exact 47/47; false=7 no-header; true=40 exact headers; exact AT contexts 16/16 / multiplicity 40 / Int=40;
+- mismatch/reselection 0/0; following payload/second-control 0/0; negative controls and privacy PASS.
 
 ## CLOSED CONTRACT — R3.18AT Outcome A
-- contract `docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json` / `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`;
-- membership `exact_tuple_only`; 16 complete eight-field tuples; exact observed multiplicities sum 40;
-- `is_rl_223` is required; all 7 false AQ rows remain outside header membership;
-- AJ/Z/P inheritance, tag/component/Cartesian/versionless/RL223-drop-or-flip/fabricated membership are rejected.
+- contract `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`; exact_tuple_only / 16 complete eight-field tuples / multiplicity 40;
+- all seven false rows remain outside header membership; AJ/Z/P inheritance and RL223 widening remain rejected.
 
-## ACTIVE DIFFERENTIAL GATE — R3.18AV
-- compare published R3.18AU against exactly the immutable 47-row AS/AT authority;
-- require false=7 no-header terminators and true=40 exact one-header results;
-- require exact header identity, boundaries, AT context/multiplicity equality, mismatch 0 and witness reselection 0;
-- production mutation is forbidden; following payload and second later property-control bit remain unread.
+## ACTIVE EVIDENCE GATE — R3.18AW
+- exact input set is only the 40 AV-true rows rematerialized from the admitted AV artifact;
+- all seven AV-false terminators are excluded before payload decoding;
+- inspect exactly one current primitive scalar and compare native vs pinned Boxcars tag/start/end/width/lossless value;
+- stop exactly at payload end with zero next-control access; production mutation forbidden.
 
 ## CLOSED
-- any following-header success on the 7 false terminator rows;
-- any following-header context outside exact R3.18AT membership;
-- following payload after the R3.18AU true header `payload_start`;
-- second later property-control bit after R3.18AU;
+- following-payload production composition after R3.18AU;
+- any payload access on the seven AV-false terminator rows;
+- next property-control bit after the one R3.18AW payload evidence boundary;
+- context/value/boundary inheritance from historical R3.18AM/R3.18AN;
 - repeated/generalized property loop or generic cursor;
 - next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

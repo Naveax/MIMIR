@@ -78,7 +78,8 @@ R3.18AR published-R3.18AQ mixed following-control differential / Outcome A CLOSE
 R3.18AS one following-property-header evidence after published AQ mixed control / Outcome A CLOSED
 R3.18AT post-AQ mixed-continuation following-header exact-context contract / Outcome A CLOSED               |
 R3.18AU bounded post-AQ mixed-continuation following-header production / PRODUCTION CLOSED                   |
-R3.18AV published-R3.18AU mixed following-header differential / ACTIVE                                      |
+R3.18AV published-R3.18AU mixed following-header differential / Outcome A CLOSED                           |
+R3.18AW one following primitive payload evidence on exact AV-true rows / ACTIVE                                 |
         |                               |
         +---------------+---------------+
                         |
@@ -230,13 +231,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 131. `docs/continuity/MIMIR_R3_18AU_EXECUTION_SPEC.md`
 132. `docs/continuity/MIMIR_R3_18AU_DECISION.md`
 133. `docs/continuity/MIMIR_R3_18AV_EXECUTION_SPEC.md`
-134. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-135. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-136. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-137. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-138. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-139. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-140. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+134. `docs/continuity/MIMIR_R3_18AV_DECISION.md`
+135. `docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md`
+136. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+137. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+138. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+139. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+140. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+141. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+142. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -325,11 +328,19 @@ scripts/verify_mimir_knowledge_archive.ps1
 - true path stops exactly at `payload_start`; following payload/second-control 0/0; generalized/repeated cursor 0
 - clean scope is only `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18au_post_aq_following_header.rs`
 
-### R3.18AV published-R3.18AU mixed following-header differential: ACTIVE
-- read-only on the immutable 47-row AS/AT authority; production remains `6a9f456c78ffccab177823234a8d9fe4ba59a850`
-- require published AU exact 47/47, false=7 no-header, true=40 exact headers, AT context/multiplicity equality, mismatch 0 and witness reselection 0
-- following payload and second later control remain unread; production/Cargo/fixture/corpus/support mutation forbidden
-- only Outcome A may open a separate R3.18AW one-following-payload evidence pass on the exact 40 true rows
+### R3.18AV published-R3.18AU mixed following-header differential: OUTCOME A / CLOSED
+- evidence `fcbabd6953b4bade41f49b767f0dd73524e190d8` / tree `922e7fb45de33b1803027e6cdcbbe55467a1bc2e`; run/job `33057596762/98468171016` SUCCESS
+- same-head natural CI `33057596712/98468756735` SUCCESS / count=1 / rerun=0
+- artifact `9640472993` / `10256` bytes / `sha256:26082be08c8644a17076d9df2138128df110bbf39b4b3bceefdc823a9492d456`; independently downloaded ZIP / inner manifest PASS
+- published AU exact 47/47; false=7 no-header; true=40 exact headers; exact AT contexts 16/16; multiplicity 40; Int=40
+- mismatch 0; witness reselection 0; following payload/second-control 0/0; negative/full validations PASS; privacy PASS
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; production remains `6a9f456c78ffccab177823234a8d9fe4ba59a850`
+
+### R3.18AW one following primitive payload evidence: ACTIVE
+- read-only on exactly the 40 admitted AV-true rows; all 7 false terminators excluded before payload decoding
+- rematerialize current tag/boundary from the admitted AV artifact; historical AM/AN ordinal/value/boundary inheritance forbidden
+- compare one native primitive scalar against pinned Boxcars at current replay coordinates; require exact tag/start/end/width/lossless-value equality
+- stop at payload end; next property-control bit, production payload composition and generalized/repeated cursor remain closed
 ### R3.18AG bounded post-AD true control: PRODUCTION / CLOSED
 - production `2d351e8ceb601e2fbe515d2977b2103a4b2c7976` / tree `4123820ce6537f2d4942cd0b5f72b52e43b96c1d` / parent `037a10a41848ca2621e1b64567c3c1bd7b2f6808`
 - lib/test blobs `db923ebcb419d278f4ab0144fe7ed15b298b60fa` / `3f3e1c8f3f6deb7f2558862a1032f8a102131443`; spec `90180dcaddd30ed9a187a0d4332a105d153488d7`
