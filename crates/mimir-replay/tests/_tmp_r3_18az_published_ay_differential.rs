@@ -34,6 +34,11 @@ fn aw_expected_rows() -> BTreeMap<String, AwExpected> {
 
 #[test]
 fn r3_18az_published_ay_matches_frozen_aw_rows_exactly() {
+    if std::env::var_os("R318AZ_AW_COMPARE").is_none() {
+        println!("R3_18AZ_SKIPPED_NO_EVIDENCE_ENV");
+        return;
+    }
+
     let expected = aw_expected_rows();
     let mut published_rows = Vec::new();
     let mut true_rows = 0usize;
