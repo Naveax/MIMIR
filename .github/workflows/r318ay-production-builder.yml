@@ -1,0 +1,80 @@
+name: R3.18AY Production Builder
+
+on:
+  push:
+    branches:
+      - builder/r318ay-production-v1
+
+concurrency:
+  group: r318ay-production-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout frozen canonical main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Authority freeze and materialize AY patch
+        shell: bash
+        run: python .github/workflows/r318ay_production_builder.py
+
+      - name: Install Rust 1.85 validation toolchain
+        shell: bash
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt,clippy
+
+      - name: Format and validate focused AY production
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 fmt --all
+          git diff --check
+          mapfile -t changed < <(git diff --name-only | sort)
+          expected=(
+            "crates/mimir-replay/src/lib.rs"
+            "crates/mimir-replay/tests/r3_18ay_post_au_payload.rs"
+          )
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            printf 'scope drift after rustfmt\nactual: %s\nexpected: %s\n' "${changed[*]}" "${expected[*]}" >&2
+            exit 1
+          fi
+          cargo +1.85.0 test -p mimir-replay --test r3_18ay_post_au_payload -- --test-threads=1
+          cargo +1.85.0 check --workspace --all-targets
+          cargo +1.85.0 clippy --workspace --all-targets -- -D warnings
+
+      - name: Publish exact clean candidate once
+        shell: bash
+        env:
+          CANDIDATE_REF: candidate/r318ay-production-v1
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin "refs/heads/${CANDIDATE_REF}" >/dev/null 2>&1; then
+            echo "candidate ref already exists; refusing duplicate publication" >&2
+            exit 1
+          fi
+          git config user.name "Naveax"
+          git config user.email "79841922+Naveax@users.noreply.github.com"
+          git switch -c "${CANDIDATE_REF}"
+          git add crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ay_post_au_payload.rs
+          mapfile -t staged < <(git diff --cached --name-only | sort)
+          expected=(
+            "crates/mimir-replay/src/lib.rs"
+            "crates/mimir-replay/tests/r3_18ay_post_au_payload.rs"
+          )
+          if [[ "${staged[*]}" != "${expected[*]}" ]]; then
+            printf 'staged scope drift\nactual: %s\nexpected: %s\n' "${staged[*]}" "${expected[*]}" >&2
+            exit 1
+          fi
+          git commit -m "Implement R3.18AY bounded post-AU payload"
+          git push origin "HEAD:refs/heads/${CANDIDATE_REF}"
+          echo "candidate_sha=$(git rev-parse HEAD)"
+          echo "candidate_tree=$(git rev-parse HEAD^{tree})"
