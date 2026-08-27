@@ -54,23 +54,33 @@ fn r3_18az_published_ay_matches_frozen_aw_rows_exactly() {
 
         if au.following_header.is_none() {
             false_rows += 1;
-            assert!(!expected.contains_key(label), "false terminator widened: {label}");
+            assert!(
+                !expected.contains_key(label),
+                "false terminator widened: {label}"
+            );
             assert!(decode_ay(&network, &prior, &control, &plan, k3_context(), &an, &au).is_err());
             continue;
         }
 
         true_rows += 1;
-        let exp = expected.get(label).unwrap_or_else(|| panic!("missing frozen AW row: {label}"));
+        let exp = expected
+            .get(label)
+            .unwrap_or_else(|| panic!("missing frozen AW row: {label}"));
         let got = decode_ay(&network, &prior, &control, &plan, k3_context(), &an, &au).unwrap();
         let direct = decode_replay_network_primitive_scalar_v1(
             &network,
             exp.start,
             ReplayNetworkAttributeTagV1::Int,
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(got.header_composition, au, "{label}");
         assert_eq!(au.stop_bit, exp.start, "{label}");
-        assert_eq!(got.following_payload.attribute_tag, ReplayNetworkAttributeTagV1::Int, "{label}");
+        assert_eq!(
+            got.following_payload.attribute_tag,
+            ReplayNetworkAttributeTagV1::Int,
+            "{label}"
+        );
         assert_eq!(
             (
                 got.following_payload.payload_start_bit,
@@ -93,9 +103,21 @@ fn r3_18az_published_ay_matches_frozen_aw_rows_exactly() {
         assert_eq!(repeat, got, "{label}");
 
         let cut_bytes = usize::try_from((exp.end - 1) / 8).unwrap();
-        assert!(cut_bytes * 8 >= usize::try_from(exp.start).unwrap(), "{label}");
         assert!(
-            decode_ay(&network[..cut_bytes], &prior, &control, &plan, k3_context(), &an, &au).is_err(),
+            cut_bytes * 8 >= usize::try_from(exp.start).unwrap(),
+            "{label}"
+        );
+        assert!(
+            decode_ay(
+                &network[..cut_bytes],
+                &prior,
+                &control,
+                &plan,
+                k3_context(),
+                &an,
+                &au
+            )
+            .is_err(),
             "{label}"
         );
 
@@ -126,6 +148,9 @@ fn r3_18az_published_ay_matches_frozen_aw_rows_exactly() {
             "label\tpayload_start_bit\tpayload_end_bit\tpayload_width\tsemantic_int\tstatus\n{}\n",
             published_rows.join("\n")
         ),
-    ).unwrap();
-    println!("R3_18AZ_PUBLISHED_ROWS=40/40 false_terminators=7/7 mismatch=0 reselection=0 following_control_bits=0");
+    )
+    .unwrap();
+    println!(
+        "R3_18AZ_PUBLISHED_ROWS=40/40 false_terminators=7/7 mismatch=0 reselection=0 following_control_bits=0"
+    );
 }
