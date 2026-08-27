@@ -6,37 +6,40 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BA production closed / R3.18BB active differential
+# 0. Current override — R3.18BA production closed / R3.18BB differential closed / R3.18BC active evidence
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BA
-- `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a` is canonical production.
+- `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a` remains canonical production.
 - one exact R3.18AY payload authority is recomputed and validated;
 - exactly one following LSB-first `property_present` bit is consumed at AY stop;
-- both frozen R3.18AX classes are admitted: false=37 / true=3;
+- both frozen classes are admitted: false=37 / true=3;
 - the boundary stops exactly one bit later;
 - all seven upstream AU false terminators remain outside BA.
 
-## CLOSED PRODUCTION VALIDATION — R3.18BA Outcome A
-- fixed builder `ce5e27641cb0240e7440b93092be69a8fc5b7a11` / `33091339939/98584661482` SUCCESS;
-- clean candidate `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`;
-- validation-only PR #208 exact-head CI `33091594385/98585555551` SUCCESS and closed unmerged;
-- published-main CI `33092084628/98587299347` SUCCESS;
-- production scope exactly `lib.rs` plus `r3_18ba_post_ay_payload_control.rs`.
+## CLOSED READ-ONLY DIFFERENTIAL — R3.18BB Outcome A
+- evidence `91595db2970ad395ec048ebd9326cfa97b01b38a` / `33104207616/98629573433` SUCCESS;
+- same-head CI `33104207621/98629573926` SUCCESS;
+- artifact `9659874105` / `sha256:0e5bc329e1fc89068243ad0846356ed4dbfc2ade245623385b8e84d21b4f138e`;
+- published BA and AY prerequisite exact 40/40;
+- false=37 / true=3; mismatch/reselection 0/0;
+- adjacent stream/header/payload/second-control 0/0/0/0;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
 
-## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BB
-- replay exactly the immutable forty R3.18AX control witnesses against published BA;
-- require published BA start/value/end/stop exact 40/40;
-- require false=37 / true=3, mismatch=0 and witness reselection=0;
-- false rows are terminators; only the exact three true rows may become candidates for a later separate header-evidence pass;
-- BB itself decodes no following stream/header/payload and no second later control.
+## ACTIVE EVIDENCE-ONLY — R3.18BC
+- preserve all forty BB witness identities;
+- all 37 false rows terminate at BA with zero following-header access;
+- only the exact three frozen true rows may observe one following property header;
+- compare native structure with pinned Boxcars through `payload_start`;
+- discover exact header tags/contexts without older-contract inheritance;
+- stop at `payload_start`.
 
 ## CLOSED
-- following stream/header/payload consumption during R3.18BB;
-- header production/evidence before R3.18BB closes;
+- header access on any of the 37 BB false terminators;
+- following payload consumption during R3.18BC;
 - second later property-control bit;
-- BA/BB access on the seven upstream AU false terminators;
+- production following-header composition before evidence + exact-context contract closure;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

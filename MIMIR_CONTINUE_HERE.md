@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BA — bounded post-AY mixed following-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18AZ — published AY exact 40/40 / AW-native-oracle exact 40/40 / false terminators 7/7 / mismatch 0 / witness reselection 0 / following-control consumption 0 / artifact 9652520412
+  R3.18BB — published R3.18BA mixed following-control differential Outcome A / exact 40/40 / false=37 true=3 / mismatch 0 / reselection 0 / same-head CI 33104207621 / artifact 9659874105
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18AT — post-AQ mixed-continuation following-header exact-context contract / Outcome A / 16 exact eight-field tuples / multiplicity 40 / 7 false terminators outside membership / contract 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5 / AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18AZ — published R3.18AY differential Outcome A / exact 40/40 / Int=40 / width32=40 / range 5..300 / mismatch 0 / reselection 0 / same-head CI 33086674797 / artifact 9652520412
+  R3.18BB — published R3.18BA differential Outcome A / exact 40/40 / false=37 true=3 / mismatch 0 / reselection 0 / same-head CI 33104207621 / artifact 9659874105
 
 CURRENT_PASS:
-  R3.18BB — published-R3.18BA mixed following-control differential
+  R3.18BC — one following-property-header evidence after published R3.18BA mixed control
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / replay exact immutable AX forty-row authority against published R3.18BA, require false=37 true=3 and exact start/value/end/stop with mismatch/reselection 0/0, and consume no following stream/header/payload/second-control bits
+  read-only boundary evidence / preserve BB 40-row split, stop 37 false rows at BA, observe exactly one following header through payload_start on only the exact 3 true rows, and decode no following payload or second control
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
