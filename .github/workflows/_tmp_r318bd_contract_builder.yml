@@ -1,0 +1,238 @@
+name: R3.18BD Contract Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318bd-contract-builder-v1
+    paths:
+      - .github/workflows/_tmp_r318bd_contract_builder.yml
+      - tools/_tmp_r318bd_contract_builder.py
+
+concurrency:
+  group: r318bd-contract-admission-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 387e1693279dec062d3ef565cc5bc597de3a5a13
+      BASE_TREE: a0dedfb8de603cc4e000a1777ed074eaed1c3163
+      PROD_SHA: 5d2bca711f528ab1bb607104379af503ff175697
+      PROD_TREE: 6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a
+      BC_DECISION_BLOB: 7e864047299c6aacdaa7c990dffd1a2064ec7ff4
+      BD_SPEC_BLOB: b9065f3e7bfa9e3a7d68386c4b49ccb25d2c529f
+      BC_HEAD: 0f4d07f5caf77ec53f5e8b512867ad17b5835ca1
+      BC_RUN: '33122152803'
+      BC_JOB: '98691409657'
+      BC_CI_RUN: '33122152793'
+      BC_CI_JOB: '98691409674'
+      BC_ARTIFACT: '9666964713'
+      BC_ARTIFACT_NAME: r318bc-one-following-property-header-evidence
+      BC_ARTIFACT_SIZE: '7795'
+      BC_ARTIFACT_DIGEST: sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e
+      BASE_CI_RUN: '33124420075'
+      BASE_KA_RUN: '33124420084'
+      GENERATOR_BLOB: 6cd3a6a81c49d12b628472f225a58523e0ce52bb
+      CONTRACT_SHA256: 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27
+      CANDIDATE_BRANCH: continuity/r318bd-admit-open-r318be-v1
+
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact authority and duplicate guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(gh api "repos/$repo/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$repo/git/commits/$PROD_SHA" --jq .tree.sha)" = "$PROD_TREE"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BC_DECISION.md")" = "$BC_DECISION_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md")" = "$BD_SPEC_BLOB"
+
+          test "$(gh api "repos/$repo/actions/runs/$BC_RUN" --jq .head_sha)" = "$BC_HEAD"
+          test "$(gh api "repos/$repo/actions/runs/$BC_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$repo/actions/runs/$BC_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/jobs/$BC_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/runs/$BC_CI_RUN" --jq .head_sha)" = "$BC_HEAD"
+          test "$(gh api "repos/$repo/actions/runs/$BC_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/jobs/$BC_CI_JOB" --jq .conclusion)" = success
+
+          meta="$(gh api "repos/$repo/actions/artifacts/$BC_ARTIFACT")"
+          test "$(jq -r .name <<<"$meta")" = "$BC_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$BC_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta" | tr '[:upper:]' '[:lower:]')" = "$(printf '%s' "$BC_ARTIFACT_DIGEST" | tr '[:upper:]' '[:lower:]')"
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$BC_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$BC_HEAD"
+          test "$(jq -r .expired <<<"$meta")" = false
+
+          test "$(gh api "repos/$repo/actions/runs/$BASE_CI_RUN" --jq .head_sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$repo/actions/runs/$BASE_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/runs/$BASE_KA_RUN" --jq .head_sha)" = "$BASE_SHA"
+          test "$(gh api "repos/$repo/actions/runs/$BASE_KA_RUN" --jq .conclusion)" = success
+
+          if git ls-remote --exit-code --heads "https://github.com/$repo.git" "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+          echo R3_18BD_AUTHORITY_FREEZE=PASS
+
+      - name: Preserve generator and reset to canonical base
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:tools/_tmp_r318bd_contract_builder.py)" = "$GENERATOR_BLOB"
+          cp tools/_tmp_r318bd_contract_builder.py "$RUNNER_TEMP/r318bd_contract_builder.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path(__import__('os').environ['RUNNER_TEMP'])/'r318bd_contract_builder.py'
+          compile(p.read_text(encoding='utf-8'), str(p), 'exec')
+          print('R3_18BD_GENERATOR_SYNTAX=PASS')
+          PY
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$BASE_TREE"
+
+      - name: Generate exact contract candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$RUNNER_TEMP/r318bd_contract_builder.py"
+
+      - name: Validate exact ten-doc contract scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json
+          docs/continuity/MIMIR_R3_18BD_DECISION.md
+          docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$expected"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$actual"
+          sort -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+          test "$(wc -l < "$actual")" -eq 10
+          git diff --check
+
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          python3 -m json.tool docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json >/dev/null
+          test "$(sha256sum docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$CONTRACT_SHA256"
+
+          python3 - <<'PY'
+          import json
+          fields=('stream_id_bound','prop_id_bits','property_object_index','attribute_tag','version_major','version_minor','net_version','is_rl_223')
+          d=json.load(open('docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json',encoding='utf-8'))
+          assert tuple(d['tuple_fields']) == fields
+          assert d['membership_policy'] == 'exact_tuple_only'
+          assert d['frozen_lane_row_count'] == 40
+          assert d['false_terminator_count'] == 37
+          assert d['observed_header_row_count'] == 3
+          assert d['unique_exact_context_count'] == 3
+          rows=d['admitted_contexts']
+          assert len(rows) == 3
+          assert [r['observed_count'] for r in rows] == [1,1,1]
+          assert sum(r['observed_count'] for r in rows) == 3
+          tuples={tuple(r[k] for k in fields) for r in rows}
+          expected={
+            (72,6,92,'Boolean',868,32,10,False),
+            (72,6,94,'Boolean',868,32,10,False),
+            (110,6,58,'Float',868,32,10,False),
+          }
+          assert tuples == expected
+          assert d['observed_tag_counts'] == {'Boolean':2,'Float':1}
+          assert d['observed_property_ordinal_counts'] == {'6':3}
+          tp=d['terminator_policy']
+          assert tp['false_rows_are_terminators'] is True
+          assert tp['false_terminator_count'] == 37
+          assert tp['false_terminators_produce_header_membership'] is False
+
+          assert (72,6,999,'Boolean',868,32,10,False) not in tuples
+          assert (72,6,92,'Float',868,32,10,False) not in tuples
+          assert (110,6,92,'Boolean',868,32,10,False) not in tuples
+          assert (72,6,92,'Boolean',867,32,10,False) not in tuples
+          assert (72,6,92,'Boolean',868,32,10,True) not in tuples
+          assert len((72,6,92,'Boolean',868,32,10)) != len(fields)
+
+          at=json.load(open('docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json',encoding='utf-8'))
+          at_tuples={tuple(r[k] for k in fields) for r in at['admitted_contexts']}
+          older=(60,5,107,'Int',868,32,10,False)
+          assert older in at_tuples and older not in tuples
+
+          aw=d['anti_widening']
+          for k in (
+            'tag_only_membership','component_only_membership','cartesian_product_membership',
+            'versionless_membership','rl223_field_dropped_membership','rl223_false_to_true_membership',
+            'r3_18at_cross_boundary_inheritance','r3_18aj_cross_boundary_inheritance',
+            'r3_18z_cross_boundary_inheritance','r3_18p_cross_boundary_inheritance',
+            'false_terminator_header_synthesis','fabricated_fourth_tuple_admitted',
+            'contexts_outside_exact_set_admitted'
+          ):
+              assert aw[k] is False, k
+          print('R3_18BD_CONTRACT_NEGATIVES=PASS')
+          PY
+
+          grep -F '150. `docs/continuity/MIMIR_R3_18BD_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '151. `docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '158. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'R3.18BE — bounded post-BA mixed-continuation following-header production' MIMIR_CONTINUE_HERE.md
+          grep -F '**Outcome:** **A — ADMITTED / BOUNDARY-SPECIFIC EXACT-EIGHT-FIELD CONTRACT**' docs/continuity/MIMIR_R3_18BD_DECISION.md
+          grep -F '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BD_CONTRACT_VALIDATION=PASS
+
+      - name: Commit and push clean candidate exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json \
+            docs/continuity/MIMIR_R3_18BD_DECISION.md \
+            docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 10
+          git diff --cached --check
+          git commit -m 'Admit R3.18BD and open R3.18BE'
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads "https://github.com/$GITHUB_REPOSITORY.git" "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared concurrently; refusing push' >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18BD_CANDIDATE_SHA=$candidate_sha"
+          echo "R3_18BD_CANDIDATE_TREE=$candidate_tree"
+          echo "R3_18BD_CONTRACT_SHA256=$CONTRACT_SHA256"
