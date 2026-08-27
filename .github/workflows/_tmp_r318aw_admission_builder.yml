@@ -1,0 +1,225 @@
+name: R3.18AW Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - builder/r318aw-admission-v1
+    paths:
+      - .github/workflows/_tmp_r318aw_admission_builder.yml
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318aw-continuity-admission-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: b745b7eebdea325015d006ecf84efe1d14f4e827
+      MAIN_TREE: 46271056bc2563cf0cf66a0076bf3849816d2cec
+      EVIDENCE_HEAD: 5f1d983a7b67f84293f337f23b7e7c25fee48795
+      EVIDENCE_TREE: 63cbbb752100ef6944b1ecf366e89854e0f2376a
+      EVIDENCE_RUN: '33064535889'
+      EVIDENCE_JOB: '98491267256'
+      SAME_HEAD_CI: '33064535850'
+      SAME_HEAD_CI_JOB: '98491266948'
+      ARTIFACT_ID: '9643254651'
+      ARTIFACT_SIZE: '23599'
+      ARTIFACT_DIGEST: sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc
+      CANDIDATE_BRANCH: candidate/r318aw-admission-v1
+
+    steps:
+      - name: Checkout exact canonical main
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.MAIN_SHA }}
+          fetch-depth: 2
+
+      - name: Freeze AW authority and candidate uniqueness
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .tree.sha)" = "$MAIN_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$EVIDENCE_HEAD" --jq .tree.sha)" = "$EVIDENCE_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$EVIDENCE_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$EVIDENCE_RUN" --jq .head_sha)" = "$EVIDENCE_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$EVIDENCE_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$SAME_HEAD_CI" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$SAME_HEAD_CI" --jq .head_sha)" = "$EVIDENCE_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$SAME_HEAD_CI_JOB" --jq .conclusion)" = success
+          art="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$ARTIFACT_ID")"
+          test "$(jq -r .name <<<"$art")" = r318aw-one-following-payload-evidence
+          test "$(jq -r .size_in_bytes <<<"$art")" = "$ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$art")" = "$ARTIFACT_DIGEST"
+          test "$(jq -r .workflow_run.id <<<"$art")" = "$EVIDENCE_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$art")" = "$EVIDENCE_HEAD"
+          if gh api "repos/${GITHUB_REPOSITORY}/branches/${CANDIDATE_BRANCH}" >/dev/null 2>&1; then
+            echo "candidate branch already exists; refusing duplicate candidate" >&2
+            exit 1
+          fi
+
+      - name: Build atomic AW admission and AX spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              s = p.read_text(encoding='utf-8')
+              if s.count(old) != 1:
+                  raise SystemExit(f"{path}: expected exactly one replacement marker, got {s.count(old)}: {old[:100]!r}")
+              p.write_text(s.replace(old, new, 1), encoding='utf-8', newline='\n')
+
+          aw_summary = "R3.18AW — one following primitive payload evidence / Outcome A / AV-true 40/40 / AV-false excluded 7/7 / Int=40 / width32=40 / semantic range 5..300 / native-Boxcars mismatch 0 / MIMIR contract RL223 false=40 / Boxcars build RL223 true=34 false=6 / next-control 0 / artifact 9643254651"
+
+          # MIMIR_CONTINUE_HERE.md
+          p = Path('MIMIR_CONTINUE_HERE.md')
+          s = p.read_text(encoding='utf-8')
+          pairs = [
+              ("LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18AV — published-R3.18AU mixed following-header differential / Outcome A / 47 frozen / false terminators 7 / true headers exact 40 / 16 exact contexts / multiplicity 40 / Int=40 / mismatch 0 / witness reselection 0 / payload-second-control 0/0 / artifact 9640472993",
+               "LAST_COMPLETED_READ_ONLY_AUDIT:\n  " + aw_summary),
+              ("LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18AV — published AU exact 47/47 / false terminators 7/7 / true following headers exact 40/40 / exact AT contexts 16/16 / multiplicity 40 / Int=40 / mismatch 0 / witness reselection 0 / payload/second-control consumption 0/0 / same-head CI 33057596712 / artifact 9640472993",
+               "LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18AW — exact AV-true payload 40/40 / false rows excluded 7/7 / Int=40 / width32=40 / semantic range 5..300 / native-oracle mismatch 0 / RL223 provenance separated / witness reselection 0 / next-control consumption 0 / same-head CI 33064535850 / artifact 9643254651"),
+              ("CURRENT_PASS:\n  R3.18AW — one following primitive payload evidence on exact AV-true rows",
+               "CURRENT_PASS:\n  R3.18AX — next property-control bit evidence after exact AW payload end"),
+              ("CURRENT_PASS_TYPE:\n  read-only one-payload boundary evidence / rematerialize exactly the 40 R3.18AV true rows from the admitted AV artifact; exclude all 7 false terminators before payload decode; compare exactly one current primitive scalar against pinned Boxcars; stop at payload end with zero next-control consumption; production mutation forbidden",
+               "CURRENT_PASS_TYPE:\n  read-only one-bit boundary evidence / rematerialize exactly the 40 admitted R3.18AW payload rows; reconstruct the exact AW payload end; independently observe exactly one next property_present bit with pinned Boxcars and standalone native LSB-first evidence logic; stop one bit later; stream/header/payload/second-control and production mutation forbidden"),
+              ("  R3.18AW ACTIVE read-only evidence: inspect exactly one following primitive payload on only the 40 admitted AV-true rows; all 7 false terminators are excluded before payload decode; require native/Boxcars exact equality and stop at payload end\n  NO following-payload production composition, next property-control bit after the AW payload, payload access on AV-false rows, context outside exact AV/AT authority, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted",
+               "  R3.18AW CLOSED Outcome A: exact one Int/32 payload on all 40 admitted AV-true rows; seven AV-false terminators excluded; native/Boxcars mismatch 0; semantic range 5..300; MIMIR contract RL223 false=40 while Boxcars build-derived RL223 true=34 false=6 and Int decoding is independent of that build flag; next-control consumption 0; artifact 9643254651\n  R3.18AX ACTIVE read-only evidence: reconstruct exactly the 40 AW payload ends and observe exactly one following property_present bit; stop one bit later with stream/header/payload/second-control consumption 0/0/0/0\n  NO following-payload production composition, stream/header/payload after the AX control bit, second later property-control bit, payload access on AV-false rows, generalized/repeated property loop/cursor, next actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening is admitted")
+          ]
+          for old, new in pairs:
+              if s.count(old) != 1:
+                  raise SystemExit(f'continue marker mismatch: {old[:120]!r} count={s.count(old)}')
+              s = s.replace(old, new, 1)
+          closure = '''\n\nR3_18AW_PAYLOAD_EVIDENCE_CLOSURE:\nOutcome A / read-only / production unchanged at 6a9f456c78ffccab177823234a8d9fe4ba59a850 / tree cbda5db96e88cc208f872c2237cf4741b8fcfaef\nevidence head/tree: 5f1d983a7b67f84293f337f23b7e7c25fee48795 / 63cbbb752100ef6944b1ecf366e89854e0f2376a\nevidence run/job: 33064535889/98491267256 SUCCESS / same-head natural CI 33064535850/98491266948 SUCCESS / count=1 / rerun=0\nartifact: 9643254651 / 23599 bytes / sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc / downloaded ZIP digest exact / inner manifest 13/13 PASS\nexact rows: AV-true payload 40/40 / AV-false excluded 7/7 / Int=40 / width32=40 / semantic range 5..300 / mismatch 0\nRL223 provenance: MIMIR exact contract false=40/40; Boxcars build-derived true=34 false=6; pinned Boxcars Int decoder RL223 dependence=0\nwitness reselection 0 / next-control bits 0 / production-Cargo-fixture-corpus-support mutation 0/0/0/0/0 / privacy PASS\nnext exact pass: R3.18AX one next property_present bit evidence on the exact forty AW payload ends; no expected boolean distribution inherited; stop one bit later\n'''
+          if 'R3_18AW_PAYLOAD_EVIDENCE_CLOSURE:' in s:
+              raise SystemExit('AW closure already present')
+          p.write_text(s.rstrip() + closure, encoding='utf-8', newline='\n')
+
+          # Knowledge graph current chain + mandatory order + closure note.
+          p = Path('MIMIR_KNOWLEDGE_GRAPH.md')
+          s = p.read_text(encoding='utf-8')
+          old = "R3.18AW one following primitive payload evidence on exact AV-true rows / ACTIVE                                 |"
+          new = "R3.18AW one following primitive payload evidence on exact AV-true rows / Outcome A CLOSED                    |\nR3.18AX next property-control bit evidence after exact AW payload end / ACTIVE                                  |"
+          if s.count(old) != 1: raise SystemExit('knowledge graph AW chain marker mismatch')
+          s = s.replace(old, new, 1)
+          old_tail = '''135. `docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md`\n136. `docs/continuity/MIMIR_PASS_PROTOCOL.md`\n137. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`\n138. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`\n139. `MIMIR_ALL_SOURCES_SUPERBOOK.md`\n140. `docs/chatgpt-archive/SOURCE_REGISTRY.md`\n141. `docs/chatgpt-archive/VALIDATION_MATRIX.md`\n142. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`'''
+          new_tail = '''135. `docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md`\n136. `docs/continuity/MIMIR_R3_18AW_DECISION.md`\n137. `docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md`\n138. `docs/continuity/MIMIR_PASS_PROTOCOL.md`\n139. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`\n140. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`\n141. `MIMIR_ALL_SOURCES_SUPERBOOK.md`\n142. `docs/chatgpt-archive/SOURCE_REGISTRY.md`\n143. `docs/chatgpt-archive/VALIDATION_MATRIX.md`\n144. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`'''
+          if s.count(old_tail) != 1: raise SystemExit('knowledge graph mandatory tail mismatch')
+          s = s.replace(old_tail, new_tail, 1)
+          kg_append = '''\n\n### R3.18AW one following primitive payload evidence: OUTCOME A / CLOSED\n- evidence `5f1d983a7b67f84293f337f23b7e7c25fee48795` / tree `63cbbb752100ef6944b1ecf366e89854e0f2376a`; run/job `33064535889/98491267256` SUCCESS\n- same-head CI `33064535850/98491266948` SUCCESS / count=1 / rerun=0; artifact `9643254651` / `23599` / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`; ZIP and 13-file inner manifest verified\n- exact AV-true rows 40/40; false terminators excluded 7/7; Int=40; width32=40; semantic range 5..300; native/Boxcars mismatch 0; next-control bits 0\n- RL223 provenance separated: MIMIR AT/AV contract false=40; Boxcars build-derived flag true=34 false=6; pinned Boxcars Int decoder does not consume that build flag\n- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; production remains R3.18AU\n\n### R3.18AX next property-control bit evidence: ACTIVE\n- exact lane is the same 40 admitted AW payload rows; all seven AV-false terminators remain outside the lane\n- reconstruct each exact AW payload end and observe exactly one following `property_present` bit with pinned Boxcars plus independent native LSB-first evidence logic\n- no expected false/true distribution is inherited; record the complete observed distribution\n- stop one bit later; next stream/header/payload, second later control, generalized cursor and production mutation remain closed\n'''
+          if '### R3.18AX next property-control bit evidence: ACTIVE' in s: raise SystemExit('AX section already present')
+          p.write_text(s.rstrip() + kg_append, encoding='utf-8', newline='\n')
+
+          # Boundary locks: replace only the current override, retain historical body.
+          p = Path('docs/continuity/MIMIR_BOUNDARY_LOCKS.md')
+          s = p.read_text(encoding='utf-8')
+          marker = '\n---\n\n# 1. Status vocabulary'
+          idx = s.find(marker)
+          if idx < 0: raise SystemExit('boundary-lock section marker missing')
+          prefix = '''# MIMIR — Boundary Locks\n\n**Purpose:** keep current capability claims narrow and prevent a future chat from opening several binary/semantic layers at once.\n\nThis file is not a wishlist. It is the list of boundaries that are currently **OPEN**, **EVIDENCE-ONLY**, or **CLOSED**.\n\n---\n\n# 0. Current override — R3.18AU production / R3.18AW closed / R3.18AX active\n\nThis current override supersedes older status wording later in this historical lock file.\n\n## PRODUCTION — R3.18AU\n- `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef` remains canonical production;\n- false remains a successful no-header terminator on the exact seven AQ/AV-false rows; true composes exactly one following header under exact R3.18AT membership and stops at `payload_start`;\n- R3.18AW is evidence only and does not publish payload composition.\n\n## CLOSED EVIDENCE — R3.18AW Outcome A\n- evidence `5f1d983a7b67f84293f337f23b7e7c25fee48795` / tree `63cbbb752100ef6944b1ecf366e89854e0f2376a` / run-job `33064535889/98491267256` SUCCESS;\n- same-head natural CI `33064535850/98491266948` SUCCESS / count=1 / rerun=0;\n- artifact `9643254651` / `23599` bytes / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`, downloaded ZIP and inner manifest 13/13 verified;\n- exact 40 AV-true rows yielded Int/32 payloads with semantic range 5..300 and native/Boxcars mismatch 0; all seven AV-false terminators were excluded before payload decoding;\n- MIMIR exact contract `is_rl_223=false` on 40/40; Boxcars build-derived flag true=34 false=6; Int decoding has zero dependency on that Boxcars flag;\n- witness reselection 0; next-control bits consumed 0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.\n\n## CLOSED CONTRACT — R3.18AT Outcome A\n- contract `sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`; exact_tuple_only / 16 complete eight-field tuples / multiplicity 40;\n- all seven false rows remain outside header membership; AJ/Z/P inheritance and RL223 widening remain rejected.\n\n## ACTIVE EVIDENCE GATE — R3.18AX\n- exact input set is only the 40 admitted AW payload rows; all seven AV-false terminators remain excluded;\n- reconstruct the exact AW payload end first, then inspect exactly one next `property_present` bit;\n- pinned Boxcars and an independent native one-bit observation must match start/value/end exactly; no expected false/true distribution is inherited;\n- stop exactly one bit later with next stream/header/payload/second-control consumption `0/0/0/0`; production mutation forbidden.\n\n## CLOSED\n- following-payload production composition after R3.18AU;\n- any payload/control access on the seven AV-false terminator rows;\n- next stream ID/header/payload after the one R3.18AX control-bit evidence boundary;\n- second later property-control bit after R3.18AX;\n- context/value/boundary inheritance from historical R3.18AM/R3.18AN;\n- repeated/generalized property loop or generic cursor;\n- next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.\n'''
+          p.write_text(prefix + s[idx:], encoding='utf-8', newline='\n')
+
+          # Machine-readable continuity state.
+          p = Path('docs/continuity/MIMIR_CONTINUITY_STATE.json')
+          d = json.loads(p.read_text(encoding='utf-8'))
+          d['updated_date'] = '2026-08-27'
+          d['last_completed_read_only_audit'] = 'R3.18AW'
+          d['current_pass'] = 'R3.18AX'
+          d['current_pass_kind'] = 'read-only next-property-control-bit evidence / exact R3.18AW payload rows only'
+          d['current_pass_goal'] = 'Rematerialize exactly the 40 admitted R3.18AW payload rows, reconstruct each exact payload end, independently observe exactly one next property_present bit with pinned Boxcars and native LSB-first evidence logic, record the complete distribution without prior expectation, and stop one bit later.'
+          d['current_pass_stop_boundary'] = 'Read-only. Stop exactly one bit after each exact AW payload end. No next stream ID/header/payload, no second later property-control bit, no AV-false-row access, no generalized cursor, no production mutation, and no actor/frame/lifecycle/raw-state/event/skill/runtime widening.'
+          closed = d.get('closed_now', [])
+          closed = [x for x in closed if x != 'next property-control bit after the one R3.18AW payload evidence boundary']
+          for x in [
+              'next stream/header/payload after the one R3.18AX control-bit evidence boundary',
+              'second later property-control bit after R3.18AX',
+              'payload or control access on the seven R3.18AV false terminator rows',
+          ]:
+              if x not in closed: closed.append(x)
+          d['closed_now'] = closed
+          files = d.get('next_files_to_read', [])
+          anchor = 'docs/continuity/MIMIR_R3_18AW_EXECUTION_SPEC.md'
+          if anchor not in files: raise SystemExit('continuity next_files AW anchor missing')
+          for x in ['docs/continuity/MIMIR_R3_18AW_DECISION.md','docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md']:
+              if x in files: files.remove(x)
+          i = files.index(anchor) + 1
+          files[i:i] = ['docs/continuity/MIMIR_R3_18AW_DECISION.md','docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md']
+          d['next_files_to_read'] = files
+          p.write_text(json.dumps(d, indent=2, ensure_ascii=False) + '\n', encoding='utf-8', newline='\n')
+
+          # Current state.
+          Path('docs/continuity/MIMIR_CURRENT_STATE.md').write_text('''# MIMIR — Current Canonical State\n\n**Continuity date:** 2026-08-27\n**Repository:** `Naveax/MIMIR`\n**Canonical production SHA:** `6a9f456c78ffccab177823234a8d9fe4ba59a850`\n**Production tree:** `cbda5db96e88cc208f872c2237cf4741b8fcfaef`\n**Production milestone:** `R3.18AU — bounded post-AQ mixed-continuation following-header production`\n**Last read-only evidence:** `R3.18AW — Outcome A / exact AV-true payload 40/40 / Int=40 / width32=40 / range 5..300 / mismatch 0 / artifact 9643254651`\n**Last completed contract:** `R3.18AT — exact_tuple_only / 16 eight-field contexts / multiplicity 40 / 7 false terminators outside membership / sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`\n**Current exact pass:** `R3.18AX — next property-control bit evidence after exact AW payload end`\n\n## Truthful boundary\n\nR3.18AU remains canonical production. R3.18AW closed read-only Outcome A on exactly the forty R3.18AV true rows; all seven false terminators were excluded before payload access. Exactly one current Int/32 scalar matched pinned Boxcars on 40/40 rows with mismatch zero and no next-control bit consumed.\n\n```text\nproduction SHA/tree                    6a9f456c78ffccab177823234a8d9fe4ba59a850 / cbda5db96e88cc208f872c2237cf4741b8fcfaef\nAW evidence head/tree                  5f1d983a7b67f84293f337f23b7e7c25fee48795 / 63cbbb752100ef6944b1ecf366e89854e0f2376a\nAW evidence run/job                    33064535889 / 98491267256 SUCCESS\nAW same-head CI                        33064535850 / 98491266948 SUCCESS / count 1\nAW artifact                            9643254651 / 23599 / sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc\nAV-true payload rows                   40/40\nAV-false excluded                      7/7\nobserved tag / width                   Int=40 / 32 bits=40\nsemantic Int range                     5..300\nnative/oracle mismatch                 0\nMIMIR contract RL223                   false=40\nBoxcars build-derived RL223            true=34 / false=6\nBoxcars Int RL223 dependence           0\nwitness reselection / next control     0 / 0\nproduction mutation                    0\n```\n\n## Current gate\n\nR3.18AX is read-only. Reconstruct exactly the forty admitted AW payload ends, observe exactly one following `property_present` bit independently with pinned Boxcars and native LSB-first evidence logic, record the complete boolean distribution without inheriting an expected value, and stop one bit later.\n\n## Hard stop\n\nNo AX access on the seven AV-false terminators, no next stream ID/header/payload after the AX bit, no second later control bit, no production payload composition, no generalized/repeated property cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/runtime/export widening.\n''', encoding='utf-8', newline='\n')
+
+          # Handoff.
+          Path('docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md').write_text('''# MIMIR — Next Chat Handoff\n\nCanonical production remains **R3.18AU** at `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef`. R3.18AW is **CLOSED Outcome A** as read-only payload evidence and did not mutate production.\n\nR3.18AW authority: evidence `5f1d983a7b67f84293f337f23b7e7c25fee48795` / tree `63cbbb752100ef6944b1ecf366e89854e0f2376a`; run/job `33064535889/98491267256` SUCCESS; same-head CI `33064535850/98491266948` SUCCESS / count 1 / rerun 0; artifact `9643254651` / `23599` bytes / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`, independently downloaded with ZIP digest exact and inner manifest 13/13 PASS. Exact AV-true payload rows 40/40 were Int/32 with semantic range 5..300 and native/Boxcars mismatch 0. All seven AV-false rows were excluded. MIMIR `is_rl_223` contract remained false on 40/40 while Boxcars' separate build-derived flag was true=34/false=6; pinned Boxcars Int decoding does not depend on that build flag. Next-control consumption was zero.\n\nThe active pass is **R3.18AX next property-control bit evidence after exact AW payload end**. Use exactly the same forty admitted AW rows, reconstruct each exact payload end first, then observe exactly one following `property_present` bit with pinned Boxcars and independent native LSB-first evidence logic. Do not inherit an expected false/true distribution. Stop exactly one bit later.\n\nDo not access any of the seven AV-false terminators; do not resolve the next stream ID, header or payload; do not read a second later property-control bit; do not create a generic/repeated property loop; do not mutate production. Before dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse the existing exact run. Rerun is never polling.\n''', encoding='utf-8', newline='\n')
+
+          # Progress ledger append.
+          p = Path('docs/continuity/MIMIR_PROGRESS_LEDGER.md')
+          s = p.read_text(encoding='utf-8')
+          ledger = '''\n\n---\n\n## R3.18AW — one following primitive payload evidence — Outcome A CLOSED\n\n- Canonical production unchanged: `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef`.\n- Evidence head/tree: `5f1d983a7b67f84293f337f23b7e7c25fee48795` / `63cbbb752100ef6944b1ecf366e89854e0f2376a`.\n- Evidence run/job `33064535889/98491267256` SUCCESS; same-head natural CI `33064535850/98491266948` SUCCESS / count 1 / rerun 0.\n- Artifact `9643254651` / 23599 bytes / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`; downloaded ZIP digest exact and inner manifest 13/13 PASS.\n- Exact AV-true rows 40/40; AV-false excluded 7/7; Int=40; width32=40; semantic range 5..300; native/Boxcars mismatch 0; witness reselection 0; next-control consumption 0.\n- MIMIR exact contract `is_rl_223=false` on 40/40. Boxcars' distinct build-derived RL223 flag observed true=34 false=6; pinned Boxcars `Int` decoder has zero dependency on that flag.\n- Production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`; privacy PASS.\n\nNext exact pass:\n- `R3.18AX — next property-control bit evidence after exact AW payload end` on exactly the same forty admitted payload rows; no expected boolean distribution; stop one bit later.\n'''
+          if '## R3.18AW — one following primitive payload evidence — Outcome A CLOSED' in s:
+              raise SystemExit('progress ledger AW closure already present')
+          p.write_text(s.rstrip() + ledger, encoding='utf-8', newline='\n')
+
+          # Decision.
+          Path('docs/continuity/MIMIR_R3_18AW_DECISION.md').write_text('''# MIMIR R3.18AW — One Following Primitive Payload Evidence Decision\n\n**Date:** 2026-08-27\n**Outcome:** **A — ADMITTED / READ-ONLY PAYLOAD EVIDENCE**\n**Production mutation:** none\n**Canonical production remains:** `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef`\n\n## Decision\n\nR3.18AW closes Outcome A. Exactly the forty R3.18AV true continuation rows were rematerialized from the admitted AV artifact; all seven AV-false terminators were excluded before payload decoding. Each current following header was `Int`, and exactly one 32-bit scalar beginning at the proven payload boundary was decoded with the published native primitive scalar decoder and independently measured with pinned Boxcars. Native and oracle tag/start/end/width/value matched on 40/40 rows with mismatch zero. Privacy-safe semantic values ranged from 5 through 300.\n\nNo next property-control bit was consumed. R3.18AW is evidence only and does not publish a following-payload production composition.\n\n## Exact authority\n\n```text\ncanonical parent main/tree           b745b7eebdea325015d006ecf84efe1d14f4e827 / 46271056bc2563cf0cf66a0076bf3849816d2cec\nproduction SHA/tree                  6a9f456c78ffccab177823234a8d9fe4ba59a850 / cbda5db96e88cc208f872c2237cf4741b8fcfaef\nevidence head/tree                   5f1d983a7b67f84293f337f23b7e7c25fee48795 / 63cbbb752100ef6944b1ecf366e89854e0f2376a\nauthority run/job                    33064535889 / 98491267256 SUCCESS\nsame-head natural CI                 33064535850 / 98491266948 SUCCESS / count=1 / rerun=0\nartifact                             9643254651 / 23599 bytes\nartifact digest / ZIP SHA256         sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc\npinned Boxcars                       c70e77df7af81b436cb545d070bb90c82f562d0b\n```\n\nThe downloaded ZIP SHA-256 equals the GitHub artifact digest exactly. Its internal SHA-256 manifest verifies all 13 payload files.\n\n## Frozen result\n\n```text\nAV true payload rows                 40/40\nAV false rows excluded               7/7\nobserved tags                        Int=40\nobserved payload width               32 bits on 40/40\nsemantic Int range                   5..300\nnative/oracle mismatch               0\nwitness reselection                  0\nnext property-control bits read      0\nproduction/Cargo/fixture/corpus/support mutation 0/0/0/0/0\nprivacy scan                         PASS\n```\n\n## RL223 provenance correction\n\nThe temporary v1/v2 comparison initially treated MIMIR's `is_rl_223` contract field and Boxcars' same-named build-derived flag as if they were the same semantic quantity. They are not. MIMIR's R3.18AT/AV exact context remains `is_rl_223=false` on all forty rows. Pinned Boxcars derives its own flag from replay `BuildVersion`; the observed forty-row distribution is true=34 / false=6. Boxcars `decode_int` performs `read_i32()` and does not consume that build-derived flag.\n\nThe final admitted v3 evidence therefore preserves MIMIR's exact contract value, reports Boxcars' build-derived value separately, and compares only semantically equivalent payload/version fields. No context widening or false-to-true contract mutation was admitted.\n\n## Superseded attempts\n\nEarlier AW evidence attempts failed only in temporary evidence validation. The first attempt exposed rustfmt plus RL223-provenance conflation. The second reached native/Boxcars 40/40 but incorrectly asserted that Boxcars' build-derived flag must be true on all forty rows. Neither failed SHA was rerun. The immutable authority is the v3 head listed above.\n\n## Hard stop\n\nR3.18AW does not admit following-payload production composition, payload/control access on the seven AV-false terminators, a stream/header/payload after the payload, a second later property-control bit, a generalized/repeated property cursor, actor/frame/lifecycle advance, raw-state/event/replay-slice/skill/counterfactual/runtime/export widening, or historical AM/AN payload authority inheritance.\n\n## Next gate\n\nR3.18AX is a separate read-only boundary-evidence pass. It may rematerialize exactly the forty admitted AW payload ends and observe exactly one following `property_present` bit using pinned Boxcars plus an independent native one-bit observation. It must inherit no expected boolean distribution and must stop exactly one bit later without resolving a stream ID, header or payload.\n''', encoding='utf-8', newline='\n')
+
+          # AX execution spec.
+          Path('docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md').write_text('''# MIMIR R3.18AX — Next Property-Control Bit Evidence After Exact AW Payload End\n\n**Status:** ACTIVE\n**Pass type:** read-only one-bit boundary evidence\n**Production authority:** R3.18AU `6a9f456c78ffccab177823234a8d9fe4ba59a850` / `cbda5db96e88cc208f872c2237cf4741b8fcfaef`\n**Direct payload authority:** R3.18AW Outcome A / artifact `9643254651` / `sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc`\n**Production mutation:** forbidden\n**Next stream/header/payload:** forbidden\n**Second later property-control bit:** forbidden\n**Repeated/generalized property loop:** forbidden\n\n## 1. Goal\n\nOn exactly the forty admitted R3.18AW payload rows, reconstruct the current R3.18AU/AV header prerequisites and the exact R3.18AW Int/32 scalar through its proven `payload_end_bit`, then observe and differentially validate exactly one next `property_present` bit beginning at that exact payload end. Stop exactly one bit later.\n\nAll seven R3.18AV false terminators remain outside the AX lane and must never reach payload or control observation.\n\n## 2. Frozen authority\n\n```text\ncanonical main before AX             continuity parent containing this spec\nproduction SHA/tree                  6a9f456c78ffccab177823234a8d9fe4ba59a850 / cbda5db96e88cc208f872c2237cf4741b8fcfaef\nAW evidence head/tree                5f1d983a7b67f84293f337f23b7e7c25fee48795 / 63cbbb752100ef6944b1ecf366e89854e0f2376a\nAW run/job                           33064535889/98491267256 SUCCESS\nAW same-head CI                      33064535850/98491266948 SUCCESS / count 1 / rerun 0\nAW artifact                          9643254651 / 23599 / sha256:9bf954cbb161a6ab37e72d04243e6b4aff5495e5d49799dbbbd71e32d0380fbc\nfrozen source lane                   exact 40 AW rows; 7 AV-false rows excluded\npayload identity                     Int=40 / width32=40 / semantic range 5..300\nnative/oracle mismatch               0\nwitness reselection                  0\npinned Boxcars                       c70e77df7af81b436cb545d070bb90c82f562d0b\n```\n\nBefore evidence, fetch fresh `main`, verify exact production/source/spec identities, AW run/CI/artifact digest and downloaded inner manifest, and all forty replay/witness identities. Do not reselect rows based on the value of the next bit.\n\n## 3. Exact source lane\n\nUse exactly the same forty R3.18AW rows with zero reselection. Each row must first prove:\n\n```text\nR3.18AU true following-header prerequisite exact\nR3.18AT exact context membership exact\nAW tag/start/end/width/value exact\npayload_end_bit == payload_start_bit + 32\nAV-false rows absent from target table\n```\n\nAny row that no longer reproduces is authority drift and stops the pass. It must not be replaced.\n\n## 4. Differential one-bit observation\n\nFor every frozen row:\n\n1. reconstruct the exact current header and AW scalar through `payload_end_bit`;\n2. require the reconstructed payload end equal the frozen AW payload end;\n3. with observation-only pinned Boxcars instrumentation, identify exactly the next property-loop `property_present` bit at that same global bit offset;\n4. independently read exactly one LSB-first bit at the same offset with evidence-only native logic;\n5. require exact start/value/end equality between oracle and independent observation;\n6. record the boolean value without filtering either class and without inheriting an expected distribution from R3.18AP or any earlier boundary;\n7. stop exactly one bit later.\n\nReport the complete false/true distribution discovered on the forty rows.\n\n## 5. Required negative controls\n\nAt minimum:\n\n- all seven AV-false terminators absent from AX target rows and never invoke payload/control observation;\n- truncate exactly before the one next control bit -> explicit failure with no fabricated value;\n- mutate the AW payload-end relationship -> reject before control observation;\n- corrupt the current header/payload prerequisite -> reject;\n- repeat identical observation -> exact identical result;\n- poison bits beginning at the one-bit control end -> observed control unchanged;\n- wrong replay/actor/exact context -> reject through published prerequisite chain;\n- prove next stream/header/payload and second later control consumption remain `0/0/0/0`;\n- prove witness reselection 0 and production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.\n\n## 6. Evidence artifact\n\nProduce one privacy-safe immutable artifact containing exact main/production/AW authority receipts; downloaded AW artifact/manifest verification; pinned Boxcars SHA and one-bit instrumentation hash; all forty privacy-safe control rows; complete false/true distribution; negatives; zero-consumption counters; mutation counters; privacy result; unique same-head CI receipt; and a SHA-256 inner manifest.\n\n## 7. Validation\n\nRequire:\n\n- exact AW artifact identity/digest/inner manifest;\n- replay/witness identities exact 40/40; AV-false exclusion 7/7;\n- exact AW payload reconstruction 40/40 before observation;\n- pinned Boxcars versus independent native one-bit start/value/end exact 40/40;\n- false + true distribution sums to 40 with no prior expected ratio;\n- repeatability/truncation/prior-end-mismatch/post-control-poison negatives PASS;\n- next stream/header/payload/second-control consumption `0/0/0/0`;\n- witness reselection 0;\n- focused regressions and full repository verifier PASS;\n- workspace fmt/check/test/clippy PASS under Rust 1.85 floor;\n- unique same-head natural CI SUCCESS;\n- privacy PASS;\n- production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`.\n\nBefore any dispatch/rerun, inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.\n\n## 8. Hard stop\n\nR3.18AX may not resolve/decode the next stream ID, property object, attribute header or payload. It may not read a second later control bit, create a generalized/repeated property loop/cursor, iterate the next actor/frame, mutate lifecycle state, materialize raw state/events, slice replays, mine skills, run counterfactuals or widen runtime/export behavior.\n\n## 9. Outcome gate\n\n### Outcome A\n\nAll forty frozen AW rows reproduce exactly and the one next `property_present` start/value/end matches pinned Boxcars with zero mismatch; all negatives/privacy/mutation gates pass. Record the complete observed false/true distribution. Only then may a separate bounded production or next-boundary pass be proposed according to the observed semantics and current canonical boundary.\n\n### Outcome B\n\nA reproducible next-control boundary mismatch exists. Record exact privacy-safe row/bit coordinates and keep the next-control boundary closed.\n\n### Outcome C\n\nAuthority drift, witness reselection, AV-false-row access, production mutation, next stream/header/payload access, second-control/loop widening, privacy failure or validation contradiction. Stop without admission.\n''', encoding='utf-8', newline='\n')
+          PY
+
+          git diff --check
+          mapfile -t actual < <(git diff --name-only "$MAIN_SHA" | sort)
+          mapfile -t expected < <(printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AW_DECISION.md \
+            docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --exit-code "$MAIN_SHA" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -Fx '  R3.18AX — next property-control bit evidence after exact AW payload end' MIMIR_CONTINUE_HERE.md
+          grep -F 'R3.18AW one following primitive payload evidence on exact AV-true rows / Outcome A CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'R3.18AX next property-control bit evidence after exact AW payload end / ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -Fx '**Outcome:** **A — ADMITTED / READ-ONLY PAYLOAD EVIDENCE**' docs/continuity/MIMIR_R3_18AW_DECISION.md
+          grep -Fx '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md
+
+      - name: Create clean candidate from canonical parent
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18AW_DECISION.md \
+            docs/continuity/MIMIR_R3_18AX_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18AW and open R3.18AX'
+          candidate="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          test "$(git diff --name-only "$MAIN_SHA" "$candidate" | wc -l)" -eq 9
+          echo "CANDIDATE_SHA=$candidate" >> "$GITHUB_ENV"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18AW_ADMISSION_CANDIDATE=$candidate"
