@@ -1,19 +1,16 @@
 include!("r3_18ay_post_au_payload.rs");
 
-use std::collections::BTreeMap;
-use std::fs;
-
 #[derive(Debug, Clone)]
 struct AwExpected {
     start: u64,
     end: u64,
-    width: u64,
+    width: u8,
     value: i32,
 }
 
 fn aw_expected_rows() -> BTreeMap<String, AwExpected> {
     let path = std::env::var("R318AZ_AW_COMPARE").expect("R318AZ_AW_COMPARE");
-    let text = fs::read_to_string(path).expect("read AW compare");
+    let text = std::fs::read_to_string(path).expect("read AW compare");
     let mut out = BTreeMap::new();
     for line in text.lines().filter(|line| !line.trim().is_empty()) {
         let mut fields = BTreeMap::<String, String>::new();
@@ -123,7 +120,7 @@ fn r3_18az_published_ay_matches_frozen_aw_rows_exactly() {
     assert_eq!((true_rows, false_rows), (40, 7));
     assert_eq!(published_rows.len(), 40);
     let out = std::env::var("R318AZ_PUBLISHED_OUT").expect("R318AZ_PUBLISHED_OUT");
-    fs::write(
+    std::fs::write(
         out,
         format!(
             "label\tpayload_start_bit\tpayload_end_bit\tpayload_width\tsemantic_int\tstatus\n{}\n",

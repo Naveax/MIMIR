@@ -39,12 +39,14 @@ jobs:
       AX_ARTIFACT: '9644869549'
       AX_DIGEST: sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9
       AT_CONTRACT_SHA256: 3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5
+      SUPERSEDED_HEAD: 8d9043e7995544995757e8e9156c24410fba20de
+      SUPERSEDED_RUN: '33081129097'
 
     steps:
       - name: Checkout exact evidence head
         uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 3
           persist-credentials: false
 
       - name: Freeze exact authorities and scope
@@ -53,7 +55,7 @@ jobs:
           set -euo pipefail
           test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
           test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .tree.sha)" = "$MAIN_TREE"
-          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          git merge-base --is-ancestor "$MAIN_SHA" "$GITHUB_SHA"
           test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .tree.sha)" = "$PROD_TREE"
           test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/src/lib.rs?ref=$MAIN_SHA" --jq .sha)" = "$LIB_BLOB"
           test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/r3_18ay_post_au_payload.rs?ref=$MAIN_SHA" --jq .sha)" = "$AY_TEST_BLOB"
@@ -72,6 +74,8 @@ jobs:
           test "$(jq -r .digest <<<"$ax")" = "$AX_DIGEST"
           test "$(jq -r .expired <<<"$ax")" = false
           test "$(sha256sum docs/continuity/MIMIR_R3_18AT_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$AT_CONTRACT_SHA256"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$SUPERSEDED_RUN" --jq .head_sha)" = "$SUPERSEDED_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$SUPERSEDED_RUN" --jq .conclusion)" = failure
           mapfile -t actual < <(git diff --name-only "$MAIN_SHA" "$GITHUB_SHA" | sort)
           mapfile -t expected < <(printf '%s\n' \
             .github/workflows/r318az-published-ay-v1.yml \
@@ -141,15 +145,15 @@ jobs:
           pub, native, oracle = rows(pub_p), rows(native_p), rows(oracle_p)
           assert len(pub) == len(native) == len(oracle) == 40
           fields = ('payload_start_bit','payload_end_bit','payload_width','semantic_int')
-          lines = ['label\tpayload_start_bit\tpayload_end_bit\tpayload_width\tsemantic_int\tpublished_aw_native_oracle_mismatch']
           values = []
+          lines = ['label\tpayload_start_bit\tpayload_end_bit\tpayload_width\tsemantic_int\tpublished_aw_native_oracle_mismatch']
           for label in sorted(pub):
               assert label in native and label in oracle
               assert pub[label]['status'] == 'PASS'
               for key in fields:
-                  assert pub[label][key] == native[label][key] == oracle[label][key], (label,key)
+                  assert pub[label][key] == native[label][key] == oracle[label][key], (label, key)
               assert native[label]['attribute_tag'] == oracle[label]['attribute_tag'] == 'Int'
-              assert native[label]['is_rl_223'] in ('false','0')
+              assert native[label]['is_rl_223'] in ('false', '0')
               values.append(int(pub[label]['semantic_int']))
               lines.append('\t'.join([label] + [pub[label][k] for k in fields] + ['0']))
           assert values.count(5) == 1 and values.count(300) == 39
@@ -169,21 +173,21 @@ jobs:
           pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1 \
             2>&1 | tee "$OUT/r3_18az_knowledge_verifier.log"
 
-      - name: Build immutable evidence artifact
-        if: always()
+      - name: Build authoritative evidence artifact
+        if: success()
         shell: bash
         run: |
           set -euo pipefail
           OUT="$RUNNER_TEMP/r318az"
           ART="$OUT/artifact"
           mkdir -p "$ART"
-          cp "$OUT"/r3_18az_published_rows.tsv "$ART/" 2>/dev/null || true
-          cp "$OUT"/r3_18az_compare.tsv "$ART/" 2>/dev/null || true
-          cp "$OUT"/r3_18az_test.log "$ART/" 2>/dev/null || true
-          cp "$OUT"/r3_18az_ay_regression.log "$ART/" 2>/dev/null || true
-          cp "$OUT"/r3_18az_knowledge_verifier.log "$ART/" 2>/dev/null || true
+          cp "$OUT"/r3_18az_published_rows.tsv "$ART/"
+          cp "$OUT"/r3_18az_compare.tsv "$ART/"
+          cp "$OUT"/r3_18az_test.log "$ART/"
+          cp "$OUT"/r3_18az_ay_regression.log "$ART/"
+          cp "$OUT"/r3_18az_knowledge_verifier.log "$ART/"
           for f in r3_18aw_targets.tsv r3_18aw_replay_identity.tsv r3_18aw_native_rows.tsv r3_18aw_oracle_rows.tsv r3_18aw_compare.tsv; do
-            cp "$OUT/aw/$f" "$ART/frozen_$f" 2>/dev/null || true
+            cp "$OUT/aw/$f" "$ART/frozen_$f"
           done
           cat > "$ART/r3_18az_authority_receipts.txt" <<EOF
           MAIN_SHA=$MAIN_SHA
@@ -202,6 +206,9 @@ jobs:
           AX_ARTIFACT=$AX_ARTIFACT
           AX_DIGEST=$AX_DIGEST
           AT_CONTRACT_SHA256=$AT_CONTRACT_SHA256
+          SUPERSEDED_HEAD=$SUPERSEDED_HEAD
+          SUPERSEDED_RUN=$SUPERSEDED_RUN
+          SUPERSEDED_CLASSIFICATION=HARNESS_ONLY_COMPILE_FAILURE_NO_SCIENTIFIC_AUTHORITY
           EVIDENCE_HEAD=$GITHUB_SHA
           EVIDENCE_RUN=$GITHUB_RUN_ID
           EOF
@@ -238,6 +245,21 @@ jobs:
           (cd "$ART" && sha256sum $(find . -maxdepth 1 -type f -printf '%f\n' | sort) > r3_18az_artifact_sha256.txt)
           grep -RIE '(^|[^0-9])([0-9]{1,3}\.){3}[0-9]{1,3}([^0-9]|$)|Bearer |Authorization:|ghp_|github_pat_' "$ART" && exit 1 || true
           echo R3_18AZ_ARTIFACT=PASS
+
+      - name: Build non-authority failure receipt
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          ART="$RUNNER_TEMP/r318az/artifact"
+          rm -rf "$ART"
+          mkdir -p "$ART"
+          cat > "$ART/r3_18az_non_authority_failure.txt" <<EOF
+          R3_18AZ_OUTCOME=NOT_ADMITTED
+          R3_18AZ_SCIENTIFIC_AUTHORITY=NONE
+          EVIDENCE_HEAD=$GITHUB_SHA
+          EVIDENCE_RUN=$GITHUB_RUN_ID
+          EOF
 
       - name: Upload evidence artifact
         if: always()
