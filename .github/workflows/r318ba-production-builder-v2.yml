@@ -1,0 +1,67 @@
+name: R3.18BA Production Builder v2
+
+on:
+  push:
+    branches:
+      - builder/r318ba-production-v2
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r318ba-production-builder-v2
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event.head_commit.message == 'Add R3.18BA production builder v2'
+    runs-on: ubuntu-24.04
+    env:
+      MAIN_SHA: 109bad258d43963fd5432317503f99a7e1b8aa1b
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt,clippy
+          rustup override set 1.85.0
+          rustc --version
+          cargo --version
+
+      - name: Build and validate bounded BA candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/r318ba_builder.py
+          python3 .github/scripts/r318ba_arity_fix.py
+          cargo fmt --all
+          cargo fmt --all -- --check
+
+          test "$(git status --porcelain | sed 's/^...//' | sort | tr '\n' ' ')" = "crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs "
+
+          cargo test -p mimir-replay --test r3_18ba_post_ay_payload_control
+          cargo check -p mimir-replay
+          cargo clippy -p mimir-replay --all-targets -- -D warnings
+
+      - name: Commit builder result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs
+          test "$(git diff --cached --name-only | sort | tr '\n' ' ')" = "crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs "
+          git commit -m "Build R3.18BA production candidate"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
