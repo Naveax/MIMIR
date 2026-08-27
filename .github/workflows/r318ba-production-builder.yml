@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: r318ba-production-builder
@@ -14,24 +15,49 @@ concurrency:
 
 jobs:
   build:
-    if: github.event.head_commit.message == 'Add R3.18BA production builder'
+    if: github.event.head_commit.message == 'Fix R3.18BA production builder arity and clean candidate'
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     env:
       MAIN_SHA: 109bad258d43963fd5432317503f99a7e1b8aa1b
+      MAIN_TREE: 66307e09a3a63ae4ab6241b94c3d4eb5e885ef0c
+      PREVIOUS_HELPER_SHA: 7586d5ea96adba95706f40dd3854e4e99a33ddb1
+      PUBLISHED_MAIN_CI_RUN: '33090229528'
+      PUBLISHED_MAIN_ARCHIVE_RUN: '33090230561'
+      CANDIDATE_REF: candidate/r318ba-production-v1
+      GH_TOKEN: ${{ github.token }}
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Verify authority
+      - name: Freeze admitted main and publication receipts
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$PREVIOUS_HELPER_SHA"
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$MAIN_SHA"
-          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+          test "$(git rev-parse "$MAIN_SHA^{tree}")" = "$MAIN_TREE"
 
-      - name: Toolchain
+          ci="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PUBLISHED_MAIN_CI_RUN")"
+          test "$(jq -r .head_sha <<<"$ci")" = "$MAIN_SHA"
+          test "$(jq -r .conclusion <<<"$ci")" = success
+          test "$(jq -r .run_attempt <<<"$ci")" = 1
+
+          archive="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$PUBLISHED_MAIN_ARCHIVE_RUN")"
+          test "$(jq -r .head_sha <<<"$archive")" = "$MAIN_SHA"
+          test "$(jq -r .conclusion <<<"$archive")" = success
+          test "$(jq -r .run_attempt <<<"$archive")" = 1
+
+          if git ls-remote --exit-code --heads origin "refs/heads/${CANDIDATE_REF}" >/dev/null 2>&1; then
+            echo "clean BA candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+
+      - name: Install Rust 1.85 validation toolchain
         shell: bash
         run: |
           set -euo pipefail
@@ -40,28 +66,85 @@ jobs:
           rustc --version
           cargo --version
 
-      - name: Build and validate bounded BA candidate
+      - name: Materialize and validate bounded BA patch
         shell: bash
         run: |
           set -euo pipefail
-          python3 .github/scripts/r318ba_builder.py
+          python3 .github/scripts/r318ba_builder_v2.py
           cargo fmt --all
           cargo fmt --all -- --check
+          git diff --check
 
-          test "$(git status --porcelain | sed 's/^...//' | sort | tr '\n' ' ')" = "crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs "
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          expected=(
+            "crates/mimir-replay/src/lib.rs"
+            "crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs"
+          )
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            printf 'BA materialized scope drift\nactual: %s\nexpected: %s\n' "${changed[*]}" "${expected[*]}" >&2
+            exit 1
+          fi
 
-          cargo test -p mimir-replay --test r3_18ba_post_ay_payload_control
+          cargo test -p mimir-replay --test r3_18ba_post_ay_payload_control -- --test-threads=1
           cargo check -p mimir-replay
           cargo clippy -p mimir-replay --all-targets -- -D warnings
 
-      - name: Commit builder result
+      - name: Reconstruct exact clean candidate from admitted main
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs
+          lib="crates/mimir-replay/src/lib.rs"
+          test_file="crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs"
+          lib_blob="$(git hash-object "$lib")"
+          test_blob="$(git hash-object "$test_file")"
 
+          cp "$lib" "$RUNNER_TEMP/r318ba-lib.rs"
+          cp "$test_file" "$RUNNER_TEMP/r318ba-test.rs"
+
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$MAIN_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/${CANDIDATE_REF}" >/dev/null 2>&1; then
+            echo "clean BA candidate appeared during validation; refusing duplicate" >&2
+            exit 1
+          fi
+
+          git reset --hard "$MAIN_SHA"
+          git clean -fd
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          test "$(git rev-parse HEAD^{tree})" = "$MAIN_TREE"
+
+          cp "$RUNNER_TEMP/r318ba-lib.rs" "$lib"
+          cp "$RUNNER_TEMP/r318ba-test.rs" "$test_file"
+          test "$(git hash-object "$lib")" = "$lib_blob"
+          test "$(git hash-object "$test_file")" = "$test_blob"
+          cargo fmt --all -- --check
+          git diff --check
+
+          mapfile -t changed < <({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
+          expected=(
+            "crates/mimir-replay/src/lib.rs"
+            "crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs"
+          )
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            printf 'BA clean reconstruction scope drift\nactual: %s\nexpected: %s\n' "${changed[*]}" "${expected[*]}" >&2
+            exit 1
+          fi
+
+          cargo test -p mimir-replay --test r3_18ba_post_ay_payload_control -- --test-threads=1
+
+          git config user.name "Naveax"
+          git config user.email "79841922+Naveax@users.noreply.github.com"
+          git switch -c "$CANDIDATE_REF"
+          git add "$lib" "$test_file"
           test "$(git diff --cached --name-only | sort | tr '\n' ' ')" = "crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs "
-          git commit -m "Build R3.18BA production candidate"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git commit -m "Implement R3.18BA bounded post-AY mixed following control"
+          test "$(git rev-parse HEAD^1)" = "$MAIN_SHA"
+          test "$(git diff --name-only "$MAIN_SHA" HEAD | sort | tr '\n' ' ')" = "crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs "
+
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$MAIN_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/${CANDIDATE_REF}" >/dev/null 2>&1; then
+            echo "clean BA candidate appeared before publication; refusing duplicate" >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/${CANDIDATE_REF}"
+          echo "candidate_sha=$(git rev-parse HEAD)"
+          echo "candidate_tree=$(git rev-parse HEAD^{tree})"
