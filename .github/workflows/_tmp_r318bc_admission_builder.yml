@@ -1,0 +1,152 @@
+name: R3.18BC Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - continuity/r318bc-admit-open-r318bd-v3
+    paths:
+      - .github/workflows/_tmp_r318bc_admission_builder.yml
+      - tools/_tmp_r318bc_admission_builder.py
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  builder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 2296eb7eb93ac4946bb5b7152f5bc76ff4bf09d8
+      BASE_TREE: 27b40170f2193d972bccf618ee6e2ef7f36806fb
+      EVIDENCE_SHA: 0f4d07f5caf77ec53f5e8b512867ad17b5835ca1
+      EVIDENCE_TREE: a198866dc3f18ffbd5cb16e32d39dada5f4116fc
+      EVIDENCE_RUN: "33122152803"
+      EVIDENCE_JOB: "98691409657"
+      SAME_HEAD_CI: "33122152793"
+      SAME_HEAD_CI_JOB: "98691409674"
+      ARTIFACT_ID: "9666964713"
+      ARTIFACT_NAME: r318bc-one-following-property-header-evidence
+      ARTIFACT_SIZE: "7795"
+      ARTIFACT_DIGEST: sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e
+
+    steps:
+      - name: Checkout exact builder head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze BC authority and fresh main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" = "$BASE_SHA"
+          test "$(git rev-parse "$EVIDENCE_SHA^{tree}")" = "$EVIDENCE_TREE"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EVIDENCE_RUN" --jq .head_sha)" = "$EVIDENCE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EVIDENCE_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EVIDENCE_RUN" --jq .conclusion)" = success
+          jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$EVIDENCE_RUN/jobs?per_page=100")"
+          test "$(jq -r '.jobs[] | select(.id == (env.EVIDENCE_JOB|tonumber)) | .conclusion' <<<"$jobs")" = success
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAME_HEAD_CI" --jq .head_sha)" = "$EVIDENCE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAME_HEAD_CI" --jq .status)" = completed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAME_HEAD_CI" --jq .conclusion)" = success
+          ci_jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SAME_HEAD_CI/jobs?per_page=100")"
+          test "$(jq -r '.jobs[] | select(.id == (env.SAME_HEAD_CI_JOB|tonumber)) | .conclusion' <<<"$ci_jobs")" = success
+
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID")"
+          test "$(jq -r .name <<<"$meta")" = "$ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta" | tr '[:upper:]' '[:lower:]')" = "$(printf '%s' "$ARTIFACT_DIGEST" | tr '[:upper:]' '[:lower:]')"
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$EVIDENCE_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$EVIDENCE_SHA"
+          test "$(jq -r .expired <<<"$meta")" = false
+          echo R3_18BC_ADMISSION_AUTHORITY=PASS
+
+      - name: Build canonical BC admission and BD spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('tools/_tmp_r318bc_admission_builder.py')
+          compile(p.read_text(encoding='utf-8'), str(p), 'exec')
+          PY
+          python3 tools/_tmp_r318bc_admission_builder.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('MIMIR_KNOWLEDGE_GRAPH.md')
+          text = p.read_text(encoding='utf-8')
+          needle = '\n \n### R3.18BC one following-property-header evidence: OUTCOME A / CLOSED'
+          replacement = '\n\n### R3.18BC one following-property-header evidence: OUTCOME A / CLOSED'
+          if text.count(needle) != 1:
+              raise SystemExit(f'KG whitespace normalization expected 1 match, got {text.count(needle)}')
+          p.write_text(text.replace(needle, replacement), encoding='utf-8')
+          print('R3_18BC_KG_WHITESPACE_NORMALIZATION=PASS')
+          PY
+
+      - name: Validate exact canonical scope and archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$RUNNER_TEMP/expected.txt"
+          changed="$RUNNER_TEMP/changed.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BC_DECISION.md
+          docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md
+          EOF
+          {
+            git diff --name-only HEAD --
+            git ls-files --others --exclude-standard
+          } | sort -u > "$changed"
+          sort -u -o "$expected" "$expected"
+          echo '--- expected'; cat "$expected"
+          echo '--- changed'; cat "$changed"
+          test -z "$(comm -3 "$expected" "$changed")"
+          test "$(wc -l < "$changed")" -eq 9
+
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -F '148. `docs/continuity/MIMIR_R3_18BC_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '149. `docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'R3.18BD — exact following-header context contract after R3.18BC' MIMIR_CONTINUE_HERE.md
+          grep -F '**Outcome:** **A — ADMITTED / READ-ONLY HEADER EVIDENCE CLOSED**' docs/continuity/MIMIR_R3_18BC_DECISION.md
+          grep -F '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md
+          grep -F '(72,  6, 92, Boolean, 868, 32, 10, false)' docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md
+          grep -F '(110, 6, 58, Float,   868, 32, 10, false)' docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BC_CONTINUITY_VALIDATION=PASS
+
+      - name: Commit generated canonical docs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BC_DECISION.md \
+            docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m 'Admit R3.18BC and open R3.18BD'
+          result_sha="$(git rev-parse HEAD)"
+          result_tree="$(git rev-parse 'HEAD^{tree}')"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo "R3_18BC_BUILDER_RESULT_SHA=$result_sha"
+          echo "R3_18BC_BUILDER_RESULT_TREE=$result_tree"
