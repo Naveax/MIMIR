@@ -52,6 +52,8 @@ jobs:
 
       - name: Rust 1.85
         uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
 
       - name: Freeze authorities and receipts
         shell: bash
