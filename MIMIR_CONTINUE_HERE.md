@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  2558cc0559422a3e6695e1501f20d96d83b23e6d
+  5d2bca711f528ab1bb607104379af503ff175697
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18AY — bounded post-AU one-following-payload production
+  R3.18BA — bounded post-AY mixed following-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18AZ — published AY exact 40/40 / AW-native-oracle exact 40/40 / false terminators 7/7 / mismatch 0 / witness reselection 0 / following-control consumption 0 / artifact 9652520412
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18AZ — published R3.18AY differential Outcome A / exact 40/40 / Int=40 / width32=40 / range 5..300 / mismatch 0 / reselection 0 / same-head CI 33086674797 / artifact 9652520412
 
 CURRENT_PASS:
-  R3.18BA — bounded post-AY mixed following-control production
+  R3.18BB — published-R3.18BA mixed following-control differential
 
 CURRENT_PASS_TYPE:
-  bounded production implementation / validate-recompute one exact R3.18AY payload, consume exactly one AX-admitted mixed property_present bit (false=37 true=3), stop one bit later, and consume no following stream/header/payload/second-control bits
+  read-only published-production differential / replay exact immutable AX forty-row authority against published R3.18BA, require false=37 true=3 and exact start/value/end/stop with mismatch/reselection 0/0, and consume no following stream/header/payload/second-control bits
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays

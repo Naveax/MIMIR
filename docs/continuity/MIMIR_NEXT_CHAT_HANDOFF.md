@@ -1,9 +1,11 @@
 # MIMIR — Next Chat Handoff
 
-Canonical production remains **R3.18AY** at `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1`. R3.18AZ is now **CLOSED / Outcome A**: evidence `f46479faa2b230f7fde474f7f7696a1024420879` / run `33086674062/98568084290` SUCCESS, same-head natural CI `33086674797/98568087263` SUCCESS, artifact `9652520412` / `sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4`, downloaded digest exact and inner manifest 13/13 PASS.
+Canonical production is now **R3.18BA** at `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`. R3.18BA closed **Outcome A / PRODUCTION**: fixed builder `ce5e27641cb0240e7440b93092be69a8fc5b7a11`, builder `33091339939/98584661482` SUCCESS, validation-only PR #208 exact-head CI `33091594385/98585555551` SUCCESS and closed unmerged, and published-main CI `33092084628/98587299347` SUCCESS.
 
-R3.18AZ proves published AY exact on the immutable 40-row AW payload lane: published AY 40/40, AW native/oracle 40/40, Int=40, width32=40, semantic range 5..300, mismatch 0, witness reselection 0, and AX following-control consumption 0. The seven upstream AU false terminators remain outside the payload lane.
+The production boundary recomputes one exact R3.18AY payload, consumes exactly one following `property_present` bit and stops one bit later. Frozen immutable R3.18AX semantics are false=37 / true=3 across forty valid rows; seven upstream AU false terminators remain outside. Adjacent stream/header/payload/second-control consumption remains 0/0/0/0.
 
-The active pass is **R3.18BA bounded post-AY mixed following-control production**. Recompute one valid AY payload, consume exactly one AX-admitted `property_present` bit at AY stop, preserve both false=37 and true=3, and stop one bit later. No following stream/header/payload or second control is open.
+The active pass is **R3.18BB — published-R3.18BA mixed following-control differential**. It is read-only: replay exactly the immutable forty AX witnesses, require published BA exact 40/40 for start/value/end/stop, false=37 / true=3, mismatch 0, witness reselection 0, deterministic repeatability and all bounded negatives. The 37 false rows terminate. Only the exact three true rows may become candidates for a later separate header-evidence pass; BB itself consumes no header or payload.
+
+R3.18AX is the exact bit-level truncation authority (`TRUNCATION_BEFORE_CONTROL=PASS 40/40`). The BA carrier API is byte-slice based and all forty frozen control starts are non-byte-aligned, so do not widen BA with a bit-length transport parameter merely to simulate a partial-byte EOF.
 
 Before any dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.

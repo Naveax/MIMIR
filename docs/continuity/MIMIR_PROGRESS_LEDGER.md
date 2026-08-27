@@ -1510,3 +1510,49 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - `R3.18BA — bounded post-AY mixed following-control production`.
+
+---
+
+## 2026-08-27 — R3.18BA — Bounded post-AY mixed following-control production
+
+Production base SHA: `109bad258d43963fd5432317503f99a7e1b8aa1b`
+Production commit SHA: `5d2bca711f528ab1bb607104379af503ff175697`
+Production tree: `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`
+Pass type: bounded production implementation + clean reconstruction + validation-only PR + force-free publication
+Outcome: **A — ADMITTED / PRODUCTION**
+
+What changed:
+- added one boundary-specific post-AY mixed following-control result/API;
+- recomputes exact R3.18AY authority, consumes exactly one LSB-first `property_present` bit and stops one bit later;
+- accepts both immutable AX classes false=37 / true=3;
+- keeps all seven upstream AU false terminators outside BA;
+- production scope is exactly two files.
+
+Validation:
+- fixed helper `ce5e27641cb0240e7440b93092be69a8fc5b7a11` / builder `33091339939/98584661482` SUCCESS;
+- helper-head CI `33091339935` SUCCESS;
+- focused BA + affected prerequisite regressions 18/18 PASS;
+- cargo check and Clippy `-D warnings` PASS;
+- validation-only PR #208 closed unmerged; exact-head CI `33091594385/98585555551` SUCCESS;
+- validation branch CI `33091611038` SUCCESS;
+- published-main CI `33092084628/98587299347` SUCCESS;
+- force=false publication and exact SHA/tree readback PASS.
+
+Evidence:
+- immutable AX authority `465a3f2fc71e5eed6f00c16a04738031bef8d82c` / `33068572230/98504703417` SUCCESS / artifact `9644869549` / `sha256:32f8b8056791280805da023e18ba73931f7caf4e2cf9e816411d4a0094bf97d9`;
+- frozen rows 40/40; false=37 / true=3; upstream false terminators 7/7 excluded;
+- one AY recomputation and one new control read per successful BA call;
+- adjacent stream/header/payload/second-control consumption 0/0/0/0.
+
+Superseded scaffolding:
+- first builder run `33090827273` was not rerun; behavior tests passed but Clippy rejected an 8-argument API;
+- corrected API removed redundant AU authority and all admitted receipts are on the fixed helper/candidate above.
+
+Boundaries opened:
+- published production now includes exactly one mixed following property-control bit after valid AY payload.
+
+Boundaries still closed:
+- following stream/header/payload, second later control, generalized cursor/loop, upstream false-terminator BA access and all wider semantic/runtime layers.
+
+Next exact pass:
+- `R3.18BB — published-R3.18BA mixed following-control differential` on exactly the immutable forty AX witnesses.

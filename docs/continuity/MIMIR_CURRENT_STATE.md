@@ -2,38 +2,43 @@
 
 **Continuity date:** 2026-08-27
 **Repository:** `Naveax/MIMIR`
-**Canonical production SHA:** `2558cc0559422a3e6695e1501f20d96d83b23e6d`
-**Production tree:** `93198ad2a4f929ac62b87beddbc9d5b5665f08d1`
-**Production milestone:** `R3.18AY — bounded post-AU one-following-payload production`
-**Last read-only evidence/audit:** `R3.18AZ — Outcome A / published AY exact 40/40 / AW-native-oracle exact 40/40 / false terminators 7/7 / mismatch 0 / reselection 0 / following-control consumption 0 / artifact 9652520412`
-**Last completed contract:** `R3.18AT — exact_tuple_only / 16 eight-field contexts / multiplicity 40 / 7 false terminators outside membership / sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5`
-**Current exact pass:** `R3.18BA — bounded post-AY mixed following-control production`
+**Canonical production SHA:** `5d2bca711f528ab1bb607104379af503ff175697`
+**Production tree:** `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`
+**Production milestone:** `R3.18BA — bounded post-AY mixed following-control production`
+**Last read-only evidence/audit:** `R3.18AZ — Outcome A / published AY exact 40/40 / mismatch 0 / reselection 0 / artifact 9652520412`
+**Current exact pass:** `R3.18BB — published-R3.18BA mixed following-control differential`
 
 ## Truthful boundary
 
-R3.18AY remains canonical production. It validates/recomputes one exact R3.18AU true-header authority, decodes one R3.18AW-admitted Int/32 payload and stops at payload end. Seven upstream AU false terminators are rejected before payload decode. R3.18AZ independently validated published AY on the immutable forty-row lane with exact 40/40 equality and mismatch/reselection 0/0. R3.18AX's next-bit distribution false=37 / true=3 is now the evidence authority for the active R3.18BA bounded production pass; production has not consumed that bit yet.
+R3.18BA is now canonical production. It validates/recomputes one exact R3.18AY Int/32 payload composition, starts exactly at the validated AY stop, consumes exactly one LSB-first following `property_present` bit, accepts both immutable R3.18AX-observed classes, and stops one bit later. The exact frozen distribution is false=37 / true=3 on forty valid payload rows; all seven upstream AU false terminators remain outside the BA lane.
 
 ```text
-production SHA/tree                    2558cc0559422a3e6695e1501f20d96d83b23e6d / 93198ad2a4f929ac62b87beddbc9d5b5665f08d1
-AZ evidence head/tree                  f46479faa2b230f7fde474f7f7696a1024420879 / 0d022d27fda2275de9512d96231979e1d016491e
-AZ run/job                             33086674062/98568084290 SUCCESS
-AZ same-head natural CI                33086674797/98568087263 SUCCESS
-AZ artifact                            9652520412 / 18151 / sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4
-AZ inner manifest                      13/13 PASS
-published AY exact                     40/40
-AW native/oracle exact                 40/40
-AU false terminators rejected          7/7
-payload tag / width                    Int=40 / width32=40
-semantic range                         5..300
-mismatch / reselection                 0 / 0
-AX control distribution                false=37 / true=3 evidence authority for BA
-production following-control consumption 0
+production SHA/tree                    5d2bca711f528ab1bb607104379af503ff175697 / 6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a
+production parent                      109bad258d43963fd5432317503f99a7e1b8aa1b
+fixed builder                          ce5e27641cb0240e7440b93092be69a8fc5b7a11
+builder run/job                        33091339939/98584661482 SUCCESS
+builder helper-head CI                 33091339935 SUCCESS
+validation-only PR                     #208 closed unmerged
+exact-candidate PR CI                  33091594385/98585555551 SUCCESS
+validation-branch CI                   33091611038 SUCCESS
+published-main CI                      33092084628/98587299347 SUCCESS
+frozen BA rows                         40/40
+upstream AU false terminators          7/7 excluded
+BA false / true                        37 / 3
+AY recomputation per BA call           exactly 1
+new control reads per BA call          exactly 1
+next stream/header/payload/second      0/0/0/0
+production files                       exactly 2
 ```
+
+The superseded first builder run `33090827273` is not authority: focused behavior passed, but Clippy rejected the redundant eight-argument API (`too_many_arguments 8/7`). It was not rerun. The corrected API removes the redundant AU authority parameter and derives that authority through `ay_prior.header_composition`.
 
 ## Current gate
 
-R3.18BA may compose exactly one mixed `property_present` bit after recomputing a valid R3.18AY payload. It must accept both false and true, stop one bit later, and consume no following stream/header/payload/second-control bits.
+R3.18BB is read-only. It must replay exactly the immutable forty R3.18AX control witnesses against published R3.18BA and require exact start/value/end/stop equality, false=37 / true=3, mismatch 0 and witness reselection 0. The 37 false rows are terminators. Only the exact three true rows may be candidates for a later, separate following-header evidence pass.
+
+R3.18AX already carries the exact bit-level `TRUNCATION_BEFORE_CONTROL=PASS 40/40` authority. All forty control starts are non-byte-aligned, so the production `&[u8]` API must not pretend it can represent a partial-byte EOF that preserves AY while deleting only the following bit. BA's carrier truncation negative remains fail-closed; the exact-before-bit claim remains AX evidence authority.
 
 ## Hard stop
 
-No BA control access on the seven upstream false terminators, no following stream/header/payload, no second later control, no generalized/repeated property cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+R3.18BB decodes no following stream ID, header or payload and no second later control. No generic/repeated property cursor, next actor/frame/lifecycle mutation, raw-state/event/replay-slice/skill/counterfactual/runtime/export widening is open.

@@ -6,27 +6,37 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18AZ closed / R3.18BA active production gate
+# 0. Current override — R3.18BA production closed / R3.18BB active differential
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18AY
-- `2558cc0559422a3e6695e1501f20d96d83b23e6d` / `93198ad2a4f929ac62b87beddbc9d5b5665f08d1` remains canonical production; exactly one AW-admitted Int/32 payload after valid AU authority, stopping at payload end.
-- all seven upstream AU false terminators remain outside the payload lane.
+## PRODUCTION — R3.18BA
+- `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a` is canonical production.
+- one exact R3.18AY payload authority is recomputed and validated;
+- exactly one following LSB-first `property_present` bit is consumed at AY stop;
+- both frozen R3.18AX classes are admitted: false=37 / true=3;
+- the boundary stops exactly one bit later;
+- all seven upstream AU false terminators remain outside BA.
 
-## CLOSED DIFFERENTIAL — R3.18AZ Outcome A
-- authority `f46479faa2b230f7fde474f7f7696a1024420879` / `33086674062/98568084290` SUCCESS; same-head CI `33086674797/98568087263` SUCCESS; artifact `9652520412` / `sha256:558c709e242d74150755565d07c7968853abad0a1de6c5f49cd8f5920e7f9fc4`; manifest 13/13 PASS.
-- published AY exact 40/40; AW native/oracle exact 40/40; Int=40 / width32=40 / range 5..300; mismatch/reselection 0/0; following-control reads 0.
+## CLOSED PRODUCTION VALIDATION — R3.18BA Outcome A
+- fixed builder `ce5e27641cb0240e7440b93092be69a8fc5b7a11` / `33091339939/98584661482` SUCCESS;
+- clean candidate `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`;
+- validation-only PR #208 exact-head CI `33091594385/98585555551` SUCCESS and closed unmerged;
+- published-main CI `33092084628/98587299347` SUCCESS;
+- production scope exactly `lib.rs` plus `r3_18ba_post_ay_payload_control.rs`.
 
-## ACTIVE PRODUCTION GATE — R3.18BA
-- only the exact 40 valid AY payload rows may enter BA; the seven upstream false terminators remain outside.
-- validate/recompute AY, consume exactly one AX-admitted `property_present` bit, preserve false=37 / true=3, and stop one bit later.
-- false and true are both valid at this boundary; true-only historical policies are not inherited.
+## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BB
+- replay exactly the immutable forty R3.18AX control witnesses against published BA;
+- require published BA start/value/end/stop exact 40/40;
+- require false=37 / true=3, mismatch=0 and witness reselection=0;
+- false rows are terminators; only the exact three true rows may become candidates for a later separate header-evidence pass;
+- BB itself decodes no following stream/header/payload and no second later control.
 
 ## CLOSED
-- following stream/header/payload after BA;
+- following stream/header/payload consumption during R3.18BB;
+- header production/evidence before R3.18BB closes;
 - second later property-control bit;
-- BA access on upstream false terminators;
+- BA/BB access on the seven upstream AU false terminators;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

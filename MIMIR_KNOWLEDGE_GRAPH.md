@@ -83,7 +83,8 @@ R3.18AW one following primitive payload evidence on exact AV-true rows / Outcome
 R3.18AX next property-control bit evidence after exact AW payload end / Outcome A CLOSED                      |
 R3.18AY bounded post-AU one-following-payload production / PRODUCTION CLOSED                                  |
 R3.18AZ published-R3.18AY one-following-payload differential / Outcome A CLOSED
-R3.18BA bounded post-AY mixed following-control production / ACTIVE                                            |
+R3.18BA bounded post-AY mixed following-control production / PRODUCTION CLOSED
+R3.18BB published-R3.18BA mixed following-control differential / ACTIVE                                            |
         |                               |
         +---------------+---------------+
                         |

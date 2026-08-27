@@ -3,14 +3,14 @@
   "updated_date": "2026-08-27",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "2558cc0559422a3e6695e1501f20d96d83b23e6d",
-  "last_production_milestone": "R3.18AY",
-  "last_production_milestone_name": "bounded post-AU one-following-payload production",
+  "last_production_code_sha": "5d2bca711f528ab1bb607104379af503ff175697",
+  "last_production_milestone": "R3.18BA",
+  "last_production_milestone_name": "bounded post-AY mixed following-control production",
   "last_completed_read_only_audit": "R3.18AZ",
-  "current_pass": "R3.18BA",
-  "current_pass_kind": "bounded production implementation / exactly one mixed following property-control bit after validated R3.18AY payload",
-  "current_pass_goal": "Validate/recompute one exact R3.18AY payload, consume exactly one R3.18AX-admitted property_present bit at AY stop, preserve false=37 and true=3, and stop one bit later.",
-  "current_pass_stop_boundary": "No following stream/header/payload or second later control; no generalized cursor; no BA access on seven upstream false terminators; no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
+  "current_pass": "R3.18BB",
+  "current_pass_kind": "read-only published-production differential / exact R3.18BA mixed following-control validation",
+  "current_pass_goal": "Replay exactly the immutable R3.18AX forty-row control authority against published R3.18BA; require exact start/value/end/stop 40/40, false=37 true=3, mismatch 0, witness reselection 0.",
+  "current_pass_stop_boundary": "No following stream/header/payload or second later control; no generalized cursor; no access on seven upstream AU false terminators; no actor/frame/lifecycle/raw-state/event/skill/runtime widening.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -141,7 +141,10 @@
     "following stream/header/payload after the one R3.18BA control bit",
     "second later property-control bit after R3.18BA",
     "BA control access on the seven upstream AU false terminators",
-    "generalized/repeated property loop or generic cursor after R3.18BA"
+    "generalized/repeated property loop or generic cursor after R3.18BA",
+    "following stream/header/payload during R3.18BB published-production differential",
+    "second later property-control bit after published R3.18BA",
+    "following-header evidence/production before R3.18BB differential closure"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -2748,13 +2751,34 @@
     "production_mutation": false
   },
   "r3_18ba": {
-    "status": "active",
-    "class": "bounded_production_implementation",
-    "input_rows": 40,
-    "upstream_false_terminators_excluded": 7,
-    "evidence_false": 37,
-    "evidence_true": 3,
-    "bits_to_consume": 1,
-    "adjacent_stream_header_payload_second_control_open": false
+    "outcome": "A",
+    "status": "production_closed",
+    "production_sha": "5d2bca711f528ab1bb607104379af503ff175697",
+    "production_tree": "6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a",
+    "parent_sha": "109bad258d43963fd5432317503f99a7e1b8aa1b",
+    "builder_fixed_sha": "ce5e27641cb0240e7440b93092be69a8fc5b7a11",
+    "builder_run": 33091339939,
+    "builder_job": 98584661482,
+    "builder_helper_ci": 33091339935,
+    "validation_pr": 208,
+    "validation_pr_run": 33091594385,
+    "validation_pr_job": 98585555551,
+    "validation_branch_run": 33091611038,
+    "published_main_run": 33092084628,
+    "published_main_job": 98587299347,
+    "frozen_rows": 40,
+    "upstream_false_terminators": 7,
+    "false": 37,
+    "true": 3,
+    "next_stream_header_payload_second_control_consumption": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "clean_production_files": [
+      "crates/mimir-replay/src/lib.rs",
+      "crates/mimir-replay/tests/r3_18ba_post_ay_payload_control.rs"
+    ]
   }
 }
