@@ -1,0 +1,172 @@
+name: R3.18BE Production Builder v4
+
+on:
+  push:
+    branches:
+      - automation/r318be-production-builder-v4
+    paths:
+      - '.github/workflows/_tmp_r318be_production_builder_v4.yml'
+      - 'tools/_tmp_r318be_production_builder.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout helper commit only
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          fetch-tags: false
+
+      - name: Freeze authority and generate clean production candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Base = '3fa88f27201ee91c51a3bb7a623c00b46204c1e0'
+          $BaseTree = 'f193ee65fcc677178891fe5cb006f2fb2903cae9'
+          $BaseLibBlob = 'fe232760e63c3c1b46711084c70049f456ef345b'
+          $BeSpecBlob = 'c5f708fbc88732402bf057bd1274dc11f90669a2'
+          $BdContractBlob = 'b0c2610b3d36e25302f35037518990fa3bc9fe69'
+          $BdContractSha256 = '33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27'
+          $GeneratorBlob = '938d376887a7d21652e41e970cd5569f6f8bfff2'
+          $CandidateBranch = 'candidate/r318be-production-v4'
+
+          $HelperParent = (git rev-parse 'HEAD^').Trim()
+          if ($HelperParent -cne $Base) { throw "helper parent drift: $HelperParent" }
+          $ObservedTree = (git rev-parse "$Base^{tree}").Trim()
+          if ($ObservedTree -cne $BaseTree) { throw "base tree drift: $ObservedTree" }
+          $ObservedGeneratorBlob = (git hash-object 'tools/_tmp_r318be_production_builder.py').Trim()
+          if ($ObservedGeneratorBlob -cne $GeneratorBlob) { throw "generator blob drift: $ObservedGeneratorBlob" }
+
+          $Generator = Join-Path $env:RUNNER_TEMP 'r318be_generator.py'
+          Copy-Item -LiteralPath 'tools/_tmp_r318be_production_builder.py' -Destination $Generator
+
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main' --depth=1 --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $RemoteMain = (git rev-parse 'refs/remotes/origin/main').Trim()
+          if ($RemoteMain -cne $Base) { throw "fresh main drift before generation: $RemoteMain" }
+
+          git reset --hard $Base
+          git clean -fdx
+
+          $ObservedLibBlob = (git hash-object 'crates/mimir-replay/src/lib.rs').Trim()
+          if ($ObservedLibBlob -cne $BaseLibBlob) { throw "lib authority drift: $ObservedLibBlob" }
+          $ObservedSpecBlob = (git hash-object 'docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md').Trim()
+          if ($ObservedSpecBlob -cne $BeSpecBlob) { throw "BE spec drift: $ObservedSpecBlob" }
+          $ObservedContractBlob = (git hash-object 'docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json').Trim()
+          if ($ObservedContractBlob -cne $BdContractBlob) { throw "BD contract blob drift: $ObservedContractBlob" }
+          $ObservedContractSha = (Get-FileHash -LiteralPath 'docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json' -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($ObservedContractSha -cne $BdContractSha256) { throw "BD contract SHA-256 drift: $ObservedContractSha" }
+
+          python $Generator
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          # v4 harness corrections only: include import collision + two Clippy-only source-quality lints.
+          $TestPath = 'crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs'
+          $TestText = [System.IO.File]::ReadAllText($TestPath)
+          $ImportRegex = [regex]'(?m)^    ReplayNetworkAttributeTagV1,\r?\n'
+          $ImportMatches = $ImportRegex.Matches($TestText)
+          if ($ImportMatches.Count -ne 1) { throw "unexpected redundant import multiplicity: $($ImportMatches.Count)" }
+          $TestText = $ImportRegex.Replace($TestText, '', 1)
+          [System.IO.File]::WriteAllText($TestPath, $TestText, [System.Text.UTF8Encoding]::new($false))
+
+          $LibPath = 'crates/mimir-replay/src/lib.rs'
+          $LibText = [System.IO.File]::ReadAllText($LibPath)
+          $DocGapRegex = [regex]'(?m)(^/// plan\. This function consumes no attribute payload bits and performs no actor/frame iteration\.\r?\n)\r?\n(pub fn decode_replay_network_existing_actor_first_property_header_v1\()'
+          $DocGapMatches = $DocGapRegex.Matches($LibText)
+          if ($DocGapMatches.Count -ne 1) { throw "unexpected R3.16B doc-gap multiplicity: $($DocGapMatches.Count)" }
+          $LibText = $DocGapRegex.Replace($LibText, '$1$2', 1)
+
+          $BeBegin = $LibText.IndexOf('// R3.18BE PRE-ADMISSION BEGIN')
+          $BeEnd = $LibText.IndexOf('// R3.18BE PRE-ADMISSION END')
+          if ($BeBegin -lt 0 -or $BeEnd -le $BeBegin) { throw 'R3.18BE marker drift' }
+          $BeforeBe = $LibText.Substring(0, $BeBegin)
+          $BeBlock = $LibText.Substring($BeBegin, $BeEnd - $BeBegin)
+          $AfterBe = $LibText.Substring($BeEnd)
+          $BeFnRegex = [regex]'(?m)^pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload.*following_header_v1\('
+          $BeFnMatches = $BeFnRegex.Matches($BeBlock)
+          if ($BeFnMatches.Count -ne 1) { throw "unexpected R3.18BE function multiplicity: $($BeFnMatches.Count)" }
+          $BeBlock = $BeFnRegex.Replace($BeBlock, "#[allow(clippy::too_many_arguments)]`n`$0", 1)
+          $LibText = $BeforeBe + $BeBlock + $AfterBe
+          [System.IO.File]::WriteAllText($LibPath, $LibText, [System.Text.UTF8Encoding]::new($false))
+
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt,clippy
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 fmt --all
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          cargo +1.85.0 test -p mimir-replay --test r3_18be_post_ba_following_header
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 test -p mimir-replay --test r3_18ba_post_ay_payload_control
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 test -p mimir-replay --test r3_18ay_post_au_payload
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 test -p mimir-replay --test r3_16b_property_header
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 check --workspace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 test --workspace
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.0 clippy --workspace --all-targets -- -D warnings
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          git add -- 'crates/mimir-replay/src/lib.rs' 'crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs'
+          $Expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs'
+          )
+          $Staged = @(git diff --cached --name-only | Sort-Object)
+          $ExpectedSorted = @($Expected | Sort-Object)
+          if (@(Compare-Object -ReferenceObject $ExpectedSorted -DifferenceObject $Staged).Count -ne 0) {
+            throw "staged scope drift: $($Staged -join ', ')"
+          }
+          $Status = @(git status --porcelain=v1 --untracked-files=all)
+          if ($Status.Count -ne 2) { throw "working-tree scope drift: $($Status -join ' | ')" }
+
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git commit -m 'Implement R3.18BE bounded post-BA following header'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $Candidate = (git rev-parse HEAD).Trim()
+          $CandidateTree = (git rev-parse 'HEAD^{tree}').Trim()
+          $CandidateParent = (git rev-parse 'HEAD^').Trim()
+          if ($CandidateParent -cne $Base) { throw "candidate parent drift: $CandidateParent" }
+          $Committed = @(git diff-tree --no-commit-id --name-only -r HEAD | Sort-Object)
+          if (@(Compare-Object -ReferenceObject $ExpectedSorted -DifferenceObject $Committed).Count -ne 0) {
+            throw "candidate commit scope drift: $($Committed -join ', ')"
+          }
+
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main' --depth=1 --quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $RemoteMainBeforePush = (git rev-parse 'refs/remotes/origin/main').Trim()
+          if ($RemoteMainBeforePush -cne $Base) { throw "fresh main drift before candidate push: $RemoteMainBeforePush" }
+          git ls-remote --exit-code --heads origin "refs/heads/$CandidateBranch" *> $null
+          if ($LASTEXITCODE -eq 0) { throw "candidate branch already exists: $CandidateBranch" }
+          $global:LASTEXITCODE = 0
+
+          git push origin "HEAD:refs/heads/$CandidateBranch"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          Write-Host "R3_18BE_CANDIDATE_SHA=$Candidate"
+          Write-Host "R3_18BE_CANDIDATE_TREE=$CandidateTree"
+          Write-Host "R3_18BE_CANDIDATE_PARENT=$CandidateParent"
+          Write-Host 'R3_18BE_CANDIDATE_SCOPE=PASS 2/2'
+          Write-Host 'R3_18BE_BUILDER=PASS'
