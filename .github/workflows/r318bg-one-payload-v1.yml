@@ -1,0 +1,505 @@
+name: R3.18BG One Following Primitive Payload Evidence v1
+
+on:
+  push:
+    branches:
+      - evidence/r318bg-one-payload-v1
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bg-one-payload-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: e507f3988091a8135a693e7f94ff597f7fe1aa80
+      MAIN_TREE: 7266575848c4f0bcf6aa1d2ebde164013107bf5e
+      MAIN_PR: '211'
+      MAIN_PR_CI_RUN: '34106747963'
+      MAIN_PR_CI_JOB: '101693411617'
+      MAIN_PR_KA_RUN: '34106747943'
+      MAIN_PR_KA_JOB: '101693411543'
+      MAIN_CI_RUN: '34107309656'
+      MAIN_KA_RUN: '34107309664'
+
+      PROD_SHA: 1d717d3e82179edd85b197968f46b8f951a3e828
+      PROD_TREE: 72cf2b907437a1ba62cc9deebd7608f7d0372f81
+      LIB_BLOB: 92d9d1893d75f9f0bd5ca921d8cf80455b88f0c3
+      BE_TEST_BLOB: 78f32c79a3526cbfeac4e32ccc06e5965cd3e97b
+      BF_DECISION_BLOB: 46d8fe40d59a6dc7888fd3433158b1a638a8c7b0
+      BG_SPEC_BLOB: 44952dc9865673a9d1adb72e5a522bb3570e415c
+      BD_CONTRACT_SHA256: 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27
+
+      BF_HEAD: 5a3f875a445f9a3a2176788555089562948c3676
+      BF_TREE: d4b0b0510d24f5c0ba0f3d748201d9fed4ea7e0f
+      BF_RUN: '34098102185'
+      BF_JOB: '101666129830'
+      BF_CI_RUN: '34098102183'
+      BF_CI_JOB: '101666129957'
+      BF_ARTIFACT: '10009534065'
+      BF_ARTIFACT_NAME: r318bf-published-be-differential-evidence
+      BF_ARTIFACT_SIZE: '9998'
+      BF_DIGEST: sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc
+      BF_MANIFEST_SHA256: 35747c9813f56e58c1515dc301cf6a0d3d3a86fd0b068fba609948016d0e45ce
+
+      BF_PROBE_BLOB: 45f057754b6e046d10b1625af99f58b7b6e25dd4
+      BG_NATIVE_BLOB: 78c4b135adc6cc6d6fadfb538e687d30628899f4
+      BG_BOXCARS_BLOB: 878378c858de59329c91c19b3560dd8afbef33b9
+      BG_COMPARE_BLOB: 3b2d029cacb2f5beac23ff623e925fe227734348
+
+      R318C_HEAD: a4b71ad43e5cf55c44c9518b24622ce29214acd2
+      R318C_PATCH_BLOB: eb61cca0c080733aa36856dbb69f4c36642a5cda
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      BOXCARS_FRAME_BLOB: 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+      BOXCARS_ATTR_BLOB: 5e2d5bc1cd8187af30c3ea95193ad987645cb76e
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Freeze canonical, production, BF and publication authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+          test "$(git rev-parse "$MAIN_SHA^{tree}")" = "$MAIN_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs")" = "$BE_TEST_BLOB"
+          test "$(git rev-parse "$MAIN_SHA:docs/continuity/MIMIR_R3_18BF_DECISION.md")" = "$BF_DECISION_BLOB"
+          test "$(git rev-parse "$MAIN_SHA:docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md")" = "$BG_SPEC_BLOB"
+          test "$(git show "$MAIN_SHA:docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json" | sha256sum | awk '{print $1}')" = "$BD_CONTRACT_SHA256"
+          test "$(git rev-parse "$BF_HEAD^")" = cbfc861e1b570fcb2e9e1faf8b6bd16149b549b9
+          test "$(git rev-parse "$BF_HEAD^{tree}")" = "$BF_TREE"
+
+          check_success() {
+            local run="$1" job="$2" sha="$3"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_sha)" = "$sha"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .status)" = completed
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" = success
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .run_id)" = "$run"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .conclusion)" = success
+          }
+          check_success "$BF_RUN" "$BF_JOB" "$BF_HEAD"
+          check_success "$BF_CI_RUN" "$BF_CI_JOB" "$BF_HEAD"
+          check_success "$MAIN_PR_CI_RUN" "$MAIN_PR_CI_JOB" "$MAIN_SHA"
+          check_success "$MAIN_PR_KA_RUN" "$MAIN_PR_KA_JOB" "$MAIN_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$MAIN_PR" --jq .state)" = closed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$MAIN_PR" --jq '.merged_at // ""')" = ""
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$MAIN_PR" --jq .head.sha)" = "$MAIN_SHA"
+
+          wait_main_run() {
+            local run="$1" expected_name="$2"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_sha)" = "$MAIN_SHA"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_branch)" = main
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .event)" = push
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .name)" = "$expected_name"
+            for attempt in $(seq 1 360); do
+              state="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .status)"
+              [ "$state" = completed ] && break
+              sleep 5
+            done
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .status)" = completed
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" = success
+          }
+          wait_main_run "$MAIN_CI_RUN" CI
+          wait_main_run "$MAIN_KA_RUN" 'Knowledge Archive'
+
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BF_ARTIFACT")"
+          test "$(jq -r .name <<<"$meta")" = "$BF_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$BF_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta" | tr '[:upper:]' '[:lower:]')" = "$(printf '%s' "$BF_DIGEST" | tr '[:upper:]' '[:lower:]')"
+          test "$(jq -r .expired <<<"$meta")" = false
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$BF_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$BF_HEAD"
+          echo R3_18BG_AUTHORITY_FREEZE=PASS
+
+      - name: Materialize immutable helper blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          fetch_blob() {
+            local sha="$1" out="$2"
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$sha" --jq .content | tr -d '\n' | base64 -d > "$out"
+            test "$(git hash-object "$out")" = "$sha"
+          }
+          fetch_blob "$BF_PROBE_BLOB" "$RUNNER_TEMP/r3_18bf_published_be_probe.rs"
+          fetch_blob "$BG_NATIVE_BLOB" "$RUNNER_TEMP/r3_18bg_one_payload_evidence.rs"
+          fetch_blob "$BG_BOXCARS_BLOB" "$RUNNER_TEMP/r318bg_boxcars.py"
+          fetch_blob "$BG_COMPARE_BLOB" "$RUNNER_TEMP/r318bg_compare.py"
+          fetch_blob "$R318C_PATCH_BLOB" "$RUNNER_TEMP/r318bg_base_patch.py"
+          python3 -m py_compile "$RUNNER_TEMP/r318bg_boxcars.py" "$RUNNER_TEMP/r318bg_compare.py" "$RUNNER_TEMP/r318bg_base_patch.py"
+          echo R3_18BG_HELPER_FREEZE=PASS
+
+      - name: Download BF authority and materialize exact BG targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          BF_DIR="$RUNNER_TEMP/r318bg-bf"
+          OUT="$RUNNER_TEMP/r318bg-out"
+          mkdir -p "$BF_DIR" "$OUT"
+          gh run download "$BF_RUN" --repo "$GITHUB_REPOSITORY" --name "$BF_ARTIFACT_NAME" --dir "$BF_DIR"
+          test "$(sha256sum "$BF_DIR/r3_18bf_artifact_sha256.txt" | awk '{print $1}')" = "$BF_MANIFEST_SHA256"
+          (cd "$BF_DIR" && sha256sum -c r3_18bf_artifact_sha256.txt)
+          grep -Fx 'R3_18BF_OUTCOME=A' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_PUBLISHED_BE_EXACT=40/40' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_FALSE_TERMINATORS=37' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_TRUE_HEADERS=3/3' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_EXACT_BD_CONTEXTS=3/3' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_TAGS=Boolean:2,Float:1' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_MISMATCH=0' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_WITNESS_RESELECTION=0' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$BF_DIR/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$BF_DIR/r3_18bf_aggregate.txt"
+
+          python3 - "$BF_DIR/r3_18bf_frozen_header_rows.json" "$BF_DIR/r3_18bf_frozen_replay_identity.tsv" "$OUT/r3_18bg_targets.tsv" "$OUT/r3_18bg_oracle_requests.tsv" <<'PY'
+          import csv, json, sys
+          from collections import Counter
+          from pathlib import Path
+          rows_p, ids_p, targets_p, requests_p = map(Path, sys.argv[1:])
+          payload = json.loads(rows_p.read_text(encoding='utf-8'))
+          rows = payload['rows']
+          assert payload['aggregate']['source_partition_rows'] == 40
+          assert payload['aggregate']['false_terminators'] == 37
+          assert payload['aggregate']['true_rows'] == 3
+          assert payload['aggregate']['tags'] == {'Boolean': 2, 'Float': 1}
+          assert len(rows) == 3
+          ids = {}
+          for line in ids_p.read_text(encoding='utf-8').splitlines():
+              label, digest, status = line.split('\t')
+              assert status == 'PASS' and label not in ids
+              ids[label] = digest.lower()
+          assert len(ids) == 3
+          fields = ['label','frame_index','actor_ordinal','actor_context_object_id','ba_start','ba_end','stream_start','stream_end','stream_id','stream_bound','prop_bits','property_object','attribute_tag','payload_start','version_major','version_minor','net_version','is_rl_223','replay_sha256']
+          tag_counts = Counter()
+          contexts = Counter()
+          out = []
+          for r in rows:
+              assert r['native_oracle_exact'] is True
+              assert r['following_payload_bits_consumed'] == 0
+              assert r['second_later_control_bits_consumed'] == 0
+              assert r['header_stop_bit'] == r['payload_start_bit']
+              assert r['label'] in ids
+              tag = r['resolved_attribute_tag']
+              assert tag in ('Boolean','Float')
+              tag_counts[tag] += 1
+              context = (r['stream_id_bound'],r['prop_id_bits'],r['resolved_property_object_index'],tag,r['version_major'],r['version_minor'],r['net_version'],r['is_rl_223'])
+              contexts[context] += 1
+              out.append({
+                  'label':r['label'],'frame_index':r['frame_index'],'actor_ordinal':r['actor_ordinal'],'actor_context_object_id':r['actor_context_object_id'],
+                  'ba_start':r['ba_property_present_start_bit'],'ba_end':r['ba_stop_bit'],'stream_start':r['stream_id_start_bit'],'stream_end':r['stream_id_end_bit'],
+                  'stream_id':r['stream_id'],'stream_bound':r['stream_id_bound'],'prop_bits':r['prop_id_bits'],'property_object':r['resolved_property_object_index'],
+                  'attribute_tag':tag,'payload_start':r['payload_start_bit'],'version_major':r['version_major'],'version_minor':r['version_minor'],'net_version':r['net_version'],
+                  'is_rl_223':str(r['is_rl_223']).lower(),'replay_sha256':ids[r['label']],
+              })
+          assert tag_counts == Counter({'Boolean':2,'Float':1})
+          assert len(contexts) == 3 and sum(contexts.values()) == 3
+          with targets_p.open('w', encoding='utf-8', newline='') as f:
+              w=csv.DictWriter(f, fieldnames=fields, delimiter='\t', lineterminator='\n'); w.writeheader(); w.writerows(out)
+          requests_p.write_text(''.join(f"{r['label']}\t{r['frame_index']}\t{r['actor_ordinal']}\t{r['actor_context_object_id']}\t{r['ba_start']}\n" for r in out), encoding='utf-8', newline='\n')
+          print('R3_18BG_TARGET_MATERIALIZATION=PASS rows=3 false_excluded=37 upstream_au_excluded=7 contexts=3 tags=Boolean:2,Float:1')
+          PY
+
+          python3 - "$OUT/r3_18bg_targets.tsv" <<'PY'
+          import csv, hashlib, sys
+          from pathlib import Path
+          rows=list(csv.DictReader(Path(sys.argv[1]).open(encoding='utf-8'), delimiter='\t'))
+          assert len(rows)==3
+          for row in rows:
+              p=Path(row['label']); assert p.is_file(), row['label']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==row['replay_sha256']
+          print('R3_18BG_REPLAY_IDENTITY=PASS rows=3')
+          PY
+
+          cp "$BF_DIR/r3_18bf_frozen_header_rows.json" "$OUT/r3_18bg_bf_header_authority.json"
+          cp "$BF_DIR/r3_18bf_frozen_replay_identity.tsv" "$OUT/r3_18bg_replay_identity.tsv"
+          cp "$BF_DIR/r3_18bf_aggregate.txt" "$OUT/r3_18bg_bf_aggregate.txt"
+
+      - name: Execute native exact one-scalar evidence and negatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bg-out"
+          BF_PROBE="crates/mimir-replay/tests/r3_18bf_published_be_probe.rs"
+          BG_TEST="crates/mimir-replay/tests/r3_18bg_one_payload_evidence.rs"
+          cp "$RUNNER_TEMP/r3_18bf_published_be_probe.rs" "$BF_PROBE"
+          cp "$RUNNER_TEMP/r3_18bg_one_payload_evidence.rs" "$BG_TEST"
+          export R318BG_TARGETS_TSV="$OUT/r3_18bg_targets.tsv"
+          export R318BG_NATIVE_OUT="$OUT/r3_18bg_native_rows.tsv"
+          cargo test -p mimir-replay --test r3_18bg_one_payload_evidence -- --nocapture 2>&1 | tee "$OUT/r3_18bg_native.log"
+          grep -F $'R3_18BG_NATIVE_SUMMARY\ttrue=3\tbf_false_excluded=37\tupstream_au_excluded=7\tboolean=2\tfloat=1\twidth1=2\twidth32=1\trepeat=3\ttruncation=3\twrong_tag=3\twrong_boundary=3\tpost_payload_poison=3\tnext_control_bits=0\twitness_reselection=0' "$OUT/r3_18bg_native.log"
+          test "$(($(wc -l < "$OUT/r3_18bg_native_rows.tsv") - 1))" -eq 3
+          cat > "$OUT/r3_18bg_negative_controls.txt" <<'EOF'
+          R3_18BG_BF_FALSE_ROWS_EXCLUDED_BEFORE_PAYLOAD=PASS 37/37
+          R3_18BG_UPSTREAM_AU_FALSE_ROWS_EXCLUDED=PASS 7/7
+          R3_18BG_REPEAT_NATIVE_SCALAR=PASS 3/3
+          R3_18BG_TRUNCATE_BEFORE_COMPLETE_SCALAR=PASS 3/3
+          R3_18BG_WRONG_TAG_GUARD=PASS 3/3
+          R3_18BG_WRONG_PAYLOAD_START_GUARD=PASS 3/3
+          R3_18BG_POST_PAYLOAD_POISON=PASS 3/3
+          R3_18BG_PUBLISHED_BE_HEADER_PREREQUISITE=PASS 3/3
+          R3_18BG_NEXT_CONTROL_BITS_CONSUMED=0
+          R3_18BG_WITNESS_RESELECTION=0
+          R3_18BG_HISTORICAL_PAYLOAD_VALUE_BOUNDARY_INHERITANCE=0
+          EOF
+          rm -f "$BF_PROBE" "$BG_TEST"
+          test -z "$(git status --porcelain --untracked-files=all | grep -E 'crates/mimir-replay/tests/r3_18b(f|g)_')"
+          echo R3_18BG_NATIVE_EVIDENCE=PASS
+
+      - name: Execute pinned coordinate-selected Boxcars oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bg-out"
+          BOXCARS="$RUNNER_TEMP/boxcars"
+          rm -rf "$BOXCARS"
+          git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+          git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" rev-parse HEAD:src/network/frame_decoder.rs)" = "$BOXCARS_FRAME_BLOB"
+          test "$(git -C "$BOXCARS" rev-parse HEAD:src/network/attributes.rs)" = "$BOXCARS_ATTR_BLOB"
+
+          cp "$RUNNER_TEMP/r318bg_base_patch.py" "$RUNNER_TEMP/r318bg_base_patch_derived.py"
+          python3 - "$RUNNER_TEMP/r318bg_base_patch_derived.py" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1]); s=p.read_text(encoding='utf-8')
+          assert s.count('    stream_id_bound: i32,\n') == 1
+          s=s.replace('    stream_id_bound: i32,\n','    stream_id_bound: u32,\n',1)
+          s=s.replace('R3_18C','R3_18BG').replace('r3_18c','r3_18bg')
+          needle='                        if r3_18bg_property_ordinal == 1 {\n'
+          assert s.count(needle)==1
+          s=s.replace(needle,'                        if false && r3_18bg_property_ordinal == 1 {\n',1)
+          p.write_text(s, encoding='utf-8', newline='\n')
+          print('R3_18BG_BOXCARS_BASE_DERIVATION=PASS')
+          PY
+          python3 "$RUNNER_TEMP/r318bg_base_patch_derived.py" "$BOXCARS"
+          python3 "$RUNNER_TEMP/r318bg_boxcars.py" "$BOXCARS"
+          git -C "$BOXCARS" add -N examples/r3_18bg_probe.rs
+          git -C "$BOXCARS" diff --check
+          git -C "$BOXCARS" diff --binary -- src/network/frame_decoder.rs examples/r3_18bg_probe.rs Cargo.toml > "$OUT/r3_18bg_boxcars_instrumentation.patch"
+          (cd "$OUT" && sha256sum r3_18bg_boxcars_instrumentation.patch > r3_18bg_boxcars_instrumentation_sha256.txt)
+          RUSTUP_TOOLCHAIN=stable cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_18bg_probe --quiet
+          PROBE="$BOXCARS/target/debug/examples/r3_18bg_probe"
+          test -x "$PROBE"
+          : > "$OUT/r3_18bg_oracle.log"
+          while IFS=$'\t' read -r label frame actor actor_object property_start; do
+            MIMIR_R3_18BG_LABEL="$label" \
+            MIMIR_R3_18BG_TARGET_FRAME="$frame" \
+            MIMIR_R3_18BG_TARGET_ACTOR_ORDINAL="$actor" \
+            MIMIR_R3_18BG_TARGET_ACTOR_OBJECT="$actor_object" \
+            MIMIR_R3_18BG_TARGET_PROPERTY_START="$property_start" \
+            MIMIR_R3_18BG_CONTRACT_RL223=false \
+            "$PROBE" "$PWD/$label" >> "$OUT/r3_18bg_oracle.log" 2>&1
+          done < "$OUT/r3_18bg_oracle_requests.tsv"
+          test "$(grep -c '^R3_18BG_ORACLE_PARSE=PASS$' "$OUT/r3_18bg_oracle.log")" -eq 3
+          test "$(grep -c $'^R3_18BG_ORACLE\t' "$OUT/r3_18bg_oracle.log")" -eq 3
+          grep $'^R3_18BG_ORACLE\t' "$OUT/r3_18bg_oracle.log" > "$OUT/r3_18bg_oracle_kv.tsv"
+          echo R3_18BG_BOXCARS_ORACLE=PASS rows=3 selector=current-coordinates ordinal-independent expected-payload-not-selector
+
+      - name: Compare native and Boxcars exactly
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bg-out"
+          python3 "$RUNNER_TEMP/r318bg_compare.py" \
+            "$OUT/r3_18bg_targets.tsv" \
+            "$OUT/r3_18bg_native_rows.tsv" \
+            "$OUT/r3_18bg_oracle_kv.tsv" \
+            "$OUT/r3_18bg_oracle_rows.tsv" \
+            "$OUT/r3_18bg_comparison.tsv" \
+            "$OUT/r3_18bg_summary.json" \
+            "$OUT/r3_18bg_aggregate.txt"
+          grep -Fx 'R3_18BG_OUTCOME=A' "$OUT/r3_18bg_aggregate.txt"
+          grep -Fx 'R3_18BG_TAGS=Boolean:2,Float:1' "$OUT/r3_18bg_aggregate.txt"
+          grep -Fx 'R3_18BG_WIDTHS=1:2,32:1' "$OUT/r3_18bg_aggregate.txt"
+          grep -Fx 'R3_18BG_FLOAT_IDENTITY=RAW_IEEE754_U32' "$OUT/r3_18bg_aggregate.txt"
+          grep -Fx 'R3_18BG_NATIVE_ORACLE_MISMATCH=0' "$OUT/r3_18bg_aggregate.txt"
+          grep -Fx 'R3_18BG_NEXT_CONTROL_BITS_CONSUMED=0' "$OUT/r3_18bg_aggregate.txt"
+
+      - name: Run focused and full validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bg-out"
+          cargo fmt --all -- --check
+          cargo test -p mimir-replay --test r3_18be_post_ba_following_header -- --nocapture
+          cargo test -p mimir-replay --test r3_17c_scalar_attribute_decoder -- --nocapture
+          cargo check --workspace --locked
+          cargo test --workspace --locked
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          pwsh -NoLogo -NoProfile -File scripts/verify_repo.ps1
+          cat > "$OUT/r3_18bg_validation.txt" <<'EOF'
+          R3_18BG_FMT=PASS
+          R3_18BG_FOCUSED_BE=PASS
+          R3_18BG_PRIMITIVE_SCALAR_REGRESSION=PASS
+          R3_18BG_WORKSPACE_CHECK=PASS
+          R3_18BG_WORKSPACE_TEST=PASS
+          R3_18BG_CLIPPY_DENY_WARNINGS=PASS
+          R3_18BG_REPOSITORY_VERIFIER=PASS
+          EOF
+
+      - name: Record immutable scope and privacy
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bg-out"
+          mapfile -t actual < <(git diff --name-only "$MAIN_SHA" "$GITHUB_SHA" | sort)
+          mapfile -t expected < <(printf '%s\n' .github/workflows/r318bg-one-payload-v1.yml | sort)
+          diff -u <(printf '%s\n' "${expected[@]}") <(printf '%s\n' "${actual[@]}")
+          git diff --exit-code "$MAIN_SHA" "$GITHUB_SHA" -- crates/mimir-replay/src crates/mimir-replay/tests Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md
+          test -z "$(git status --porcelain --untracked-files=all)"
+          cat > "$OUT/r3_18bg_source_scope.txt" <<'EOF'
+          R3_18BG_COMMIT_SCOPE=workflow-only
+          R3_18BG_PRODUCTION_MUTATION=0
+          R3_18BG_CARGO_MUTATION=0
+          R3_18BG_FIXTURE_MUTATION=0
+          R3_18BG_CORPUS_MUTATION=0
+          R3_18BG_SUPPORT_MUTATION=0
+          R3_18BG_PAYLOAD_DECODERS_PER_TARGET=1
+          R3_18BG_NEXT_CONTROL_DECODERS=0
+          R3_18BG_GENERALIZED_PROPERTY_LOOP=0
+          EOF
+          if grep -R -E '/home/runner|C:\\Users\\|Omersevik095|79841922\+Naveax' "$OUT" --exclude='r3_18bg_boxcars_instrumentation.patch' >/dev/null; then
+            echo 'privacy scan found disallowed runner/user material' >&2
+            exit 1
+          fi
+          echo R3_18BG_PRIVACY_SCAN=PASS >> "$OUT/r3_18bg_aggregate.txt"
+          echo R3_18BG_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0 >> "$OUT/r3_18bg_aggregate.txt"
+          echo R3_18BG_SCOPE_PRIVACY=PASS
+
+      - name: Bind exact evidence head to unique natural CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bg-out"
+          workflow_id="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml" --jq .id)"
+          run_id=''
+          for attempt in $(seq 1 120); do
+            runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/${workflow_id}/runs?head_sha=${GITHUB_SHA}&event=push&per_page=100")"
+            count="$(jq '[.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push")] | length' <<<"$runs")"
+            if [ "$count" -eq 1 ]; then
+              run_id="$(jq -r '.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push") | .id' <<<"$runs")"
+              break
+            fi
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate same-head CI runs detected: $count" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          test -n "$run_id"
+          for attempt in $(seq 1 360); do
+            state="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/${run_id}" --jq .status)"
+            [ "$state" = completed ] && break
+            sleep 5
+          done
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/${run_id}" --jq .conclusion)" = success
+          jobs="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/${run_id}/jobs?per_page=100")"
+          test "$(jq '.jobs | length' <<<"$jobs")" -eq 1
+          job_id="$(jq -r '.jobs[0].id' <<<"$jobs")"
+          test "$(jq -r '.jobs[0].conclusion' <<<"$jobs")" = success
+          printf 'R3_18BG_SAME_HEAD_CI_RUN=%s\nR3_18BG_SAME_HEAD_CI_JOB=%s\nR3_18BG_SAME_HEAD_CI_COUNT=1\n' "$run_id" "$job_id" > "$OUT/r3_18bg_same_head_ci_receipt.txt"
+          echo R3_18BG_SAME_HEAD_CI=PASS run="$run_id" job="$job_id"
+
+      - name: Finalize authoritative BG artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bg-out"
+          main_ci_job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$MAIN_CI_RUN/jobs?per_page=100" --jq '.jobs[0].id')"
+          main_ka_job="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$MAIN_KA_RUN/jobs?per_page=100" --jq '.jobs[0].id')"
+          cat > "$OUT/r3_18bg_evidence_identity.txt" <<EOF
+          R3_18BG_HEAD=$GITHUB_SHA
+          R3_18BG_TREE=$(git rev-parse 'HEAD^{tree}')
+          R3_18BG_PARENT=$(git rev-parse 'HEAD^')
+          R3_18BG_MAIN_SHA=$MAIN_SHA
+          R3_18BG_PROD_SHA=$PROD_SHA
+          R3_18BG_BF_HEAD=$BF_HEAD
+          R3_18BG_BF_ARTIFACT=$BF_ARTIFACT
+          R3_18BG_BF_DIGEST=$BF_DIGEST
+          R3_18BG_BOXCARS_SHA=$BOXCARS_SHA
+          EOF
+          cat > "$OUT/r3_18bg_upstream_receipts.txt" <<EOF
+          R3_18BG_MAIN_PR=$MAIN_PR CLOSED_UNMERGED
+          R3_18BG_MAIN_PR_CI=$MAIN_PR_CI_RUN/$MAIN_PR_CI_JOB SUCCESS
+          R3_18BG_MAIN_PR_KA=$MAIN_PR_KA_RUN/$MAIN_PR_KA_JOB SUCCESS
+          R3_18BG_PUBLISHED_MAIN_CI=$MAIN_CI_RUN/$main_ci_job SUCCESS
+          R3_18BG_PUBLISHED_MAIN_KA=$MAIN_KA_RUN/$main_ka_job SUCCESS
+          R3_18BG_BF_RUN=$BF_RUN/$BF_JOB SUCCESS
+          R3_18BG_BF_SAME_HEAD_CI=$BF_CI_RUN/$BF_CI_JOB SUCCESS
+          EOF
+          cat >> "$OUT/r3_18bg_aggregate.txt" <<'EOF'
+          R3_18BG_FULL_VALIDATION=PASS
+          R3_18BG_SAME_HEAD_NATURAL_CI=SUCCESS_COUNT_1
+          EOF
+          (
+            cd "$OUT"
+            sha256sum \
+              r3_18bg_aggregate.txt \
+              r3_18bg_bf_aggregate.txt \
+              r3_18bg_bf_header_authority.json \
+              r3_18bg_boxcars_instrumentation.patch \
+              r3_18bg_boxcars_instrumentation_sha256.txt \
+              r3_18bg_comparison.tsv \
+              r3_18bg_evidence_identity.txt \
+              r3_18bg_native_rows.tsv \
+              r3_18bg_negative_controls.txt \
+              r3_18bg_oracle_rows.tsv \
+              r3_18bg_replay_identity.tsv \
+              r3_18bg_same_head_ci_receipt.txt \
+              r3_18bg_source_scope.txt \
+              r3_18bg_summary.json \
+              r3_18bg_targets.tsv \
+              r3_18bg_upstream_receipts.txt \
+              r3_18bg_validation.txt \
+              > r3_18bg_artifact_sha256.txt
+            sha256sum -c r3_18bg_artifact_sha256.txt
+          )
+          echo R3_18BG_ARTIFACT_FINALIZE=PASS
+
+      - name: Upload authoritative R3.18BG evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bg-one-following-primitive-payload-evidence
+          path: ${{ runner.temp }}/r318bg-out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create non-authority failure receipt
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/r318bg-failure"
+          cat > "$RUNNER_TEMP/r318bg-failure/r3_18bg_failure_receipt.txt" <<EOF
+          R3_18BG_OUTCOME=NOT_ADMITTED
+          R3_18BG_SCIENTIFIC_AUTHORITY=NONE
+          R3_18BG_HEAD=$GITHUB_SHA
+          R3_18BG_MAIN=$MAIN_SHA
+          EOF
+
+      - name: Upload failure receipt
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bg-non-authority-failure-receipt
+          path: ${{ runner.temp }}/r318bg-failure/
+          if-no-files-found: error
+          retention-days: 30
