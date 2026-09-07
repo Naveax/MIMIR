@@ -1,4 +1,4 @@
-name: R3.18BG Admission and R3.18BH Open v6
+name: R3.18BG Admission and R3.18BH Open v7
 
 on:
   push:
@@ -9,12 +9,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: r318bg-admission-r318bh-v6-${{ github.sha }}
+  group: r318bg-admission-r318bh-v7-${{ github.sha }}
   cancel-in-progress: false
 
 env:
   PAYLOAD_WORKFLOW_BLOB: 96a46597019011ed9e5223f7954c469f04fb300a
-  WRAPPER_BLOB: e11c7138bd5a252b4b98d2bdbc62abdcd7d39a29
+  WRAPPER_BLOB: a9c73d307d1c2a21dee4edd7df2715176b11acf7
 
 jobs:
   continuity:
@@ -49,6 +49,7 @@ jobs:
           test -f docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md
           test "$(grep -c '^# CURRENT OVERRIDE — R3.18BG CLOSED / R3.18BH ACTIVE$' MIMIR_CONTINUE_HERE.md)" -eq 1
           test "$(grep -c '^# CURRENT OVERRIDE — R3.18BF CLOSED / R3.18BG ACTIVE$' MIMIR_CONTINUE_HERE.md)" -eq 0
+          test "$(grep -c '^# HISTORICAL OVERRIDE — R3.18BF CLOSED / R3.18BG ACTIVE$' MIMIR_CONTINUE_HERE.md)" -eq 1
           grep -A1 '^LAST_COMPLETED_READ_ONLY_AUDIT:$' MIMIR_CONTINUE_HERE.md | grep -q 'R3.18BG'
           grep -A1 '^LAST_COMPLETED_EVIDENCE_PASS:$' MIMIR_CONTINUE_HERE.md | grep -q 'R3.18BG'
           grep -A1 '^CURRENT_PASS:$' MIMIR_CONTINUE_HERE.md | grep -q 'R3.18BH'
@@ -57,10 +58,10 @@ jobs:
           grep -q '^# 0. Current override — R3.18BG payload evidence closed / R3.18BH next-control evidence active$' docs/continuity/MIMIR_BOUNDARY_LOCKS.md
           grep -q 'R3.18BH' docs/continuity/MIMIR_CURRENT_STATE.md
           grep -q 'R3.18BH' docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
-          git rm .github/workflows/r318bg-admission-r318bh-v6.yml
+          git rm .github/workflows/r318bg-admission-r318bh-v7.yml
           actual="$(git diff --name-only | sort)"
           expected="$(printf '%s\n' \
-            .github/workflows/r318bg-admission-r318bh-v6.yml \
+            .github/workflows/r318bg-admission-r318bh-v7.yml \
             MIMIR_CONTINUE_HERE.md \
             MIMIR_KNOWLEDGE_GRAPH.md \
             docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
