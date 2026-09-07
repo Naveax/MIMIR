@@ -1,0 +1,46 @@
+name: R3.18BG Admission Bootstrap v2
+
+on:
+  push:
+    branches:
+      - continuity/r318bg-admit-r318bh
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r318bg-admission-bootstrap-v2
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: continuity/r318bg-admit-r318bh
+          fetch-depth: 0
+      - name: Repair admission workflow syntax
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/r318bg-admission-r318bh.yml')
+          t = p.read_text(encoding='utf-8')
+          old = 'group: r318bg-admission-r318bh\n\njobs:'
+          new = 'concurrency:\n  group: r318bg-admission-r318bh\n  cancel-in-progress: false\n\njobs:'
+          if t.count(old) != 1:
+              raise SystemExit(f'expected one syntax marker, got {t.count(old)}')
+          p.write_text(t.replace(old, new, 1), encoding='utf-8', newline='\n')
+          PY
+          git rm .github/workflows/r318bg-admission-bootstrap-v2.yml
+          git diff --check
+      - name: Commit repaired workflow
+        shell: bash
+        run: |
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git add .github/workflows/r318bg-admission-r318bh.yml
+          git commit -m 'Fix R3.18BG admission workflow syntax'
+          git push origin HEAD:continuity/r318bg-admit-r318bh
