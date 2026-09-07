@@ -1698,3 +1698,35 @@ Next exact pass:
 - `R3.18BE — bounded post-BA mixed-continuation following-header production`.
 
 ---
+
+
+---
+
+## 2026-09-07 — R3.18BE — Bounded post-BA mixed-continuation following-header production
+Production base SHA: `3fa88f27201ee91c51a3bb7a623c00b46204c1e0`
+Production commit SHA: `1d717d3e82179edd85b197968f46b8f951a3e828` / tree `72cf2b907437a1ba62cc9deebd7608f7d0372f81`
+Pass type: bounded production implementation
+Outcome: **A — ADMITTED / PUBLISHED**
+
+What changed:
+- Added one boundary-specific following-header composition after an exact valid published R3.18BA mixed control.
+- Preserves 37 false rows as successful no-header terminators with zero post-BA reads.
+- Composes exactly one R3.18BD-admitted header on only 3 true rows, stopping at `payload_start`; Boolean=2 / Float=1.
+- Clean scope is exactly `lib.rs` + `r3_18be_post_ba_following_header.rs`; no Cargo/docs/workflow/fixture/corpus/support mutation entered production.
+
+Evidence and validation:
+- BC authority `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` / artifact `9666964713` / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`.
+- BD contract `sha256:33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27` / exact_tuple_only / 3 contexts / multiplicity 3.
+- Builder `33129018318/98713908063` SUCCESS.
+- Validation-only PR #209 closed unmerged; PR CI `34094630343/101655343287` SUCCESS.
+- Published-main CI `34095061141/101656732728` SUCCESS.
+- Fresh-main ancestry, exact SHA/tree readback and force=false publication PASS.
+
+Boundaries opened:
+- Exactly one following header after a validated BA true control, under exact R3.18BD membership.
+
+Boundaries still closed:
+- Header on BA false rows, following payload, second later control, context outside BD, BA/BE access on seven upstream AU false terminators, generalized cursor and all actor/frame/semantic/runtime widening.
+
+Next exact pass:
+- `R3.18BF — published R3.18BE mixed following-header differential` on exactly the immutable forty-row BC/BD-backed authority lane.

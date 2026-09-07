@@ -6,43 +6,28 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BD contract closed / R3.18BE bounded production active
+# 0. Current override — R3.18BE production closed / R3.18BF active differential
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18BA
-- `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a` remains canonical production.
-- one exact R3.18AY payload authority is recomputed and validated;
-- exactly one following LSB-first `property_present` bit is consumed at AY stop;
-- frozen split false=37 / true=3 remains authoritative;
-- the boundary stops exactly one bit later.
+## PRODUCTION — R3.18BE
+- `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81` is canonical production, parent `3fa88f27201ee91c51a3bb7a623c00b46204c1e0`.
+- exactly 40 valid BA rows enter BE; 37 false rows terminate with no header and 3 true rows compose one exact R3.18BD-admitted header.
+- true headers stop at `payload_start`; exact tags Boolean=2 / Float=1.
+- seven upstream AU false terminators remain outside BA/BE.
+- following payload / second later control consumption remains 0/0.
 
-## CLOSED EVIDENCE — R3.18BC Outcome A
-- evidence `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` SUCCESS;
-- same-head CI `33122152793/98691409674` SUCCESS;
-- artifact `9666964713` / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`;
-- 37 false terminators / 3 true one-header observations; native/oracle mismatch 0;
-- exact contexts 3; Boolean=2 / Float=1; payload/second-control 0/0.
-
-## CLOSED CONTRACT — R3.18BD Outcome A
-- contract sha256 `33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`;
-- membership policy `exact_tuple_only`;
-- exactly 3 complete eight-field tuples, multiplicity 1 each / sum 3;
-- all 37 false terminators remain outside header membership;
-- no AT/AJ/Z/P inheritance, no component/Cartesian/versionless/RL223-dropped widening.
-
-## ACTIVE BOUNDED PRODUCTION — R3.18BE
-- validate/recompute one exact published BA mixed-control prior;
-- false BA result is a successful no-header terminator with zero following-header access;
-- true BA result may invoke exactly one existing stateless header primitive;
-- true header must match exact R3.18BD membership;
-- final stop is exactly `payload_start`.
+## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BF
+- immutable authority is the forty-row BA/BC/BD-backed lane.
+- compare published BE branching, header identity/boundary and exact BD membership with mismatch/reselection 0/0.
+- 37 false rows terminate; 3 true rows expose exactly one header only.
 
 ## CLOSED
-- any following-header synthesis on the 37 BA false terminators;
-- any header context outside exact R3.18BD membership;
-- following payload after the one R3.18BE header;
+- following payload during BF, including on the three true rows;
 - second later property-control bit;
+- header synthesis on any of the 37 false BA rows;
+- BA/BE/BF success on seven upstream AU false terminators;
+- contexts outside exact R3.18BD membership;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 

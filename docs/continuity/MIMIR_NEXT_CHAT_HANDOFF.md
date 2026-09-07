@@ -1,11 +1,11 @@
 # MIMIR — Next Chat Handoff
 
-Canonical production remains **R3.18BA** at `5d2bca711f528ab1bb607104379af503ff175697` / `6b5140e228c882efea8b3f5ec0b0f6abf2f49a3a`.
+Canonical production is **R3.18BE** at `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81`, parent `3fa88f27201ee91c51a3bb7a623c00b46204c1e0`. The clean production commit changes only `crates/mimir-replay/src/lib.rs` and `crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs`.
 
-R3.18BC is **Outcome A / CLOSED**: evidence `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1`, run/job `33122152803/98691409657` SUCCESS, same-head CI `33122152793/98691409674` SUCCESS, artifact `9666964713` / 7795 / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e`. The forty-row lane is false=37 / true=3; the three true rows each have one exact following header; unique contexts=3; payload/second-control 0/0.
+R3.18BE validates/recomputes one exact published R3.18BA mixed control. False rows (**37**) terminate successfully with no following-header access. True rows (**3**) compose exactly one stateless existing-actor header under exact R3.18BD membership and stop at `payload_start`; observed true tags are Boolean=2 / Float=1. Seven upstream AU false terminators remain outside the BA/BE lane. Following payload / second later control consumption is 0/0.
 
-R3.18BD is **Outcome A / CLOSED**. Contract `docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json` has SHA-256 `33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27` and admits exactly three complete eight-field tuples with multiplicity one each. All 37 false terminators remain outside header membership. Tag/component/Cartesian/versionless/RL223-dropped and AT/AJ/Z/P inherited membership are rejected.
+Validation: builder `33129018318/98713908063` SUCCESS; PR #209 closed unmerged with exact-head CI `34094630343/101655343287` SUCCESS; published-main CI `34095061141/101656732728` SUCCESS; publication force=false.
 
-The active pass is **R3.18BE — bounded post-BA mixed-continuation following-header production**. Validate/recompute published BA. False terminates with no header access. True may compose exactly one stateless header under exact BD membership and must stop at `payload_start`. No following payload or second control.
+The active pass is **R3.18BF published R3.18BE mixed following-header differential**. Use exactly the immutable forty-row BC/BD-backed lane. Require published BE exact 40/40, false=37 / true=3, true headers exact 3/3, exact BD contexts 3/3, Boolean=2 / Float=1, mismatch/reselection 0/0, repeatability/negatives PASS and payload/second-control 0/0. BF is read-only and must not decode a following payload.
 
 Before any dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Rerun is never polling.

@@ -87,7 +87,8 @@ R3.18BA bounded post-AY mixed following-control production / PRODUCTION CLOSED
 R3.18BB published-R3.18BA mixed following-control differential / Outcome A CLOSED
 R3.18BC one following-property-header evidence after published BA mixed control / Outcome A CLOSED
 R3.18BD exact following-header context contract / Outcome A CLOSED
-R3.18BE bounded post-BA mixed-continuation following-header production / ACTIVE
+R3.18BE bounded post-BA mixed-continuation following-header production / PRODUCTION CLOSED
+R3.18BF published-R3.18BE mixed following-header differential / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -257,13 +258,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 149. `docs/continuity/MIMIR_R3_18BD_EXECUTION_SPEC.md`
 150. `docs/continuity/MIMIR_R3_18BD_DECISION.md`
 151. `docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md`
-152. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-153. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-154. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-155. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-156. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-157. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-158. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+152. `docs/continuity/MIMIR_R3_18BE_DECISION.md`
+153. `docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md`
+154. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+155. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+156. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+157. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+158. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+159. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+160. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1214,3 +1217,15 @@ next                        R3.18M true-only one-bit production composition
 - false path: successful terminator, zero following-header access
 - true path: exactly one stateless header primitive call, exact R3.18BD membership, stop at `payload_start`
 - no following payload, second later control, generalized property cursor, or semantic/runtime widening
+
+
+### R3.18BE bounded post-BA mixed-continuation following-header production: PRODUCTION / CLOSED
+- production `1d717d3e82179edd85b197968f46b8f951a3e828` / tree `72cf2b907437a1ba62cc9deebd7608f7d0372f81` / parent `3fa88f27201ee91c51a3bb7a623c00b46204c1e0`; exact clean scope two files.
+- builder `33129018318/98713908063`, exact-head PR CI `34094630343/101655343287`, published-main CI `34095061141/101656732728` SUCCESS; PR #209 closed unmerged; force=false publication.
+- exact 40-row lane; false=37 no-header / true=3 exact header; BD contexts 3/3; Boolean=2 / Float=1; seven upstream AU false terminators excluded; payload/control 0/0.
+- next exact pass: R3.18BF read-only published BE differential; no following payload in BF.
+
+### R3.18BF published-R3.18BE mixed following-header differential: ACTIVE
+- immutable authority BC `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` / artifact `9666964713` / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e` plus BD contract `sha256:33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`.
+- require published BE exact 40/40, false=37, true=3 exact headers, BD contexts 3/3, Boolean=2 / Float=1, mismatch/reselection 0/0, payload/control 0/0.
+- production mutation and following payload/second-control access are forbidden.

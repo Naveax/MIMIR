@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  5d2bca711f528ab1bb607104379af503ff175697
+  1d717d3e82179edd85b197968f46b8f951a3e828
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18BA — bounded post-AY mixed following-control production
+  R3.18BE — bounded post-BA mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BC — one following-property-header evidence Outcome A / 40-row partition exact / false=37 true=3 / one-header=3/3 / contexts=3 / mismatch 0 / reselection 0 / artifact 9666964713
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BC — one following-property-header evidence Outcome A / exact 3/3 native-Boxcars headers / contexts=3 / payload=0 / second-control=0 / artifact 9666964713
 
 CURRENT_PASS:
-  R3.18BE — bounded post-BA mixed-continuation following-header production
+  R3.18BF — published R3.18BE mixed following-header differential
 
 CURRENT_PASS_TYPE:
-  bounded production implementation / validate one exact published BA mixed control; false terminates with no header, true composes exactly one BD-admitted header and stops at payload_start
+  read-only published-production differential / exact BE-versus-BC/BD branch, header identity, boundary and membership on the immutable 40-row lane; no following payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4100,3 +4100,33 @@ next exact pass: R3.18AZ published-R3.18AY one-following-payload differential; p
 - Canonical production remains R3.18AY `2558cc0559422a3e6695e1501f20d96d83b23e6d`.
 - First incomplete canonical pass is R3.18BA. It may validate/recompute one exact AY payload, consume exactly one AX-admitted mixed control bit, accept false=37 and true=3, and stop one bit later.
 - Still closed: following stream/header/payload, second later control, BA access on upstream false terminators, generic/repeated property cursor, actor/frame/lifecycle/raw-state/event/slice/skill/runtime/export widening.
+
+
+---
+
+# CURRENT OVERRIDE — R3.18BE PRODUCTION / R3.18BF ACTIVE
+
+Fresh source/tests and the receipts below override older current-like wording above.
+
+```text
+R3_18BE_PRODUCTION_CLOSURE:
+Outcome A / published production
+production SHA/tree: 1d717d3e82179edd85b197968f46b8f951a3e828 / 72cf2b907437a1ba62cc9deebd7608f7d0372f81
+parent: 3fa88f27201ee91c51a3bb7a623c00b46204c1e0
+lib/test blobs: 92d9d1893d75f9f0bd5ca921d8cf80455b88f0c3 / 78f32c79a3526cbfeac4e32ccc06e5965cd3e97b
+builder: 33129018318/98713908063 SUCCESS / head 5ae76da91fb21ec9b62201673f6434fa2203cf6d
+validation-only PR #209: CLOSED UNMERGED / CI 34094630343/101655343287 SUCCESS
+published-main CI: 34095061141/101656732728 SUCCESS
+clean scope: exactly lib.rs + r3_18be_post_ba_following_header.rs
+frozen rows: 40 / false no-header=37 / true exact-header=3
+BD contexts: 3/3 / Boolean=2 / Float=1
+upstream AU false terminators excluded: 7
+following payload / second-control: 0/0
+publication: force=false
+
+CURRENT_PASS: R3.18BF
+TYPE: read-only published-production differential
+AUTHORITY: BC 0f4d07f5caf77ec53f5e8b512867ad17b5835ca1 / artifact 9666964713; BD contract sha256:33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27
+REQUIRE: BE exact 40/40 / false=37 / true=3 / true headers=3/3 / BD contexts=3/3 / mismatch=0 / reselection=0 / payload-control=0/0
+HARD STOP: no following payload/second-control; no false-row header; no generalized cursor
+```
