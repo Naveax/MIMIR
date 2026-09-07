@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  1d717d3e82179edd85b197968f46b8f951a3e828
+  def8e959239106e25d95091fcfcf468fec59e228
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18BE — bounded post-BA mixed-continuation following-header production
+  R3.18BI — bounded post-BE one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BH — Outcome A / exact 3/3 next-control bits / false=1 true=2 / mismatch 0 / artifact 10023482583
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BH — next property-control bit evidence / Outcome A / 3/3 / false=1 true=2 / native-oracle mismatch 0 / artifact 10023482583
 
 CURRENT_PASS:
-  R3.18BI — bounded post-BE one-following-payload production
+  R3.18BJ — published-R3.18BI one-following-payload differential
 
 CURRENT_PASS_TYPE:
-  production / exact BG Boolean+Float payload composition on only three BG authority rows; stop at payload_end; BH control read forbidden
+  read-only published-production differential / exact 3 BG payload rows; 37 BE-false + 7 AU-false remain closed; BH control consumption forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays

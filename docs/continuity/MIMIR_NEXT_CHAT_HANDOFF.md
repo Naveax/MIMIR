@@ -1,11 +1,11 @@
 # MIMIR — Next Chat Handoff
 
-Canonical production remains **R3.18BE** at `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81`.
+Canonical production is now **R3.18BI** at `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537`.
 
-R3.18BG payload evidence is Outcome A / CLOSED: exact three BF-true payloads, Boolean=2 / Float=1, mismatch/reselection 0/0, artifact `10015405999`.
+R3.18BI production is Outcome A / CLOSED. It publishes exactly the three immutable R3.18BG payload rows: Boolean=2 / Float=1, widths 1/1/32, exact semantic/start/end/stop identity, and zero R3.18BH control-bit consumption. Production builder `34158571800/101855439564` SUCCESS, validation PR #213 closed unmerged, exact-head PR CI `34159120199/101857049780` SUCCESS, published-main CI `34159530318/101858247592` SUCCESS.
 
-R3.18BH next-control evidence is **Outcome A / CLOSED** at `c728658ac237a45f34b3af002c27f704f5293fb5`. Evidence `34132181073/101774645567` SUCCESS and same-head CI `34132181159/101775846915` SUCCESS. Artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`, manifest `sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa`. Exact 3/3 next-control bits matched native/Boxcars; observed false=1 / true=2; no adjacent stream/header/payload/second-control consumption.
+R3.18BH next-control evidence remains read-only Outcome A: exact 3/3, false=1 / true=2, artifact `10023482583`. Do not infer production permission from that observation.
 
-Active pass: **R3.18BI — bounded post-BE one-following-payload production**. Production still stops at BE `payload_start`, so BI must first publish only the exact BG Boolean/Float payload and stop at `payload_end_bit`. Do **not** consume the BH bit. After clean production publication, run a separate published-BI differential before considering BH control production.
+Active pass: **R3.18BJ — Published R3.18BI One-Following-Payload Differential**. Compare published BI against immutable BG/BH authority. Require exact payload success 3/3, 37 BE-false rows rejected before payload decoding, 7 upstream AU-false rows outside success, and zero BH/later consumption. Production mutation and witness reselection are forbidden.
 
-Before dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. CI waiting is not a reason to duplicate the same SHA/workflow/input.
+Before dispatch or rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. CI waiting is not a reason to duplicate the same SHA/workflow/input.
