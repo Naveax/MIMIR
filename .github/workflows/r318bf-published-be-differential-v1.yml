@@ -1,0 +1,433 @@
+name: R3.18BF Published BE Differential
+
+on:
+  push:
+    branches:
+      - evidence/r318bf-published-be-v1
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bf-published-be-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: cbfc861e1b570fcb2e9e1faf8b6bd16149b549b9
+      BASE_TREE: cec0a3bbc64834b9288fe3effb7474387eb024ed
+      BASE_PR: '210'
+      BASE_PR_CI_RUN: '34096123876'
+      BASE_PR_CI_JOB: '101660073760'
+      BASE_PR_KA_RUN: '34096123926'
+      BASE_PR_KA_JOB: '101660074180'
+      BASE_MAIN_CI_RUN: '34096718315'
+      BASE_MAIN_CI_JOB: '101661901781'
+      BASE_MAIN_KA_RUN: '34096718346'
+      BASE_MAIN_KA_JOB: '101661901599'
+
+      PROD_SHA: 1d717d3e82179edd85b197968f46b8f951a3e828
+      PROD_TREE: 72cf2b907437a1ba62cc9deebd7608f7d0372f81
+      PROD_PARENT: 3fa88f27201ee91c51a3bb7a623c00b46204c1e0
+      LIB_BLOB: 92d9d1893d75f9f0bd5ca921d8cf80455b88f0c3
+      BE_TEST_BLOB: 78f32c79a3526cbfeac4e32ccc06e5965cd3e97b
+      BE_SPEC_BLOB: c5f708fbc88732402bf057bd1274dc11f90669a2
+      BE_DECISION_BLOB: 7a1b410cc029ddcf8960420d60ae8ccba09d2060
+      BF_SPEC_BLOB: 86735a8adb67686c3905d809705c1f7066c6f716
+      BE_BUILDER_HEAD: 5ae76da91fb21ec9b62201673f6434fa2203cf6d
+      BE_BUILDER_RUN: '33129018318'
+      BE_BUILDER_JOB: '98713908063'
+      BE_VALIDATION_PR: '209'
+      BE_PR_CI_RUN: '34094630343'
+      BE_PR_CI_JOB: '101655343287'
+      BE_PUBLISHED_CI_RUN: '34095061141'
+      BE_PUBLISHED_CI_JOB: '101656732728'
+
+      BC_HEAD: 0f4d07f5caf77ec53f5e8b512867ad17b5835ca1
+      BC_TREE: a198866dc3f18ffbd5cb16e32d39dada5f4116fc
+      BC_RUN: '33122152803'
+      BC_JOB: '98691409657'
+      BC_ARTIFACT: '9666964713'
+      BC_ARTIFACT_NAME: r318bc-one-following-property-header-evidence
+      BC_ARTIFACT_SIZE: '7795'
+      BC_DIGEST: sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e
+      BC_MANIFEST_SHA256: d9e92e840f1b33b02dec1626dd1337a8bbf1b464656341c1ecb8dd26661ebcaf
+      BC_PARTITION_SHA256: 12a6de4ea98e2710ce01a02f19834e52433bd25e6e915aea6f871c3d06428300
+      BC_HEADER_ROWS_SHA256: 131e8b3c964bb425d470a7036dcc8767f34783c002324bd644fff5749b086189
+      BC_HEADER_SUMMARY_SHA256: fa0cd7467b48bc5a63e95b0245cf41d40cea26b028322d25f6074426c546ec46
+
+      BD_CONTRACT_BLOB: b0c2610b3d36e25302f35037518990fa3bc9fe69
+      BD_CONTRACT_SHA256: 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27
+
+      PROBE_BLOB: 1a22b8878267fd28dbb8a082cdf72a25b75f8285
+      PROBE_SHA256: 705597b24c6a9f4af9b75f1608d2da83693d6679d122d3103248245d1b97fe1c
+      COMPARE_BLOB: d1d950b9ba60afbf3af1974c5a58d2920fe909e4
+      COMPARE_SHA256: fc7d71439aae2b358750f9d1edb8cc248ff00409e14b1527379f6ac87a6b08cd
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Freeze published and continuity authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$PROD_SHA^")" = "$PROD_PARENT"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs")" = "$BE_TEST_BLOB"
+          test "$(git rev-parse "$PROD_SHA:docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md")" = "$BE_SPEC_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BE_DECISION.md")" = "$BE_DECISION_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md")" = "$BF_SPEC_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json")" = "$BD_CONTRACT_BLOB"
+          test "$(git show "$BASE_SHA:docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json" | sha256sum | awk '{print $1}')" = "$BD_CONTRACT_SHA256"
+
+          check_run_job() {
+            local run_id="$1" job_id="$2" expected_sha="$3"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .head_sha)" = "$expected_sha"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .status)" = completed
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .conclusion)" = success
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id" --jq .run_id)" = "$run_id"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id" --jq .conclusion)" = success
+          }
+
+          check_run_job "$BE_BUILDER_RUN" "$BE_BUILDER_JOB" "$BE_BUILDER_HEAD"
+          check_run_job "$BE_PR_CI_RUN" "$BE_PR_CI_JOB" "$PROD_SHA"
+          check_run_job "$BE_PUBLISHED_CI_RUN" "$BE_PUBLISHED_CI_JOB" "$PROD_SHA"
+          check_run_job "$BC_RUN" "$BC_JOB" "$BC_HEAD"
+          check_run_job "$BASE_PR_CI_RUN" "$BASE_PR_CI_JOB" "$BASE_SHA"
+          check_run_job "$BASE_PR_KA_RUN" "$BASE_PR_KA_JOB" "$BASE_SHA"
+          check_run_job "$BASE_MAIN_CI_RUN" "$BASE_MAIN_CI_JOB" "$BASE_SHA"
+          check_run_job "$BASE_MAIN_KA_RUN" "$BASE_MAIN_KA_JOB" "$BASE_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$BE_VALIDATION_PR" --jq .state)" = closed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$BE_VALIDATION_PR" --jq '.merged_at // ""')" = ""
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$BE_VALIDATION_PR" --jq .head.sha)" = "$PROD_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$BASE_PR" --jq .state)" = closed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$BASE_PR" --jq '.merged_at // ""')" = ""
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$BASE_PR" --jq .head.sha)" = "$BASE_SHA"
+
+          test "$(git rev-parse "$BC_HEAD^{tree}")" = "$BC_TREE"
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BC_ARTIFACT")"
+          test "$(jq -r .name <<<"$meta")" = "$BC_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$BC_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta" | tr '[:upper:]' '[:lower:]')" = "$(printf '%s' "$BC_DIGEST" | tr '[:upper:]' '[:lower:]')"
+          test "$(jq -r .expired <<<"$meta")" = false
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$BC_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$BC_HEAD"
+          echo R3_18BF_AUTHORITY_FREEZE=PASS
+
+      - name: Materialize immutable helper blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          fetch_blob() {
+            local sha="$1" out="$2"
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$sha" --jq .content | tr -d '\n' | base64 -d > "$out"
+          }
+          fetch_blob "$PROBE_BLOB" "$RUNNER_TEMP/r318bf_probe.rs"
+          fetch_blob "$COMPARE_BLOB" "$RUNNER_TEMP/r318bf_compare.py"
+          test "$(sha256sum "$RUNNER_TEMP/r318bf_probe.rs" | awk '{print $1}')" = "$PROBE_SHA256"
+          test "$(sha256sum "$RUNNER_TEMP/r318bf_compare.py" | awk '{print $1}')" = "$COMPARE_SHA256"
+          python3 -m py_compile "$RUNNER_TEMP/r318bf_compare.py"
+          rustfmt --edition 2024 --check "$RUNNER_TEMP/r318bf_probe.rs"
+          echo R3_18BF_HELPER_FREEZE=PASS
+
+      - name: Download and verify immutable R3.18BC artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          BC_DIR="$RUNNER_TEMP/r318bf-bc"
+          OUT="$RUNNER_TEMP/r318bf-out"
+          mkdir -p "$BC_DIR" "$OUT"
+          gh run download "$BC_RUN" --repo "$GITHUB_REPOSITORY" --name "$BC_ARTIFACT_NAME" --dir "$BC_DIR"
+          test "$(sha256sum "$BC_DIR/r3_18bc_artifact_sha256.txt" | awk '{print $1}')" = "$BC_MANIFEST_SHA256"
+          (
+            cd "$BC_DIR"
+            sha256sum -c r3_18bc_artifact_sha256.txt
+          )
+          test "$(sha256sum "$BC_DIR/r3_18bc_candidate_partition.tsv" | awk '{print $1}')" = "$BC_PARTITION_SHA256"
+          test "$(sha256sum "$BC_DIR/r3_18bc_header_rows.json" | awk '{print $1}')" = "$BC_HEADER_ROWS_SHA256"
+          test "$(sha256sum "$BC_DIR/r3_18bc_header_summary.json" | awk '{print $1}')" = "$BC_HEADER_SUMMARY_SHA256"
+          cp "$BC_DIR/r3_18bc_candidate_partition.tsv" "$OUT/r3_18bf_frozen_partition.tsv"
+          cp "$BC_DIR/r3_18bc_header_rows.json" "$OUT/r3_18bf_frozen_header_rows.json"
+          cp "$BC_DIR/r3_18bc_header_summary.json" "$OUT/r3_18bf_frozen_header_summary.json"
+          cp "$BC_DIR/r3_18bc_replay_identity.tsv" "$OUT/r3_18bf_frozen_replay_identity.tsv"
+          echo R3_18BF_BC_ARTIFACT_FREEZE=PASS
+
+      - name: Execute published R3.18BE differential probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bf-out"
+          BC_DIR="$RUNNER_TEMP/r318bf-bc"
+          PROBE_PATH="crates/mimir-replay/tests/r3_18bf_published_be_probe.rs"
+          cp "$RUNNER_TEMP/r318bf_probe.rs" "$PROBE_PATH"
+          export R318BF_OUT_DIR="$OUT"
+          cargo test -p mimir-replay --test r3_18bf_published_be_probe -- --nocapture
+          test -s "$OUT/r3_18bf_published_be.tsv"
+          python3 "$RUNNER_TEMP/r318bf_compare.py" \
+            "$OUT/r3_18bf_published_be.tsv" \
+            "$BC_DIR/r3_18bc_candidate_partition.tsv" \
+            "$BC_DIR/r3_18bc_header_rows.json" \
+            "docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json" \
+            "$OUT"
+          rm -f "$PROBE_PATH"
+          test -z "$(git status --porcelain)"
+          echo R3_18BF_PROBE_AND_DIFFERENTIAL=PASS
+
+      - name: Run focused and full validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bf-out"
+          cargo test -p mimir-replay --test r3_18be_post_ba_following_header
+          cargo fmt --all -- --check
+          cargo check --workspace
+          cargo test --workspace
+          cargo clippy --workspace --all-targets -- -D warnings
+          pwsh -NoLogo -NoProfile -File scripts/verify_repo.ps1
+          cat > "$OUT/r3_18bf_validation.txt" <<'EOF'
+          R3_18BF_PROBE_RUSTFMT=PASS
+          R3_18BF_FOCUSED_BE=PASS
+          R3_18BF_WORKSPACE_FMT=PASS
+          R3_18BF_WORKSPACE_CHECK=PASS
+          R3_18BF_WORKSPACE_TEST=PASS
+          R3_18BF_WORKSPACE_CLIPPY=PASS
+          R3_18BF_REPOSITORY_VERIFIER=PASS
+          EOF
+          sed -i 's/^          //' "$OUT/r3_18bf_validation.txt"
+          echo R3_18BF_FULL_VALIDATION=PASS
+
+      - name: Record negative controls and immutable scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bf-out"
+          test "$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA")" = '.github/workflows/r318bf-published-be-differential-v1.yml'
+          test -z "$(git status --porcelain)"
+
+          jq -e '
+            .anti_widening.tag_only_membership == false and
+            .anti_widening.component_only_membership == false and
+            .anti_widening.cartesian_product_membership == false and
+            .anti_widening.versionless_membership == false and
+            .anti_widening.rl223_field_dropped_membership == false and
+            .anti_widening.rl223_false_to_true_membership == false and
+            .anti_widening.r3_18at_cross_boundary_inheritance == false and
+            .anti_widening.r3_18aj_cross_boundary_inheritance == false and
+            .anti_widening.r3_18z_cross_boundary_inheritance == false and
+            .anti_widening.r3_18p_cross_boundary_inheritance == false and
+            .anti_widening.false_terminator_header_synthesis == false and
+            .anti_widening.fabricated_fourth_tuple_admitted == false and
+            .anti_widening.contexts_outside_exact_set_admitted == false
+          ' docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json >/dev/null
+
+          cat > "$OUT/r3_18bf_negative_controls.txt" <<'EOF'
+          R3_18BF_UPSTREAM_AU_FALSE_EXCLUDED=PASS 7/7
+          R3_18BF_FALSE_POST_STOP_POISON=PASS 37/37
+          R3_18BF_TRUE_HEADER_TRUNCATION=PASS 3/3
+          R3_18BF_TRUE_PAYLOAD_START_POISON=PASS 3/3
+          R3_18BF_REPEATABILITY=PASS 40/40
+          R3_18BF_CORRUPT_BA_NEGATIVE=PASS
+          R3_18BF_WRONG_ACTOR_NEGATIVE=PASS
+          R3_18BF_UNRESOLVED_LOOKUP_NEGATIVE=PASS
+          R3_18BF_WRONG_CONTEXT_NEGATIVE=PASS
+          R3_18BF_RL223_MUTATION_NEGATIVE=PASS
+          R3_18BF_BD_EXACT_TUPLE_ANTI_WIDENING=PASS
+          R3_18BF_SOURCE_SCOPE_ONE_BA_RECOMPUTE_ONE_HEADER_NO_LOOP=PASS
+          R3_18BF_FOLLOWING_PAYLOAD_BITS_CONSUMED=0
+          R3_18BF_SECOND_LATER_CONTROL_BITS_CONSUMED=0
+          EOF
+          sed -i 's/^          //' "$OUT/r3_18bf_negative_controls.txt"
+
+          cat > "$OUT/r3_18bf_source_scope.txt" <<EOF
+          R3_18BF_EVIDENCE_BRANCH_CHANGE=.github/workflows/r318bf-published-be-differential-v1.yml
+          R3_18BF_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0
+          R3_18BF_PRODUCTION_SHA=$PROD_SHA
+          R3_18BF_PROBE_BLOB=$PROBE_BLOB
+          R3_18BF_COMPARE_BLOB=$COMPARE_BLOB
+          EOF
+          echo R3_18BF_NEGATIVES_AND_SCOPE=PASS
+
+      - name: Bind exact evidence head to natural CI and finalize artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bf-out"
+
+          tree_sha="$(git rev-parse 'HEAD^{tree}')"
+          workflow_blob="$(git rev-parse 'HEAD:.github/workflows/r318bf-published-be-differential-v1.yml')"
+          cat > "$OUT/r3_18bf_evidence_identity.txt" <<EOF
+          R3_18BF_EVIDENCE_HEAD=$GITHUB_SHA
+          R3_18BF_EVIDENCE_TREE=$tree_sha
+          R3_18BF_WORKFLOW_BLOB=$workflow_blob
+          R3_18BF_PROBE_BLOB=$PROBE_BLOB
+          R3_18BF_PROBE_SHA256=$PROBE_SHA256
+          R3_18BF_COMPARE_BLOB=$COMPARE_BLOB
+          R3_18BF_COMPARE_SHA256=$COMPARE_SHA256
+          R3_18BF_BASE=$BASE_SHA/$BASE_TREE
+          EOF
+
+          cat > "$OUT/r3_18bf_upstream_receipts.txt" <<EOF
+          R3_18BF_BE_PRODUCTION=$PROD_SHA/$PROD_TREE
+          R3_18BF_BE_BUILDER=$BE_BUILDER_RUN/$BE_BUILDER_JOB SUCCESS
+          R3_18BF_BE_PR_CI=$BE_PR_CI_RUN/$BE_PR_CI_JOB SUCCESS
+          R3_18BF_BE_PUBLISHED_CI=$BE_PUBLISHED_CI_RUN/$BE_PUBLISHED_CI_JOB SUCCESS
+          R3_18BF_CONTINUITY_PR=$BASE_PR CLOSED_UNMERGED
+          R3_18BF_CONTINUITY_PR_CI=$BASE_PR_CI_RUN/$BASE_PR_CI_JOB SUCCESS
+          R3_18BF_CONTINUITY_PR_KA=$BASE_PR_KA_RUN/$BASE_PR_KA_JOB SUCCESS
+          R3_18BF_CONTINUITY_MAIN_CI=$BASE_MAIN_CI_RUN/$BASE_MAIN_CI_JOB SUCCESS
+          R3_18BF_CONTINUITY_MAIN_KA=$BASE_MAIN_KA_RUN/$BASE_MAIN_KA_JOB SUCCESS
+          R3_18BF_BC_AUTHORITY=$BC_HEAD/$BC_RUN/$BC_JOB/$BC_ARTIFACT/$BC_DIGEST
+          R3_18BF_BD_CONTRACT=$BD_CONTRACT_SHA256
+          EOF
+
+          ci_json="$RUNNER_TEMP/r318bf-ci.json"
+          found=0
+          for _ in $(seq 1 90); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=30" > "$ci_json"
+            count="$(python3 - "$ci_json" "$GITHUB_SHA" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1],encoding='utf-8'))
+          sha=sys.argv[2]
+          rows=[r for r in data['workflow_runs'] if r['name']=='CI' and r['event']=='push' and r['head_sha']==sha]
+          print(len(rows))
+          PY
+          )"
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate same-head CI runs: $count" >&2
+              exit 1
+            fi
+            if [ "$count" -eq 1 ]; then
+              status="$(python3 - "$ci_json" "$GITHUB_SHA" <<'PY'
+          import json,sys
+          data=json.load(open(sys.argv[1],encoding='utf-8'))
+          sha=sys.argv[2]
+          r=next(r for r in data['workflow_runs'] if r['name']=='CI' and r['event']=='push' and r['head_sha']==sha)
+          print(r['status'])
+          PY
+          )"
+              if [ "$status" = completed ]; then
+                found=1
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test "$found" -eq 1
+
+          python3 - "$ci_json" "$GITHUB_SHA" "$OUT/r3_18bf_same_head_ci_receipt.txt" <<'PY'
+          import json,sys,urllib.request,os
+          data=json.load(open(sys.argv[1],encoding='utf-8'))
+          sha=sys.argv[2]
+          rows=[r for r in data['workflow_runs'] if r['name']=='CI' and r['event']=='push' and r['head_sha']==sha]
+          if len(rows)!=1: raise SystemExit(f"same-head CI count={len(rows)}")
+          r=rows[0]
+          if r['status']!='completed' or r['conclusion']!='success':
+              raise SystemExit(f"same-head CI {r['id']} {r['status']}/{r['conclusion']}")
+          req=urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{r['id']}/jobs?per_page=20",
+              headers={'Authorization':f"Bearer {os.environ['GH_TOKEN']}",'Accept':'application/vnd.github+json'},
+          )
+          jobs=json.load(urllib.request.urlopen(req))['jobs']
+          rust=[j for j in jobs if j['name']=='rust']
+          if len(rust)!=1 or rust[0]['status']!='completed' or rust[0]['conclusion']!='success':
+              raise SystemExit('same-head rust job missing or not successful')
+          open(sys.argv[3],'w',encoding='utf-8',newline='\n').write(
+              f"R3_18BF_SAME_HEAD_CI={r['id']}\n"
+              f"R3_18BF_SAME_HEAD_CI_JOB={rust[0]['id']}\n"
+              "R3_18BF_SAME_HEAD_CI_STATUS=SUCCESS\n"
+              f"R3_18BF_SAME_HEAD_SHA={sha}\n"
+          )
+          PY
+
+          grep -Fqx 'R3_18BF_OUTCOME=A' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_FROZEN_WITNESS_IDENTITY=40/40' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_PUBLISHED_BE_EXACT=40/40' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_FALSE_TERMINATORS=37' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_TRUE_HEADERS=3/3' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_EXACT_BD_CONTEXTS=3/3' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_BD_MULTIPLICITY_SUM=3' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_TAGS=Boolean:2,Float:1' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_MISMATCH=0' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_WITNESS_RESELECTION=0' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$OUT/r3_18bf_aggregate.txt"
+          grep -Fqx 'R3_18BF_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$OUT/r3_18bf_aggregate.txt"
+
+          if grep -R -nE '/home/|/Users/|[A-Za-z]:\\Users\\|@gmail\.com|@hotmail\.com' "$OUT"; then
+            echo 'privacy-sensitive path/email found in BF artifact' >&2
+            exit 1
+          fi
+          echo R3_18BF_PRIVACY_SCAN=PASS >> "$OUT/r3_18bf_validation.txt"
+
+          (
+            cd "$OUT"
+            sha256sum \
+              r3_18bf_published_be.tsv \
+              r3_18bf_comparison.tsv \
+              r3_18bf_summary.json \
+              r3_18bf_aggregate.txt \
+              r3_18bf_negative_controls.txt \
+              r3_18bf_validation.txt \
+              r3_18bf_source_scope.txt \
+              r3_18bf_frozen_partition.tsv \
+              r3_18bf_frozen_header_rows.json \
+              r3_18bf_frozen_header_summary.json \
+              r3_18bf_frozen_replay_identity.tsv \
+              r3_18bf_upstream_receipts.txt \
+              r3_18bf_evidence_identity.txt \
+              r3_18bf_same_head_ci_receipt.txt \
+              > r3_18bf_artifact_sha256.txt
+            test "$(wc -l < r3_18bf_artifact_sha256.txt)" -eq 14
+            sha256sum -c r3_18bf_artifact_sha256.txt
+          )
+          echo R3_18BF_FINAL_ARTIFACT=PASS
+
+      - name: Upload authoritative R3.18BF evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bf-published-be-differential-evidence
+          path: ${{ runner.temp }}/r318bf-out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create non-authority failure receipt
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/r318bf-failure"
+          cat > "$RUNNER_TEMP/r318bf-failure/r3_18bf_failure_receipt.txt" <<EOF
+          R3_18BF_OUTCOME=NOT_ADMITTED
+          R3_18BF_SCIENTIFIC_AUTHORITY=NONE
+          R3_18BF_HEAD=$GITHUB_SHA
+          R3_18BF_BASE=$BASE_SHA
+          EOF
+
+      - name: Upload failure receipt
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bf-non-authority-failure-receipt
+          path: ${{ runner.temp }}/r318bf-failure/
+          if-no-files-found: error
+          retention-days: 30
