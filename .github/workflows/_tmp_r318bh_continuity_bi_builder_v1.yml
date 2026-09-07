@@ -1,0 +1,162 @@
+name: R3.18BH Continuity Admission and R3.18BI Open v1
+
+on:
+  push:
+    branches:
+      - automation/r318bh-continuity-bi-builder-v1
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bh-continuity-bi-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: 1fbfb8f05bc4c06c21f4cfe79697bd4097b26cc0
+      MAIN_TREE: cb6cd697023d53e1ec632f146a994f516d8bd778
+      BH_HEAD: c728658ac237a45f34b3af002c27f704f5293fb5
+      BH_TREE: 9761d42cd55d3152fe19653ea5be67efd826f2fa
+      BH_RUN: '34132181073'
+      BH_JOB: '101774645567'
+      BH_CI_RUN: '34132181159'
+      BH_CI_JOB: '101775846915'
+      BH_ARTIFACT: '10023482583'
+      BH_ARTIFACT_NAME: r318bh-next-property-control-bit-evidence-v3
+      BH_ARTIFACT_SIZE: '9833'
+      BH_DIGEST: sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d
+      BH_MANIFEST: 9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa
+      BH_FALSE: '1'
+      BH_TRUE: '2'
+      GENERATOR_BLOB: 8bdec91a93be5ed2acc3f4441cfce7f69b861dfe
+      CANDIDATE_BRANCH: candidate/r318bh-admit-open-r318bi-v1
+
+    steps:
+      - name: Checkout helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze exact BH authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+          test "$(git rev-parse "$MAIN_SHA^{tree}")" = "$MAIN_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BH_RUN" --jq .head_sha)" = "$BH_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BH_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BH_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BH_JOB" --jq .run_id)" = "$BH_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BH_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BH_CI_RUN" --jq .head_sha)" = "$BH_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BH_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BH_CI_JOB" --jq .run_id)" = "$BH_CI_RUN"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BH_CI_JOB" --jq .conclusion)" = success
+
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BH_RUN/artifacts" --jq '.artifacts[] | select(.id == '"$BH_ARTIFACT"')')"
+          test "$(jq -r .name <<<"$meta")" = "$BH_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$BH_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta" | tr '[:upper:]' '[:lower:]')" = "$BH_DIGEST"
+          test "$(jq -r .expired <<<"$meta")" = false
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$BH_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$BH_HEAD"
+
+          auth="$RUNNER_TEMP/r318bh-authority"
+          mkdir -p "$auth"
+          gh run download "$BH_RUN" --repo "$GITHUB_REPOSITORY" --name "$BH_ARTIFACT_NAME" --dir "$auth"
+          test "$(find "$auth" -maxdepth 1 -type f | wc -l)" -eq 16
+          test "$(sha256sum "$auth/r3_18bh_artifact_sha256.txt" | awk '{print $1}')" = "$BH_MANIFEST"
+          (cd "$auth" && sha256sum -c r3_18bh_artifact_sha256.txt)
+          grep -Fx 'R3_18BH_OUTCOME=A' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_TARGET_ROWS=3/3' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_NATIVE_ORACLE_EXACT=3/3' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_FALSE=1' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_TRUE=2' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_WITNESS_RESELECTION=0' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_FOLLOWING_STREAM_BITS_CONSUMED=0' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_FOLLOWING_HEADER_BITS_CONSUMED=0' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_FULL_VALIDATION=PASS' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_PRIVACY_SCAN=PASS' "$auth/r3_18bh_aggregate.txt"
+          grep -Fx 'R3_18BH_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' "$auth/r3_18bh_aggregate.txt"
+          echo R3_18BH_AUTHORITY_FREEZE=PASS
+
+      - name: Generate clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "$MAIN_SHA"
+          git clean -ffd
+          test "$(git rev-parse HEAD)" = "$MAIN_SHA"
+          test -z "$(git status --porcelain --untracked-files=all)"
+
+          gen="$RUNNER_TEMP/r318bh_continuity_generator.sh"
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$GENERATOR_BLOB" --jq .content | tr -d '\n' | base64 -d > "$gen"
+          test "$(git hash-object "$gen")" = "$GENERATOR_BLOB"
+          bash -n "$gen"
+          chmod +x "$gen"
+          export BH_HEAD BH_TREE BH_RUN BH_JOB BH_ARTIFACT BH_DIGEST BH_MANIFEST BH_FALSE BH_TRUE BH_ARTIFACT_NAME
+          "$gen"
+
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+
+          expected="$RUNNER_TEMP/expected.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BH_DECISION.md
+          docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$expected"
+          actual="$RUNNER_TEMP/actual.txt"
+          git status --porcelain --untracked-files=all | sed -E 's/^.. //' | sort > "$actual"
+          sort -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+          test "$(wc -l < "$actual")" -eq 9
+
+          grep -F 'false=1 / true=2' docs/continuity/MIMIR_R3_18BH_DECISION.md
+          grep -F 'R3.18BI' docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md
+          grep -F 'must **not** consume the R3.18BH-observed next control bit' docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md
+          grep -F 'R3.18BI — bounded post-BE one-following-payload production' docs/continuity/MIMIR_CURRENT_STATE.md
+          echo R3_18BH_CONTINUITY_SCOPE=PASS
+
+      - name: Verify knowledge archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Commit and push clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18BH_DECISION.md docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git commit -m 'Admit R3.18BH and open R3.18BI'
+          candidate="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+          test -z "$(git status --porcelain --untracked-files=all)"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${CANDIDATE_BRANCH}"
+          echo "R3_18BH_CONTINUITY_CANDIDATE=$candidate"
