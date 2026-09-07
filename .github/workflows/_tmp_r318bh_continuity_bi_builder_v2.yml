@@ -1,0 +1,38 @@
+name: R3.18BH Continuity Admission and R3.18BI Open v2
+
+on:
+  push:
+    branches:
+      - automation/r318bh-continuity-bi-builder-v2
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bh-continuity-bi-builder-v2
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUNNER_BLOB: 2b1c935d1b46c8056de0d66126828646b05e9904
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Execute immutable continuity builder v2
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$RUNNER_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318bh_continuity_v2.sh"
+          test "$(git hash-object "$RUNNER_TEMP/r318bh_continuity_v2.sh")" = "$RUNNER_BLOB"
+          bash -n "$RUNNER_TEMP/r318bh_continuity_v2.sh"
+          bash "$RUNNER_TEMP/r318bh_continuity_v2.sh"
