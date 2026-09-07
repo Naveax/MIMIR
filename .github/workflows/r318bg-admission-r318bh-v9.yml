@@ -1,4 +1,4 @@
-name: R3.18BG Admission and R3.18BH Open v8
+name: R3.18BG Admission and R3.18BH Open v9
 
 on:
   push:
@@ -9,12 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: r318bg-admission-r318bh-v8-${{ github.sha }}
+  group: r318bg-admission-r318bh-v9-${{ github.sha }}
   cancel-in-progress: false
 
 env:
   PAYLOAD_WORKFLOW_BLOB: 96a46597019011ed9e5223f7954c469f04fb300a
   WRAPPER_BLOB: a9c73d307d1c2a21dee4edd7df2715176b11acf7
+  CLEANUP_BLOB: b049a247e3b863dc11d1454c619126622d449eeb
 
 jobs:
   continuity:
@@ -35,10 +36,13 @@ jobs:
           set -euo pipefail
           gh api "repos/$GITHUB_REPOSITORY/git/blobs/$PAYLOAD_WORKFLOW_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/original-admission.yml"
           gh api "repos/$GITHUB_REPOSITORY/git/blobs/$WRAPPER_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318bg_admission_wrapper.py"
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$CLEANUP_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318bg_markdown_hygiene.py"
           test "$(git hash-object "$RUNNER_TEMP/original-admission.yml")" = "$PAYLOAD_WORKFLOW_BLOB"
           test "$(git hash-object "$RUNNER_TEMP/r318bg_admission_wrapper.py")" = "$WRAPPER_BLOB"
-          python3 -m py_compile "$RUNNER_TEMP/r318bg_admission_wrapper.py"
+          test "$(git hash-object "$RUNNER_TEMP/r318bg_markdown_hygiene.py")" = "$CLEANUP_BLOB"
+          python3 -m py_compile "$RUNNER_TEMP/r318bg_admission_wrapper.py" "$RUNNER_TEMP/r318bg_markdown_hygiene.py"
           python3 "$RUNNER_TEMP/r318bg_admission_wrapper.py" "$RUNNER_TEMP/original-admission.yml"
+          python3 "$RUNNER_TEMP/r318bg_markdown_hygiene.py"
 
       - name: Stage and validate exact continuity surface
         shell: bash
@@ -59,13 +63,13 @@ jobs:
           grep -q 'R3.18BH' docs/continuity/MIMIR_CURRENT_STATE.md
           grep -q 'R3.18BH' docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
 
-          git rm .github/workflows/r318bg-admission-r318bh-v8.yml
+          git rm .github/workflows/r318bg-admission-r318bh-v9.yml
           git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity
           git diff --cached --check
 
           actual="$(git diff --cached --name-only | sort)"
           expected="$(printf '%s\n' \
-            .github/workflows/r318bg-admission-r318bh-v8.yml \
+            .github/workflows/r318bg-admission-r318bh-v9.yml \
             MIMIR_CONTINUE_HERE.md \
             MIMIR_KNOWLEDGE_GRAPH.md \
             docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
