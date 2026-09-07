@@ -1756,3 +1756,31 @@ Evidence head: `02e1799001b670db24f1e0076f2afd6c05f5afdf`. Evidence run/job `341
 Proven: exact 3/3 BF-true payloads; Boolean=2 / Float=1; widths 1:2 / 32:1; Float raw IEEE754 identity; native/oracle mismatch 0; witness reselection 0; BF-false exclusions 37/37; upstream-AU-false exclusions 7/7; next-control bits consumed 0; full validation PASS; privacy PASS.
 
 Opened next: R3.18BH read-only exactly-one-next-property-control observation on only the three exact BG payload-end rows. Still closed: production payload/control composition, following stream/header/payload, second later control, generalized cursor, actor/frame/state/event/skill/runtime/export widening.
+
+## 2026-09-07 — R3.18BH — Next property-control bit evidence Outcome A
+Production base SHA: `1d717d3e82179edd85b197968f46b8f951a3e828`
+Production commit SHA: unchanged
+Pass type: read-only exactly-one-control-bit differential evidence
+Outcome: A
+
+What changed:
+- No production code changed. R3.18BH evidence closed and R3.18BI payload-only production was opened.
+
+Evidence:
+- exact BG payload rows 3/3; native/Boxcars next bit exact 3/3; false=1 / true=2; mismatch 0; witness reselection 0.
+- authority `c728658ac237a45f34b3af002c27f704f5293fb5` / `34132181073/101774645567` SUCCESS; artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`.
+
+Validation:
+- same-head CI `34132181159/101775846915` SUCCESS; manifest `sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa`; privacy PASS.
+
+Boundaries opened:
+- R3.18BI may productionize exactly one BG-admitted Boolean/Float payload after BE.
+
+Boundaries still closed:
+- BH control production; following stream/header/payload; second later control; generalized cursor; wider actor/frame/state/event/skill surfaces.
+
+Important negative facts / anti-regressions:
+- production still stops at BE payload_start until BI is published; do not skip payload production merely because BH observed the next bit.
+
+Next exact pass:
+- R3.18BI bounded post-BE one-following-payload production.

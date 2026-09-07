@@ -6,11 +6,11 @@
   "last_production_code_sha": "1d717d3e82179edd85b197968f46b8f951a3e828",
   "last_production_milestone": "R3.18BE",
   "last_production_milestone_name": "bounded post-BA mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18BG",
-  "current_pass": "R3.18BH",
-  "current_pass_kind": "read-only one-next-property-control evidence on exactly the three R3.18BG Outcome-A payload-end rows",
-  "current_pass_goal": "From each exact BG payload_end_bit, read exactly one next property_present bit and require native/pinned-Boxcars bit and one-bit boundary equality on all 3 authority rows; distribution is discovered, not assumed.",
-  "current_pass_stop_boundary": "Stop exactly one bit after BG payload_end. No following stream/header/payload, no second later property-control bit, no generalized/repeated cursor, and no access on the 37 BF-false or 7 upstream AU-false rows.",
+  "last_completed_read_only_audit": "R3.18BH",
+  "current_pass": "R3.18BI",
+  "current_pass_kind": "bounded production composition of exactly one R3.18BG-admitted primitive payload after a valid published R3.18BE following header",
+  "current_pass_goal": "Publish exactly the three BG-supported Boolean/Float payloads with exact start/value/width/end semantics and stop at payload_end_bit without consuming the R3.18BH control bit.",
+  "current_pass_stop_boundary": "Stop exactly at the BG payload_end_bit. The R3.18BH property_present bit, following stream/header/payload, second later control and generalized cursor remain closed.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -167,7 +167,9 @@
     "historical R3.18AW/R3.18AM/R3.18AN payload coordinate/value inheritance at R3.18BG",
     "production consumption/composition of the R3.18BH-observed next property-control bit before a later production pass",
     "next stream/header/payload after the one R3.18BH control evidence boundary",
-    "second later property-control bit after R3.18BH"
+    "second later property-control bit after R3.18BH",
+    "production consumption of the R3.18BH-observed next property-control bit during R3.18BI",
+    "following stream/header/payload after the R3.18BH control boundary"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -343,7 +345,9 @@
     "docs/continuity/MIMIR_R3_18BF_DECISION.md",
     "docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BG_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BH_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18BG",
   "last_completed_evidence_outcome": "A — exact 3/3 BF-true primitive payloads; Boolean=2 Float=1; widths 1:2 and 32:1; raw IEEE754 Float identity; native/oracle mismatch 0; witness reselection 0; 37 BF-false and 7 upstream AU-false excluded; next-control consumption 0; artifact 10015405999.",
@@ -2975,5 +2979,29 @@
     },
     "next_property_control_open": false,
     "witness_reselection_allowed": false
+  },
+  "r3_18bh": {
+    "outcome": "A",
+    "head": "c728658ac237a45f34b3af002c27f704f5293fb5",
+    "tree": "9761d42cd55d3152fe19653ea5be67efd826f2fa",
+    "run": 34132181073,
+    "job": 101774645567,
+    "same_head_ci_run": 34132181159,
+    "same_head_ci_job": 101775846915,
+    "artifact": 10023482583,
+    "artifact_digest": "sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d",
+    "manifest_sha256": "9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa",
+    "target_rows": 3,
+    "false": 1,
+    "true": 2,
+    "native_oracle_exact": 3,
+    "native_oracle_mismatch": 0,
+    "witness_reselection": 0,
+    "adjacent_consumption_bits": {
+      "stream": 0,
+      "header": 0,
+      "payload": 0,
+      "second_control": 0
+    }
   }
 }

@@ -6,40 +6,33 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BG payload evidence closed / R3.18BH next-control evidence active
+# 0. Current override — R3.18BH closed / R3.18BI payload production active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BE
-- `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81` remains canonical production.
-- 37 false BA rows terminate with no header; 3 true rows expose one exact BD-admitted header and stop at `payload_start`.
-- production still consumes no following payload or later control.
-
-## CLOSED READ-ONLY DIFFERENTIAL — R3.18BF
-- evidence `5a3f875a445f9a3a2176788555089562948c3676` / `34098102185/101666129830` SUCCESS; artifact `10009534065` / `sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc`.
-- exact 40/40, false=37 / true=3, headers=3/3, BD contexts=3/3, Boolean=2 / Float=1, mismatch/reselection 0/0, payload/control 0/0.
+- `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81` remains canonical production and stops at the true-path following-header `payload_start`.
 
 ## CLOSED READ-ONLY PAYLOAD EVIDENCE — R3.18BG
-- authority head `02e1799001b670db24f1e0076f2afd6c05f5afdf` / evidence `34112731371/101715102551` SUCCESS; same-head CI `34112731358/101712578621` SUCCESS.
-- authoritative artifact `10015405999` / `sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a`; inner manifest `sha256:b06097e08cc276e80e17543f36a3ab05ac184b335ec12ded0fd460e2129d5e46`; 17/17 files verified.
-- exact 3/3 BF-true payloads; Boolean=2, Float=1; widths 1:2 and 32:1; Float identity is raw IEEE754 u32; native/oracle mismatch 0; witness reselection 0.
-- all 37 BF-false rows and 7 upstream AU false terminators were excluded before payload access; next-control consumption 0.
+- exact 3/3 primitive payloads: Boolean=2 / Float=1, native/oracle mismatch 0, next-control consumption 0.
+- artifact `10015405999` / `sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a`.
 
-## ACTIVE READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BH
-- direct row authority is the exact three-row BG Outcome-A artifact.
-- start exactly at each BG `payload_end_bit` and observe exactly one next `property_present` bit.
-- compare native bit/boundary with pinned Boxcars; do not assume the false/true distribution in advance.
-- stop one bit later: no following stream/header/payload, no second later control, no generalized cursor.
+## CLOSED READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BH
+- authority `c728658ac237a45f34b3af002c27f704f5293fb5` / `34132181073/101774645567` SUCCESS; same-head CI `34132181159/101775846915` SUCCESS.
+- artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`; manifest `sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa`.
+- exact 3/3; false=1, true=2; native/oracle mismatch 0; witness reselection 0; adjacent consumption 0.
+
+## ACTIVE PRODUCTION — R3.18BI
+- publish only the exact BG payload after a valid BE header.
+- Boolean=2 / Float=1 authority only; stop exactly at BG `payload_end_bit`.
+- the BH `property_present` bit is explicitly forbidden in BI.
 
 ## CLOSED
-- payload access on any BF false terminator;
-- production composition/consumption of the R3.18BH-observed next property-control bit;
-- following stream/header/payload after the one R3.18BH control observation;
-- second later property-control bit after R3.18BH;
-- second payload or following header after BG;
-- production composition of BF/BG payload before a later production pass;
-- historical payload coordinate/value inheritance;
-- repeated/generalized property loop or generic cursor;
+- BH control production during BI;
+- payload/control access on BF-false or upstream-AU-false rows;
+- following stream/header/payload after BI;
+- second later property-control bit;
+- generalized/repeated property cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 # 1. Status vocabulary
