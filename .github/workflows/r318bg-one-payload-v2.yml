@@ -1,0 +1,73 @@
+name: R3.18BG One Following Primitive Payload Evidence v2
+
+on:
+  push:
+    branches:
+      - evidence/r318bg-one-payload-v2
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bg-one-payload-v2
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUNNER_BLOB: c910f53c2bdad907155336ab19f25d97f5506e5d
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Execute immutable R3.18BG evidence runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$RUNNER_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318bg_run.sh"
+          test "$(git hash-object "$RUNNER_TEMP/r318bg_run.sh")" = "$RUNNER_BLOB"
+          bash "$RUNNER_TEMP/r318bg_run.sh"
+
+      - name: Upload authoritative R3.18BG evidence v2
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bg-one-following-primitive-payload-evidence-v2
+          path: ${{ runner.temp }}/r318bg-authority/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create non-authority failure receipt
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/r318bg-failure"
+          cat > "$RUNNER_TEMP/r318bg-failure/r3_18bg_failure_receipt.txt" <<EOF
+          R3_18BG_OUTCOME=NOT_ADMITTED
+          R3_18BG_SCIENTIFIC_AUTHORITY=NONE
+          R3_18BG_HEAD=$GITHUB_SHA
+          R3_18BG_MAIN=e507f3988091a8135a693e7f94ff597f7fe1aa80
+          R3_18BG_RUNNER_BLOB=$RUNNER_BLOB
+          EOF
+
+      - name: Upload v2 failure receipt
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bg-v2-non-authority-failure-receipt
+          path: ${{ runner.temp }}/r318bg-failure/
+          if-no-files-found: error
+          retention-days: 30
