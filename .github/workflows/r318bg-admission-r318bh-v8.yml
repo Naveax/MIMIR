@@ -1,4 +1,4 @@
-name: R3.18BG Admission and R3.18BH Open v7
+name: R3.18BG Admission and R3.18BH Open v8
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: r318bg-admission-r318bh-v7-${{ github.sha }}
+  group: r318bg-admission-r318bh-v8-${{ github.sha }}
   cancel-in-progress: false
 
 env:
@@ -40,7 +40,7 @@ jobs:
           python3 -m py_compile "$RUNNER_TEMP/r318bg_admission_wrapper.py"
           python3 "$RUNNER_TEMP/r318bg_admission_wrapper.py" "$RUNNER_TEMP/original-admission.yml"
 
-      - name: Validate exact continuity surface
+      - name: Stage and validate exact continuity surface
         shell: bash
         run: |
           set -euo pipefail
@@ -58,10 +58,14 @@ jobs:
           grep -q '^# 0. Current override — R3.18BG payload evidence closed / R3.18BH next-control evidence active$' docs/continuity/MIMIR_BOUNDARY_LOCKS.md
           grep -q 'R3.18BH' docs/continuity/MIMIR_CURRENT_STATE.md
           grep -q 'R3.18BH' docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
-          git rm .github/workflows/r318bg-admission-r318bh-v7.yml
-          actual="$(git diff --name-only | sort)"
+
+          git rm .github/workflows/r318bg-admission-r318bh-v8.yml
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity
+          git diff --cached --check
+
+          actual="$(git diff --cached --name-only | sort)"
           expected="$(printf '%s\n' \
-            .github/workflows/r318bg-admission-r318bh-v7.yml \
+            .github/workflows/r318bg-admission-r318bh-v8.yml \
             MIMIR_CONTINUE_HERE.md \
             MIMIR_KNOWLEDGE_GRAPH.md \
             docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
@@ -71,8 +75,11 @@ jobs:
             docs/continuity/MIMIR_PROGRESS_LEDGER.md \
             docs/continuity/MIMIR_R3_18BG_DECISION.md \
             docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md | sort)"
-          test "$actual" = "$expected" || { echo 'Unexpected diff surface'; diff -u <(printf '%s\n' "$expected") <(printf '%s\n' "$actual"); exit 1; }
-          test -z "$(git diff --name-only -- '*.rs' 'Cargo.toml' 'Cargo.lock')"
+          test "$actual" = "$expected" || { echo 'Unexpected staged diff surface'; diff -u <(printf '%s\n' "$expected") <(printf '%s\n' "$actual"); exit 1; }
+          test -z "$(git diff --cached --name-only -- '*.rs' 'Cargo.toml' 'Cargo.lock')"
+          test -z "$(git diff --name-only)"
+          test -z "$(git ls-files --others --exclude-standard)"
+          echo R3_18BG_ADMISSION_STAGED_SURFACE=PASS
 
       - name: Commit exact docs-only admission
         shell: bash
@@ -80,6 +87,5 @@ jobs:
           set -euo pipefail
           git config user.name 'Naveax'
           git config user.email '79841922+Naveax@users.noreply.github.com'
-          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity
           git commit -m 'Admit R3.18BG and open R3.18BH'
           git push origin HEAD:continuity/r318bg-admit-r318bh
