@@ -1,0 +1,120 @@
+name: R3.18BG Evidence v2 Builder
+
+on:
+  push:
+    branches:
+      - automation/r318bg-v2-builder-v1
+    paths:
+      - '.github/workflows/_tmp_r318bg_v2_builder.yml'
+      - '.github/scripts/_tmp_r318bg_v2_patch.py'
+      - '.github/scripts/_tmp_r318bg_v2_privacy_fix.py'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318bg-v2-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: e507f3988091a8135a693e7f94ff597f7fe1aa80
+      MAIN_TREE: 7266575848c4f0bcf6aa1d2ebde164013107bf5e
+      V1_HEAD: e0bdfd091a7f0fef14bdd0fc33f5cf108dfd5f39
+      V1_TREE: ac8e3b40ee7889480fb4763cb4f43b93b39a2e12
+      V1_WORKFLOW_BLOB: 1c92d8387c0000d27f54db103bf07eca77ae089c
+      PATCH_BLOB: a61b3c3eae1ae07475423818e2022ede8b9cb4c9
+      PRIVACY_FIX_BLOB: 60cadd1c54918db0beb23185206a4552171cf658
+      CANDIDATE_BRANCH: evidence/r318bg-one-payload-v2
+
+    steps:
+      - name: Checkout exact helper commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          fetch-tags: false
+
+      - name: Freeze canonical and v1 non-authority source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+          test "$(git rev-parse "$MAIN_SHA^{tree}")" = "$MAIN_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$V1_HEAD" --jq .tree.sha)" = "$V1_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/contents/.github/workflows/r318bg-one-payload-v1.yml?ref=$V1_HEAD" --jq .sha)" = "$V1_WORKFLOW_BLOB"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/34107643273" --jq .conclusion)" = failure
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/34107643147" --jq .conclusion)" = success
+          echo R3_18BG_V2_SOURCE_FREEZE=PASS
+
+      - name: Materialize immutable source and patchers
+        shell: bash
+        run: |
+          set -euo pipefail
+          fetch_blob() {
+            local sha="$1" out="$2"
+            gh api "repos/$GITHUB_REPOSITORY/git/blobs/$sha" --jq .content | tr -d '\n' | base64 -d > "$out"
+            test "$(git hash-object "$out")" = "$sha"
+          }
+          fetch_blob "$V1_WORKFLOW_BLOB" "$RUNNER_TEMP/r318bg-v1.yml"
+          fetch_blob "$PATCH_BLOB" "$RUNNER_TEMP/r318bg-v2-patch.py"
+          fetch_blob "$PRIVACY_FIX_BLOB" "$RUNNER_TEMP/r318bg-v2-privacy-fix.py"
+          python3 -m py_compile "$RUNNER_TEMP/r318bg-v2-patch.py" "$RUNNER_TEMP/r318bg-v2-privacy-fix.py"
+          echo R3_18BG_V2_PATCHERS_FREEZE=PASS
+
+      - name: Generate clean v2 evidence candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          patch1="$RUNNER_TEMP/r318bg-v2-patch.py"
+          patch2="$RUNNER_TEMP/r318bg-v2-privacy-fix.py"
+          source="$RUNNER_TEMP/r318bg-v1.yml"
+          git reset --hard "$MAIN_SHA"
+          git clean -fdx
+          mkdir -p .github/workflows
+          python3 "$patch1" "$source" .github/workflows/r318bg-one-payload-v2.yml
+          python3 "$patch2" .github/workflows/r318bg-one-payload-v2.yml
+          test "$(git status --porcelain --untracked-files=all | wc -l)" -eq 1
+          test "$(git status --porcelain --untracked-files=all | awk '{print $2}')" = .github/workflows/r318bg-one-payload-v2.yml
+          grep -F 'name: R3.18BG One Following Primitive Payload Evidence v2' .github/workflows/r318bg-one-payload-v2.yml
+          grep -F 'evidence/r318bg-one-payload-v2' .github/workflows/r318bg-one-payload-v2.yml
+          grep -F 'R3_18BG_CURATED_AUTHORITY_FILES=17' .github/workflows/r318bg-one-payload-v2.yml
+          grep -F 'R3_18BG_EPHEMERAL_LOGS_EXCLUDED=native.log,oracle.log,oracle_kv.tsv,oracle_requests.tsv' .github/workflows/r318bg-one-payload-v2.yml
+          grep -F 'r318bg-one-following-primitive-payload-evidence-v2' .github/workflows/r318bg-one-payload-v2.yml
+          grep -F 'r318bg-v2-non-authority-failure-receipt' .github/workflows/r318bg-one-payload-v2.yml
+          grep -F 'R3_18BG_V1_NON_AUTHORITY_FAILURE_FREEZE=PASS' .github/workflows/r318bg-one-payload-v2.yml
+          ! grep -F 'path: ${{ runner.temp }}/r318bg-out/' .github/workflows/r318bg-one-payload-v2.yml
+          ! grep -F '(?i)' .github/workflows/r318bg-one-payload-v2.yml
+          git diff --check
+          echo R3_18BG_V2_CANDIDATE_VALIDATION=PASS
+
+      - name: Commit and push clean v2 evidence head
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git add .github/workflows/r318bg-one-payload-v2.yml
+          test "$(git diff --cached --name-only | wc -l)" -eq 1
+          git commit -m 'Fix R3.18BG curated evidence privacy boundary'
+          candidate="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          parent="$(git rev-parse 'HEAD^')"
+          test "$parent" = "$MAIN_SHA"
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main' --depth=1 --quiet
+          test "$(git rev-parse refs/remotes/origin/main)" = "$MAIN_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists: $CANDIDATE_BRANCH" >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18BG_V2_SHA=$candidate"
+          echo "R3_18BG_V2_TREE=$tree"
+          echo "R3_18BG_V2_PARENT=$parent"
+          echo R3_18BG_V2_SCOPE=workflow-only
