@@ -1,0 +1,201 @@
+name: R3.18BF Continuity Admission Builder v1
+
+on:
+  push:
+    branches:
+      - automation/r318bf-continuity-bg-builder-v1
+    paths:
+      - '.github/workflows/_tmp_r318bf_continuity_bg_builder_v1.yml'
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bf-continuity-bg-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: cbfc861e1b570fcb2e9e1faf8b6bd16149b549b9
+      BASE_TREE: cec0a3bbc64834b9288fe3effb7474387eb024ed
+      PROD_SHA: 1d717d3e82179edd85b197968f46b8f951a3e828
+      PROD_TREE: 72cf2b907437a1ba62cc9deebd7608f7d0372f81
+      LIB_BLOB: 92d9d1893d75f9f0bd5ca921d8cf80455b88f0c3
+      BE_TEST_BLOB: 78f32c79a3526cbfeac4e32ccc06e5965cd3e97b
+      BE_DECISION_BLOB: 7a1b410cc029ddcf8960420d60ae8ccba09d2060
+      BF_SPEC_BLOB: 86735a8adb67686c3905d809705c1f7066c6f716
+      BF_HEAD: 5a3f875a445f9a3a2176788555089562948c3676
+      BF_TREE: d4b0b0510d24f5c0ba0f3d748201d9fed4ea7e0f
+      BF_RUN: '34098102185'
+      BF_JOB: '101666129830'
+      BF_CI_RUN: '34098102183'
+      BF_CI_JOB: '101666129957'
+      BF_ARTIFACT: '10009534065'
+      BF_ARTIFACT_NAME: r318bf-published-be-differential-evidence
+      BF_ARTIFACT_SIZE: '9998'
+      BF_DIGEST: sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc
+      BF_MANIFEST_SHA256: 35747c9813f56e58c1515dc301cf6a0d3d3a86fd0b068fba609948016d0e45ce
+      BF_V1_RUN: '34097535331'
+      BF_V1_JOB: '101664404031'
+      BF_V1_FAILURE_ARTIFACT: '10009188799'
+      GENERATOR_BLOB: 767974607d69bcb89ba93b084ff485338cdbbc35
+      CANDIDATE_BRANCH: candidate/r318bf-admit-open-r318bg-v1
+
+    steps:
+      - name: Checkout exact helper commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          fetch-tags: false
+
+      - name: Freeze BF and canonical authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs")" = "$BE_TEST_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BE_DECISION.md")" = "$BE_DECISION_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md")" = "$BF_SPEC_BLOB"
+          test "$(git rev-parse "$BF_HEAD^")" = "$BASE_SHA"
+          test "$(git rev-parse "$BF_HEAD^{tree}")" = "$BF_TREE"
+
+          check_run_job() {
+            local run_id="$1" job_id="$2" expected_sha="$3"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .head_sha)" = "$expected_sha"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .status)" = completed
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq .conclusion)" = success
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id" --jq .run_id)" = "$run_id"
+            test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job_id" --jq .conclusion)" = success
+          }
+          check_run_job "$BF_RUN" "$BF_JOB" "$BF_HEAD"
+          check_run_job "$BF_CI_RUN" "$BF_CI_JOB" "$BF_HEAD"
+
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BF_ARTIFACT")"
+          test "$(jq -r .name <<<"$meta")" = "$BF_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$BF_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta" | tr '[:upper:]' '[:lower:]')" = "$(printf '%s' "$BF_DIGEST" | tr '[:upper:]' '[:lower:]')"
+          test "$(jq -r .expired <<<"$meta")" = false
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$BF_RUN"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$BF_HEAD"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BF_V1_RUN" --jq .conclusion)" = failure
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BF_V1_JOB" --jq .run_id)" = "$BF_V1_RUN"
+          fail_meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BF_V1_FAILURE_ARTIFACT")"
+          test "$(jq -r .name <<<"$fail_meta")" = r318bf-non-authority-failure-receipt
+          echo R3_18BF_CONTINUITY_AUTHORITY_FREEZE=PASS
+
+      - name: Verify BF artifact inner manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r318bf-authority"
+          mkdir -p "$out"
+          gh run download "$BF_RUN" --repo "$GITHUB_REPOSITORY" --name "$BF_ARTIFACT_NAME" --dir "$out"
+          test "$(sha256sum "$out/r3_18bf_artifact_sha256.txt" | awk '{print $1}')" = "$BF_MANIFEST_SHA256"
+          (
+            cd "$out"
+            sha256sum -c r3_18bf_artifact_sha256.txt
+          )
+          grep -Fx 'R3_18BF_OUTCOME=A' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_PUBLISHED_BE_EXACT=40/40' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_FALSE_TERMINATORS=37' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_TRUE_HEADERS=3/3' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_EXACT_BD_CONTEXTS=3/3' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_TAGS=Boolean:2,Float:1' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_MISMATCH=0' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_WITNESS_RESELECTION=0' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$out/r3_18bf_aggregate.txt"
+          grep -Fx 'R3_18BF_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$out/r3_18bf_aggregate.txt"
+          echo R3_18BF_ARTIFACT_AUTHORITY=PASS
+
+      - name: Generate exact nine-file continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          generator="$RUNNER_TEMP/r318bf_continuity_bg.py"
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$GENERATOR_BLOB" --jq .content | tr -d '\n' | base64 -d > "$generator"
+          test "$(git hash-object "$generator")" = "$GENERATOR_BLOB"
+          python3 -m py_compile "$generator"
+
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python3 "$generator"
+
+          cat > "$RUNNER_TEMP/expected.txt" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BF_DECISION.md
+          docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/expected.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/actual.txt"
+          sort "$RUNNER_TEMP/expected.txt" -o "$RUNNER_TEMP/expected.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -F 'R3.18BF — Outcome A' docs/continuity/MIMIR_CURRENT_STATE.md
+          grep -F 'R3.18BG — one following primitive payload evidence' docs/continuity/MIMIR_CURRENT_STATE.md
+          grep -F 'R3.18BF published-R3.18BE mixed following-header differential / Outcome A CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'R3.18BG one following primitive payload evidence / ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '154. `docs/continuity/MIMIR_R3_18BF_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '155. `docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '  R3.18BG — one following primitive payload evidence' MIMIR_CONTINUE_HERE.md
+          grep -F 'Direct row authority:' docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md
+          git diff --check
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BF_CONTINUITY_VALIDATION=PASS
+
+      - name: Commit and push exact clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BF_DECISION.md \
+            docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git commit -m 'Admit R3.18BF and open R3.18BG'
+
+          candidate="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          parent="$(git rev-parse 'HEAD^')"
+          test "$parent" = "$BASE_SHA"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD | wc -l)" -eq 9
+
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main' --depth=1 --quiet
+          test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists: $CANDIDATE_BRANCH" >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18BF_CONTINUITY_CANDIDATE_SHA=$candidate"
+          echo "R3_18BF_CONTINUITY_CANDIDATE_TREE=$tree"
+          echo "R3_18BF_CONTINUITY_CANDIDATE_PARENT=$parent"
+          echo R3_18BF_CONTINUITY_SCOPE=PASS_9_OF_9
+          echo R3_18BG_OPENED=PASS
