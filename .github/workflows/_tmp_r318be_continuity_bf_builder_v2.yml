@@ -1,0 +1,165 @@
+name: R3.18BE Continuity Admission Builder v2
+
+on:
+  push:
+    branches:
+      - automation/r318be-continuity-bf-builder-v2
+    paths:
+      - '.github/workflows/_tmp_r318be_continuity_bf_builder_v2.yml'
+      - '.github/scripts/_tmp_r318be_continuity_bf.py'
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318be-continuity-bf-builder-v2
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PROD_SHA: 1d717d3e82179edd85b197968f46b8f951a3e828
+      PROD_TREE: 72cf2b907437a1ba62cc9deebd7608f7d0372f81
+      PROD_PARENT: 3fa88f27201ee91c51a3bb7a623c00b46204c1e0
+      LIB_BLOB: 92d9d1893d75f9f0bd5ca921d8cf80455b88f0c3
+      TEST_BLOB: 78f32c79a3526cbfeac4e32ccc06e5965cd3e97b
+      BE_SPEC_BLOB: c5f708fbc88732402bf057bd1274dc11f90669a2
+      BUILDER_HEAD: 5ae76da91fb21ec9b62201673f6434fa2203cf6d
+      BUILDER_RUN: '33129018318'
+      BUILDER_JOB: '98713908063'
+      VALIDATION_PR: '209'
+      PR_CI_RUN: '34094630343'
+      PR_CI_JOB: '101655343287'
+      PUBLISHED_CI_RUN: '34095061141'
+      PUBLISHED_CI_JOB: '101656732728'
+      BD_CONTRACT_BLOB: b0c2610b3d36e25302f35037518990fa3bc9fe69
+      BD_CONTRACT_SHA256: 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27
+      CANDIDATE_BRANCH: candidate/r318be-admit-open-r318bf-v2
+
+    steps:
+      - name: Checkout exact helper commit with production ancestry
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 3
+          fetch-tags: false
+
+      - name: Freeze published R3.18BE authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          helper_parent="$(git rev-parse HEAD^)"
+          test "$helper_parent" = "$PROD_SHA"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$PROD_SHA^")" = "$PROD_PARENT"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18be_post_ba_following_header.rs")" = "$TEST_BLOB"
+          test "$(git rev-parse "$PROD_SHA:docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md")" = "$BE_SPEC_BLOB"
+          test "$(git rev-parse "$PROD_SHA:docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json")" = "$BD_CONTRACT_BLOB"
+          test "$(git show "$PROD_SHA:docs/continuity/MIMIR_R3_18BD_ADMITTED_HEADER_CONTEXTS.json" | sha256sum | awk '{print $1}')" = "$BD_CONTRACT_SHA256"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$PROD_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILDER_RUN" --jq .head_sha)" = "$BUILDER_HEAD"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILDER_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILDER_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$BUILDER_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$VALIDATION_PR" --jq .state)" = closed
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$VALIDATION_PR" --jq '.merged_at // ""')" = ""
+          test "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$VALIDATION_PR" --jq .head.sha)" = "$PROD_SHA"
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PR_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PR_CI_RUN" --jq .event)" = pull_request
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PR_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$PR_CI_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_CI_RUN" --jq .head_branch)" = main
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_CI_RUN" --jq .event)" = push
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PUBLISHED_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$PUBLISHED_CI_JOB" --jq .conclusion)" = success
+          echo R3_18BE_PUBLICATION_AUTHORITY_FREEZE=PASS
+
+      - name: Generate bounded clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          generator="$RUNNER_TEMP/r318be_continuity_bf.py"
+          cp .github/scripts/_tmp_r318be_continuity_bf.py "$generator"
+
+          git reset --hard "$PROD_SHA"
+          git clean -fdx
+          python3 "$generator"
+
+          cat > "$RUNNER_TEMP/expected.txt" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BE_DECISION.md
+          docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/expected.txt"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/actual.txt"
+          sort "$RUNNER_TEMP/expected.txt" -o "$RUNNER_TEMP/expected.txt"
+          diff -u "$RUNNER_TEMP/expected.txt" "$RUNNER_TEMP/actual.txt"
+          test "$(wc -l < "$RUNNER_TEMP/actual.txt")" -eq 9
+
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -F 'R3.18BF — published R3.18BE mixed following-header differential' docs/continuity/MIMIR_CURRENT_STATE.md
+          grep -F 'R3.18BE bounded post-BA mixed-continuation following-header production / PRODUCTION CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'R3.18BF published-R3.18BE mixed following-header differential / ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '152. `docs/continuity/MIMIR_R3_18BE_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '153. `docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F 'CURRENT_PASS:' MIMIR_CONTINUE_HERE.md
+          grep -F '  R3.18BF — published R3.18BE mixed following-header differential' MIMIR_CONTINUE_HERE.md
+          git diff --check
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BE_CONTINUITY_VALIDATION=PASS
+
+      - name: Commit and push exact clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Naveax'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git add \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BE_DECISION.md \
+            docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git commit -m 'Admit R3.18BE and open R3.18BF'
+
+          candidate="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          parent="$(git rev-parse 'HEAD^')"
+          test "$parent" = "$PROD_SHA"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD | wc -l)" -eq 9
+
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main' --depth=1 --quiet
+          test "$(git rev-parse refs/remotes/origin/main)" = "$PROD_SHA"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists: $CANDIDATE_BRANCH" >&2
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+
+          echo "R3_18BE_CONTINUITY_CANDIDATE_SHA=$candidate"
+          echo "R3_18BE_CONTINUITY_CANDIDATE_TREE=$tree"
+          echo "R3_18BE_CONTINUITY_CANDIDATE_PARENT=$parent"
+          echo R3_18BE_CONTINUITY_SCOPE=PASS_9_OF_9
+          echo R3_18BF_OPENED=PASS
