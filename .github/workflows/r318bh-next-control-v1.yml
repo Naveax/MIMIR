@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 180
     env:
       GH_TOKEN: ${{ github.token }}
-      RUNNER_BLOB: 5c7ad8a20bf122575c002f6d748916ed403c05a6
+      RUNNER_BLOB: b1c0f035ed1185d864b3d54719bb1908071c3ebb
     steps:
       - name: Checkout exact BH evidence head
         uses: actions/checkout@v6
