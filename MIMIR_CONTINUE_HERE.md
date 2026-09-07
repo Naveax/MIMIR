@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BE — bounded post-BA mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BC — one following-property-header evidence Outcome A / 40-row partition exact / false=37 true=3 / one-header=3/3 / contexts=3 / mismatch 0 / reselection 0 / artifact 9666964713
+  R3.18BF — published R3.18BE differential Outcome A / exact 40/40 / false=37 true=3 / headers=3/3 / contexts=3/3 / mismatch 0 / reselection 0 / artifact 10009534065
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BD — post-BA mixed-continuation following-header exact-context contract / Outcome A / 3 exact eight-field tuples / multiplicity 3 / 37 false terminators outside membership / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27 / AT-AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BC — one following-property-header evidence Outcome A / exact 3/3 native-Boxcars headers / contexts=3 / payload=0 / second-control=0 / artifact 9666964713
+  R3.18BF — published BE differential Outcome A / exact 40/40 / false=37 true=3 / BD contexts=3/3 / payload=0 / second-control=0 / artifact 10009534065
 
 CURRENT_PASS:
-  R3.18BF — published R3.18BE mixed following-header differential
+  R3.18BG — one following primitive payload evidence
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / exact BE-versus-BC/BD branch, header identity, boundary and membership on the immutable 40-row lane; no following payload
+  read-only one-payload boundary evidence / exact BF-true three-row primitive scalar decode versus pinned Boxcars; false rows excluded; no next control
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4129,4 +4129,34 @@ TYPE: read-only published-production differential
 AUTHORITY: BC 0f4d07f5caf77ec53f5e8b512867ad17b5835ca1 / artifact 9666964713; BD contract sha256:33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27
 REQUIRE: BE exact 40/40 / false=37 / true=3 / true headers=3/3 / BD contexts=3/3 / mismatch=0 / reselection=0 / payload-control=0/0
 HARD STOP: no following payload/second-control; no false-row header; no generalized cursor
+```
+
+
+---
+
+# CURRENT OVERRIDE — R3.18BF CLOSED / R3.18BG ACTIVE
+
+Fresh receipts below override older current-like wording above.
+
+```text
+R3_18BF_EVIDENCE_CLOSURE:
+Outcome A / read-only
+head/tree: 5a3f875a445f9a3a2176788555089562948c3676 / d4b0b0510d24f5c0ba0f3d748201d9fed4ea7e0f
+run/job: 34098102185/101666129830 SUCCESS
+same-head CI: 34098102183/101666129957 SUCCESS
+artifact: 10009534065 / sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc
+inner manifest: sha256:35747c9813f56e58c1515dc301cf6a0d3d3a86fd0b068fba609948016d0e45ce
+rows: 40/40 / false=37 / true=3
+headers/BD contexts: 3/3 / 3/3
+tags: Boolean=2 / Float=1
+mismatch/reselection: 0/0
+payload/second-control consumed: 0/0
+v1 failure: 34097535331/101664404031 non-authority, no differential executed
+
+CURRENT_PASS: R3.18BG
+TYPE: read-only one-following-primitive-payload evidence
+DIRECT_AUTHORITY: BF artifact 10009534065 / sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc
+TARGETS: exact BF true rows=3 / Boolean=2 width1 / Float=1 width32
+REQUIRE: exact native-Boxcars boundary/value equality / mismatch=0 / reselection=0
+HARD_STOP: false-row payload access=0 / next-control=0 / second-payload=0 / generalized cursor=0
 ```

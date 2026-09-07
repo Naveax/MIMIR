@@ -88,7 +88,8 @@ R3.18BB published-R3.18BA mixed following-control differential / Outcome A CLOSE
 R3.18BC one following-property-header evidence after published BA mixed control / Outcome A CLOSED
 R3.18BD exact following-header context contract / Outcome A CLOSED
 R3.18BE bounded post-BA mixed-continuation following-header production / PRODUCTION CLOSED
-R3.18BF published-R3.18BE mixed following-header differential / ACTIVE
+R3.18BF published-R3.18BE mixed following-header differential / Outcome A CLOSED
+R3.18BG one following primitive payload evidence / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -260,13 +261,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 151. `docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md`
 152. `docs/continuity/MIMIR_R3_18BE_DECISION.md`
 153. `docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md`
-154. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-155. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-156. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-157. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-158. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-159. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-160. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+154. `docs/continuity/MIMIR_R3_18BF_DECISION.md`
+155. `docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md`
+156. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+157. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+158. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+159. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+160. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+161. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+162. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1229,3 +1232,17 @@ next                        R3.18M true-only one-bit production composition
 - immutable authority BC `0f4d07f5caf77ec53f5e8b512867ad17b5835ca1` / `33122152803/98691409657` / artifact `9666964713` / `sha256:88e29fbf3fcf089c117aef736b3411e70f1dd6d73c9515d52b28c325cfc5e10e` plus BD contract `sha256:33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`.
 - require published BE exact 40/40, false=37, true=3 exact headers, BD contexts 3/3, Boolean=2 / Float=1, mismatch/reselection 0/0, payload/control 0/0.
 - production mutation and following payload/second-control access are forbidden.
+
+
+### R3.18BF published-R3.18BE mixed following-header differential: Outcome A / CLOSED
+- evidence `5a3f875a445f9a3a2176788555089562948c3676` / tree `d4b0b0510d24f5c0ba0f3d748201d9fed4ea7e0f` / `34098102185/101666129830` SUCCESS; same-head CI `34098102183/101666129957` SUCCESS.
+- artifact `10009534065` / `sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc` / inner manifest `sha256:35747c9813f56e58c1515dc301cf6a0d3d3a86fd0b068fba609948016d0e45ce`.
+- exact 40/40; false=37 / true=3; BD contexts 3/3; Boolean=2 / Float=1; mismatch/reselection 0/0; payload/control 0/0.
+- v1 `34097535331/101664404031` is non-authority and failed before differential execution.
+- next exact pass: R3.18BG one following primitive payload evidence.
+
+### R3.18BG one following primitive payload evidence: ACTIVE
+- direct row authority BF artifact `10009534065` / `sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc`.
+- exactly 3 BF-true rows only; Boolean=2 / Float=1; exact current values/boundaries must match pinned Boxcars.
+- 37 BF-false rows and 7 upstream AU false terminators are excluded before payload decode.
+- next control, second payload/header, production composition and generalized cursor remain closed.

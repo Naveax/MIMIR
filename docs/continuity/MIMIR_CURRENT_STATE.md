@@ -5,35 +5,32 @@
 **Canonical production SHA:** `1d717d3e82179edd85b197968f46b8f951a3e828`
 **Production tree:** `72cf2b907437a1ba62cc9deebd7608f7d0372f81`
 **Production milestone:** `R3.18BE — bounded post-BA mixed-continuation following-header production`
-**Last read-only evidence/audit:** `R3.18BC — Outcome A / false=37 true=3 / true headers exact 3/3 / contexts=3 / artifact 9666964713`
+**Last read-only evidence/audit:** `R3.18BF — Outcome A / exact 40/40 / false=37 true=3 / headers=3/3 / contexts=3/3 / mismatch=0 / artifact 10009534065`
 **Last completed contract:** `R3.18BD — exact_tuple_only / 3 eight-field contexts / multiplicity 3 / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`
-**Current exact pass:** `R3.18BF — published R3.18BE mixed following-header differential`
+**Current exact pass:** `R3.18BG — one following primitive payload evidence`
 
 ## Truthful boundary
 
-R3.18BE is canonical production. Exactly forty valid R3.18BA rows may enter BE. Thirty-seven false BA controls terminate successfully without any post-BA header access. Exactly three true BA controls compose one R3.18BD-admitted existing-actor following header and stop at `payload_start`; observed tags are Boolean=2 / Float=1. Seven upstream AU false terminators remain outside the BA/BE lane. Production consumes no following payload or second later control.
+R3.18BE remains canonical production. R3.18BF independently verified it on all forty frozen witnesses: 37 false no-header terminators and 3 exact true headers, exact BD contexts 3/3, Boolean=2 / Float=1, mismatch/reselection 0/0 and payload/second-control consumption 0/0.
+
+R3.18BG is read-only. It may decode exactly one primitive payload on only the three BF-true rows after rematerializing the exact published BE header. The 37 BF-false rows and 7 upstream AU false terminators are excluded before payload access.
 
 ```text
 production SHA/tree                    1d717d3e82179edd85b197968f46b8f951a3e828 / 72cf2b907437a1ba62cc9deebd7608f7d0372f81
-parent                                 3fa88f27201ee91c51a3bb7a623c00b46204c1e0
-lib/test blobs                         92d9d1893d75f9f0bd5ca921d8cf80455b88f0c3 / 78f32c79a3526cbfeac4e32ccc06e5965cd3e97b
-builder                                33129018318/98713908063 SUCCESS
-validation PR                          #209 CLOSED UNMERGED
-PR CI                                  34094630343/101655343287 SUCCESS
-published-main CI                      34095061141/101656732728 SUCCESS
-valid BE rows                          40/40
+BF head/tree                           5a3f875a445f9a3a2176788555089562948c3676 / d4b0b0510d24f5c0ba0f3d748201d9fed4ea7e0f
+BF run/job                             34098102185/101666129830 SUCCESS
+BF same-head CI                        34098102183/101666129957 SUCCESS
+BF artifact                            10009534065 / sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc
+BF inner manifest                     sha256:35747c9813f56e58c1515dc301cf6a0d3d3a86fd0b068fba609948016d0e45ce
+BF exact rows                          40/40
 false no-header                        37
 true exact header                      3
 exact BD contexts                     3/3
 true tags                              Boolean=2 / Float=1
-upstream AU false terminators excluded 7/7
-following payload / second control     0/0
+BG payload targets                     3
+next control                           CLOSED
 ```
-
-## Current gate
-
-R3.18BF is read-only. It must validate published BE against exactly the immutable forty-row BA/BC/BD authority with mismatch/reselection zero, exact 37/3 branching, exact three BD contexts and no adjacent payload/later-control consumption. It may not decode a following payload.
 
 ## Hard stop
 
-No following payload, second later control, generalized property cursor, actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+No payload access on false rows, next property-control bit, second payload/header, generalized property cursor, actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.

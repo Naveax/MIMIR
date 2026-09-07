@@ -1730,3 +1730,19 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18BF — published R3.18BE mixed following-header differential` on exactly the immutable forty-row BC/BD-backed authority lane.
+
+
+---
+
+## 2026-09-07 — R3.18BF — Published R3.18BE mixed following-header differential
+Production authority: `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81`
+Evidence head: `5a3f875a445f9a3a2176788555089562948c3676` / tree `d4b0b0510d24f5c0ba0f3d748201d9fed4ea7e0f`
+Pass type: read-only published-production differential
+Outcome: **A — CLOSED / ADMITTED**
+
+Proven: exact 40/40; false=37 no-header; true=3 exact header; BD contexts 3/3; Boolean=2 / Float=1; mismatch/reselection 0/0; following payload / second later control 0/0.
+
+Validation: evidence `34098102185/101666129830` SUCCESS; same-head CI `34098102183/101666129957` SUCCESS; artifact `10009534065` / `sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc`; inner manifest `sha256:35747c9813f56e58c1515dc301cf6a0d3d3a86fd0b068fba609948016d0e45ce`; Rust 1.85 full validation, repository verifier, negative/scope guards and privacy PASS. v1 `34097535331/101664404031` failed closed before differential execution and remains non-authority; no rerun was used.
+
+Opened: R3.18BG read-only exactly-one-payload evidence on the 3 BF-true rows.
+Still closed: payload on 37 BF-false rows / 7 upstream AU false rows, payload production, next control, second payload/header, historical coordinate/value inheritance, generalized cursor and wider semantic/runtime behavior.

@@ -6,11 +6,11 @@
   "last_production_code_sha": "1d717d3e82179edd85b197968f46b8f951a3e828",
   "last_production_milestone": "R3.18BE",
   "last_production_milestone_name": "bounded post-BA mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18BC",
-  "current_pass": "R3.18BF",
-  "current_pass_kind": "read-only published-production differential / exact published R3.18BE versus immutable BA/BC/BD mixed following-header authority",
-  "current_pass_goal": "Validate published R3.18BE on exactly 40 frozen rows: false=37 no-header, true=3 exact BD headers, exact contexts 3/3, Boolean=2 / Float=1, mismatch/reselection 0/0.",
-  "current_pass_stop_boundary": "No following payload, no second later control, no header on false terminators, no context outside exact R3.18BD, no generalized cursor, and seven upstream AU false terminators remain outside.",
+  "last_completed_read_only_audit": "R3.18BF",
+  "current_pass": "R3.18BG",
+  "current_pass_kind": "read-only one-following-primitive-payload evidence on exactly the three R3.18BF true rows",
+  "current_pass_goal": "Decode exactly one current primitive scalar on BF true rows only and require pinned-Boxcars boundary/value equality: Boolean=2, Float=1, mismatch 0.",
+  "current_pass_stop_boundary": "Stop at payload end. No payload access on 37 BF false rows or 7 upstream AU false terminators, no next control, second payload/header or generalized cursor.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -161,7 +161,11 @@
     "following payload during R3.18BF",
     "second later property-control bit after R3.18BE/R3.18BF",
     "header synthesis on R3.18BE false terminators",
-    "following-payload evidence before R3.18BF Outcome A"
+    "payload access on any of the 37 R3.18BF false terminator rows",
+    "next property-control bit after the one R3.18BG payload evidence boundary",
+    "second payload or following header after R3.18BG",
+    "production composition of the R3.18BG-observed payload before a later production pass",
+    "historical R3.18AW/R3.18AM/R3.18AN payload coordinate/value inheritance at R3.18BG"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -333,7 +337,9 @@
     "docs/continuity/MIMIR_R3_18BD_DECISION.md",
     "docs/continuity/MIMIR_R3_18BE_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BE_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BF_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18BC",
   "last_completed_evidence_outcome": "A — frozen 47-row mixed lane preserved; false terminators 7/7; true following headers exact 40/40; 16 exact eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9603335255.",
@@ -2925,13 +2931,45 @@
     "published_main_ci_run": 34095061141
   },
   "r3_18bf": {
-    "status": "active_read_only_differential",
-    "frozen_rows": 40,
-    "expected_false_no_header": 37,
-    "expected_true_exact_header": 3,
-    "contract": "R3.18BD exact_tuple_only",
-    "contract_sha256": "33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27",
-    "following_payload_open": false,
-    "second_later_control_open": false
+    "status": "closed_outcome_a",
+    "head": "5a3f875a445f9a3a2176788555089562948c3676",
+    "tree": "d4b0b0510d24f5c0ba0f3d748201d9fed4ea7e0f",
+    "run": 34098102185,
+    "job": 101666129830,
+    "same_head_ci_run": 34098102183,
+    "same_head_ci_job": 101666129957,
+    "artifact": 10009534065,
+    "artifact_size": 9998,
+    "artifact_digest": "sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc",
+    "inner_manifest_sha256": "35747c9813f56e58c1515dc301cf6a0d3d3a86fd0b068fba609948016d0e45ce",
+    "rows": 40,
+    "false_no_header": 37,
+    "true_exact_header": 3,
+    "exact_bd_contexts": 3,
+    "tag_distribution": {
+      "Boolean": 2,
+      "Float": 1
+    },
+    "mismatch": 0,
+    "witness_reselection": 0,
+    "following_payload_consumed": 0,
+    "second_later_control_consumed": 0
+  },
+  "r3_18bg": {
+    "status": "active_read_only_payload_evidence",
+    "direct_row_authority_artifact": 10009534065,
+    "target_rows": 3,
+    "excluded_bf_false_rows": 37,
+    "excluded_upstream_au_false_rows": 7,
+    "expected_tags": {
+      "Boolean": 2,
+      "Float": 1
+    },
+    "expected_widths": {
+      "Boolean": 1,
+      "Float": 32
+    },
+    "next_property_control_open": false,
+    "witness_reselection_allowed": false
   }
 }

@@ -6,28 +6,31 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BE production closed / R3.18BF active differential
+# 0. Current override — R3.18BF differential closed / R3.18BG payload evidence active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BE
-- `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81` is canonical production, parent `3fa88f27201ee91c51a3bb7a623c00b46204c1e0`.
-- exactly 40 valid BA rows enter BE; 37 false rows terminate with no header and 3 true rows compose one exact R3.18BD-admitted header.
-- true headers stop at `payload_start`; exact tags Boolean=2 / Float=1.
-- seven upstream AU false terminators remain outside BA/BE.
-- following payload / second later control consumption remains 0/0.
+- `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81` remains canonical production.
+- 37 false BA rows terminate with no header; 3 true rows expose one exact BD-admitted header and stop at `payload_start`.
+- production still consumes no following payload or later control.
 
-## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BF
-- immutable authority is the forty-row BA/BC/BD-backed lane.
-- compare published BE branching, header identity/boundary and exact BD membership with mismatch/reselection 0/0.
-- 37 false rows terminate; 3 true rows expose exactly one header only.
+## CLOSED READ-ONLY DIFFERENTIAL — R3.18BF
+- evidence `5a3f875a445f9a3a2176788555089562948c3676` / `34098102185/101666129830` SUCCESS; artifact `10009534065` / `sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc`.
+- exact 40/40, false=37 / true=3, headers=3/3, BD contexts=3/3, Boolean=2 / Float=1, mismatch/reselection 0/0, payload/control 0/0.
+
+## ACTIVE READ-ONLY PAYLOAD EVIDENCE — R3.18BG
+- direct row authority is the BF artifact.
+- only 3 BF-true rows may enter one primitive scalar decode.
+- exact current values/boundaries must independently match pinned Boxcars.
+- all 37 BF-false rows and 7 upstream AU false terminators are excluded before payload access.
 
 ## CLOSED
-- following payload during BF, including on the three true rows;
-- second later property-control bit;
-- header synthesis on any of the 37 false BA rows;
-- BA/BE/BF success on seven upstream AU false terminators;
-- contexts outside exact R3.18BD membership;
+- payload access on any BF false terminator;
+- next property-control bit after BG payload;
+- second payload or following header after BG;
+- production composition of BF/BG payload before a later production pass;
+- historical payload coordinate/value inheritance;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
