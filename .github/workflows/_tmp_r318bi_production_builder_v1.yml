@@ -1,0 +1,37 @@
+name: R3.18BI Production Builder v1
+
+on:
+  push:
+    branches:
+      - automation/r318bi-production-builder-v1
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: 2d8a2a28413467690b076bd08e6f750843af5c33
+      MAIN_TREE: ef963c10ba9fa353f62c6ed7d445d507310026a9
+      BI_SPEC_BLOB: e70e45a8a256d633c516895bbc28b61413af4b97
+      GENERATOR_BLOB: ea23630180dc190e189ab931a1abfecaee48e8bb
+      RUNNER_BLOB: e2ed1a52d70015ec885be8cc07eefc98ae88f38b
+      CANDIDATE_BRANCH: candidate/r318bi-production-v1
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Execute immutable R3.18BI production builder
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$RUNNER_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318bi_production_builder.sh"
+          test "$(git hash-object "$RUNNER_TEMP/r318bi_production_builder.sh")" = "$RUNNER_BLOB"
+          bash -n "$RUNNER_TEMP/r318bi_production_builder.sh"
+          bash "$RUNNER_TEMP/r318bi_production_builder.sh"
