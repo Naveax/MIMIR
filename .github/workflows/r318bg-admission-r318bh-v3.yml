@@ -1,4 +1,4 @@
-name: R3.18BG Admission and R3.18BH Open v2
+name: R3.18BG Admission and R3.18BH Open v3
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: r318bg-admission-r318bh-v2
+  group: r318bg-admission-r318bh-v3
   cancel-in-progress: false
 
 jobs:
@@ -34,14 +34,21 @@ jobs:
           test "$(git hash-object "$RUNNER_TEMP/original-admission.yml")" = "$PAYLOAD_WORKFLOW_BLOB"
           python3 - "$RUNNER_TEMP/original-admission.yml" "$RUNNER_TEMP/r318bg_admission_patch.py" <<'PY'
           from pathlib import Path
-          import sys, textwrap
+          import sys
           src = Path(sys.argv[1]).read_text(encoding='utf-8')
           begin = "          python3 - <<'PY'\n"
           end = "\n          PY\n      - name: Validate exact continuity surface"
           if src.count(begin) != 1 or src.count(end) != 1:
               raise SystemExit('immutable admission payload markers drifted')
           body = src.split(begin, 1)[1].split(end, 1)[0]
-          body = textwrap.dedent(body)
+          lines = body.splitlines()
+          bad = [(i + 1, line) for i, line in enumerate(lines) if line and not line.startswith('          ')]
+          if bad:
+              raise SystemExit(f'payload line escaped YAML indent: {bad[:3]}')
+          body = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines) + '\n'
+          if not body.startswith('from pathlib import Path\n'):
+              raise SystemExit('dedented payload has unexpected first line')
+          compile(body, '<r318bg-admission-patch>', 'exec')
           Path(sys.argv[2]).write_text(body, encoding='utf-8', newline='\n')
           PY
           python3 "$RUNNER_TEMP/r318bg_admission_patch.py"
@@ -59,10 +66,10 @@ jobs:
           grep -q 'R3.18BH' docs/continuity/MIMIR_CURRENT_STATE.md
           grep -q 'R3.18BH' docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
           grep -q 'R3.18BG one following primitive payload evidence — Outcome A' docs/continuity/MIMIR_PROGRESS_LEDGER.md
-          git rm .github/workflows/r318bg-admission-r318bh-v2.yml
+          git rm .github/workflows/r318bg-admission-r318bh-v3.yml
           actual="$(git diff --name-only | sort)"
           expected="$(printf '%s\n' \
-            .github/workflows/r318bg-admission-r318bh-v2.yml \
+            .github/workflows/r318bg-admission-r318bh-v3.yml \
             MIMIR_CONTINUE_HERE.md \
             MIMIR_KNOWLEDGE_GRAPH.md \
             docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
