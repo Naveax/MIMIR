@@ -6,7 +6,7 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BF differential closed / R3.18BG payload evidence active
+# 0. Current override — R3.18BG payload evidence closed / R3.18BH next-control evidence active
 
 This current override supersedes older status wording later in this historical lock file.
 
@@ -19,15 +19,23 @@ This current override supersedes older status wording later in this historical l
 - evidence `5a3f875a445f9a3a2176788555089562948c3676` / `34098102185/101666129830` SUCCESS; artifact `10009534065` / `sha256:79a5d254876d19d90e03dcfeff650755d8b816d8a6869e13b8468eebd7d60bdc`.
 - exact 40/40, false=37 / true=3, headers=3/3, BD contexts=3/3, Boolean=2 / Float=1, mismatch/reselection 0/0, payload/control 0/0.
 
-## ACTIVE READ-ONLY PAYLOAD EVIDENCE — R3.18BG
-- direct row authority is the BF artifact.
-- only 3 BF-true rows may enter one primitive scalar decode.
-- exact current values/boundaries must independently match pinned Boxcars.
-- all 37 BF-false rows and 7 upstream AU false terminators are excluded before payload access.
+## CLOSED READ-ONLY PAYLOAD EVIDENCE — R3.18BG
+- authority head `02e1799001b670db24f1e0076f2afd6c05f5afdf` / evidence `34112731371/101715102551` SUCCESS; same-head CI `34112731358/101712578621` SUCCESS.
+- authoritative artifact `10015405999` / `sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a`; inner manifest `sha256:b06097e08cc276e80e17543f36a3ab05ac184b335ec12ded0fd460e2129d5e46`; 17/17 files verified.
+- exact 3/3 BF-true payloads; Boolean=2, Float=1; widths 1:2 and 32:1; Float identity is raw IEEE754 u32; native/oracle mismatch 0; witness reselection 0.
+- all 37 BF-false rows and 7 upstream AU false terminators were excluded before payload access; next-control consumption 0.
+
+## ACTIVE READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BH
+- direct row authority is the exact three-row BG Outcome-A artifact.
+- start exactly at each BG `payload_end_bit` and observe exactly one next `property_present` bit.
+- compare native bit/boundary with pinned Boxcars; do not assume the false/true distribution in advance.
+- stop one bit later: no following stream/header/payload, no second later control, no generalized cursor.
 
 ## CLOSED
 - payload access on any BF false terminator;
-- next property-control bit after BG payload;
+- production composition/consumption of the R3.18BH-observed next property-control bit;
+- following stream/header/payload after the one R3.18BH control observation;
+- second later property-control bit after R3.18BH;
 - second payload or following header after BG;
 - production composition of BF/BG payload before a later production pass;
 - historical payload coordinate/value inheritance;

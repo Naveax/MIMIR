@@ -6,11 +6,11 @@
   "last_production_code_sha": "1d717d3e82179edd85b197968f46b8f951a3e828",
   "last_production_milestone": "R3.18BE",
   "last_production_milestone_name": "bounded post-BA mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18BF",
-  "current_pass": "R3.18BG",
-  "current_pass_kind": "read-only one-following-primitive-payload evidence on exactly the three R3.18BF true rows",
-  "current_pass_goal": "Decode exactly one current primitive scalar on BF true rows only and require pinned-Boxcars boundary/value equality: Boolean=2, Float=1, mismatch 0.",
-  "current_pass_stop_boundary": "Stop at payload end. No payload access on 37 BF false rows or 7 upstream AU false terminators, no next control, second payload/header or generalized cursor.",
+  "last_completed_read_only_audit": "R3.18BG",
+  "current_pass": "R3.18BH",
+  "current_pass_kind": "read-only one-next-property-control evidence on exactly the three R3.18BG Outcome-A payload-end rows",
+  "current_pass_goal": "From each exact BG payload_end_bit, read exactly one next property_present bit and require native/pinned-Boxcars bit and one-bit boundary equality on all 3 authority rows; distribution is discovered, not assumed.",
+  "current_pass_stop_boundary": "Stop exactly one bit after BG payload_end. No following stream/header/payload, no second later property-control bit, no generalized/repeated cursor, and no access on the 37 BF-false or 7 upstream AU-false rows.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -162,10 +162,12 @@
     "second later property-control bit after R3.18BE/R3.18BF",
     "header synthesis on R3.18BE false terminators",
     "payload access on any of the 37 R3.18BF false terminator rows",
-    "next property-control bit after the one R3.18BG payload evidence boundary",
     "second payload or following header after R3.18BG",
     "production composition of the R3.18BG-observed payload before a later production pass",
-    "historical R3.18AW/R3.18AM/R3.18AN payload coordinate/value inheritance at R3.18BG"
+    "historical R3.18AW/R3.18AM/R3.18AN payload coordinate/value inheritance at R3.18BG",
+    "production consumption/composition of the R3.18BH-observed next property-control bit before a later production pass",
+    "next stream/header/payload after the one R3.18BH control evidence boundary",
+    "second later property-control bit after R3.18BH"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -339,10 +341,12 @@
     "docs/continuity/MIMIR_R3_18BE_DECISION.md",
     "docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BF_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BG_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18BC",
-  "last_completed_evidence_outcome": "A — frozen 47-row mixed lane preserved; false terminators 7/7; true following headers exact 40/40; 16 exact eight-field contexts; Int=40; mismatch/reselection 0/0; payload/second-control 0/0; artifact 9603335255.",
+  "last_completed_evidence_pass": "R3.18BG",
+  "last_completed_evidence_outcome": "A — exact 3/3 BF-true primitive payloads; Boolean=2 Float=1; widths 1:2 and 32:1; raw IEEE754 Float identity; native/oracle mismatch 0; witness reselection 0; 37 BF-false and 7 upstream AU-false excluded; next-control consumption 0; artifact 10015405999.",
   "last_completed_contract_pass": "R3.18BD",
   "r3_14a": {
     "outcome": "A",

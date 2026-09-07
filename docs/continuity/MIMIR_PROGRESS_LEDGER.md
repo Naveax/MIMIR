@@ -1746,3 +1746,13 @@ Validation: evidence `34098102185/101666129830` SUCCESS; same-head CI `340981021
 
 Opened: R3.18BG read-only exactly-one-payload evidence on the 3 BF-true rows.
 Still closed: payload on 37 BF-false rows / 7 upstream AU false rows, payload production, next control, second payload/header, historical coordinate/value inheritance, generalized cursor and wider semantic/runtime behavior.
+
+## 2026-09-07 — R3.18BG one following primitive payload evidence — Outcome A
+
+Base production: `1d717d3e82179edd85b197968f46b8f951a3e828`; continuity authority before admission: `e507f3988091a8135a693e7f94ff597f7fe1aa80`. Production source unchanged.
+
+Evidence head: `02e1799001b670db24f1e0076f2afd6c05f5afdf`. Evidence run/job `34112731371/101715102551` SUCCESS; same-head CI `34112731358/101712578621` SUCCESS. Artifact `10015405999` / `sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a`; inner manifest `sha256:b06097e08cc276e80e17543f36a3ab05ac184b335ec12ded0fd460e2129d5e46`; 17/17 artifact files verified.
+
+Proven: exact 3/3 BF-true payloads; Boolean=2 / Float=1; widths 1:2 / 32:1; Float raw IEEE754 identity; native/oracle mismatch 0; witness reselection 0; BF-false exclusions 37/37; upstream-AU-false exclusions 7/7; next-control bits consumed 0; full validation PASS; privacy PASS.
+
+Opened next: R3.18BH read-only exactly-one-next-property-control observation on only the three exact BG payload-end rows. Still closed: production payload/control composition, following stream/header/payload, second later control, generalized cursor, actor/frame/state/event/skill/runtime/export widening.

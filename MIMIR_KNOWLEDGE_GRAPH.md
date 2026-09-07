@@ -89,7 +89,8 @@ R3.18BC one following-property-header evidence after published BA mixed control 
 R3.18BD exact following-header context contract / Outcome A CLOSED
 R3.18BE bounded post-BA mixed-continuation following-header production / PRODUCTION CLOSED
 R3.18BF published-R3.18BE mixed following-header differential / Outcome A CLOSED
-R3.18BG one following primitive payload evidence / ACTIVE
+R3.18BG one following primitive payload evidence / Outcome A CLOSED
+R3.18BH next property-control bit evidence after exact BG payload end / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -263,13 +264,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 153. `docs/continuity/MIMIR_R3_18BF_EXECUTION_SPEC.md`
 154. `docs/continuity/MIMIR_R3_18BF_DECISION.md`
 155. `docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md`
-156. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-157. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-158. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-159. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-160. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-161. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-162. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+156. `docs/continuity/MIMIR_R3_18BG_DECISION.md`
+157. `docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md`
+158. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+159. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+160. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+161. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+162. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+163. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+164. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -488,7 +491,6 @@ scripts/verify_mimir_knowledge_archive.ps1
 - production pass; base production remains `fd74ba8c520ab83b808730572c41e45d6dc616e6` until admitted
 - one header only after valid R3.18M true control; exact R3.18P membership required
 - stop at payload_start; payload/another-control/loop widening closed
-
 ## Current replay-decoder chain
 
 ```text

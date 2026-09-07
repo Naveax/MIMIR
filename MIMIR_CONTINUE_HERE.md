@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BE — bounded post-BA mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BF — published R3.18BE differential Outcome A / exact 40/40 / false=37 true=3 / headers=3/3 / contexts=3/3 / mismatch 0 / reselection 0 / artifact 10009534065
+  R3.18BG — Outcome A / exact 3/3 BF-true payloads / Boolean=2 Float=1 / widths 1:2 + 32:1 / mismatch 0 / next-control 0 / artifact 10015405999
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BD — post-BA mixed-continuation following-header exact-context contract / Outcome A / 3 exact eight-field tuples / multiplicity 3 / 37 false terminators outside membership / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27 / AT-AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BF — published BE differential Outcome A / exact 40/40 / false=37 true=3 / BD contexts=3/3 / payload=0 / second-control=0 / artifact 10009534065
+  R3.18BG — one following primitive payload evidence / Outcome A / 3/3 / Boolean=2 Float=1 / native-oracle mismatch 0 / artifact 10015405999
 
 CURRENT_PASS:
-  R3.18BG — one following primitive payload evidence
+  R3.18BH — next property-control bit evidence after exact BG payload end
 
 CURRENT_PASS_TYPE:
-  read-only one-payload boundary evidence / exact BF-true three-row primitive scalar decode versus pinned Boxcars; false rows excluded; no next control
+  read-only one-next-property-control evidence / exact BG payload-end boundary on only the three BG authority rows; no following stream/header/payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4134,7 +4134,29 @@ HARD STOP: no following payload/second-control; no false-row header; no generali
 
 ---
 
-# CURRENT OVERRIDE — R3.18BF CLOSED / R3.18BG ACTIVE
+# CURRENT OVERRIDE — R3.18BG CLOSED / R3.18BH ACTIVE
+
+Fresh receipts below are authoritative over older current-like wording retained as history.
+
+```text
+R3_18BF_EVIDENCE_CLOSURE:
+Outcome A / read-only / exact 40/40 / false=37 true=3 / headers=3/3 / contexts=3/3 / mismatch=0 / reselection=0 / artifact 10009534065
+R3_18BG_EVIDENCE_CLOSURE:
+Outcome A / read-only one primitive payload on exactly the three BF-true rows
+head: 02e1799001b670db24f1e0076f2afd6c05f5afdf
+run/job: 34112731371/101715102551 SUCCESS
+same-head CI: 34112731358/101712578621 SUCCESS
+artifact: 10015405999 / sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a
+inner manifest: sha256:b06097e08cc276e80e17543f36a3ab05ac184b335ec12ded0fd460e2129d5e46 / 17/17 verified
+rows: 3/3 / Boolean=2 / Float=1 / widths 1:2 + 32:1 / raw IEEE754 Float identity
+native-oracle mismatch: 0 / witness reselection: 0 / BF-false excluded: 37/37 / upstream-AU-false excluded: 7/7 / next-control consumed: 0
+R3_18BH_ACTIVE:
+read exactly one next property_present bit from each exact BG payload_end_bit; discover distribution; require native/pinned-Boxcars bit+end equality 3/3; stop one bit later
+```
+
+Hard stop: no production BG payload/BH-control composition, no following stream/header/payload, no second later control, no generalized cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+# HISTORICAL OVERRIDE — R3.18BF CLOSED / R3.18BG ACTIVE
 
 Fresh receipts below override older current-like wording above.
 
