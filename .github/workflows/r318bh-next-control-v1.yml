@@ -1,0 +1,74 @@
+name: R3.18BH Next Property-Control Bit Evidence v3
+
+on:
+  push:
+    branches:
+      - evidence/r318bh-next-control-v3
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bh-next-control-v3
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUNNER_BLOB: b4be8ab73dbac99c2b09d34d08fe1815fb17db54
+    steps:
+      - name: Checkout exact BH evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Execute immutable R3.18BH evidence runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$RUNNER_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318bh_run.sh"
+          test "$(git hash-object "$RUNNER_TEMP/r318bh_run.sh")" = "$RUNNER_BLOB"
+          bash -n "$RUNNER_TEMP/r318bh_run.sh"
+          bash "$RUNNER_TEMP/r318bh_run.sh"
+
+      - name: Upload authoritative R3.18BH evidence v3
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bh-next-property-control-bit-evidence-v3
+          path: ${{ runner.temp }}/r318bh-authority/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create non-authority failure receipt
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/r318bh-failure"
+          cat > "$RUNNER_TEMP/r318bh-failure/r3_18bh_failure_receipt.txt" <<EOF
+          R3_18BH_OUTCOME=NOT_ADMITTED
+          R3_18BH_SCIENTIFIC_AUTHORITY=NONE
+          R3_18BH_HEAD=$GITHUB_SHA
+          R3_18BH_MAIN=1fbfb8f05bc4c06c21f4cfe79697bd4097b26cc0
+          R3_18BH_RUNNER_BLOB=$RUNNER_BLOB
+          EOF
+
+      - name: Upload BH failure receipt
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bh-v3-non-authority-failure-receipt
+          path: ${{ runner.temp }}/r318bh-failure/
+          if-no-files-found: error
+          retention-days: 30
