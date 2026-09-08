@@ -1,0 +1,108 @@
+name: R3.18BL continuity sync
+
+on:
+  push:
+    branches:
+      - continuity/r318bl-admit-helper-v1
+    paths:
+      - '.github/workflows/r318bl-continuity-sync.yml'
+      - 'tools/r318bl_continuity_sync.py'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      BASE_SHA: 13ec83ae1c34b1cd41f6636e949039886f19d6fe
+      OUTPUT_BRANCH: continuity/r318bl-admission-ready-v1
+    steps:
+      - name: Checkout helper head with full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Freeze canonical base and materialize generator
+        shell: bash
+        run: |
+          set -euo pipefail
+          helper_sha="$GITHUB_SHA"
+          git fetch origin main --no-tags
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          git show "$helper_sha:tools/r318bl_continuity_sync.py" > /tmp/r318bl_continuity_sync.py
+          python -m py_compile /tmp/r318bl_continuity_sync.py
+          if git ls-remote --exit-code --heads origin "$OUTPUT_BRANCH" >/dev/null 2>&1; then
+            echo "output branch already exists: $OUTPUT_BRANCH" >&2
+            exit 1
+          fi
+          git checkout --detach "$BASE_SHA"
+          git switch -c "$OUTPUT_BRANCH"
+
+      - name: Generate bounded continuity tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/r318bl_continuity_sync.py
+
+      - name: Verify exact nine-file scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git status --short | awk '{print $2}' | sort)
+          expected=(
+            MIMIR_CONTINUE_HERE.md
+            MIMIR_KNOWLEDGE_GRAPH.md
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+            docs/continuity/MIMIR_CONTINUITY_STATE.json
+            docs/continuity/MIMIR_CURRENT_STATE.md
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md
+            docs/continuity/MIMIR_R3_18BL_DECISION.md
+            docs/continuity/MIMIR_R3_18BM_EXECUTION_SPEC.md
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 9
+          diff -u <(printf '%s\n' "${expected_sorted[@]}") <(printf '%s\n' "${changed[@]}")
+          test -z "$(git diff --name-only -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures test_corpus scripts/evidence support || true)"
+
+      - name: Run full repository verifier
+        shell: pwsh
+        run: |
+          & ./scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Commit exact final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BL_DECISION.md \
+            docs/continuity/MIMIR_R3_18BM_EXECUTION_SPEC.md
+          git diff --cached --check
+          git commit -m "Admit R3.18BL and open R3.18BM"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-list --count "$BASE_SHA..HEAD")" -eq 1
+          test "$(git diff --name-only "$BASE_SHA..HEAD" | wc -l)" -eq 9
+          test -z "$(git diff --name-only "$BASE_SHA..HEAD" -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures test_corpus scripts/evidence support || true)"
+          test ! -e .github/workflows/r318bl-continuity-sync.yml
+          test ! -e tools/r318bl_continuity_sync.py
+
+      - name: Publish docs-only admission branch without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "HEAD:refs/heads/$OUTPUT_BRANCH"
+          remote_sha="$(git ls-remote origin "refs/heads/$OUTPUT_BRANCH" | awk '{print $1}')"
+          test "$remote_sha" = "$(git rev-parse HEAD)"
+          echo "R318BL_ADMISSION_SHA=$remote_sha"
