@@ -1880,3 +1880,29 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18BL — published-R3.18BK mixed next-control differential` on immutable BH authority; no production mutation.
+
+## 2026-09-08 — R3.18BL — Published R3.18BK mixed next-control differential Outcome A
+
+Pass type: read-only published-production differential
+Canonical production: `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d`
+Canonical pre-pass base: `13ec83ae1c34b1cd41f6636e949039886f19d6fe`
+BL execution spec blob: `3e0a69c14e21b1da12acf38e7d61435b935d40af`
+Evidence head/tree: `cd30b3bb4139381ea78a2c8ec0f70c1e162e16a9` / `2b233c68444f8886736b28311507d025bdbaeeab`
+Evidence run/job: `34215686040/102026758270` SUCCESS
+Same-head normal CI: `34215686044/102027091932` SUCCESS
+Artifact: `10051851703` / `4001` bytes / `sha256:452cb989e2ad9d992c7e8fbb9ff3643d110bee941997fc40f2188b0ce22dcc73`
+Inner manifest: `sha256:1270cc5cce9e832cc86f1854ff89c9c8c73ce6d78fe4ee61c985c116f057d53d` / 9/9 PASS
+
+Admitted evidence result:
+- published BK exact 3/3 and published BI prerequisite exact 3/3;
+- exact mixed distribution false=1 / true=2;
+- `sample_002` true `11231 -> 11232`, `sample_003` false `7815 -> 7816`, `079_1f838...` true `3198 -> 3199`;
+- native/frozen boundary-value mismatch 0; witness reselection 0;
+- 37 BE-false rows rejected and 7 upstream AU-false rows excluded;
+- repeatability, focused negatives, full repository validation, source scope and privacy PASS;
+- following stream/header/payload/second-control consumption 0/0/0/0;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0;
+- BL artifact ZIP and all 9 inner manifest entries independently hash-verified.
+
+Next exact pass:
+- `R3.18BM — one following-property-header evidence after published R3.18BK mixed control` on exactly the two true witnesses. The sample_003 false row remains a terminator. No following payload or second later control.

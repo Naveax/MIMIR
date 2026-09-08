@@ -94,7 +94,8 @@ R3.18BH next property-control bit evidence after exact BG payload end / Outcome 
 R3.18BI bounded post-BE one-following-payload production / PRODUCTION CLOSED
 R3.18BJ published-R3.18BI one-following-payload differential / Outcome A CLOSED
 R3.18BK bounded post-BI next property-control production / PRODUCTION CLOSED
-R3.18BL published-R3.18BK mixed next-control differential / ACTIVE
+R3.18BL published-R3.18BK mixed next-control differential / Outcome A CLOSED
+R3.18BM one following-property-header evidence after published R3.18BK mixed control / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -278,13 +279,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 163. `docs/continuity/MIMIR_R3_18BK_EXECUTION_SPEC.md`
 164. `docs/continuity/MIMIR_R3_18BK_DECISION.md`
 165. `docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md`
-166. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-167. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-168. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-169. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-170. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-171. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-172. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+166. `docs/continuity/MIMIR_R3_18BL_DECISION.md`
+167. `docs/continuity/MIMIR_R3_18BM_EXECUTION_SPEC.md`
+168. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+169. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+170. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+171. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+172. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+173. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+174. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1268,3 +1271,12 @@ next                        R3.18M true-only one-bit production composition
 - immutable BH authority rows 3/3; false=1 / true=2; one control bit each; both values admitted
 - 37 BE-false + 7 upstream AU-false excluded; following stream/header/payload/second-control 0/0/0/0
 - next exact pass: R3.18BL published-BK differential; only BL Outcome A may open following-header evidence on the exact 2 true rows
+
+### R3.18BL published-R3.18BK mixed next-control differential: OUTCOME A / CLOSED
+- production unchanged at `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / tree `07656c7a43c1afb97903ef33c1109b764fbf8b7d`; canonical pre-pass base `13ec83ae1c34b1cd41f6636e949039886f19d6fe`
+- evidence `cd30b3bb4139381ea78a2c8ec0f70c1e162e16a9` / tree `2b233c68444f8886736b28311507d025bdbaeeab` / run-job `34215686040/102026758270` SUCCESS; same-head CI `34215686044/102027091932` SUCCESS
+- artifact `10051851703` / `sha256:452cb989e2ad9d992c7e8fbb9ff3643d110bee941997fc40f2188b0ce22dcc73`; inner manifest `sha256:1270cc5cce9e832cc86f1854ff89c9c8c73ce6d78fe4ee61c985c116f057d53d` verified 9/9
+- exact published BK 3/3; BI prerequisite 3/3; false=1 / true=2; mismatch/reselection 0/0
+- true continuation rows: `sample_002` 11231->11232 and `079_1f838...` 3198->3199; false terminator: `sample_003` 7815->7816
+- 37 BE-false rejected + 7 AU-false excluded; adjacent stream/header/payload/second-control 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+- next exact pass: R3.18BM one-header evidence on exactly the two true rows; no following payload or second later control

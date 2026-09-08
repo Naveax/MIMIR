@@ -6,11 +6,11 @@
   "last_production_code_sha": "f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf",
   "last_production_milestone": "R3.18BK",
   "last_production_milestone_name": "bounded post-BI next property-control production",
-  "last_completed_read_only_audit": "R3.18BJ",
-  "current_pass": "R3.18BL",
-  "current_pass_kind": "read-only published-R3.18BK mixed next-control differential against immutable R3.18BH authority",
-  "current_pass_goal": "Revalidate published R3.18BK on exactly the three immutable BH control rows with exact BI prerequisite, boolean/start/end/stop identity, false=1 true=2, repeatability, and zero following stream/header/payload/second-control consumption.",
-  "current_pass_stop_boundary": "Stop exactly at the published BK stop bit, one bit after BI payload_end_bit. No following stream/header/payload, second later control, or generalized property cursor is admitted.",
+  "last_completed_read_only_audit": "R3.18BL",
+  "current_pass": "R3.18BM",
+  "current_pass_kind": "read-only one-following-property-header evidence on exactly two published-R3.18BK true continuation rows",
+  "current_pass_goal": "Observe exactly one following property header through payload_start on only sample_002 and 079 BK-true witnesses, while sample_003 remains a false terminator; classify exact complete header/context tuples with native/Boxcars equality and zero following-payload or second-control consumption.",
+  "current_pass_stop_boundary": "For the exact two BK-true witnesses, stop at one following header payload_start. For the BK-false witness, stop at BK control end. No following payload, second later control, production mutation, witness reselection, or generalized property cursor is admitted.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -357,10 +357,12 @@
     "docs/continuity/MIMIR_R3_18BJ_DECISION.md",
     "docs/continuity/MIMIR_R3_18BK_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BK_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BL_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BM_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18BH",
-  "last_completed_evidence_outcome": "A — exact 3/3 next property-control bits; false=1 true=2; native/oracle mismatch 0; witness reselection 0; following stream/header/payload and second-control consumption 0; artifact 10023482583.",
+  "last_completed_evidence_pass": "R3.18BL",
+  "last_completed_evidence_outcome": "A — published BK exact 3/3; false=1 true=2; published BI prerequisite 3/3; mismatch/reselection 0/0; 37 BE-false rejected; 7 AU-false excluded; adjacent consumption 0/0/0/0; artifact 10051851703.",
   "last_completed_contract_pass": "R3.18BD",
   "r3_14a": {
     "outcome": "A",
@@ -3097,5 +3099,71 @@
     "following_stream_header_payload_second_control_consumption": "0/0/0/0",
     "production_scope_files": 2,
     "next_pass": "R3.18BL"
+  },
+  "r3_18bl": {
+    "outcome": "A — admitted / read-only evidence complete",
+    "production_source_changed": false,
+    "canonical_base_sha": "13ec83ae1c34b1cd41f6636e949039886f19d6fe",
+    "production_sha": "f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf",
+    "production_tree": "07656c7a43c1afb97903ef33c1109b764fbf8b7d",
+    "execution_spec_blob": "3e0a69c14e21b1da12acf38e7d61435b935d40af",
+    "evidence_head_sha": "cd30b3bb4139381ea78a2c8ec0f70c1e162e16a9",
+    "evidence_tree": "2b233c68444f8886736b28311507d025bdbaeeab",
+    "workflow_run": 34215686040,
+    "workflow_job": 102026758270,
+    "same_head_ci_run": 34215686044,
+    "same_head_ci_job": 102027091932,
+    "artifact_id": 10051851703,
+    "artifact_size_bytes": 4001,
+    "artifact_digest": "sha256:452cb989e2ad9d992c7e8fbb9ff3643d110bee941997fc40f2188b0ce22dcc73",
+    "inner_manifest_digest": "sha256:1270cc5cce9e832cc86f1854ff89c9c8c73ce6d78fe4ee61c985c116f057d53d",
+    "inner_manifest_files": 9,
+    "bh_head_sha": "c728658afa6c55749976c5f30cb5ca4daafe066f",
+    "bh_run": 34132181073,
+    "bh_job": 101774645567,
+    "bh_artifact_id": 10023482583,
+    "bh_artifact_digest": "sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d",
+    "bh_inner_manifest_digest": "sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa",
+    "published_bk_exact": 3,
+    "published_bi_prerequisite_exact": 3,
+    "false": 1,
+    "true": 2,
+    "true_witnesses": [
+      {
+        "path": "external_fixtures/sample_002.replay",
+        "control_start": 11231,
+        "control_end": 11232
+      },
+      {
+        "path": "test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay",
+        "control_start": 3198,
+        "control_end": 3199
+      }
+    ],
+    "false_terminator": {
+      "path": "external_fixtures/sample_003.replay",
+      "control_start": 7815,
+      "control_end": 7816
+    },
+    "be_false_rejected": 37,
+    "upstream_au_false_excluded": 7,
+    "mismatch": 0,
+    "witness_reselection": 0,
+    "following_stream_header_payload_second_control_consumption": "0/0/0/0",
+    "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
+    "repeatability": "PASS",
+    "negative_controls": "PASS",
+    "privacy": "PASS",
+    "next_pass": "R3.18BM"
+  },
+  "r3_18bm": {
+    "status": "ACTIVE",
+    "pass_kind": "read-only one-following-property-header evidence",
+    "authority_pass": "R3.18BL",
+    "continuation_rows": 2,
+    "false_terminators": 1,
+    "following_payload_admitted": false,
+    "second_later_control_admitted": false,
+    "production_mutation_admitted": false
   }
 }

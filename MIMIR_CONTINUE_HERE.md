@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BK — bounded post-BI next property-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BJ — Outcome A / published BI exact 3/3 / 37 BE-false rejected / 7 AU-false excluded / BH+later consumption 0 / mismatch 0 / artifact 10042480960
+  R3.18BL — Outcome A / published BK exact 3/3 / false=1 true=2 / 37 BE-false rejected / 7 AU-false excluded / following stream-header-payload-second-control 0/0/0/0 / mismatch-reselection 0/0 / artifact 10051851703
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BD — post-BA mixed-continuation following-header exact-context contract / Outcome A / 3 exact eight-field tuples / multiplicity 3 / 37 false terminators outside membership / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27 / AT-AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BH — next property-control bit evidence / Outcome A / 3/3 / false=1 true=2 / native-oracle mismatch 0 / artifact 10023482583
+  R3.18BL — published-R3.18BK mixed next-control differential / Outcome A / 3/3 / false=1 true=2 / mismatch-reselection 0/0 / artifact 10051851703
 
 CURRENT_PASS:
-  R3.18BL — published-R3.18BK mixed next-control differential
+  R3.18BM — one following-property-header evidence after published R3.18BK mixed control
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / exact 3 BH authority rows; false=1 true=2; published BI prerequisite exact; following stream/header/payload/second-control consumption forbidden
+  read-only boundary evidence / exact 2 BL/BK true continuation rows only; one following property header through payload_start; false BK row terminates; following payload and second later control forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4203,4 +4203,27 @@ R3_18BL_ACTIVE:
   immutable BH authority: exact 3 rows / false=1 true=2
   one false row is a terminator; two true rows are continuation candidates only after BL Outcome A
   no following header decode during BL
+
+R3_18BL_EVIDENCE_CLOSURE:
+  Outcome A / read-only published-production differential / production unchanged at f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf
+  canonical base: 13ec83ae1c34b1cd41f6636e949039886f19d6fe
+  BL spec blob: 3e0a69c14e21b1da12acf38e7d61435b935d40af
+  evidence head/tree: cd30b3bb4139381ea78a2c8ec0f70c1e162e16a9 / 2b233c68444f8886736b28311507d025bdbaeeab
+  evidence run/job: 34215686040/102026758270 SUCCESS
+  same-head normal CI: 34215686044/102027091932 SUCCESS
+  artifact: 10051851703 / 4001 bytes / sha256:452cb989e2ad9d992c7e8fbb9ff3643d110bee941997fc40f2188b0ce22dcc73
+  inner manifest: sha256:1270cc5cce9e832cc86f1854ff89c9c8c73ce6d78fe4ee61c985c116f057d53d / 9/9 PASS
+  immutable BH authority: c728658afa6c55749976c5f30cb5ca4daafe066f / 34132181073/101774645567 / artifact 10023482583 / sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d
+  exact BK rows: 3/3 / false=1 true=2 / published BI prerequisite 3/3 / mismatch-reselection 0/0
+  true continuation identities: external_fixtures/sample_002.replay @ 11231->11232; test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay @ 3198->3199
+  false terminator identity: external_fixtures/sample_003.replay @ 7815->7816
+  BE false rejected: 37/37 / upstream AU false excluded: 7/7
+  following stream/header/payload/second-control consumption during BL: 0/0/0/0
+  production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0
+
+R3_18BM_ACTIVE:
+  one following-property-header evidence on exactly the 2 BL/BK true rows
+  false sample_003 row remains a terminator and must perform zero following-header access
+  decode/observe one header only through payload_start; following payload and second later control remain closed
+  no production mutation / no witness reselection / no generalized property cursor
 

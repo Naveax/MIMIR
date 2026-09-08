@@ -6,34 +6,34 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BK production closed / R3.18BL published differential active
+# 0. Current override — R3.18BL evidence closed / R3.18BM one-header evidence active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BK
-- `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d` is canonical production.
-- exactly the three immutable BI/BG/BH authority rows are admitted.
-- published BI is recomputed/validated; one BH `property_present` bit is consumed; false=1 / true=2 are both successful production data.
-- start is exact BI `payload_end_bit`; stop is exactly one bit later.
-- 37 BE-false and 7 upstream AU-false rows remain outside success.
-- following stream/header/payload/second-control consumption is 0/0/0/0.
+- `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d` remains canonical production.
+- exactly the three immutable BI/BG/BH authority rows are admitted at the BK one-control boundary.
+- false=1 / true=2 are both valid BK results; BK stops exactly one bit after BI payload end.
+- following stream/header/payload/second-control are not production-admitted.
 
-## CLOSED READ-ONLY AUTHORITY — R3.18BH / R3.18BJ
-- BH exact 3/3 next bits: false=1 / true=2; artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`.
-- BJ published-BI differential exact 3/3; artifact `10042480960` / `sha256:e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d`.
+## CLOSED READ-ONLY PUBLISHED DIFFERENTIAL — R3.18BL
+- evidence `cd30b3bb4139381ea78a2c8ec0f70c1e162e16a9` / `34215686040/102026758270` SUCCESS; same-head CI `34215686044/102027091932` SUCCESS.
+- artifact `10051851703` / `sha256:452cb989e2ad9d992c7e8fbb9ff3643d110bee941997fc40f2188b0ce22dcc73`; inner manifest `sha256:1270cc5cce9e832cc86f1854ff89c9c8c73ce6d78fe4ee61c985c116f057d53d` 9/9 PASS.
+- published BK exact 3/3; published BI prerequisite exact 3/3; false=1 / true=2; mismatch/reselection 0/0.
+- 37 BE-false rejected; 7 AU-false excluded; following stream/header/payload/second-control 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
 
-## ACTIVE READ-ONLY PUBLISHED DIFFERENTIAL — R3.18BL
-- compare published BK only against immutable BH row/value/boundary authority.
-- require published BI prerequisite exact 3/3, BK exact 3/3, false=1 / true=2, mismatch/reselection 0/0.
-- one false row is a terminator and two true rows are continuation candidates, but BL must not decode any following header.
-- following stream/header/payload/second-control consumption and production mutation must remain zero.
+## ACTIVE READ-ONLY BOUNDARY EVIDENCE — R3.18BM
+- only `external_fixtures/sample_002.replay` at BK stop 11232 and `test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay` at BK stop 3199 may enter the following-header lane.
+- `external_fixtures/sample_003.replay` is the exact false terminator at 7815 -> 7816 and must perform zero following-header access.
+- observe exactly one following property header through `payload_start`; classify the complete exact structural/context tuple and compare native/pinned Boxcars.
+- following payload and second later control remain closed; production mutation and witness reselection forbidden.
 
 ## CLOSED
-- following stream/header/payload after the R3.18BK control bit;
+- following-header evidence on the BK-false sample_003 row;
+- any continuation identity outside the exact two BL/BK true witnesses;
+- following payload after the R3.18BM header;
 - second later property-control bit;
-- following-header evidence before R3.18BL Outcome A;
-- any BK success outside the exact three immutable BI/BG/BH authority rows;
-- wider payload tags/contexts;
+- production following-header composition before a separate exact contract pass;
 - generalized/repeated property cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
