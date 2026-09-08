@@ -12490,6 +12490,139 @@ pub fn decode_replay_network_existing_actor_after_first_primitive_second_propert
 }
 // R3.18BI PRE-ADMISSION END bounded post-BE one-following-payload
 
+// R3.18BK PRE-ADMISSION BEGIN bounded post-BI following control
+/// One validated R3.18BI payload result plus exactly one R3.18BH-admitted
+/// following `property_present` control bit.
+///
+/// Both boolean values are admitted at this exact boundary. The result stops
+/// exactly one bit after the validated BI payload end and deliberately does not
+/// inspect a following stream, header, payload, or second control bit.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1 {
+    pub payload_composition: ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    pub property_present: bool,
+    pub property_present_start_bit: u64,
+    pub property_present_end_bit: u64,
+    pub stop_bit: u64,
+}
+
+fn network_existing_actor_post_bi_following_control_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-BI following-control error: {category}: {}",
+        detail.into()
+    ))
+}
+
+/// Recompute exactly one published R3.18BI payload result, validate the supplied
+/// BI authority, then consume exactly one following LSB-first `property_present`
+/// bit. False and true are both successful data at this boundary.
+#[allow(clippy::too_many_arguments)]
+pub fn decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_control_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    control: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+    an_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    ay_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    ba_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    be_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    bi_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+) -> Result<ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1>{
+    let expected_bi = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_v1(
+        network_bytes,
+        prior,
+        control,
+        lookup_plan,
+        context,
+        an_prior,
+        ay_prior,
+        ba_prior,
+        be_prior,
+    )?;
+    if &expected_bi != bi_prior {
+        return Err(network_existing_actor_post_bi_following_control_error(
+            "invalid-r3-18bi-prior",
+            "supplied R3.18BI payload result differs from recomputed published authority",
+        ));
+    }
+
+    if bi_prior.header_composition.stop_bit != bi_prior.following_payload.payload_start_bit
+        || bi_prior.following_payload.payload_end_bit != bi_prior.following_payload.stop_bit
+        || bi_prior.stop_bit != bi_prior.following_payload.payload_end_bit
+    {
+        return Err(network_existing_actor_post_bi_following_control_error(
+            "invalid-prior-boundary",
+            "R3.18BK requires the exact validated R3.18BI payload-end boundary",
+        ));
+    }
+
+    let property_present_start_bit = bi_prior.stop_bit;
+    let property_present_start = usize::try_from(property_present_start_bit).map_err(|_| {
+        network_existing_actor_post_bi_following_control_error(
+            "invalid-position",
+            format!("R3.18BI stop bit {property_present_start_bit} does not fit usize"),
+        )
+    })?;
+    let property_present_end = property_present_start.checked_add(1).ok_or_else(|| {
+        network_existing_actor_post_bi_following_control_error(
+            "invalid-position",
+            "following-control bit end overflows usize",
+        )
+    })?;
+    let total_bits = network_bytes.len().checked_mul(8).ok_or_else(|| {
+        network_existing_actor_post_bi_following_control_error(
+            "invalid-length",
+            "network bit length overflows usize",
+        )
+    })?;
+    if property_present_end > total_bits {
+        return Err(network_existing_actor_post_bi_following_control_error(
+            "insufficient-bits",
+            format!(
+                "need one following control bit at {property_present_start}, but network ends at {total_bits}"
+            ),
+        ));
+    }
+
+    let mut cursor = NetworkBitCursor::new(network_bytes);
+    cursor.bit_position = property_present_start;
+    let property_present = cursor.read_bit().map_err(|error| {
+        network_existing_actor_post_bi_following_control_error(
+            "control-read-failed",
+            error.to_string(),
+        )
+    })?;
+    if cursor.position_bits() != property_present_end {
+        return Err(network_existing_actor_post_bi_following_control_error(
+            "invalid-stop",
+            format!(
+                "one control bit must stop at {property_present_end}, got {}",
+                cursor.position_bits()
+            ),
+        ));
+    }
+
+    let property_present_end_bit = u64::try_from(property_present_end).map_err(|_| {
+        network_existing_actor_post_bi_following_control_error(
+            "invalid-position",
+            "following-control end does not fit u64",
+        )
+    })?;
+
+    Ok(ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1 {
+        payload_composition: bi_prior.clone(),
+        property_present,
+        property_present_start_bit,
+        property_present_end_bit,
+        stop_bit: property_present_end_bit,
+    })
+}
+// R3.18BK PRE-ADMISSION END bounded post-BI following control
+
 #[cfg(test)]
 mod r3_18au_exact_contract_tests {
     use super::*;
