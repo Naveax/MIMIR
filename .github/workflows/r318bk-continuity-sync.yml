@@ -1,0 +1,118 @@
+name: R3.18BK Continuity Sync
+
+on:
+  push:
+    branches:
+      - continuity/r318bk-admit-bl
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318bk-continuity-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      BASE_SHA: f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf
+      PUBLISHED_CI_RUN: '34212774993'
+      HELPER_WORKFLOW: .github/workflows/r318bk-continuity-sync.yml
+      HELPER_SCRIPT: tools/r318bk_continuity_sync.py
+    steps:
+      - name: Checkout continuity branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact published authority and helper scope
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_SHA"
+          test "$(git merge-base HEAD "$BASE_SHA")" = "$BASE_SHA"
+
+          status=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PUBLISHED_CI_RUN}" --jq '.status + "/" + (.conclusion // "")')
+          test "$status" = 'completed/success'
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PUBLISHED_CI_RUN}" --jq '.head_sha')" = "$BASE_SHA"
+
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA"...HEAD | sort)
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 2
+          test "${changed[0]}" = "$HELPER_WORKFLOW"
+          test "${changed[1]}" = "$HELPER_SCRIPT"
+
+      - name: Apply canonical BK closure and BL opening
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$HELPER_SCRIPT"
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+
+      - name: Verify exact continuity scope and bounded diff size
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t dirty < <(git status --short | sed -E 's/^...//' | sort)
+          printf '%s\n' "${dirty[@]}"
+          test "${#dirty[@]}" -eq 9
+          expected=(
+            'MIMIR_CONTINUE_HERE.md'
+            'MIMIR_KNOWLEDGE_GRAPH.md'
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+            'docs/continuity/MIMIR_CURRENT_STATE.md'
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+            'docs/continuity/MIMIR_R3_18BJ_DECISION.md.__never__'
+          )
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'MIMIR_CONTINUE_HERE.md'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'MIMIR_KNOWLEDGE_GRAPH.md'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_CURRENT_STATE.md'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_R3_18BK_DECISION.md'
+          printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md'
+
+          read add del < <(git diff --numstat -- docs/continuity/MIMIR_CONTINUITY_STATE.json)
+          test "$add" -lt 140
+          test "$del" -lt 40
+          read add del < <(git diff --numstat -- MIMIR_KNOWLEDGE_GRAPH.md)
+          test "$add" -lt 60
+          test "$del" -lt 25
+
+          grep -Fq 'CURRENT_PASS:' MIMIR_CONTINUE_HERE.md
+          grep -Fq 'R3.18BL — published-R3.18BK mixed next-control differential' MIMIR_CONTINUE_HERE.md
+          grep -Fq 'R3.18BK bounded post-BI next property-control production / PRODUCTION CLOSED' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -Fq 'R3.18BL published-R3.18BK mixed next-control differential / ACTIVE' MIMIR_KNOWLEDGE_GRAPH.md
+
+      - name: Repository verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+
+      - name: Commit final docs-only tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f "$HELPER_WORKFLOW" "$HELPER_SCRIPT"
+          git add -A
+          git config user.name 'MIMIR Continuity Bot'
+          git config user.email '79841922+Naveax@users.noreply.github.com'
+          git commit -m 'Admit R3.18BK and open R3.18BL'
+
+          mapfile -t net < <(git diff --name-only "$BASE_SHA"...HEAD | sort)
+          printf '%s\n' "${net[@]}"
+          test "${#net[@]}" -eq 9
+          test -z "$(printf '%s\n' "${net[@]}" | grep -E '^(crates/|Cargo|external_fixtures/|test_corpus/|tools/|\.github/)' || true)"
+          test -z "$(git status --porcelain)"
+          git push origin HEAD:continuity/r318bk-admit-bl
