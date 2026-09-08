@@ -92,7 +92,8 @@ R3.18BF published-R3.18BE mixed following-header differential / Outcome A CLOSED
 R3.18BG one following primitive payload evidence / Outcome A CLOSED
 R3.18BH next property-control bit evidence after exact BG payload end / Outcome A CLOSED
 R3.18BI bounded post-BE one-following-payload production / PRODUCTION CLOSED
-R3.18BJ published-R3.18BI one-following-payload differential / ACTIVE
+R3.18BJ published-R3.18BI one-following-payload differential / Outcome A CLOSED
+R3.18BK bounded post-BI next property-control production / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -268,13 +269,19 @@ scripts/verify_mimir_knowledge_archive.ps1
 155. `docs/continuity/MIMIR_R3_18BG_EXECUTION_SPEC.md`
 156. `docs/continuity/MIMIR_R3_18BG_DECISION.md`
 157. `docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md`
-158. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-159. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-160. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-161. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-162. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-163. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-164. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+158. `docs/continuity/MIMIR_R3_18BH_DECISION.md`
+159. `docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md`
+160. `docs/continuity/MIMIR_R3_18BI_DECISION.md`
+161. `docs/continuity/MIMIR_R3_18BJ_EXECUTION_SPEC.md`
+162. `docs/continuity/MIMIR_R3_18BJ_DECISION.md`
+163. `docs/continuity/MIMIR_R3_18BK_EXECUTION_SPEC.md`
+164. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+165. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+166. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+167. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+168. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+169. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+170. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
