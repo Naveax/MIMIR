@@ -1850,3 +1850,33 @@ Boundaries still closed:
 Next exact pass:
 - `R3.18BK — bounded post-BI next property-control production`, exactly one bit, both false and true admitted, stop one bit later.
 
+## 2026-09-08 — R3.18BK — Bounded post-BI next property-control production Outcome A
+
+Pass type: bounded production composition
+Production SHA/tree: `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d`
+Parent: `de8df0b2bb36454c97863d4078ce7829fd4ecb77`
+Lib/test blobs: `0bfff19a7d285e07508b648dbcd5af95a31838f6` / `1938707e60f7893768747931bf84e3bbac792d1b`
+Execution spec blob: `12d3c92db43433871deaf2d86889b770bfd4af3d`
+Builder: `34211911298/102014640422` SUCCESS
+Validation PR: #216 closed unmerged
+Exact-head PR CI: `34212312983/102015924320` SUCCESS
+Published-main CI: `34212774993/102017408925` SUCCESS
+
+Admitted production result:
+- exact immutable BI/BG/BH rows 3/3;
+- one control bit each; false=1 / true=2, both values successful;
+- control start equals published BI stop / BG payload end; end/stop equals start+1;
+- published BI prerequisite recomputed and exact;
+- 37 BE-false rows and 7 upstream AU-false rows excluded;
+- repeatability and corrupt-prior/context/lookup/truncation/post-stop-poison/source-scope negatives PASS;
+- following stream/header/payload/second-control consumption 0/0/0/0;
+- clean production scope exactly 2 files; Cargo/fixture/corpus/support/helper net mutation 0.
+
+Boundaries still closed:
+- following stream/header/payload after BK;
+- second later property-control bit;
+- following-header evidence until BL Outcome A;
+- generalized/repeated property cursor and all wider state/event/skill/runtime surfaces.
+
+Next exact pass:
+- `R3.18BL — published-R3.18BK mixed next-control differential` on immutable BH authority; no production mutation.

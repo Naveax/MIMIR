@@ -93,7 +93,8 @@ R3.18BG one following primitive payload evidence / Outcome A CLOSED
 R3.18BH next property-control bit evidence after exact BG payload end / Outcome A CLOSED
 R3.18BI bounded post-BE one-following-payload production / PRODUCTION CLOSED
 R3.18BJ published-R3.18BI one-following-payload differential / Outcome A CLOSED
-R3.18BK bounded post-BI next property-control production / ACTIVE
+R3.18BK bounded post-BI next property-control production / PRODUCTION CLOSED
+R3.18BL published-R3.18BK mixed next-control differential / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -275,13 +276,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 161. `docs/continuity/MIMIR_R3_18BJ_EXECUTION_SPEC.md`
 162. `docs/continuity/MIMIR_R3_18BJ_DECISION.md`
 163. `docs/continuity/MIMIR_R3_18BK_EXECUTION_SPEC.md`
-164. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-165. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-166. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-167. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-168. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-169. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-170. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+164. `docs/continuity/MIMIR_R3_18BK_DECISION.md`
+165. `docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md`
+166. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+167. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+168. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+169. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+170. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+171. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+172. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1257,3 +1260,11 @@ next                        R3.18M true-only one-bit production composition
 - exactly 3 BF-true rows only; Boolean=2 / Float=1; exact current values/boundaries must match pinned Boxcars.
 - 37 BF-false rows and 7 upstream AU false terminators are excluded before payload decode.
 - next control, second payload/header, production composition and generalized cursor remain closed.
+
+### R3.18BK bounded post-BI next property-control production: PRODUCTION / CLOSED
+- production `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / tree `07656c7a43c1afb97903ef33c1109b764fbf8b7d` / parent `de8df0b2bb36454c97863d4078ce7829fd4ecb77`
+- lib/test blobs `0bfff19a7d285e07508b648dbcd5af95a31838f6` / `1938707e60f7893768747931bf84e3bbac792d1b`; exact clean scope 2 files / 483 insertions
+- builder `34211911298/102014640422` SUCCESS; validation-only PR #216 closed unmerged; exact-head PR CI `34212312983/102015924320` SUCCESS; published-main CI `34212774993/102017408925` SUCCESS
+- immutable BH authority rows 3/3; false=1 / true=2; one control bit each; both values admitted
+- 37 BE-false + 7 upstream AU-false excluded; following stream/header/payload/second-control 0/0/0/0
+- next exact pass: R3.18BL published-BK differential; only BL Outcome A may open following-header evidence on the exact 2 true rows

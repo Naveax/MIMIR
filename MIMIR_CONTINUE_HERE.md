@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  def8e959239106e25d95091fcfcf468fec59e228
+  f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18BI — bounded post-BE one-following-payload production
+  R3.18BK — bounded post-BI next property-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BJ — Outcome A / published BI exact 3/3 / 37 BE-false rejected / 7 AU-false excluded / BH+later consumption 0 / mismatch 0 / artifact 10042480960
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BH — next property-control bit evidence / Outcome A / 3/3 / false=1 true=2 / native-oracle mismatch 0 / artifact 10023482583
 
 CURRENT_PASS:
-  R3.18BK — bounded post-BI next property-control production
+  R3.18BL — published-R3.18BK mixed next-control differential
 
 CURRENT_PASS_TYPE:
-  production / validate exact published BI result, consume exactly one BH-admitted property_present bit on only three authority rows, accept false=1 and true=2, stop one bit later; following structure forbidden
+  read-only published-production differential / exact 3 BH authority rows; false=1 true=2; published BI prerequisite exact; following stream/header/payload/second-control consumption forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4182,3 +4182,25 @@ TARGETS: exact BF true rows=3 / Boolean=2 width1 / Float=1 width32
 REQUIRE: exact native-Boxcars boundary/value equality / mismatch=0 / reselection=0
 HARD_STOP: false-row payload access=0 / next-control=0 / second-payload=0 / generalized cursor=0
 ```
+
+R3_18BK_PRODUCTION_CLOSURE:
+  Outcome A / production / exact 3 immutable BI-BG-BH authority rows
+  production SHA/tree: f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf / 07656c7a43c1afb97903ef33c1109b764fbf8b7d
+  parent: de8df0b2bb36454c97863d4078ce7829fd4ecb77
+  lib/test blobs: 0bfff19a7d285e07508b648dbcd5af95a31838f6 / 1938707e60f7893768747931bf84e3bbac792d1b
+  BK spec blob: 12d3c92db43433871deaf2d86889b770bfd4af3d
+  builder: 34211911298/102014640422 SUCCESS
+  validation PR: #216 closed unmerged
+  exact-head PR CI: 34212312983/102015924320 SUCCESS
+  published-main CI: 34212774993/102017408925 SUCCESS
+  exact control rows: 3/3 / false=1 true=2 / one bit each
+  BE false excluded: 37 / upstream AU false excluded: 7
+  following stream/header/payload/second-control consumption: 0/0/0/0
+  production scope: exactly 2 files
+
+R3_18BL_ACTIVE:
+  published-R3.18BK one-control differential only
+  immutable BH authority: exact 3 rows / false=1 true=2
+  one false row is a terminator; two true rows are continuation candidates only after BL Outcome A
+  no following header decode during BL
+
