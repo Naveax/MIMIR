@@ -1,0 +1,456 @@
+from pathlib import Path
+import json
+
+BASE_SHA = "910b88b66cf896893ff86620944111c723c5ab5d"
+BJ_HEAD = "fa75bb265eed9909047076d4a35e55e65dd27838"
+BJ_TREE = "877f783c665215a56f43a71aec0abfe23acb99ce"
+BJ_RUN = "34191528993"
+BJ_JOB = "101950417302"
+BJ_CI_RUN = "34191528959"
+BJ_CI_JOB = "101950417219"
+BJ_ARTIFACT = "10042480960"
+BJ_ZIP = "e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d"
+BJ_MANIFEST = "ac1ec9da8053f21e54bb4ff4e42d63c46058a281374412a9e31a87e6228012c4"
+
+
+def read(path):
+    return Path(path).read_text(encoding="utf-8")
+
+
+def write(path, text):
+    Path(path).write_text(text, encoding="utf-8", newline="\n")
+
+
+def replace_once(text, old, new, label):
+    count = text.count(old)
+    if count != 1:
+        raise SystemExit(f"{label}: expected exactly one match, got {count}")
+    return text.replace(old, new, 1)
+
+
+# Master continuity handbook.
+p = Path("MIMIR_CONTINUE_HERE.md")
+s = read(p)
+s = replace_once(
+    s,
+    "LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18BH — Outcome A / exact 3/3 next-control bits / false=1 true=2 / mismatch 0 / artifact 10023482583",
+    "LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18BJ — Outcome A / published BI exact 3/3 / 37 BE-false rejected / 7 AU-false excluded / BH+later consumption 0 / mismatch 0 / artifact 10042480960",
+    "continue last audit",
+)
+s = replace_once(
+    s,
+    "CURRENT_PASS:\n  R3.18BJ — published-R3.18BI one-following-payload differential\n\nCURRENT_PASS_TYPE:\n  read-only published-production differential / exact 3 BG payload rows; 37 BE-false + 7 AU-false remain closed; BH control consumption forbidden",
+    "CURRENT_PASS:\n  R3.18BK — bounded post-BI next property-control production\n\nCURRENT_PASS_TYPE:\n  production / validate exact published BI result, consume exactly one BH-admitted property_present bit on only three authority rows, accept false=1 and true=2, stop one bit later; following structure forbidden",
+    "continue current pass",
+)
+write(p, s)
+
+# Knowledge graph root + mandatory reading order.
+p = Path("MIMIR_KNOWLEDGE_GRAPH.md")
+s = read(p)
+s = replace_once(
+    s,
+    "R3.18BI bounded post-BE one-following-payload production / PRODUCTION CLOSED\nR3.18BJ published-R3.18BI one-following-payload differential / ACTIVE",
+    "R3.18BI bounded post-BE one-following-payload production / PRODUCTION CLOSED\nR3.18BJ published-R3.18BI one-following-payload differential / Outcome A CLOSED\nR3.18BK bounded post-BI next property-control production / ACTIVE",
+    "knowledge graph current node",
+)
+old_order = """157. `docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md`
+158. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+159. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+160. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+161. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+162. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+163. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+164. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`"""
+new_order = """157. `docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md`
+158. `docs/continuity/MIMIR_R3_18BH_DECISION.md`
+159. `docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md`
+160. `docs/continuity/MIMIR_R3_18BI_DECISION.md`
+161. `docs/continuity/MIMIR_R3_18BJ_EXECUTION_SPEC.md`
+162. `docs/continuity/MIMIR_R3_18BJ_DECISION.md`
+163. `docs/continuity/MIMIR_R3_18BK_EXECUTION_SPEC.md`
+164. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+165. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+166. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+167. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+168. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+169. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+170. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`"""
+s = replace_once(s, old_order, new_order, "knowledge graph mandatory order")
+write(p, s)
+
+# Boundary locks current override.
+p = Path("docs/continuity/MIMIR_BOUNDARY_LOCKS.md")
+s = read(p)
+start = s.index("# 0. Current override")
+end = s.index("# 1. Status vocabulary")
+override = """# 0. Current override — R3.18BJ differential closed / R3.18BK one-control production active
+
+This current override supersedes older status wording later in this historical lock file.
+
+## PRODUCTION — R3.18BI
+- `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537` remains canonical production.
+- exactly three BG authority payloads are admitted: Boolean=2 / Float=1, widths 1/1/32.
+- production stops exactly at primitive `payload_end_bit` before R3.18BK.
+
+## CLOSED READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BH
+- exact 3/3 next bits, false=1 / true=2, native-oracle mismatch 0.
+- artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`; manifest `sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa`.
+
+## CLOSED READ-ONLY PUBLISHED DIFFERENTIAL — R3.18BJ
+- evidence `fa75bb265eed9909047076d4a35e55e65dd27838` / `877f783c665215a56f43a71aec0abfe23acb99ce`; run/job `34191528993/101950417302` SUCCESS.
+- same-head natural CI `34191528959/101950417219` SUCCESS; exact run count 1.
+- artifact `10042480960` / `sha256:e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d`; manifest `sha256:ac1ec9da8053f21e54bb4ff4e42d63c46058a281374412a9e31a87e6228012c4`.
+- published BI exact 3/3; Boolean=2 / Float=1; widths 1/1/32; 37/37 BE-false rejected; 7/7 AU-false excluded; mismatch/reselection 0/0.
+- BH control plus following stream/header/payload/second-control consumption 0/0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+
+## ACTIVE BOUNDED PRODUCTION — R3.18BK
+- only the exact three BI/BG/BH authority rows may reach the new control read.
+- validate/recompute the published BI result and require `control_start_bit == BI.stop_bit == BG.payload_end_bit`.
+- consume exactly one BH-admitted `property_present` bit; both false and true are valid, preserving the observed false=1 / true=2 distribution.
+- stop exactly one bit later. Do not consume a following stream ID, header, payload, second later control, or generalized cursor.
+
+## CLOSED
+- following stream/header/payload after the R3.18BK control bit;
+- second later property-control bit;
+- any BK success outside the exact three immutable BI/BG/BH authority rows;
+- wider payload tags/contexts;
+- generalized/repeated property cursor;
+- actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+"""
+s = s[:start] + override + s[end:]
+write(p, s)
+
+# Structured current state.
+p = Path("docs/continuity/MIMIR_CONTINUITY_STATE.json")
+data = json.loads(read(p))
+data["updated_date"] = "2026-09-08"
+data["last_completed_read_only_audit"] = "R3.18BJ"
+data["current_pass"] = "R3.18BK"
+data["current_pass_kind"] = "bounded production composition of exactly one R3.18BH-admitted property_present bit after a valid published R3.18BI payload result"
+data["current_pass_goal"] = "On exactly the three immutable BI/BG/BH authority rows, validate the published BI boundary, consume exactly one next property_present bit, accept both observed boolean classes false=1 and true=2, and stop one bit later."
+data["current_pass_stop_boundary"] = "Stop exactly at control_start_bit + 1. Following stream/header/payload, a second later control and any generalized property cursor remain closed."
+closed = data.get("closed_now", [])
+closed = [x for x in closed if "before R3.18BJ published-production differential closure" not in x and "before a later production pass" not in x]
+for item in [
+    "following stream/header/payload after the one R3.18BK control bit",
+    "second later property-control bit after R3.18BK",
+    "success outside the three immutable BI/BG/BH authority rows during R3.18BK",
+    "generalized/repeated property loop or generic cursor after R3.18BK",
+]:
+    if item not in closed:
+        closed.append(item)
+data["closed_now"] = closed
+data["r3_18bj"] = {
+    "outcome": "A",
+    "evidence_head": BJ_HEAD,
+    "evidence_tree": BJ_TREE,
+    "base_sha": BASE_SHA,
+    "run_job": f"{BJ_RUN}/{BJ_JOB}",
+    "same_head_ci": f"{BJ_CI_RUN}/{BJ_CI_JOB}",
+    "same_head_ci_count": 1,
+    "artifact_id": int(BJ_ARTIFACT),
+    "artifact_size_bytes": 7131,
+    "artifact_sha256": BJ_ZIP,
+    "manifest_sha256": BJ_MANIFEST,
+    "published_bi_exact": 3,
+    "boolean": 2,
+    "float": 1,
+    "width_1": 2,
+    "width_32": 1,
+    "be_false_rejected": 37,
+    "au_false_excluded": 7,
+    "native_authority_mismatch": 0,
+    "witness_reselection": 0,
+    "bh_control_bits_consumed": 0,
+    "following_stream_bits_consumed": 0,
+    "following_header_bits_consumed": 0,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0,
+    "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
+}
+reads = data.get("next_files_to_read", [])
+for item in [
+    "docs/continuity/MIMIR_R3_18BH_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BI_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BJ_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BJ_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BK_EXECUTION_SPEC.md",
+]:
+    if item not in reads:
+        reads.append(item)
+data["next_files_to_read"] = reads
+write(p, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+# Small canonical mirrors are replaced as a whole.
+current_state = """# MIMIR — Current Canonical State
+
+**Continuity date:** 2026-09-08
+**Repository:** `Naveax/MIMIR`
+**Canonical production SHA:** `def8e959239106e25d95091fcfcf468fec59e228`
+**Production tree:** `61ca1c3cdf504f4c1eaef3001cbe81984414c537`
+**Production milestone:** `R3.18BI — bounded post-BE one-following-payload production`
+**Last read-only evidence/audit:** `R3.18BJ — Outcome A / published BI exact 3/3 / 37 BE-false rejected / 7 AU-false excluded / BH+later consumption=0 / artifact 10042480960`
+**Last completed contract:** `R3.18BD — exact_tuple_only / 3 eight-field contexts / multiplicity 3 / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27`
+**Current exact pass:** `R3.18BK — bounded post-BI next property-control production`
+
+## Truthful boundary
+
+R3.18BI remains canonical production and stops exactly at primitive `payload_end_bit` on the three immutable BG authority rows. R3.18BJ independently revalidated the published BI behavior against immutable BG/BH authority: exact 3/3, Boolean=2 / Float=1, widths 1/1/32, 37/37 BE-false rejected, 7/7 AU-false excluded, mismatch/reselection 0/0, and zero BH or later consumption.
+
+R3.18BH remains the immutable next-control evidence authority: one exact `property_present` bit immediately after each successful BI payload, false=1 / true=2. R3.18BJ Outcome A now permits R3.18BK to consider only that one bit in production. Both boolean values are admitted at this boundary; earlier true-only control semantics are not inherited.
+
+```text
+production SHA/tree                    def8e959239106e25d95091fcfcf468fec59e228 / 61ca1c3cdf504f4c1eaef3001cbe81984414c537
+BJ evidence SHA/tree                   fa75bb265eed9909047076d4a35e55e65dd27838 / 877f783c665215a56f43a71aec0abfe23acb99ce
+BJ run/job                             34191528993/101950417302 SUCCESS
+BJ same-head natural CI                34191528959/101950417219 SUCCESS / count 1
+BJ artifact                            10042480960 / sha256:e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d
+BJ manifest                            sha256:ac1ec9da8053f21e54bb4ff4e42d63c46058a281374412a9e31a87e6228012c4
+BJ published BI exact                  3/3
+BJ false lanes                         BE 37/37 rejected / AU 7/7 excluded
+BJ mismatch / reselection              0 / 0
+BJ BH/later consumption                0 / 0
+BK admitted control authority          BH false=1 / true=2
+BK stop                                exactly one bit after BI payload_end_bit
+```
+
+## Hard stop
+
+R3.18BK may consume exactly one BH-admitted control bit on the three authority rows and no more. No following stream/header/payload, no second later control, no wider context/tag membership, no generalized property cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+"""
+write("docs/continuity/MIMIR_CURRENT_STATE.md", current_state)
+
+handoff = """# MIMIR — Next Chat Handoff
+
+Canonical production remains **R3.18BI** at `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537`.
+
+**R3.18BJ is CLOSED / Outcome A.** Scientific authority is `fa75bb265eed9909047076d4a35e55e65dd27838` / `877f783c665215a56f43a71aec0abfe23acb99ce`; run/job `34191528993/101950417302` SUCCESS; same-head natural CI `34191528959/101950417219` SUCCESS with exact run count 1. Artifact `10042480960` is `7131` bytes with ZIP `sha256:e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d` and manifest `sha256:ac1ec9da8053f21e54bb4ff4e42d63c46058a281374412a9e31a87e6228012c4`; downloaded ZIP and all 13/13 manifest entries were independently verified.
+
+BJ results: published BI exact 3/3; Boolean=2 / Float=1; widths 1/1/32; direct primitive exact 3/3; repeatability 3/3; BH poison unchanged 3/3; 37/37 BE-false rejected; 7/7 AU-false excluded; mismatch/reselection 0/0; BH control and all later consumption zero; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Active pass: **R3.18BK — Bounded Post-BI Next Property-Control Production**. Validate/recompute the exact published BI boundary, consume exactly one R3.18BH-admitted `property_present` bit on only the three immutable authority rows, accept both false and true (frozen distribution false=1 / true=2), and stop exactly one bit later. No following stream/header/payload, no second control and no generalized property loop.
+
+Before dispatch or rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. CI waiting is not a reason to duplicate the same SHA/workflow/input.
+"""
+write("docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md", handoff)
+
+decision = f"""# MIMIR R3.18BJ — Published R3.18BI One-Following-Payload Differential Decision
+
+**Date:** 2026-09-08
+**Outcome:** **A — ADMITTED / READ-ONLY DIFFERENTIAL CLOSED**
+**Canonical production remains:** `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537`
+**Evidence authority:** `{BJ_HEAD}` / `{BJ_TREE}`
+
+## Decision
+
+R3.18BJ closes Outcome A. Published R3.18BI matches immutable R3.18BG payload authority exactly on all three admitted rows while preserving every surrounding false terminator and stopping before the R3.18BH next-control bit.
+
+The exact payload lane remains Boolean=2 / Float=1 with widths 1/1/32. Published BI, the immutable BG authority and a direct primitive decode agree 3/3. Repeatability is exact 3/3, poisoning only the BH bit does not change BI 3/3, all 37 R3.18BE false terminators reject before payload decoding, all 7 upstream R3.18AU false terminators stay outside BI success, and witness reselection is zero.
+
+No R3.18BH bit or later stream/header/payload/second-control bit was consumed. Production, Cargo, fixture, corpus and support mutation are all zero.
+
+## Exact authority
+
+```text
+published continuity base             {BASE_SHA}
+BJ evidence SHA/tree                  {BJ_HEAD} / {BJ_TREE}
+BJ evidence run/job                   {BJ_RUN}/{BJ_JOB} SUCCESS
+BJ same-head natural CI               {BJ_CI_RUN}/{BJ_CI_JOB} SUCCESS
+same-head CI count                    1
+artifact                              {BJ_ARTIFACT} / 7131 bytes
+artifact ZIP sha256                   {BJ_ZIP}
+artifact manifest sha256              {BJ_MANIFEST}
+curated authority files               13 + manifest
+published BI SHA/tree                 def8e959239106e25d95091fcfcf468fec59e228 / 61ca1c3cdf504f4c1eaef3001cbe81984414c537
+BI lib/test blobs                     2307ea008176d27208e2354c9706f09dc447fd5f / 16b15e1fa5dc71d295837578dff861635679ffc9
+BG artifact                           10015405999 / sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a
+BH artifact                           10023482583 / sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d
+pinned Boxcars                        c70e77df7af81b436cb545d070bb90c82f562d0b
+```
+
+## Frozen differential result
+
+```text
+published BI exact                    3/3
+direct primitive exact                3/3
+Boolean / Float                       2 / 1
+width 1 / width 32                    2 / 1
+native-authority mismatch             0
+repeatability                         PASS 3/3
+BH poison unchanged                   PASS 3/3
+BE false rejected                     37/37
+AU false excluded                     7/7
+witness reselection                   0
+BH control bits consumed              0
+following stream/header/payload       0/0/0
+second later control                  0
+full validation                       PASS
+production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+privacy                               PASS
+```
+
+## Sequencing consequence
+
+R3.18BJ does not itself widen production. It closes the publication differential required by the R3.18BI decision. The next exact pass is **R3.18BK — Bounded Post-BI Next Property-Control Production**.
+
+R3.18BK may consider exactly the one R3.18BH-observed `property_present` bit at BI `payload_end_bit` on the same three immutable authority rows. Both observed boolean classes are valid: false=1 / true=2. Earlier true-only production semantics must not be inherited.
+
+## Hard stop
+
+No following stream ID, header, payload, second later control, wider tag/context membership, generalized/repeated property cursor, actor/frame/lifecycle mutation, raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+"""
+write("docs/continuity/MIMIR_R3_18BJ_DECISION.md", decision)
+
+bk_spec = f"""# MIMIR R3.18BK — Bounded Post-BI Next Property-Control Production
+
+**Status:** ACTIVE
+**Pass type:** bounded production composition
+**Production base:** R3.18BI `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537`
+**Published differential gate:** R3.18BJ Outcome A, `{BJ_HEAD}` / run `{BJ_RUN}`
+**Control authority:** immutable R3.18BH artifact `10023482583`
+**Witness reselection:** forbidden
+
+## 1. Goal
+
+Publish exactly one already-evidenced R3.18BH `property_present` control bit immediately after a valid published R3.18BI payload result, on only the three immutable BI/BG/BH authority rows.
+
+R3.18BK must validate/recompute the supplied BI prior, require the exact BI payload-end boundary, consume exactly one bit, accept both boolean values observed by BH (`false=1 / true=2`), and stop exactly one bit later.
+
+This is not a property loop. It does not decode a following stream ID, property header, payload or a second later control.
+
+## 2. Frozen authority
+
+```text
+production base SHA/tree              def8e959239106e25d95091fcfcf468fec59e228 / 61ca1c3cdf504f4c1eaef3001cbe81984414c537
+BI lib/test blobs                     2307ea008176d27208e2354c9706f09dc447fd5f / 16b15e1fa5dc71d295837578dff861635679ffc9
+BJ evidence SHA/tree                  {BJ_HEAD} / {BJ_TREE}
+BJ evidence run/job                   {BJ_RUN}/{BJ_JOB} SUCCESS
+BJ same-head natural CI               {BJ_CI_RUN}/{BJ_CI_JOB} SUCCESS / count=1
+BJ artifact                           {BJ_ARTIFACT} / sha256:{BJ_ZIP}
+BJ manifest                           sha256:{BJ_MANIFEST}
+BH evidence head                      c728658ac237a45f34b3af002c27f704f5293fb5
+BH artifact                           10023482583 / sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d
+BH manifest                           sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa
+BH exact rows                         3/3
+BH observed distribution              false=1 / true=2
+pinned Boxcars                        c70e77df7af81b436cb545d070bb90c82f562d0b
+```
+
+## 3. Exact production contract
+
+For an R3.18BK call:
+
+1. recompute the published R3.18BI result from the supplied published prerequisites;
+2. require field equality between the recomputed BI result and the supplied BI prior;
+3. require `control_start_bit == BI.stop_bit == BI.following_payload.payload_end_bit`;
+4. read exactly one checked bit at `control_start_bit`;
+5. materialize that bit as `property_present: bool` without true-only filtering;
+6. require `control_end_bit == control_start_bit + 1` with checked arithmetic;
+7. return with `stop_bit == control_end_bit`;
+8. perform no read at or after `control_end_bit`.
+
+The production implementation must not consult replay paths, hashes, fixture names, evidence artifacts or the external Boxcars oracle at runtime. Exact lane membership is inherited only through the already-published BI/BE/BD authority and the validated BI prior.
+
+Expected frozen production lane:
+
+```text
+successful authority rows             3/3
+false / true                          1 / 2
+new bits consumed per success         1
+BI boundary mismatch                  0
+BE false success                      0/37
+AU false success                      0/7
+following stream/header/payload       0/0/0 bits
+second later control                  0 bits
+generalized property loop             0
+```
+
+## 4. Required negative controls
+
+At minimum:
+- supplied BI prior differs from recomputed published BI -> reject atomically;
+- wrong actor / unresolved lookup / wrong exact upstream context -> reject through the published prerequisite chain;
+- truncate exactly at `control_start_bit` -> reject without partial result;
+- corrupt BI payload start/end/stop or payload semantic identity -> reject before the new control result is returned;
+- poison any bit strictly after `control_end_bit` -> BK result unchanged 3/3;
+- all 37 BE false terminators -> no BK success;
+- all 7 upstream AU false terminators -> no BK success;
+- fabricated fourth BI/BG/BH authority row -> reject;
+- source-scope guard -> exactly one new control-bit read and zero following stream/header/payload/second-control reads.
+
+## 5. Production construction rule
+
+Evidence helpers and temporary workflow/probe code are not production. Construct the clean production change from verified source edits only.
+
+Expected source scope is exactly:
+- `crates/mimir-replay/src/lib.rs`;
+- one focused `crates/mimir-replay/tests/r3_18bk_post_bi_following_control.rs` test target.
+
+Cargo, fixture, corpus, scripts/support, generated artifacts and unrelated crates remain unchanged unless a concrete blocker is separately admitted.
+
+## 6. Validation
+
+Require focused BK tests plus the BI/BE and primitive-scalar prerequisite regressions; `cargo fmt --all -- --check`; workspace `cargo check --locked`; workspace tests; workspace clippy with warnings denied; repository verifier; clean-source scope audit; exact-head normal CI; fresh-main ancestry audit; force=false publication; published-main readback and CI.
+
+Before dispatch or rerun, inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run. Never dispatch a duplicate merely to poll.
+
+## 7. Hard stop
+
+No following stream ID, following property header, following payload, second later property-control bit, wider payload/header context, generalized/repeated property cursor, next actor/frame/lifecycle mutation, raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+## 8. Outcome gate
+
+### Outcome A
+Exactly 3/3 immutable authority rows produce one new control bit with the frozen false=1 / true=2 distribution, exact BI boundary validation, one-bit stop semantics, all negatives and full validation PASS, source scope remains exact, and no adjacent structure is consumed. Publish the clean production SHA, then open a separate published-R3.18BK differential before any following-header evidence or production.
+
+### Outcome B/C
+Any authority drift, BI mismatch, false-lane success, value filtering, overread, source-scope widening, validation failure or privacy/provenance defect keeps R3.18BK unadmitted and all later structure closed.
+"""
+write("docs/continuity/MIMIR_R3_18BK_EXECUTION_SPEC.md", bk_spec)
+
+ledger_path = Path("docs/continuity/MIMIR_PROGRESS_LEDGER.md")
+ledger = read(ledger_path)
+marker = "## 2026-09-08 — R3.18BJ — Published R3.18BI one-following-payload differential Outcome A"
+if marker in ledger:
+    raise SystemExit("ledger already contains BJ admission")
+entry = f"""
+
+{marker}
+
+Pass type: read-only published-production differential
+Production mutation: none; canonical production remains R3.18BI `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537`
+Evidence authority: `{BJ_HEAD}` / `{BJ_TREE}`
+Run/job: `{BJ_RUN}/{BJ_JOB}` SUCCESS
+Same-head natural CI: `{BJ_CI_RUN}/{BJ_CI_JOB}` SUCCESS / exact run count 1
+Artifact: `{BJ_ARTIFACT}` / 7131 bytes / `sha256:{BJ_ZIP}`
+Manifest: `sha256:{BJ_MANIFEST}` / 13/13 files verified
+
+Admitted result:
+- published BI exact 3/3 against immutable BG authority;
+- Boolean=2 / Float=1; widths 1/1/32;
+- direct primitive exact 3/3; repeatability 3/3; BH poison unchanged 3/3;
+- BE false rejected 37/37; upstream AU false excluded 7/7;
+- native-authority mismatch 0; witness reselection 0;
+- BH control / following stream / following header / following payload / second later control consumption 0/0/0/0/0;
+- full validation PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Boundaries still closed:
+- following stream/header/payload after the one BH control bit;
+- second later property-control bit;
+- wider tag/context membership;
+- generalized/repeated property cursor;
+- actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Next exact pass:
+- `R3.18BK — bounded post-BI next property-control production`, exactly one bit, both false and true admitted, stop one bit later.
+"""
+write(ledger_path, ledger.rstrip() + entry + "\n")
+
+assert "R3.18BK — bounded post-BI next property-control production" in read("MIMIR_CONTINUE_HERE.md")
+assert "R3.18BJ published-R3.18BI one-following-payload differential / Outcome A CLOSED" in read("MIMIR_KNOWLEDGE_GRAPH.md")
+assert "R3.18BK bounded post-BI next property-control production / ACTIVE" in read("MIMIR_KNOWLEDGE_GRAPH.md")
+assert json.loads(read("docs/continuity/MIMIR_CONTINUITY_STATE.json"))["current_pass"] == "R3.18BK"
+print("R3_18BJ_CONTINUITY_MUTATION=PASS")
