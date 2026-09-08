@@ -6,35 +6,32 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BJ differential closed / R3.18BK one-control production active
+# 0. Current override — R3.18BK production closed / R3.18BL published differential active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18BI
-- `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537` remains canonical production.
-- exactly three BG authority payloads are admitted: Boolean=2 / Float=1, widths 1/1/32.
-- production stops exactly at primitive `payload_end_bit` before R3.18BK.
+## PRODUCTION — R3.18BK
+- `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d` is canonical production.
+- exactly the three immutable BI/BG/BH authority rows are admitted.
+- published BI is recomputed/validated; one BH `property_present` bit is consumed; false=1 / true=2 are both successful production data.
+- start is exact BI `payload_end_bit`; stop is exactly one bit later.
+- 37 BE-false and 7 upstream AU-false rows remain outside success.
+- following stream/header/payload/second-control consumption is 0/0/0/0.
 
-## CLOSED READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BH
-- exact 3/3 next bits, false=1 / true=2, native-oracle mismatch 0.
-- artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`; manifest `sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa`.
+## CLOSED READ-ONLY AUTHORITY — R3.18BH / R3.18BJ
+- BH exact 3/3 next bits: false=1 / true=2; artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`.
+- BJ published-BI differential exact 3/3; artifact `10042480960` / `sha256:e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d`.
 
-## CLOSED READ-ONLY PUBLISHED DIFFERENTIAL — R3.18BJ
-- evidence `fa75bb265eed9909047076d4a35e55e65dd27838` / `877f783c665215a56f43a71aec0abfe23acb99ce`; run/job `34191528993/101950417302` SUCCESS.
-- same-head natural CI `34191528959/101950417219` SUCCESS; exact run count 1.
-- artifact `10042480960` / `sha256:e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d`; manifest `sha256:ac1ec9da8053f21e54bb4ff4e42d63c46058a281374412a9e31a87e6228012c4`.
-- published BI exact 3/3; Boolean=2 / Float=1; widths 1/1/32; 37/37 BE-false rejected; 7/7 AU-false excluded; mismatch/reselection 0/0.
-- BH control plus following stream/header/payload/second-control consumption 0/0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
-
-## ACTIVE BOUNDED PRODUCTION — R3.18BK
-- only the exact three BI/BG/BH authority rows may reach the new control read.
-- validate/recompute the published BI result and require `control_start_bit == BI.stop_bit == BG.payload_end_bit`.
-- consume exactly one BH-admitted `property_present` bit; both false and true are valid, preserving the observed false=1 / true=2 distribution.
-- stop exactly one bit later. Do not consume a following stream ID, header, payload, second later control, or generalized cursor.
+## ACTIVE READ-ONLY PUBLISHED DIFFERENTIAL — R3.18BL
+- compare published BK only against immutable BH row/value/boundary authority.
+- require published BI prerequisite exact 3/3, BK exact 3/3, false=1 / true=2, mismatch/reselection 0/0.
+- one false row is a terminator and two true rows are continuation candidates, but BL must not decode any following header.
+- following stream/header/payload/second-control consumption and production mutation must remain zero.
 
 ## CLOSED
 - following stream/header/payload after the R3.18BK control bit;
 - second later property-control bit;
+- following-header evidence before R3.18BL Outcome A;
 - any BK success outside the exact three immutable BI/BG/BH authority rows;
 - wider payload tags/contexts;
 - generalized/repeated property cursor;
