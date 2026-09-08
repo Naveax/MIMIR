@@ -62,16 +62,6 @@ jobs:
           mapfile -t dirty < <(git status --short | sed -E 's/^...//' | sort)
           printf '%s\n' "${dirty[@]}"
           test "${#dirty[@]}" -eq 9
-          expected=(
-            'MIMIR_CONTINUE_HERE.md'
-            'MIMIR_KNOWLEDGE_GRAPH.md'
-            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
-            'docs/continuity/MIMIR_CONTINUITY_STATE.json'
-            'docs/continuity/MIMIR_CURRENT_STATE.md'
-            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
-            'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
-            'docs/continuity/MIMIR_R3_18BJ_DECISION.md.__never__'
-          )
           printf '%s\n' "${dirty[@]}" | grep -Fxq 'MIMIR_CONTINUE_HERE.md'
           printf '%s\n' "${dirty[@]}" | grep -Fxq 'MIMIR_KNOWLEDGE_GRAPH.md'
           printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
@@ -82,10 +72,10 @@ jobs:
           printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_R3_18BK_DECISION.md'
           printf '%s\n' "${dirty[@]}" | grep -Fxq 'docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md'
 
-          read add del < <(git diff --numstat -- docs/continuity/MIMIR_CONTINUITY_STATE.json)
+          IFS=$'\t' read -r add del _ < <(git diff --numstat -- docs/continuity/MIMIR_CONTINUITY_STATE.json)
           test "$add" -lt 140
           test "$del" -lt 40
-          read add del < <(git diff --numstat -- MIMIR_KNOWLEDGE_GRAPH.md)
+          IFS=$'\t' read -r add del _ < <(git diff --numstat -- MIMIR_KNOWLEDGE_GRAPH.md)
           test "$add" -lt 60
           test "$del" -lt 25
 
