@@ -1,0 +1,88 @@
+name: R3.18BJ Published BI Differential v1
+
+on:
+  push:
+    branches:
+      - evidence/r318bj-published-bi-v1
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bj-published-bi-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUNNER_BLOB: 66c2929c21f968fcd31b784a789597ffac0ae804
+      BASE_SHA: 910b88b66cf896893ff86620944111c723c5ab5d
+      BASE_TREE: 4d353d0009f7781592def389a018c1943ef42a60
+      BI_DECISION_BLOB: 365f95b696b3ea9a1c3376033c3cfcd6ad6c88a5
+      BJ_SPEC_BLOB: 99984622533373d365875326dae35b9eb572c57b
+      BASE_PR: '215'
+      BASE_PR_CI_RUN: '34190824942'
+      BASE_PR_CI_JOB: '101948359318'
+      BASE_PR_KA_RUN: '34190824904'
+      BASE_PR_KA_JOB: '101948359098'
+      BASE_MAIN_CI_RUN: '34191250805'
+      BASE_MAIN_CI_JOB: '101949599952'
+      BASE_MAIN_KA_RUN: '34191250893'
+      BASE_MAIN_KA_JOB: '101949600327'
+
+    steps:
+      - name: Checkout exact BJ evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Execute immutable R3.18BJ evidence runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$RUNNER_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318bj_run.sh"
+          test "$(git hash-object "$RUNNER_TEMP/r318bj_run.sh")" = "$RUNNER_BLOB"
+          bash -n "$RUNNER_TEMP/r318bj_run.sh"
+          bash "$RUNNER_TEMP/r318bj_run.sh"
+
+      - name: Upload authoritative R3.18BJ evidence v1
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bj-published-bi-differential-evidence-v1
+          path: ${{ runner.temp }}/r318bj-authority/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Create non-authority failure receipt
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/r318bj-failure"
+          cat > "$RUNNER_TEMP/r318bj-failure/r3_18bj_failure_receipt.txt" <<EOF
+          R3_18BJ_OUTCOME=NOT_ADMITTED
+          R3_18BJ_SCIENTIFIC_AUTHORITY=NONE
+          R3_18BJ_HEAD=$GITHUB_SHA
+          R3_18BJ_BASE=$BASE_SHA
+          R3_18BJ_RUNNER_BLOB=$RUNNER_BLOB
+          EOF
+
+      - name: Upload BJ failure receipt
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bj-v1-non-authority-failure-receipt
+          path: ${{ runner.temp }}/r318bj-failure/
+          if-no-files-found: error
+          retention-days: 30
