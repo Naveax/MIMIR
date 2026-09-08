@@ -91,7 +91,8 @@ R3.18BE bounded post-BA mixed-continuation following-header production / PRODUCT
 R3.18BF published-R3.18BE mixed following-header differential / Outcome A CLOSED
 R3.18BG one following primitive payload evidence / Outcome A CLOSED
 R3.18BH next property-control bit evidence after exact BG payload end / Outcome A CLOSED
-R3.18BI bounded post-BE one-following-payload production / ACTIVE
+R3.18BI bounded post-BE one-following-payload production / PRODUCTION CLOSED
+R3.18BJ published-R3.18BI one-following-payload differential / ACTIVE
         |                               |
         +---------------+---------------+
                         |

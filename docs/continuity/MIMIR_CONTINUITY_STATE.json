@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-09-07",
+  "updated_date": "2026-09-08",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "1d717d3e82179edd85b197968f46b8f951a3e828",
-  "last_production_milestone": "R3.18BE",
-  "last_production_milestone_name": "bounded post-BA mixed-continuation following-header production",
+  "last_production_code_sha": "def8e959239106e25d95091fcfcf468fec59e228",
+  "last_production_milestone": "R3.18BI",
+  "last_production_milestone_name": "bounded post-BE one-following-payload production",
   "last_completed_read_only_audit": "R3.18BH",
-  "current_pass": "R3.18BI",
-  "current_pass_kind": "bounded production composition of exactly one R3.18BG-admitted primitive payload after a valid published R3.18BE following header",
-  "current_pass_goal": "Publish exactly the three BG-supported Boolean/Float payloads with exact start/value/width/end semantics and stop at payload_end_bit without consuming the R3.18BH control bit.",
-  "current_pass_stop_boundary": "Stop exactly at the BG payload_end_bit. The R3.18BH property_present bit, following stream/header/payload, second later control and generalized cursor remain closed.",
+  "current_pass": "R3.18BJ",
+  "current_pass_kind": "read-only published-R3.18BI one-following-payload differential against immutable R3.18BG/R3.18BH authority",
+  "current_pass_goal": "Revalidate published R3.18BI on exactly the three BG payload rows with exact tag/value/width/start/end/stop equality, keep 37 BE-false and 7 AU-false rows outside payload success, and prove zero BH or later consumption.",
+  "current_pass_stop_boundary": "Stop exactly at the published BI payload_end_bit. The R3.18BH property_present bit and every following stream/header/payload or second control remain closed.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -169,7 +169,9 @@
     "next stream/header/payload after the one R3.18BH control evidence boundary",
     "second later property-control bit after R3.18BH",
     "production consumption of the R3.18BH-observed next property-control bit during R3.18BI",
-    "following stream/header/payload after the R3.18BH control boundary"
+    "following stream/header/payload after the R3.18BH control boundary",
+    "production consumption of the R3.18BH-observed next property-control bit before R3.18BJ published-production differential closure",
+    "following stream/header/payload after published R3.18BI payload_end_bit"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -347,10 +349,12 @@
     "docs/continuity/MIMIR_R3_18BG_DECISION.md",
     "docs/continuity/MIMIR_R3_18BH_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BH_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BI_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BI_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BJ_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18BG",
-  "last_completed_evidence_outcome": "A — exact 3/3 BF-true primitive payloads; Boolean=2 Float=1; widths 1:2 and 32:1; raw IEEE754 Float identity; native/oracle mismatch 0; witness reselection 0; 37 BF-false and 7 upstream AU-false excluded; next-control consumption 0; artifact 10015405999.",
+  "last_completed_evidence_pass": "R3.18BH",
+  "last_completed_evidence_outcome": "A — exact 3/3 next property-control bits; false=1 true=2; native/oracle mismatch 0; witness reselection 0; following stream/header/payload and second-control consumption 0; artifact 10023482583.",
   "last_completed_contract_pass": "R3.18BD",
   "r3_14a": {
     "outcome": "A",
@@ -3003,5 +3007,35 @@
       "payload": 0,
       "second_control": 0
     }
+  },
+  "r3_18bi": {
+    "outcome": "A",
+    "sha": "def8e959239106e25d95091fcfcf468fec59e228",
+    "tree": "61ca1c3cdf504f4c1eaef3001cbe81984414c537",
+    "parent": "2d8a2a28413467690b076bd08e6f750843af5c33",
+    "lib_blob": "2307ea008176d27208e2354c9706f09dc447fd5f",
+    "focused_test_blob": "16b15e1fa5dc71d295837578dff861635679ffc9",
+    "execution_spec_blob": "e70e45a8a256d633c516895bbc28b61413af4b97",
+    "builder_run": 34158571800,
+    "builder_job": 101855439564,
+    "helper_exact_head_ci_run": 34158571745,
+    "helper_exact_head_ci_job": 101855439673,
+    "validation_pr": 213,
+    "exact_head_pr_ci_run": 34159120199,
+    "exact_head_pr_ci_job": 101857049780,
+    "published_main_ci_run": 34159530318,
+    "published_main_ci_job": 101858247592,
+    "target_rows": 3,
+    "boolean": 2,
+    "float": 1,
+    "payload_widths": [
+      1,
+      1,
+      32
+    ],
+    "be_false_excluded": 37,
+    "upstream_au_false_excluded": 7,
+    "bh_control_bits_consumed": 0,
+    "production_scope_files": 2
   }
 }

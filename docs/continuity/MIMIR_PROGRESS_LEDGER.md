@@ -1784,3 +1784,39 @@ Important negative facts / anti-regressions:
 
 Next exact pass:
 - R3.18BI bounded post-BE one-following-payload production.
+
+## 2026-09-08 — R3.18BI — Bounded post-BE one-following-payload production Outcome A
+Production base SHA: `2d8a2a28413467690b076bd08e6f750843af5c33`
+Production commit SHA: `def8e959239106e25d95091fcfcf468fec59e228`
+Pass type: bounded production composition
+Outcome: **A — ADMITTED / PRODUCTION CLOSED**
+
+What changed:
+- Production now composes exactly one R3.18BG-admitted primitive payload after a valid R3.18BE true header and stops at payload end.
+- Exactly two production files changed: `crates/mimir-replay/src/lib.rs` and `crates/mimir-replay/tests/r3_18bi_post_be_following_payload.rs`.
+
+Authority:
+- SHA/tree `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537`.
+- lib/test blobs `2307ea008176d27208e2354c9706f09dc447fd5f` / `16b15e1fa5dc71d295837578dff861635679ffc9`.
+- execution spec blob `e70e45a8a256d633c516895bbc28b61413af4b97`.
+- production builder `34158571800/101855439564` SUCCESS.
+
+Validation:
+- validation-only PR #213 closed unmerged.
+- exact-head PR CI `34159120199/101857049780` SUCCESS.
+- fresh-main `force:false` publication.
+- published-main CI `34159530318/101858247592` SUCCESS.
+
+Frozen result:
+- exact BG payload rows 3/3; Boolean=2 / Float=1; widths 1/1/32.
+- stop exact at payload_end; BH control consumption 0.
+- 37 BE-false rows and 7 upstream AU-false rows cannot enter payload production.
+
+Boundaries opened:
+- published BI payload composition only.
+
+Boundaries still closed:
+- R3.18BH control production; following stream/header/payload; second later control; wider tag/context membership; generalized cursor; wider state/event/skill/runtime surfaces.
+
+Next exact pass:
+- `R3.18BJ — published-R3.18BI one-following-payload differential`.

@@ -6,32 +6,34 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BH closed / R3.18BI payload production active
+# 0. Current override — R3.18BI production closed / R3.18BJ published differential active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18BE
-- `1d717d3e82179edd85b197968f46b8f951a3e828` / `72cf2b907437a1ba62cc9deebd7608f7d0372f81` remains canonical production and stops at the true-path following-header `payload_start`.
+## PRODUCTION — R3.18BI
+- `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537` is canonical production.
+- exactly three BG authority payloads are admitted: Boolean=2 / Float=1, widths 1/1/32.
+- production stops exactly at primitive `payload_end_bit`.
+- the R3.18BH `property_present` bit is not consumed.
 
 ## CLOSED READ-ONLY PAYLOAD EVIDENCE — R3.18BG
-- exact 3/3 primitive payloads: Boolean=2 / Float=1, native/oracle mismatch 0, next-control consumption 0.
-- artifact `10015405999` / `sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a`.
+- exact 3/3 payload authority, Boolean=2 / Float=1, artifact `10015405999` / `sha256:a43a528a49fa6d07ef1c92266c6dc9ed4ef2a3e87e7f69f65f2f40d39f3fa15a`.
 
 ## CLOSED READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BH
-- authority `c728658ac237a45f34b3af002c27f704f5293fb5` / `34132181073/101774645567` SUCCESS; same-head CI `34132181159/101775846915` SUCCESS.
+- exact 3/3 next bits, false=1 / true=2, native/oracle mismatch 0.
 - artifact `10023482583` / `sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d`; manifest `sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa`.
-- exact 3/3; false=1, true=2; native/oracle mismatch 0; witness reselection 0; adjacent consumption 0.
 
-## ACTIVE PRODUCTION — R3.18BI
-- publish only the exact BG payload after a valid BE header.
-- Boolean=2 / Float=1 authority only; stop exactly at BG `payload_end_bit`.
-- the BH `property_present` bit is explicitly forbidden in BI.
+## ACTIVE READ-ONLY PUBLISHED DIFFERENTIAL — R3.18BJ
+- compare published BI only against immutable BG/BH authority.
+- exact successes 3/3; 37 BE-false rows must reject before payload decode; 7 upstream AU-false rows remain outside success.
+- stop at BI `payload_end_bit`; BH control and all later structure remain unread.
+- production mutation and witness reselection are forbidden.
 
 ## CLOSED
-- BH control production during BI;
-- payload/control access on BF-false or upstream-AU-false rows;
-- following stream/header/payload after BI;
+- production consumption of the BH control before BJ Outcome A;
+- following stream/header/payload after BI/BH;
 - second later property-control bit;
+- wider payload tags/contexts;
 - generalized/repeated property cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
