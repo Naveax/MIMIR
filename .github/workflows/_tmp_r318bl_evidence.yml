@@ -51,7 +51,7 @@ jobs:
       - name: Checkout exact evidence head
         uses: actions/checkout@v6
         with:
-          fetch-depth: 2
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Mark evidence pending
@@ -132,10 +132,10 @@ jobs:
             [ "$state" = completed ] && break
             sleep 5
           done
-          eq_ci="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}")"
-          test "$(jq -r .status <<<"$eq_ci")" = completed
-          test "$(jq -r .conclusion <<<"$eq_ci")" = success
-          test "$(jq -r .head_sha <<<"$eq_ci")" = "$GITHUB_SHA"
+          ci="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}")"
+          test "$(jq -r .status <<<"$ci")" = completed
+          test "$(jq -r .conclusion <<<"$ci")" = success
+          test "$(jq -r .head_sha <<<"$ci")" = "$GITHUB_SHA"
           jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?per_page=100")"
           test "$(jq '.total_count' <<<"$jobs")" -eq 1
           job_id="$(jq -r '.jobs[0].id' <<<"$jobs")"
