@@ -52,7 +52,7 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BI — bounded post-BE one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BH — Outcome A / exact 3/3 next-control bits / false=1 true=2 / mismatch 0 / artifact 10023482583
+  R3.18BJ — Outcome A / published BI exact 3/3 / 37 BE-false rejected / 7 AU-false excluded / BH+later consumption 0 / mismatch 0 / artifact 10042480960
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BD — post-BA mixed-continuation following-header exact-context contract / Outcome A / 3 exact eight-field tuples / multiplicity 3 / 37 false terminators outside membership / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27 / AT-AJ-Z-P inheritance false / RL223 retained
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BH — next property-control bit evidence / Outcome A / 3/3 / false=1 true=2 / native-oracle mismatch 0 / artifact 10023482583
 
 CURRENT_PASS:
-  R3.18BJ — published-R3.18BI one-following-payload differential
+  R3.18BK — bounded post-BI next property-control production
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / exact 3 BG payload rows; 37 BE-false + 7 AU-false remain closed; BH control consumption forbidden
+  production / validate exact published BI result, consume exactly one BH-admitted property_present bit on only three authority rows, accept false=1 and true=2, stop one bit later; following structure forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays

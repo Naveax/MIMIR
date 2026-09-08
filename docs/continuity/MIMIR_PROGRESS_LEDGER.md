@@ -1820,3 +1820,33 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18BJ — published-R3.18BI one-following-payload differential`.
+
+## 2026-09-08 — R3.18BJ — Published R3.18BI one-following-payload differential Outcome A
+
+Pass type: read-only published-production differential
+Production mutation: none; canonical production remains R3.18BI `def8e959239106e25d95091fcfcf468fec59e228` / `61ca1c3cdf504f4c1eaef3001cbe81984414c537`
+Evidence authority: `fa75bb265eed9909047076d4a35e55e65dd27838` / `877f783c665215a56f43a71aec0abfe23acb99ce`
+Run/job: `34191528993/101950417302` SUCCESS
+Same-head natural CI: `34191528959/101950417219` SUCCESS / exact run count 1
+Artifact: `10042480960` / 7131 bytes / `sha256:e9ec49453dc69c384042b67ee6e459881999478f4ab5e6fe978ce171299ff24d`
+Manifest: `sha256:ac1ec9da8053f21e54bb4ff4e42d63c46058a281374412a9e31a87e6228012c4` / 13/13 files verified
+
+Admitted result:
+- published BI exact 3/3 against immutable BG authority;
+- Boolean=2 / Float=1; widths 1/1/32;
+- direct primitive exact 3/3; repeatability 3/3; BH poison unchanged 3/3;
+- BE false rejected 37/37; upstream AU false excluded 7/7;
+- native-authority mismatch 0; witness reselection 0;
+- BH control / following stream / following header / following payload / second later control consumption 0/0/0/0/0;
+- full validation PASS; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+Boundaries still closed:
+- following stream/header/payload after the one BH control bit;
+- second later property-control bit;
+- wider tag/context membership;
+- generalized/repeated property cursor;
+- actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Next exact pass:
+- `R3.18BK — bounded post-BI next property-control production`, exactly one bit, both false and true admitted, stop one bit later.
+
