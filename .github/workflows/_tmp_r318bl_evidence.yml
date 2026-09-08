@@ -1,0 +1,228 @@
+name: R3.18BL Published BK Differential Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318bl-published-bk-v1
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318bl-published-bk-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 13ec83ae1c34b1cd41f6636e949039886f19d6fe
+      BASE_TREE: c06643acf68026b6decc34d107959b3b648b57b9
+      PROD_SHA: f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf
+      PROD_TREE: 07656c7a43c1afb97903ef33c1109b764fbf8b7d
+      PROD_PARENT: de8df0b2bb36454c97863d4078ce7829fd4ecb77
+      LIB_BLOB: 0bfff19a7d285e07508b648dbcd5af95a31838f6
+      BK_TEST_BLOB: 1938707e60f7893768747931bf84e3bbac792d1b
+      BL_SPEC_BLOB: 3e0a69c14e21b1da12acf38e7d61435b935d40af
+      BK_BUILDER_RUN: '34211911298'
+      BK_BUILDER_JOB: '102014640422'
+      BK_VALIDATION_PR: '216'
+      BK_PR_CI_RUN: '34212312983'
+      BK_PR_CI_JOB: '102015924320'
+      BK_PUBLISHED_CI_RUN: '34212774993'
+      BK_PUBLISHED_CI_JOB: '102017408925'
+      BH_HEAD: c728658ac237a45f34b3af002c27f704f5293fb5
+      BH_RUN: '34132181073'
+      BH_JOB: '101774645567'
+      BH_SAME_HEAD_CI_RUN: '34132181159'
+      BH_SAME_HEAD_CI_JOB: '101775846915'
+      BH_ARTIFACT: '10023482583'
+      BH_ARTIFACT_NAME: r318bh-next-property-control-bit-evidence-v3
+      BH_ARTIFACT_SIZE: '9833'
+      BH_DIGEST: sha256:26e2bf42abe3d174949bc37b2e3e5e7e02a6caff2fa0490cbc9f3fa30626822d
+      BH_MANIFEST_DIGEST: sha256:9eba3e774500eccf0fa1df06d98588ea945b237683594ebd0a8e89c3bad671aa
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending \
+            -f context='r318bl/evidence' \
+            -f description='R3.18BL published BK differential running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Freeze canonical authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$BASE_SHA" --jq .tree.sha)" = "$BASE_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$BASE_SHA" --jq .parents[0].sha)" = "$PROD_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .tree.sha)" = "$PROD_TREE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$PROD_SHA" --jq .parents[0].sha)" = "$PROD_PARENT"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/src/lib.rs?ref=$BASE_SHA" --jq .sha)" = "$LIB_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/r3_18bk_post_bi_following_control.rs?ref=$BASE_SHA" --jq .sha)" = "$BK_TEST_BLOB"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md?ref=$BASE_SHA" --jq .sha)" = "$BL_SPEC_BLOB"
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BK_BUILDER_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BK_BUILDER_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$BK_VALIDATION_PR" --jq .state)" = closed
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/pulls/$BK_VALIDATION_PR" --jq '.merged_at // ""')" = ""
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BK_PR_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BK_PR_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BK_PR_CI_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BK_PUBLISHED_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BK_PUBLISHED_CI_RUN" --jq .head_branch)" = main
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BK_PUBLISHED_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BK_PUBLISHED_CI_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BH_RUN" --jq .head_sha)" = "$BH_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BH_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BH_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BH_SAME_HEAD_CI_RUN" --jq .head_sha)" = "$BH_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BH_SAME_HEAD_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BH_SAME_HEAD_CI_JOB" --jq .conclusion)" = success
+          bh_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BH_ARTIFACT")"
+          test "$(jq -r .name <<<"$bh_meta")" = "$BH_ARTIFACT_NAME"
+          test "$(jq -r .size_in_bytes <<<"$bh_meta")" = "$BH_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$bh_meta")" = "$BH_DIGEST"
+          test "$(jq -r .expired <<<"$bh_meta")" = false
+          echo R3_18BL_AUTHORITY_FREEZE=PASS
+
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Execute deterministic R3.18BL differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/_tmp_r318bl_run.sh
+
+      - name: Reuse and verify unique same-head natural CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bl-out"
+          workflow_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml" --jq .id)"
+          run_id=''
+          for attempt in $(seq 1 120); do
+            runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_id}/runs?head_sha=${GITHUB_SHA}&event=push&per_page=100")"
+            count="$(jq '[.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push")] | length' <<<"$runs")"
+            if [ "$count" -eq 1 ]; then
+              run_id="$(jq -r '.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push") | .id' <<<"$runs")"
+              break
+            fi
+            if [ "$count" -gt 1 ]; then
+              echo "duplicate same-head CI runs detected: $count" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          test -n "$run_id"
+          for attempt in $(seq 1 240); do
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)"
+            [ "$state" = completed ] && break
+            sleep 5
+          done
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)" = completed
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .conclusion)" = success
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .head_sha)" = "$GITHUB_SHA"
+          jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?per_page=100")"
+          test "$(jq '.total_count' <<<"$jobs")" -eq 1
+          job_id="$(jq -r '.jobs[0].id' <<<"$jobs")"
+          test "$(jq -r '.jobs[0].conclusion' <<<"$jobs")" = success
+          {
+            echo R3_18BL_SAME_HEAD_CI=PASS
+            echo CI_RUN_ID=$run_id
+            echo CI_JOB_ID=$job_id
+            echo CI_RUN_COUNT=1
+            echo CI_HEAD_SHA=$GITHUB_SHA
+          } | tee "$OUT/r3_18bl_same_head_ci_receipt.txt"
+          (
+            cd "$OUT"
+            sha256sum \
+              r3_18bl_source_scope.txt \
+              r3_18bl_frozen_authority.tsv \
+              r3_18bl_comparison.tsv \
+              r3_18bl_summary.json \
+              r3_18bl_negative_controls.txt \
+              r3_18bl_validation.txt \
+              r3_18bl_aggregate.txt \
+              r3_18bl_upstream_receipts.txt \
+              r3_18bl_same_head_ci_receipt.txt \
+              > r3_18bl_artifact_sha256.txt
+          )
+
+      - name: Upload immutable R3.18BL evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bl-published-bk-differential-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: |
+            ${{ runner.temp }}/r318bl-out/r3_18bl_source_scope.txt
+            ${{ runner.temp }}/r318bl-out/r3_18bl_frozen_authority.tsv
+            ${{ runner.temp }}/r318bl-out/r3_18bl_comparison.tsv
+            ${{ runner.temp }}/r318bl-out/r3_18bl_summary.json
+            ${{ runner.temp }}/r318bl-out/r3_18bl_negative_controls.txt
+            ${{ runner.temp }}/r318bl-out/r3_18bl_validation.txt
+            ${{ runner.temp }}/r318bl-out/r3_18bl_aggregate.txt
+            ${{ runner.temp }}/r318bl-out/r3_18bl_upstream_receipts.txt
+            ${{ runner.temp }}/r318bl-out/r3_18bl_same_head_ci_receipt.txt
+            ${{ runner.temp }}/r318bl-out/r3_18bl_artifact_sha256.txt
+
+      - name: Verify immutable receipt and mark success
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bl-out"
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r '.workflow_run.id' <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r '.workflow_run.head_sha' <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r '.expired' <<<"$meta")" = false
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$(jq -r '.digest' <<<"$meta")")" = "$(norm "$ARTIFACT_DIGEST")"
+          grep -Fx 'R3_18BL_OUTCOME=A' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_PUBLISHED_BK_EXACT=3/3' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_PUBLISHED_BI_PREREQUISITE=3/3' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_CONTROL_FALSE=1' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_CONTROL_TRUE=2' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_BE_FALSE_EXCLUDED=37/37' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_AU_FALSE_EXCLUDED=7/7' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_MISMATCH=0' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_WITNESS_RESELECTION=0' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_NEXT_STREAM_HEADER_PAYLOAD_SECOND_CONTROL=0/0/0/0' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_NEGATIVE_CONTROLS=PASS' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_FULL_VALIDATION=PASS' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_PRIVACY_SCAN=PASS' "$OUT/r3_18bl_aggregate.txt"
+          grep -Fx 'R3_18BL_SAME_HEAD_CI=PASS' "$OUT/r3_18bl_same_head_ci_receipt.txt"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f context='r318bl/evidence' \
+            -f description='R3.18BL Outcome A evidence verified' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo R3_18BL_IMMUTABLE_RECEIPT=PASS
