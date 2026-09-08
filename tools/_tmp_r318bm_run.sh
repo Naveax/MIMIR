@@ -117,4 +117,34 @@ chmod +x "$DIR/_tmp_r318bm_inner.sh"
 bash -n "$DIR/_tmp_r318bm_inner.sh"
 python3 -m py_compile "$RUNNER_TEMP/r318bm_boxcars_patch.py"
 echo R3_18BM_BOOTSTRAP=PASS
-exec "$DIR/_tmp_r318bm_inner.sh"
+
+LOG="$RUNNER_TEMP/r318bm_execute.log"
+set +e
+bash "$DIR/_tmp_r318bm_inner.sh" >"$LOG" 2>&1
+rc=$?
+set -e
+cat "$LOG"
+if [ "$rc" -ne 0 ]; then
+  stage=inner_before_boxcars_strip
+  grep -Fq 'R3_18BM_BOXCARS_BENCH_DEVDEPS_STRIPPED=PASS' "$LOG" && stage=inner_after_boxcars_strip
+  kind=unknown
+  grep -Eqi 'requires rustc|rustc .* is not supported' "$LOG" && kind=msrv
+  grep -Eqi 'failed to select a version|failed to resolve|dependency.*conflict' "$LOG" && kind=resolver
+  grep -Fqi 'expected exactly one exact-SHA Boxcars Cargo.toml' "$LOG" && kind=boxcars_checkout_discovery
+  grep -Fqi 'benchmark dev-dependency authority mismatch' "$LOG" && kind=boxcars_devdep_authority
+  grep -Eqi 'native[^[:alnum:]]+oracle|oracle[^[:alnum:]]+mismatch|R3_18BM_NATIVE_ORACLE_MISMATCH=[1-9]' "$LOG" && kind=oracle_mismatch
+  grep -Eqi 'No such file or directory|not found' "$LOG" && kind=missing_file
+  sig="$(sha256sum "$LOG" | awk '{print substr($1,1,12)}')"
+  gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+    -f state=failure -f context='r318bm/diagnostic' \
+    -f description="stage=${stage};kind=${kind};rc=${rc};sig=${sig}" \
+    -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+  printf 'R3_18BM_DIAGNOSTIC stage=%s kind=%s rc=%s sig=%s\n' "$stage" "$kind" "$rc" "$sig"
+  exit "$rc"
+fi
+
+gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+  -f state=success -f context='r318bm/diagnostic' \
+  -f description='inner deterministic evidence completed' \
+  -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+echo R3_18BM_DIAGNOSTIC=PASS
