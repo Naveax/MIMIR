@@ -166,7 +166,7 @@ with open(dst, 'w', encoding='utf-8', newline='\n') as f:
     for s in chosen[:4]:
         f.write(s + '\n')
 PYDIAG
-  if [[ -n "${GITHUB_TOKEN:-}" && -n "${GITHUB_REPOSITORY:-}" && -n "${GITHUB_SHA:-}" ]]; then
+  if [[ -n "${GH_TOKEN:-}" && -n "${GITHUB_REPOSITORY:-}" && -n "${GITHUB_SHA:-}" ]]; then
     i=0
     while IFS= read -r line && (( i < 4 )); do
       [[ -n "$line" ]] || continue
@@ -181,6 +181,10 @@ PYDIAG
   gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
     -f state=failure -f context='r318bm/diagnostic' \
     -f description="stage=${stage};kind=${kind};rc=${rc};sig=${sig}" \
+    -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+  gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+    -f state=failure -f context='r318bm/evidence' \
+    -f description='R3.18BM evidence failed; inspect diagnostic statuses' \
     -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
   printf 'R3_18BM_DIAGNOSTIC stage=%s kind=%s rc=%s sig=%s\n' "$stage" "$kind" "$rc" "$sig"
   exit "$rc"
