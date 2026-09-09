@@ -1,0 +1,167 @@
+name: R3.18BP Continuity Admission Builder v1
+
+on:
+  push:
+    branches:
+      - automation/r318bp-continuity-bq-builder-v1
+    paths:
+      - '.github/workflows/_tmp_r318bp_continuity_bq_builder_v1.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318bp-continuity-bq-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: bd7310eb8ba96f0bd8ebcd59ed3b1806e856ae52
+      BASE_TREE: 17ad3834dc36c5e9e6ddd1f62d5147c16dd93946
+      PROD_SHA: cbb823ce7d3fc871c35a83afc5ee21ae71945821
+      PROD_TREE: 146cb78edfb434fd43e532593efce8e35ee97111
+      BP_HEAD: 319d2b910ac23008bcc5338f04a5f95a0ae5ac5b
+      BP_TREE: 1fc7223296b71256681a885de7e20161114532a9
+      BP_RUN: '34355148349'
+      BP_JOB: '102477806191'
+      BP_CI_RUN: '34355148286'
+      BP_CI_JOB: '102477834627'
+      BP_ARTIFACT: '10105612793'
+      BP_ARTIFACT_NAME: r318bp-published-bo-differential-evidence
+      BP_ARTIFACT_SIZE: '7008'
+      BP_DIGEST: sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240
+      BP_MANIFEST_SHA256: 2e8fbf0b4a9c2d29d4fdb440dba54eabcd860c91bc25c49d486c969052bef174
+      GENERATOR_BLOB: 445703cf2aca75af8265ba6d403f1916e37dbe3d
+      CANDIDATE_BRANCH: continuity/r318bp-admit-open-r318bq-v1
+
+    steps:
+      - name: Checkout exact helper commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze BP and canonical authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { test "$1" = "$2"; }
+          eq "$(git rev-parse HEAD^)" "$BASE_SHA"
+          eq "$(git rev-parse "$BASE_SHA^{tree}")" "$BASE_TREE"
+          eq "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" "$BASE_SHA"
+          eq "$(git rev-parse "$PROD_SHA^{tree}")" "$PROD_TREE"
+          eq "$(git rev-parse "$BP_HEAD^")" "$BASE_SHA"
+          eq "$(git rev-parse "$BP_HEAD^{tree}")" "$BP_TREE"
+          eq "$(git rev-parse HEAD:tools/_tmp_r318bp_admit_bq.py)" "$GENERATOR_BLOB"
+          check_run() {
+            local run="$1" job="$2" sha="$3"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_sha)" "$sha"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .status)" completed
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" success
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .run_id)" "$run"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .conclusion)" success
+          }
+          check_run "$BP_RUN" "$BP_JOB" "$BP_HEAD"
+          check_run "$BP_CI_RUN" "$BP_CI_JOB" "$BP_HEAD"
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BP_ARTIFACT")"
+          eq "$(jq -r .name <<<"$meta")" "$BP_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$meta")" "$BP_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$meta" | tr '[:upper:]' '[:lower:]')" "$(printf '%s' "$BP_DIGEST" | tr '[:upper:]' '[:lower:]')"
+          eq "$(jq -r .expired <<<"$meta")" false
+          eq "$(jq -r .workflow_run.id <<<"$meta")" "$BP_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$meta")" "$BP_HEAD"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate branch already exists" >&2
+            exit 1
+          fi
+          echo R3_18BP_CONTINUITY_AUTHORITY_FREEZE=PASS
+
+      - name: Verify BP artifact authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r318bp-authority"
+          mkdir -p "$out"
+          gh run download "$BP_RUN" --repo "$GITHUB_REPOSITORY" --name "$BP_ARTIFACT_NAME" --dir "$out"
+          test "$(sha256sum "$out/r3_18bp_artifact_sha256.txt" | awk '{print $1}')" = "$BP_MANIFEST_SHA256"
+          (cd "$out" && sha256sum -c r3_18bp_artifact_sha256.txt)
+          grep -Fx 'R3_18BP_OUTCOME=A' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_ROWS=3/3' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_FALSE_TERMINATORS=1/1' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_TRUE_HEADERS=2/2' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_EXACT_BN_CONTEXTS=2/2' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_TAGS=Boolean:1,ActiveActor:1' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_PUBLISHED_BO_MISMATCH=0' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_WITNESS_RESELECTION=0' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$out/r3_18bp_aggregate.txt"
+          grep -Fx 'R3_18BP_PRIVACY_SCAN=PASS' "$out/r3_18bp_privacy.txt"
+          echo R3_18BP_ARTIFACT_AUTHORITY=PASS
+
+      - name: Generate exact nine-file continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          gen="$RUNNER_TEMP/r318bp_admit_bq.py"
+          cp tools/_tmp_r318bp_admit_bq.py "$gen"
+          test "$(git hash-object "$gen")" = "$GENERATOR_BLOB"
+          python3 -m py_compile "$gen"
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          python3 "$gen"
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          printf '%s\n' \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BP_DECISION.md \
+            docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md | sort > "$expected"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$actual"
+          diff -u "$expected" "$actual"
+          test "$(wc -l < "$actual")" -eq 9
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -F '**Outcome:** **A — CLOSED / ADMITTED READ-ONLY EVIDENCE**' docs/continuity/MIMIR_R3_18BP_DECISION.md
+          grep -F '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md
+          grep -F 'R3.18BQ — one following payload evidence' docs/continuity/MIMIR_CURRENT_STATE.md
+          grep -F '175. `docs/continuity/MIMIR_R3_18BP_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '176. `docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          git diff --check
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BP_CONTINUITY_VALIDATION=PASS_9_OF_9
+
+      - name: Commit and push clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BP_DECISION.md \
+            docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git diff --cached --check
+          git commit -m 'Admit R3.18BP and open R3.18BQ'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          candidate="$(git rev-parse HEAD)"
+          tree="$(git rev-parse 'HEAD^{tree}')"
+          git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          echo "R3_18BP_CONTINUITY_CANDIDATE_SHA=$candidate"
+          echo "R3_18BP_CONTINUITY_CANDIDATE_TREE=$tree"
+          echo R3_18BQ_OPENED=PASS
