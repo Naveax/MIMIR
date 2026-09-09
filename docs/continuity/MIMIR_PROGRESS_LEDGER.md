@@ -1938,3 +1938,35 @@ Next exact pass:
 
 Next exact pass:
 - `R3.18BO — bounded post-BK mixed-continuation following-header production`; false terminates without header, true composes exactly one BN-member header and stops at payload_start.
+
+
+---
+
+## 2026-09-09 — R3.18BO — Bounded Post-BK Mixed-Continuation Following-Header Production
+
+Production base SHA: `a07b405ee5bb299b468d6bcfc8e66ba89a69e40d`
+Production commit SHA: `cbb823ce7d3fc871c35a83afc5ee21ae71945821`
+Pass type: bounded production implementation
+Outcome: **A — ADMITTED / PUBLISHED**
+
+What changed:
+- one boundary-specific BO composition plus one focused integration test;
+- exact BK prior is recomputed; false=1 terminates with no header; true=2 compose one exact BN header and stop at `payload_start`.
+
+Authority / validation:
+- builder `34346270277/102448481752` SUCCESS at `225880eb90f36b3c0f03d144726045d089528257`;
+- candidate `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111`; lib/test `89359ead38b18e4a71448217561caed97a41b915` / `5bfd9a81e0de21e70f93e24d8b43a4b540724e9c`;
+- candidate CI `34347518210/102452536398` SUCCESS;
+- published-main CI `34348026122/102454170761` SUCCESS;
+- BM artifact `10097405795` / `sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963`;
+- BN contract `sha256:904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c` / exact_tuple_only / 2 tuples / multiplicity 2;
+- fresh ancestry / force=false / exact readback PASS.
+
+Observed behavior:
+- BK lane 3/3; false=1; true=2; Boolean=1 / ActiveActor=1; ordinal 7 on 2/2; AU exclusions 7 / BE exclusions 37; payload/second-control 0/0; generalized cursor 0.
+
+Boundaries still closed:
+- following payload; second later control; header on false; context outside exact BN; generalized cursor; wider semantic/runtime layers.
+
+Next exact pass:
+- `R3.18BP — published R3.18BO mixed following-header differential` on exactly the immutable three-row authority.

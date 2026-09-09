@@ -97,7 +97,8 @@ R3.18BK bounded post-BI next property-control production / PRODUCTION CLOSED
 R3.18BL published-R3.18BK mixed next-control differential / Outcome A CLOSED
 R3.18BM one following-property-header evidence after published R3.18BK mixed control / Outcome A CLOSED
 R3.18BN exact following-header context contract after R3.18BM / Outcome A CLOSED
-R3.18BO bounded post-BK mixed-continuation following-header production / ACTIVE
+R3.18BO bounded post-BK mixed-continuation following-header production / PRODUCTION CLOSED
+R3.18BP published-R3.18BO mixed following-header differential / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -288,13 +289,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 170. `docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json`
 171. `docs/continuity/MIMIR_R3_18BN_DECISION.md`
 172. `docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md`
-173. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-174. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-175. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-176. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-177. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-178. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-179. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+173. `docs/continuity/MIMIR_R3_18BO_DECISION.md`
+174. `docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md`
+175. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+176. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+177. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+178. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+179. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+180. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+181. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1343,3 +1346,16 @@ Mandatory newest reading order:
 12. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
 13. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
 14. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+
+
+## CURRENT OVERRIDE — 2026-09-09 — R3.18BO CLOSED / R3.18BP ACTIVE
+
+This newest override supersedes older historical `ACTIVE` wording above.
+
+- canonical production is R3.18BO `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111`;
+- clean production scope is `crates/mimir-replay/src/lib.rs` plus `crates/mimir-replay/tests/r3_18bo_post_bk_following_header.rs`;
+- builder `34346270277/102448481752`, candidate CI `34347518210/102452536398` and published-main CI `34348026122/102454170761` are SUCCESS;
+- BO lane is exactly 3 rows: false=1 no-header / true=2 exact BN headers;
+- BN membership remains `sha256:904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c` with Boolean=1 / ActiveActor=1 and ordinal 7 on 2/2;
+- payload / second later control consumption is 0/0;
+- R3.18BP is ACTIVE and read-only; no wider capability is admitted.

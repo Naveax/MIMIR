@@ -6,38 +6,36 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BN exact-context contract closed / R3.18BO bounded production active
+# 0. Current override — R3.18BO production closed / R3.18BP differential active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18BK
-- `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d` remains canonical production.
-- exactly the three immutable BI/BG/BH authority rows are admitted at the BK one-control boundary.
-- false=1 / true=2 are both valid BK results; following stream/header/payload/second-control remain outside production.
+## PRODUCTION — R3.18BO
+- `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111` is canonical production.
+- exactly the three immutable BM/BN/BK authority rows are admitted at the BO following-header boundary.
+- false=1 is a successful no-header terminator with zero post-BK reads.
+- true=2 compose exactly one stateless following header under exact R3.18BN membership and stop at `payload_start`.
+- following payload / second later control remains 0/0.
 
 ## CLOSED READ-ONLY EVIDENCE — R3.18BM Outcome A
 - evidence `689b1a24b57a84c81dc19c9a308fb1423f191c4b` / `34334615939/102410984005` SUCCESS; same-head CI `34334615886/102411487443` SUCCESS.
-- exact three-row split: one false terminator / two true headers; native/Boxcars exact 2/2; unique contexts 2.
-- exact contexts: `(72,6,95,Boolean,868,32,10,false)` and `(110,6,66,ActiveActor,868,32,10,false)`.
-- mismatch/unclassified/reselection 0/0/0; following payload/second-control 0/0.
+- exact split: one false terminator / two true headers; native/Boxcars exact 2/2; unique contexts 2.
 
 ## CLOSED CONTRACT — R3.18BN Outcome A
-- contract sha256 `904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`; membership policy `exact_tuple_only`.
-- exactly 2 complete eight-field tuples, multiplicity 1 each / sum 2.
+- contract sha256 `904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`; exact_tuple_only; 2 complete eight-field tuples; multiplicity sum 2.
 - the one BK-false terminator remains outside header membership.
-- no tag/component/ordinal/Cartesian/versionless/RL223-drop-or-flip/BD-AT-AJ-Z-P inheritance/fabricated-third widening.
 
-## ACTIVE BOUNDED PRODUCTION — R3.18BO
-- validate/recompute one exact published BK mixed-control prior;
-- false BK result is a successful no-header terminator with zero following-header access;
-- true BK result may invoke exactly one existing stateless header primitive;
-- true header must match exact R3.18BN membership;
-- final stop is exactly `payload_start`.
+## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BP
+- compare published R3.18BO against exactly the immutable three-row authority;
+- preserve false=1 no-header and true=2 exact BN headers;
+- require mismatch/reselection 0/0 and repeatability;
+- consume zero following-payload and zero second-later-control bits;
+- production mutation is forbidden.
 
 ## CLOSED
-- any following-header synthesis on the BK-false terminator;
-- any header context outside exact R3.18BN membership;
-- following payload after the one R3.18BO header;
+- header on the false terminator;
+- context outside exact R3.18BN membership;
+- following payload after R3.18BO;
 - second later property-control bit;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.

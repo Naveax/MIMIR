@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf
+  cbb823ce7d3fc871c35a83afc5ee21ae71945821
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18BK — bounded post-BI next property-control production
+  R3.18BO — bounded post-BK mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BM — Outcome A / exact two following headers / 2 exact eight-field contexts / one false terminator / mismatch-unclassified-reselection 0/0/0 / payload-second-control 0/0 / artifact 10097405795
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BM — one following-property-header evidence / Outcome A / exact 2/2 native-Boxcars / contexts=2 / Boolean=1 ActiveActor=1 / payload=0 / second-control=0 / artifact 10097405795
 
 CURRENT_PASS:
-  R3.18BO — bounded post-BK mixed-continuation following-header production
+  R3.18BP — published R3.18BO mixed following-header differential
 
 CURRENT_PASS_TYPE:
-  bounded production implementation / validate one exact published BK mixed control; false terminates with no header, true composes exactly one BN-admitted header and stops at payload_start
+  read-only published-production differential / exact three-row BM/BN/BK authority / false=1 no-header / true=2 exact BN headers / payload-second-control 0/0
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4257,3 +4257,16 @@ R3_18BM_ACTIVE:
 - false path: successful terminator, zero following-header access
 - true path: exactly one stateless header primitive call, exact R3.18BN membership, stop at `payload_start`
 - no following payload, second later control, generalized property cursor, or semantic/runtime widening
+
+
+# CURRENT OVERRIDE — 2026-09-09 — R3.18BO CLOSED / R3.18BP ACTIVE
+
+This newest current override supersedes stale R3.18BO ACTIVE wording in historical/checklist sections above.
+
+- canonical production: `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111`;
+- BO exact lane: 3 rows / false=1 no-header / true=2 exact BN headers;
+- exact BN contract: `sha256:904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`;
+- candidate CI `34347518210/102452536398` and published-main CI `34348026122/102454170761` SUCCESS;
+- following payload / second later control: 0/0;
+- active pass: R3.18BP read-only published-production differential;
+- production mutation, payload access, later-control access and generalized cursor remain forbidden.
