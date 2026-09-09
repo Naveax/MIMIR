@@ -1,31 +1,176 @@
-name: CI
+name: R3.18BO Production Builder
 
 on:
   push:
-  pull_request:
+    branches:
+      - automation/r318bo-production-builder-v1
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: r318bo-production-builder-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
+  actions: read
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: a07b405ee5bb299b468d6bcfc8e66ba89a69e40d
+      BASE_TREE: 9548fcc5cf3d2f8d054b049aee5110edca5342a9
+      PROD_SHA: f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf
+      PROD_TREE: 07656c7a43c1afb97903ef33c1109b764fbf8b7d
+      LIB_BLOB: 0bfff19a7d285e07508b648dbcd5af95a31838f6
+      BK_TEST_BLOB: 1938707e60f7893768747931bf84e3bbac792d1b
+      BN_CONTRACT_BLOB: c5f5a0cd0df3969646fecd8e137a2770c2daae71
+      BN_CONTRACT_SHA256: 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c
+      BO_SPEC_BLOB: 3be058d574cf55f3dfaf9e369c37bf3fa42afaa4
+      GENERATOR_BLOB: 81f27312aa6e66c70b59931bb7a19d17756d054a
+      CANDIDATE_BRANCH: production/r318bo-bounded-following-header-v1
 
     steps:
-      - name: Checkout
+      - name: Checkout exact helper head
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze canonical authority and duplicate guard
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(gh api "repos/$repo/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(git rev-parse "$BASE_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$BASE_SHA:crates/mimir-replay/tests/r3_18bk_post_bi_following_control.rs")" = "$BK_TEST_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json")" = "$BN_CONTRACT_BLOB"
+          test "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md")" = "$BO_SPEC_BLOB"
+          actual_contract="$(git show "$BASE_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json" | sha256sum | awk '{print $1}')"
+          test "$actual_contract" = "$BN_CONTRACT_SHA256"
+          if git ls-remote --exit-code --heads "https://github.com/$repo.git" "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo "candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+          echo R3_18BO_AUTHORITY_FREEZE=PASS
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Preserve generator and reset to canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:tools/_tmp_r318bo_production_builder.py)" = "$GENERATOR_BLOB"
+          cp tools/_tmp_r318bo_production_builder.py "$RUNNER_TEMP/r318bo_production_builder.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p = Path(os.environ['RUNNER_TEMP']) / 'r318bo_production_builder.py'
+          compile(p.read_text(encoding='utf-8'), str(p), 'exec')
+          print('R3_18BO_GENERATOR_SYNTAX=PASS')
+          PY
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          git switch -C "$CANDIDATE_BRANCH" "$BASE_SHA"
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$BASE_TREE"
+
+      - name: Generate bounded BO production candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$RUNNER_TEMP/r318bo_production_builder.py"
+
+      - name: Validate exact two-file scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          cat > "$expected" <<'EOF'
+          crates/mimir-replay/src/lib.rs
+          crates/mimir-replay/tests/r3_18bo_post_bk_following_header.rs
+          EOF
+          sed -i 's/^          //' "$expected"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$actual"
+          sort -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+          test "$(wc -l < "$actual")" -eq 2
+          git diff --check
+          test "$(git diff -- crates/mimir-replay/src/lib.rs | grep -c 'R3.18BO PRE-ADMISSION BEGIN')" -eq 1
+          test "$(grep -c 'decode_replay_network_existing_actor_property_header_suffix_v1(' crates/mimir-replay/src/lib.rs)" -ge 2
+          echo R3_18BO_SCOPE=PASS
+
+      - name: Install pinned toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt,clippy
+
+      - name: Format and run focused BO contract tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 fmt --all -- --check || {
+            cargo +1.85.0 fmt --all
+            cargo +1.85.0 fmt --all -- --check
+          }
+          cargo +1.85.0 test --locked -p mimir-replay r3_18bo_exact_contract_tests -- --nocapture
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18bo_post_bk_following_header -- --nocapture
+          echo R3_18BO_FOCUSED=PASS
+
+      - name: Run direct prerequisite regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18bk_post_bi_following_control -- --nocapture
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18bi_post_be_following_payload -- --nocapture
+          cargo +1.85.0 test --locked -p mimir-replay --test r3_18be_post_ba_following_header -- --nocapture
+          echo R3_18BO_REGRESSIONS=PASS
+
+      - name: Run workspace and repository validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 check --locked --workspace --all-targets --all-features
+          cargo +1.85.0 clippy --locked --workspace --all-targets --all-features -- -D warnings
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          git diff --check
+          echo R3_18BO_FULL_VALIDATION=PASS
+
+      - name: Recheck source scope and commit clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(git status --porcelain | awk '{print $2}' | sort -u | wc -l)" -eq 2
+          git add -- crates/mimir-replay/src/lib.rs crates/mimir-replay/tests/r3_18bo_post_bk_following_header.rs
+          test "$(git diff --cached --name-only | wc -l)" -eq 2
+          git diff --cached --check
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git commit -m 'Implement R3.18BO bounded post-BK following header'
+          candidate_sha="$(git rev-parse HEAD)"
+          candidate_tree="$(git rev-parse 'HEAD^{tree}')"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git diff --name-only "$BASE_SHA"..HEAD | wc -l)" -eq 2
+          printf 'R3_18BO_CANDIDATE_SHA=%s\n' "$candidate_sha"
+          printf 'R3_18BO_CANDIDATE_TREE=%s\n' "$candidate_tree"
+          printf 'R3_18BO_LIB_BLOB=%s\n' "$(git rev-parse HEAD:crates/mimir-replay/src/lib.rs)"
+          printf 'R3_18BO_TEST_BLOB=%s\n' "$(git rev-parse HEAD:crates/mimir-replay/tests/r3_18bo_post_bk_following_header.rs)"
+
+      - name: Push clean candidate exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          if git ls-remote --exit-code --heads "https://github.com/$GITHUB_REPOSITORY.git" "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            echo 'candidate appeared concurrently; refusing push' >&2
+            exit 1
+          fi
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          remote_sha="$(gh api "repos/$GITHUB_REPOSITORY/branches/$CANDIDATE_BRANCH" --jq .commit.sha)"
+          test "$remote_sha" = "$(git rev-parse HEAD)"
+          echo R3_18BO_CANDIDATE_PUSH=PASS
