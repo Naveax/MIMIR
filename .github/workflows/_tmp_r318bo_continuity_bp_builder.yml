@@ -1,0 +1,170 @@
+name: R3.18BO Continuity Admission and R3.18BP Open Builder
+
+on:
+  push:
+    branches:
+      - automation/r318bo-continuity-bp-builder-v1
+
+concurrency:
+  group: r318bo-continuity-bp-builder-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PROD_SHA: cbb823ce7d3fc871c35a83afc5ee21ae71945821
+      PROD_TREE: 146cb78edfb434fd43e532593efce8e35ee97111
+      GENERATOR_BLOB: 1b3d3c5e83936e77076f95696ad5421e4071167b
+      LIB_BLOB: 89359ead38b18e4a71448217561caed97a41b915
+      TEST_BLOB: 5bfd9a81e0de21e70f93e24d8b43a4b540724e9c
+      BN_CONTRACT_BLOB: c5f5a0cd0df3969646fecd8e137a2770c2daae71
+      BN_CONTRACT_SHA256: 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c
+      CANDIDATE_CI_RUN: '34347518210'
+      CANDIDATE_CI_JOB: '102452536398'
+      PUBLISHED_CI_RUN: '34348026122'
+      PUBLISHED_CI_JOB: '102454170761'
+      CLEAN_BRANCH: continuity/r318bo-admit-open-r318bp-v1
+
+    steps:
+      - name: Checkout exact helper head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze BO authority and validation receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          test "$(git rev-parse HEAD^)" = "$PROD_SHA"
+          test "$(git rev-parse "$PROD_SHA^{tree}")" = "$PROD_TREE"
+          test "$(gh api "repos/$repo/branches/main" --jq .commit.sha)" = "$PROD_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_r318bo_admit_bp.py)" = "$GENERATOR_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" = "$LIB_BLOB"
+          test "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18bo_post_bk_following_header.rs")" = "$TEST_BLOB"
+          test "$(git rev-parse "$PROD_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json")" = "$BN_CONTRACT_BLOB"
+          actual_contract="$(git show "$PROD_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json" | sha256sum | awk '{print $1}')"
+          test "$actual_contract" = "$BN_CONTRACT_SHA256"
+
+          test "$(gh api "repos/$repo/actions/runs/$CANDIDATE_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
+          test "$(gh api "repos/$repo/actions/runs/$CANDIDATE_CI_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$repo/actions/runs/$CANDIDATE_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/jobs/$CANDIDATE_CI_JOB" --jq .conclusion)" = success
+
+          test "$(gh api "repos/$repo/actions/runs/$PUBLISHED_CI_RUN" --jq .head_sha)" = "$PROD_SHA"
+          test "$(gh api "repos/$repo/actions/runs/$PUBLISHED_CI_RUN" --jq .head_branch)" = main
+          test "$(gh api "repos/$repo/actions/runs/$PUBLISHED_CI_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$repo/actions/runs/$PUBLISHED_CI_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/jobs/$PUBLISHED_CI_JOB" --jq .conclusion)" = success
+
+          if git ls-remote --exit-code --heads "https://github.com/$repo.git" "refs/heads/$CLEAN_BRANCH" >/dev/null 2>&1; then
+            echo 'clean admission candidate already exists; refusing duplicate' >&2
+            exit 1
+          fi
+          echo R3_18BO_ADMISSION_AUTHORITY_FREEZE=PASS
+
+      - name: Preserve generator and reset to exact production
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318bo_admit_bp.py "$RUNNER_TEMP/r318bo_admit_bp.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p = Path(os.environ['RUNNER_TEMP']) / 'r318bo_admit_bp.py'
+          compile(p.read_text(encoding='utf-8'), str(p), 'exec')
+          print('R3_18BO_ADMISSION_GENERATOR_SYNTAX=PASS')
+          PY
+          git reset --hard "$PROD_SHA"
+          git clean -fdx
+          git switch -C "$CLEAN_BRANCH" "$PROD_SHA"
+          test "$(git rev-parse HEAD)" = "$PROD_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$PROD_TREE"
+
+      - name: Generate BO admission and BP spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$RUNNER_TEMP/r318bo_admit_bp.py"
+
+      - name: Validate exact nine-doc scope and archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BO_DECISION.md
+          docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$expected"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$actual"
+          sort -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+          test "$(wc -l < "$actual")" -eq 9
+          git diff --check
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          grep -F '**Outcome:** **A — ADMITTED / PUBLISHED**' docs/continuity/MIMIR_R3_18BO_DECISION.md
+          grep -F '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md
+          grep -F "$PROD_SHA" docs/continuity/MIMIR_CURRENT_STATE.md
+          grep -F "$PROD_SHA" docs/continuity/MIMIR_R3_18BO_DECISION.md
+          grep -F 'CURRENT_PASS:' MIMIR_CONTINUE_HERE.md
+          grep -F 'R3.18BP — published R3.18BO mixed following-header differential' MIMIR_CONTINUE_HERE.md
+          grep -F '173. `docs/continuity/MIMIR_R3_18BO_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '174. `docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BO_ADMISSION_SCOPE=PASS_9_OF_9
+          echo R3_18BP_OPENED=PASS
+
+      - name: Commit clean continuity candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$PROD_SHA"
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BO_DECISION.md \
+            docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 9
+          git diff --cached --check
+          git commit -m 'Admit R3.18BO and open R3.18BP'
+          test "$(git rev-parse HEAD^)" = "$PROD_SHA"
+          test "$(git diff --name-only "$PROD_SHA"..HEAD | wc -l)" -eq 9
+          echo "R3_18BO_ADMISSION_CANDIDATE_SHA=$(git rev-parse HEAD)"
+          echo "R3_18BO_ADMISSION_CANDIDATE_TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: Push clean continuity candidate exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$PROD_SHA"
+          if git ls-remote --exit-code --heads "https://github.com/$GITHUB_REPOSITORY.git" "refs/heads/$CLEAN_BRANCH" >/dev/null 2>&1; then
+            echo 'clean admission candidate appeared concurrently; refusing push' >&2
+            exit 1
+          fi
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$CLEAN_BRANCH"
+          remote_sha="$(gh api "repos/$GITHUB_REPOSITORY/branches/$CLEAN_BRANCH" --jq .commit.sha)"
+          test "$remote_sha" = "$(git rev-parse HEAD)"
+          echo R3_18BO_ADMISSION_CANDIDATE_PUSH=PASS
