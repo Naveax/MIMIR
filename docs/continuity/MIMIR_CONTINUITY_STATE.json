@@ -7,10 +7,10 @@
   "last_production_milestone": "R3.18BK",
   "last_production_milestone_name": "bounded post-BI next property-control production",
   "last_completed_read_only_audit": "R3.18BM",
-  "current_pass": "R3.18BN",
-  "current_pass_kind": "contract-only exact following-header context admission from R3.18BM",
-  "current_pass_goal": "Freeze exactly the two R3.18BM evidence-supported complete eight-field header contexts, preserve the one BK-false terminator outside membership, and admit no production composition or payload decode.",
-  "current_pass_stop_boundary": "No production following-header composition, no following payload, no second later control, no generalized cursor, and no membership outside the exact two R3.18BM-supported tuples.",
+  "current_pass": "R3.18BO",
+  "current_pass_kind": "bounded production composition of exactly one R3.18BN-admitted following header after a validated published R3.18BK mixed control",
+  "current_pass_goal": "Validate/recompute the exact published BK mixed control; preserve the false row as a no-header terminator and compose exactly one BN-admitted header on only the two true rows, stopping at payload_start.",
+  "current_pass_stop_boundary": "No following payload, no second later control, no header on the false terminator, no context outside exact R3.18BN membership, and no generalized cursor.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -371,7 +371,7 @@
   ],
   "last_completed_evidence_pass": "R3.18BM",
   "last_completed_evidence_outcome": "A — three-row split exact; false=1 true=2; one following header exact 2/2; two exact eight-field contexts; mismatch/unclassified/reselection 0/0/0; payload/second-control 0/0; artifact 10097405795.",
-  "last_completed_contract_pass": "R3.18BD",
+  "last_completed_contract_pass": "R3.18BN",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -878,7 +878,7 @@
     "receipt_manifest_sha256": "400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc",
     "next_pass": "R3.17F"
   },
-  "last_completed_contract_outcome": "A — exact_tuple_only 16 complete eight-field contexts; multiplicity sum 40; 7 false terminators outside membership; contract sha256:3c412a5fdf5ed647fbe2b2e4db1f3adf4e4f578ae07c58a302c261f6abafd0a5.",
+  "last_completed_contract_outcome": "A — exact_tuple_only / 2 complete eight-field contexts / multiplicity 2 / one false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c.",
   "r3_17f": {
     "outcome": "A — admitted / contract complete",
     "production_source_changed": false,
@@ -3222,5 +3222,43 @@
     ],
     "privacy": "PASS",
     "validation": "PASS"
+  },
+  "r3_18bn": {
+    "outcome": "A",
+    "canonical_base_sha": "0e36965d2f469f8d2411535b359ac22f9e480fd6",
+    "canonical_base_tree": "fc87430df448aff995a4a59c6c87b2cb196da52e",
+    "production_sha_unchanged": "f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf",
+    "contract_path": "docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json",
+    "contract_sha256": "904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c",
+    "membership_policy": "exact_tuple_only",
+    "frozen_lane_rows": 3,
+    "false_terminators": 1,
+    "observed_header_rows": 2,
+    "unique_exact_contexts": 2,
+    "multiplicity_sum": 2,
+    "observed_tags": {
+      "Boolean": 1,
+      "ActiveActor": 1
+    },
+    "observed_property_ordinal": 7,
+    "validation_run_job": [
+      34340205828,
+      102428959672
+    ],
+    "knowledge_archive_run_job": [
+      34340205835,
+      102428960213
+    ],
+    "production_cargo_fixture_corpus_support_mutation": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "following_payload_second_control_bits": [
+      0,
+      0
+    ]
   }
 }

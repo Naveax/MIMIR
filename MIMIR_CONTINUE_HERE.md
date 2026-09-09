@@ -55,16 +55,16 @@ LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BM — Outcome A / exact two following headers / 2 exact eight-field contexts / one false terminator / mismatch-unclassified-reselection 0/0/0 / payload-second-control 0/0 / artifact 10097405795
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.18BD — post-BA mixed-continuation following-header exact-context contract / Outcome A / 3 exact eight-field tuples / multiplicity 3 / 37 false terminators outside membership / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27 / AT-AJ-Z-P inheritance false / RL223 retained
+  R3.18BN — exact following-header context contract / Outcome A / 2 exact eight-field tuples / multiplicity 2 / 1 false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c / older-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BM — one following-property-header evidence / Outcome A / exact 2/2 native-Boxcars / contexts=2 / Boolean=1 ActiveActor=1 / payload=0 / second-control=0 / artifact 10097405795
 
 CURRENT_PASS:
-  R3.18BN — exact following-header context contract after R3.18BM
+  R3.18BO — bounded post-BK mixed-continuation following-header production
 
 CURRENT_PASS_TYPE:
-  contract-only admission / exact two BM-supported complete eight-field contexts; one false terminator outside membership; production mutation and payload/second-control access forbidden
+  bounded production implementation / validate one exact published BK mixed control; false terminates with no header, true composes exactly one BN-admitted header and stops at payload_start
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4242,3 +4242,18 @@ R3_18BM_ACTIVE:
 - exact tuple equality only; reject tag/component/Cartesian/versionless/RL223-drop-or-flip/older-contract/fabricated membership
 - production remains R3.18BK; following payload and second later control remain closed
 - mandatory newest reading: `docs/continuity/MIMIR_R3_18BM_DECISION.md` then `docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md`
+
+
+### R3.18BN exact following-header context contract: OUTCOME A / CLOSED
+- contract `docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json` / sha256 `904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`
+- exact_tuple_only / 2 complete eight-field contexts / multiplicity 2 / Boolean=1 ActiveActor=1 / property ordinal 7 on 2/2
+- full lane 3 rows; one BK-false terminator outside header membership; exact true headers 2
+- validation `34340205828/102428959672` SUCCESS; Knowledge Archive `34340205835/102428960213` SUCCESS
+- anti-widening: tag/component/ordinal/Cartesian/versionless/RL223-drop-or-flip/BD-AT-AJ-Z-P inheritance/fabricated-third all rejected
+- production unchanged at R3.18BK; payload/second-control remain 0/0
+
+### R3.18BO bounded post-BK mixed-continuation following-header production: ACTIVE
+- validate/recompute one exact published BK mixed control
+- false path: successful terminator, zero following-header access
+- true path: exactly one stateless header primitive call, exact R3.18BN membership, stop at `payload_start`
+- no following payload, second later control, generalized property cursor, or semantic/runtime widening

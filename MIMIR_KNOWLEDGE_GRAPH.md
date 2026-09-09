@@ -96,7 +96,8 @@ R3.18BJ published-R3.18BI one-following-payload differential / Outcome A CLOSED
 R3.18BK bounded post-BI next property-control production / PRODUCTION CLOSED
 R3.18BL published-R3.18BK mixed next-control differential / Outcome A CLOSED
 R3.18BM one following-property-header evidence after published R3.18BK mixed control / Outcome A CLOSED
-R3.18BN exact following-header context contract after R3.18BM / ACTIVE
+R3.18BN exact following-header context contract after R3.18BM / Outcome A CLOSED
+R3.18BO bounded post-BK mixed-continuation following-header production / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -282,13 +283,18 @@ scripts/verify_mimir_knowledge_archive.ps1
 165. `docs/continuity/MIMIR_R3_18BL_EXECUTION_SPEC.md`
 166. `docs/continuity/MIMIR_R3_18BL_DECISION.md`
 167. `docs/continuity/MIMIR_R3_18BM_EXECUTION_SPEC.md`
-168. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-169. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-170. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-171. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-172. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-173. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-174. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+168. `docs/continuity/MIMIR_R3_18BM_DECISION.md`
+169. `docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md`
+170. `docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json`
+171. `docs/continuity/MIMIR_R3_18BN_DECISION.md`
+172. `docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md`
+173. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+174. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+175. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+176. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+177. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+178. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+179. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1307,3 +1313,33 @@ Mandatory newest reading order:
 9. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
 10. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
 11. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+
+
+## CURRENT OVERRIDE — 2026-09-09 — R3.18BN CLOSED / R3.18BO ACTIVE
+
+This newest override supersedes older historical `ACTIVE` wording above.
+
+- canonical production remains R3.18BK `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d`;
+- R3.18BN Outcome A is closed under contract `sha256:904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`;
+- exact membership is two complete eight-field tuples, multiplicity 2, with the one BK-false row outside membership;
+- exact tuples are `(72,6,95,Boolean,868,32,10,false)` x1 and `(110,6,66,ActiveActor,868,32,10,false)` x1;
+- validation `34340205828/102428959672` and Knowledge Archive `34340205835/102428960213` are SUCCESS;
+- no tag/component/ordinal/Cartesian/versionless/RL223-drop-or-flip/older-contract/fabricated membership is admitted;
+- production/Cargo/fixture/corpus/support mutation remains `0/0/0/0/0`;
+- R3.18BO is ACTIVE as the separate bounded production pass; false terminates without header, true may compose exactly one BN-member header and stop at `payload_start`.
+
+Mandatory newest reading order:
+1. `MIMIR_CONTINUE_HERE.md`
+2. `docs/continuity/MIMIR_R3_18BM_DECISION.md`
+3. `docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md`
+4. `docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json`
+5. `docs/continuity/MIMIR_R3_18BN_DECISION.md`
+6. `docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md`
+7. `docs/continuity/MIMIR_CONTINUITY_STATE.json`
+8. `docs/continuity/MIMIR_CURRENT_STATE.md`
+9. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+10. `docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md`
+11. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+12. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+13. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+14. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`

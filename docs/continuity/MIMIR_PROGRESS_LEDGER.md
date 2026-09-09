@@ -1924,3 +1924,17 @@ Next exact pass:
 - Privacy, fmt, check, clippy -D warnings, workspace tests, repository verifier, diff-check and clean-worktree gates PASS.
 - Outcome A admitted read-only evidence only. Production following-header composition remains closed.
 - Next pass opened: R3.18BN exact complete eight-field following-header context contract, contract-only.
+
+
+## 2026-09-09 — R3.18BN — Exact Following-Header Context Contract Outcome A
+
+- canonical base `0e36965d2f469f8d2411535b359ac22f9e480fd6` / `fc87430df448aff995a4a59c6c87b2cb196da52e`; production unchanged at R3.18BK `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d`.
+- candidate validation `34340205828/102428959672` SUCCESS; Knowledge Archive `34340205835/102428960213` SUCCESS.
+- contract `docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json` / sha256 `904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`.
+- exact_tuple_only; 2 complete eight-field contexts; multiplicity 1+1=2; Boolean=1 / ActiveActor=1; property ordinal 7 on 2/2.
+- one BK-false terminator remains outside membership.
+- tag/component/ordinal/Cartesian/versionless/RL223-drop-or-flip/BD-AT-AJ-Z-P inheritance/fabricated-third negatives PASS.
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; following payload/second-control 0/0.
+
+Next exact pass:
+- `R3.18BO — bounded post-BK mixed-continuation following-header production`; false terminates without header, true composes exactly one BN-member header and stops at payload_start.

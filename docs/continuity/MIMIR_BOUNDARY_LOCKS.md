@@ -6,7 +6,7 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BM evidence closed / R3.18BN exact-context contract active
+# 0. Current override — R3.18BN exact-context contract closed / R3.18BO bounded production active
 
 This current override supersedes older status wording later in this historical lock file.
 
@@ -17,22 +17,28 @@ This current override supersedes older status wording later in this historical l
 
 ## CLOSED READ-ONLY EVIDENCE — R3.18BM Outcome A
 - evidence `689b1a24b57a84c81dc19c9a308fb1423f191c4b` / `34334615939/102410984005` SUCCESS; same-head CI `34334615886/102411487443` SUCCESS.
-- artifact `10097405795` / `sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963`; manifest `sha256:167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2` 13/13 PASS.
 - exact three-row split: one false terminator / two true headers; native/Boxcars exact 2/2; unique contexts 2.
 - exact contexts: `(72,6,95,Boolean,868,32,10,false)` and `(110,6,66,ActiveActor,868,32,10,false)`.
-- mismatch/unclassified/reselection 0/0/0; following payload/second-control 0/0; mutation 0/0/0/0/0; privacy PASS.
+- mismatch/unclassified/reselection 0/0/0; following payload/second-control 0/0.
 
-## ACTIVE CONTRACT-ONLY — R3.18BN
-- admit only exact complete eight-field tuples observed by R3.18BM;
-- the one BK-false row remains a terminator and cannot acquire header membership;
-- exact tuple equality only; multiplicity is evidence provenance, not a runtime-frequency promise;
-- reject tag-only, component-only, Cartesian, versionless, RL223-drop/flip, older-contract inheritance, and fabricated third tuples.
+## CLOSED CONTRACT — R3.18BN Outcome A
+- contract sha256 `904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`; membership policy `exact_tuple_only`.
+- exactly 2 complete eight-field tuples, multiplicity 1 each / sum 2.
+- the one BK-false terminator remains outside header membership.
+- no tag/component/ordinal/Cartesian/versionless/RL223-drop-or-flip/BD-AT-AJ-Z-P inheritance/fabricated-third widening.
+
+## ACTIVE BOUNDED PRODUCTION — R3.18BO
+- validate/recompute one exact published BK mixed-control prior;
+- false BK result is a successful no-header terminator with zero following-header access;
+- true BK result may invoke exactly one existing stateless header primitive;
+- true header must match exact R3.18BN membership;
+- final stop is exactly `payload_start`.
 
 ## CLOSED
-- production following-header composition before R3.18BN contract closure;
-- following payload and second later control;
-- header membership/synthesis for the BK-false terminator;
-- contexts outside the exact R3.18BN evidence-supported set;
+- any following-header synthesis on the BK-false terminator;
+- any header context outside exact R3.18BN membership;
+- following payload after the one R3.18BO header;
+- second later property-control bit;
 - repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
