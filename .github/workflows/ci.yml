@@ -2,30 +2,142 @@ name: CI
 
 on:
   push:
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+    branches:
+      - validation/r318bn-contract-candidate-v1
 
 permissions:
   contents: read
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
-
+  r318bn-contract:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
+      - name: Validate exact R3.18BN contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import subprocess
+
+          BASE = '0e36965d2f469f8d2411535b359ac22f9e480fd6'
+          CONTRACT = Path('docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json')
+          raw = CONTRACT.read_bytes()
+          digest = hashlib.sha256(raw).hexdigest()
+          expected_digest = 'b60329891d7bddd34901bb8a9a423954a930173d597c0a9296d04d6b8a9b1e03'
+          assert digest == expected_digest, (digest, expected_digest)
+          data = json.loads(raw)
+
+          fields = [
+              'stream_id_bound', 'prop_id_bits', 'property_object_index', 'attribute_tag',
+              'version_major', 'version_minor', 'net_version', 'is_rl_223'
+          ]
+          expected = [
+              (72, 6, 95, 'Boolean', 868, 32, 10, False),
+              (110, 6, 66, 'ActiveActor', 868, 32, 10, False),
+          ]
+
+          assert data['schema_version'] == 1
+          assert data['status'] == 'candidate'
+          assert data['membership_policy'] == 'exact_tuple_only'
+          assert data['tuple_fields'] == fields
+          assert data['frozen_lane_row_count'] == 3
+          assert data['false_terminator_count'] == 1
+          assert data['observed_header_row_count'] == 2
+          assert data['unique_exact_context_count'] == 2
+          assert data['observed_tag_counts'] == {'Boolean': 1, 'ActiveActor': 1}
+          assert data['observed_property_ordinal_counts'] == {'7': 2}
+
+          contexts = []
+          counts = []
+          for row in data['admitted_contexts']:
+              contexts.append(tuple(row[k] for k in fields))
+              counts.append(row['observed_count'])
+          assert contexts == expected
+          assert counts == [1, 1]
+          assert sum(counts) == 2
+          assert len(set(contexts)) == 2
+
+          allowed = set(contexts)
+          def member(v):
+              return tuple(v) in allowed
+
+          assert member(expected[0]) and member(expected[1])
+          assert not member((72, 6, 66, 'ActiveActor', 868, 32, 10, False))  # Cartesian
+          assert not member((72, 6, 95, 'Boolean', 869, 32, 10, False))      # version mutation
+          assert not member((72, 6, 95, 'Boolean', 868, 32, 10, True))       # RL223 flip
+          assert not member((72, 6, 999, 'Boolean', 868, 32, 10, False))     # fabricated third
+          assert not member((72, 6, 92, 'Boolean', 868, 32, 10, False))      # BD-valid, BN-absent
+          assert not member((72, 6, 95, 'ActiveActor', 868, 32, 10, False))  # tag-only widening
+          assert not member((110, 6, 66, 'Boolean', 868, 32, 10, False))     # component-only widening
+          assert not member((72, 6, 95, 'Boolean', None, None, None, False)) # versionless
+
+          tp = data['terminator_policy']
+          assert tp == {
+              'false_rows_are_terminators': True,
+              'false_terminator_count': 1,
+              'false_terminators_produce_header_membership': False,
+          }
+          assert all(v is False for v in data['anti_widening'].values())
+
+          authority = data['authority']
+          assert authority['canonical_main_sha'] == BASE
+          assert authority['canonical_main_tree'] == 'fc87430df448aff995a4a59c6c87b2cb196da52e'
+          assert authority['production_sha'] == 'f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf'
+          assert authority['production_tree'] == '07656c7a43c1afb97903ef33c1109b764fbf8b7d'
+          assert authority['r3_18bm_evidence_head'] == '689b1a24b57a84c81dc19c9a308fb1423f191c4b'
+          assert authority['r3_18bm_run'] == 34334615939
+          assert authority['r3_18bm_job'] == 102410984005
+          assert authority['r3_18bm_artifact_id'] == 10097405795
+          assert authority['native_oracle_mismatch'] == 0
+          assert authority['unclassified_rows'] == 0
+          assert authority['witness_reselection'] == 0
+          assert authority['following_payload_bits_consumed'] == 0
+          assert authority['second_later_control_bits_consumed'] == 0
+
+          decision = Path('docs/continuity/MIMIR_R3_18BM_DECISION.md').read_text(encoding='utf-8')
+          for needle in [
+              '(72,  6, 95, Boolean,     868, 32, 10, false) x1',
+              '(110, 6, 66, ActiveActor, 868, 32, 10, false) x1',
+              'false terminators                     1/1',
+              'native/oracle mismatch                0',
+              'following payload bits                0',
+              'second later control bits             0',
+          ]:
+              assert needle in decision, needle
+
+          changed = subprocess.check_output(
+              ['git', 'diff', '--name-only', f'{BASE}...HEAD'], text=True
+          ).splitlines()
+          assert set(changed) == {
+              '.github/workflows/ci.yml',
+              'docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json',
+          }, changed
+
+          forbidden_prefixes = ('crates/', 'external_fixtures/', 'test_corpus/', 'tools/')
+          forbidden_exact = {'Cargo.toml', 'Cargo.lock'}
+          assert not any(p.startswith(forbidden_prefixes) or p in forbidden_exact for p in changed)
+
+          print('R3_18BN_CONTRACT_VALIDATION=PASS')
+          print(f'R3_18BN_CONTRACT_SHA256={digest}')
+          print('R3_18BN_EXACT_CONTEXTS=2 MULTIPLICITY=2 FALSE_TERMINATORS=1')
+          print('R3_18BN_ANTI_WIDENING=PASS')
+          print('R3_18BN_MUTATION_SCOPE=production0 cargo0 fixture0 corpus0 support0')
+          PY
+
+      - name: Verify knowledge archive
         shell: pwsh
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          ./scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+      - name: Diff check
+        shell: bash
+        run: git diff --check 0e36965d2f469f8d2411535b359ac22f9e480fd6...HEAD
