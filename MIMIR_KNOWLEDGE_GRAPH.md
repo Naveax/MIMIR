@@ -95,7 +95,8 @@ R3.18BI bounded post-BE one-following-payload production / PRODUCTION CLOSED
 R3.18BJ published-R3.18BI one-following-payload differential / Outcome A CLOSED
 R3.18BK bounded post-BI next property-control production / PRODUCTION CLOSED
 R3.18BL published-R3.18BK mixed next-control differential / Outcome A CLOSED
-R3.18BM one following-property-header evidence after published R3.18BK mixed control / ACTIVE
+R3.18BM one following-property-header evidence after published R3.18BK mixed control / Outcome A CLOSED
+R3.18BN exact following-header context contract after R3.18BM / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -1280,3 +1281,29 @@ next                        R3.18M true-only one-bit production composition
 - true continuation rows: `sample_002` 11231->11232 and `079_1f838...` 3198->3199; false terminator: `sample_003` 7815->7816
 - 37 BE-false rejected + 7 AU-false excluded; adjacent stream/header/payload/second-control 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
 - next exact pass: R3.18BM one-header evidence on exactly the two true rows; no following payload or second later control
+
+
+## CURRENT OVERRIDE — 2026-09-09 — R3.18BM CLOSED / R3.18BN ACTIVE
+
+This newest override supersedes older historical `ACTIVE` wording above.
+
+- canonical production remains R3.18BK `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d`;
+- R3.18BM Outcome A is closed at evidence `689b1a24b57a84c81dc19c9a308fb1423f191c4b` / `34334615939/102410984005` with same-head CI `34334615886/102411487443`;
+- immutable artifact `10097405795` / `sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963`; manifest `sha256:167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2` 13/13 PASS;
+- exact BM partition is false=1 / true=2; one-header native/Boxcars exact 2/2; unique complete eight-field contexts 2;
+- exact contexts are `(72,6,95,Boolean,868,32,10,false)` x1 and `(110,6,66,ActiveActor,868,32,10,false)` x1;
+- mismatch/unclassified/reselection `0/0/0`; payload/second-control `0/0`; production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`;
+- R3.18BN is ACTIVE and contract-only. It may freeze only those two complete tuples and must leave the false terminator outside membership.
+
+Mandatory newest reading order:
+1. `MIMIR_CONTINUE_HERE.md`
+2. `docs/continuity/MIMIR_R3_18BM_DECISION.md`
+3. `docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md`
+4. `docs/continuity/MIMIR_CONTINUITY_STATE.json`
+5. `docs/continuity/MIMIR_CURRENT_STATE.md`
+6. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+7. `docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md`
+8. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+9. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+10. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+11. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`

@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BK — bounded post-BI next property-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BL — Outcome A / published BK exact 3/3 / false=1 true=2 / 37 BE-false rejected / 7 AU-false excluded / following stream-header-payload-second-control 0/0/0/0 / mismatch-reselection 0/0 / artifact 10051851703
+  R3.18BM — Outcome A / exact two following headers / 2 exact eight-field contexts / one false terminator / mismatch-unclassified-reselection 0/0/0 / payload-second-control 0/0 / artifact 10097405795
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BD — post-BA mixed-continuation following-header exact-context contract / Outcome A / 3 exact eight-field tuples / multiplicity 3 / 37 false terminators outside membership / contract 33dac50e525ef560490e6c996b6a00a0700ef33b86c400f5d58f84f825df2b27 / AT-AJ-Z-P inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BL — published-R3.18BK mixed next-control differential / Outcome A / 3/3 / false=1 true=2 / mismatch-reselection 0/0 / artifact 10051851703
+  R3.18BM — one following-property-header evidence / Outcome A / exact 2/2 native-Boxcars / contexts=2 / Boolean=1 ActiveActor=1 / payload=0 / second-control=0 / artifact 10097405795
 
 CURRENT_PASS:
-  R3.18BM — one following-property-header evidence after published R3.18BK mixed control
+  R3.18BN — exact following-header context contract after R3.18BM
 
 CURRENT_PASS_TYPE:
-  read-only boundary evidence / exact 2 BL/BK true continuation rows only; one following property header through payload_start; false BK row terminates; following payload and second later control forbidden
+  contract-only admission / exact two BM-supported complete eight-field contexts; one false terminator outside membership; production mutation and payload/second-control access forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4227,3 +4227,18 @@ R3_18BM_ACTIVE:
   decode/observe one header only through payload_start; following payload and second later control remain closed
   no production mutation / no witness reselection / no generalized property cursor
 
+
+### R3.18BM one following-property-header evidence: OUTCOME A / CLOSED
+- evidence `689b1a24b57a84c81dc19c9a308fb1423f191c4b` / tree `1d4e95409e1125b01a78aae6a436190b3c1381f4`; run/job `34334615939/102410984005` SUCCESS
+- same-head natural CI `34334615886/102411487443` SUCCESS
+- artifact `10097405795` / 8340 bytes / `sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963`; inner manifest `sha256:167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2` 13/13 PASS
+- exact three-row partition; one false terminator / two true headers; native/Boxcars exact 2/2; unique contexts 2
+- exact contexts `(72,6,95,Boolean,868,32,10,false)` and `(110,6,66,ActiveActor,868,32,10,false)`, each x1; property ordinal 7 on 2/2
+- mismatch/unclassified/reselection 0/0/0; payload/second-control 0/0; mutation 0/0/0/0/0; privacy and full validation PASS
+
+### R3.18BN exact following-header context contract: ACTIVE
+- contract-only; freeze only the two BM-supported complete eight-field tuples
+- the one BK-false row remains a terminator outside membership
+- exact tuple equality only; reject tag/component/Cartesian/versionless/RL223-drop-or-flip/older-contract/fabricated membership
+- production remains R3.18BK; following payload and second later control remain closed
+- mandatory newest reading: `docs/continuity/MIMIR_R3_18BM_DECISION.md` then `docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md`

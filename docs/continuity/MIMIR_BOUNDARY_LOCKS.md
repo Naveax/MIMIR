@@ -6,35 +6,34 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BL evidence closed / R3.18BM one-header evidence active
+# 0. Current override — R3.18BM evidence closed / R3.18BN exact-context contract active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BK
 - `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d` remains canonical production.
 - exactly the three immutable BI/BG/BH authority rows are admitted at the BK one-control boundary.
-- false=1 / true=2 are both valid BK results; BK stops exactly one bit after BI payload end.
-- following stream/header/payload/second-control are not production-admitted.
+- false=1 / true=2 are both valid BK results; following stream/header/payload/second-control remain outside production.
 
-## CLOSED READ-ONLY PUBLISHED DIFFERENTIAL — R3.18BL
-- evidence `cd30b3bb4139381ea78a2c8ec0f70c1e162e16a9` / `34215686040/102026758270` SUCCESS; same-head CI `34215686044/102027091932` SUCCESS.
-- artifact `10051851703` / `sha256:452cb989e2ad9d992c7e8fbb9ff3643d110bee941997fc40f2188b0ce22dcc73`; inner manifest `sha256:1270cc5cce9e832cc86f1854ff89c9c8c73ce6d78fe4ee61c985c116f057d53d` 9/9 PASS.
-- published BK exact 3/3; published BI prerequisite exact 3/3; false=1 / true=2; mismatch/reselection 0/0.
-- 37 BE-false rejected; 7 AU-false excluded; following stream/header/payload/second-control 0/0/0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0.
+## CLOSED READ-ONLY EVIDENCE — R3.18BM Outcome A
+- evidence `689b1a24b57a84c81dc19c9a308fb1423f191c4b` / `34334615939/102410984005` SUCCESS; same-head CI `34334615886/102411487443` SUCCESS.
+- artifact `10097405795` / `sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963`; manifest `sha256:167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2` 13/13 PASS.
+- exact three-row split: one false terminator / two true headers; native/Boxcars exact 2/2; unique contexts 2.
+- exact contexts: `(72,6,95,Boolean,868,32,10,false)` and `(110,6,66,ActiveActor,868,32,10,false)`.
+- mismatch/unclassified/reselection 0/0/0; following payload/second-control 0/0; mutation 0/0/0/0/0; privacy PASS.
 
-## ACTIVE READ-ONLY BOUNDARY EVIDENCE — R3.18BM
-- only `external_fixtures/sample_002.replay` at BK stop 11232 and `test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay` at BK stop 3199 may enter the following-header lane.
-- `external_fixtures/sample_003.replay` is the exact false terminator at 7815 -> 7816 and must perform zero following-header access.
-- observe exactly one following property header through `payload_start`; classify the complete exact structural/context tuple and compare native/pinned Boxcars.
-- following payload and second later control remain closed; production mutation and witness reselection forbidden.
+## ACTIVE CONTRACT-ONLY — R3.18BN
+- admit only exact complete eight-field tuples observed by R3.18BM;
+- the one BK-false row remains a terminator and cannot acquire header membership;
+- exact tuple equality only; multiplicity is evidence provenance, not a runtime-frequency promise;
+- reject tag-only, component-only, Cartesian, versionless, RL223-drop/flip, older-contract inheritance, and fabricated third tuples.
 
 ## CLOSED
-- following-header evidence on the BK-false sample_003 row;
-- any continuation identity outside the exact two BL/BK true witnesses;
-- following payload after the R3.18BM header;
-- second later property-control bit;
-- production following-header composition before a separate exact contract pass;
-- generalized/repeated property cursor;
+- production following-header composition before R3.18BN contract closure;
+- following payload and second later control;
+- header membership/synthesis for the BK-false terminator;
+- contexts outside the exact R3.18BN evidence-supported set;
+- repeated/generalized property loop or generic cursor;
 - actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
 
 # 1. Status vocabulary

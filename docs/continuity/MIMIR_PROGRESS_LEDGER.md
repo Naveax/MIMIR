@@ -1906,3 +1906,21 @@ Admitted evidence result:
 
 Next exact pass:
 - `R3.18BM — one following-property-header evidence after published R3.18BK mixed control` on exactly the two true witnesses. The sample_003 false row remains a terminator. No following payload or second later control.
+
+## 2026-09-09 — R3.18BM — One Following-Property-Header Evidence — Outcome A / CLOSED
+
+- Base: `607361a67b7eb03a868114b0171f30a6d26873e6` / `8a83d5d80b39d79cc7d3fc8612d02bd911e3446e`.
+- Canonical production unchanged: R3.18BK `f4a56d53d11a0c3d59f4bd57e58688bdd9d192bf` / `07656c7a43c1afb97903ef33c1109b764fbf8b7d`.
+- Evidence: `689b1a24b57a84c81dc19c9a308fb1423f191c4b` / `1d4e95409e1125b01a78aae6a436190b3c1381f4`; run/job `34334615939/102410984005` SUCCESS.
+- Same-head natural CI: `34334615886/102411487443` SUCCESS.
+- Artifact: `10097405795` / 8340 bytes / `sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963`.
+- Manifest: `sha256:167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2`; 13/13 listed files PASS; ZIP members=14 including manifest.
+- Frozen controls 3/3; false terminators 1/1; true rows 2/2; one-header native/Boxcars exact 2/2.
+- Exact contexts: `(72,6,95,Boolean,868,32,10,false)` x1 and `(110,6,66,ActiveActor,868,32,10,false)` x1.
+- Property ordinal 7 on 2/2; mismatch/unclassified/reselection 0/0/0.
+- Repeatability/truncation/corrupt-BK/wrong-actor/unresolved-lookup/wrong-context/payload-start-poison/false-terminator/fabricated-identity negatives PASS.
+- Following payload / second later control bits: 0/0.
+- Production/Cargo/fixture/corpus/support mutation: 0/0/0/0/0.
+- Privacy, fmt, check, clippy -D warnings, workspace tests, repository verifier, diff-check and clean-worktree gates PASS.
+- Outcome A admitted read-only evidence only. Production following-header composition remains closed.
+- Next pass opened: R3.18BN exact complete eight-field following-header context contract, contract-only.
