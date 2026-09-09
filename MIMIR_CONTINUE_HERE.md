@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BO — bounded post-BK mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BM — Outcome A / exact two following headers / 2 exact eight-field contexts / one false terminator / mismatch-unclassified-reselection 0/0/0 / payload-second-control 0/0 / artifact 10097405795
+  R3.18BP — published R3.18BO differential Outcome A / exact 3/3 / false=1 true=2 / mismatch 0 / artifact 10105612793
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BN — exact following-header context contract / Outcome A / 2 exact eight-field tuples / multiplicity 2 / 1 false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c / older-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BM — one following-property-header evidence / Outcome A / exact 2/2 native-Boxcars / contexts=2 / Boolean=1 ActiveActor=1 / payload=0 / second-control=0 / artifact 10097405795
+  R3.18BP — published BO differential Outcome A / exact 3/3 / BN contexts=2/2 / payload=0 / second-control=0 / artifact 10105612793
 
 CURRENT_PASS:
-  R3.18BP — published R3.18BO mixed following-header differential
+  R3.18BQ — one following payload evidence
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / exact three-row BM/BN/BK authority / false=1 no-header / true=2 exact BN headers / payload-second-control 0/0
+  read-only exactly-one-payload boundary evidence / BP true rows=2 / Boolean width1 / ActiveActor K2 width33 / no next control
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4270,3 +4270,11 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - following payload / second later control: 0/0;
 - active pass: R3.18BP read-only published-production differential;
 - production mutation, payload access, later-control access and generalized cursor remain forbidden.
+
+
+# CURRENT OVERRIDE — 2026-09-09 — R3.18BP CLOSED / R3.18BQ ACTIVE
+
+- BP evidence: `319d2b910ac23008bcc5338f04a5f95a0ae5ac5b` / `34355148349/102477806191` SUCCESS; same-head CI `34355148286/102477834627` SUCCESS.
+- artifact: `10105612793` / `sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240` / manifest `sha256:2e8fbf0b4a9c2d29d4fdb440dba54eabcd860c91bc25c49d486c969052bef174`.
+- result: 3/3 / false=1 / true=2 / exact BN=2/2 / Boolean=1 ActiveActor=1 / mismatch-reselection=0/0 / payload-control=0/0.
+- active R3.18BQ: two true rows only; Boolean width1, ActiveActor exact K2 width33; pinned-Boxcars equality required; next control closed.

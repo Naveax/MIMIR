@@ -6,39 +6,30 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BO production closed / R3.18BP differential active
+# 0. Current override — R3.18BP differential closed / R3.18BQ payload evidence active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BO
-- `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111` is canonical production.
-- exactly the three immutable BM/BN/BK authority rows are admitted at the BO following-header boundary.
-- false=1 is a successful no-header terminator with zero post-BK reads.
-- true=2 compose exactly one stateless following header under exact R3.18BN membership and stop at `payload_start`.
-- following payload / second later control remains 0/0.
+- `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111` remains canonical production.
+- following payload and later control remain unconsumed in production.
 
-## CLOSED READ-ONLY EVIDENCE — R3.18BM Outcome A
-- evidence `689b1a24b57a84c81dc19c9a308fb1423f191c4b` / `34334615939/102410984005` SUCCESS; same-head CI `34334615886/102411487443` SUCCESS.
-- exact split: one false terminator / two true headers; native/Boxcars exact 2/2; unique contexts 2.
+## CLOSED READ-ONLY DIFFERENTIAL — R3.18BP
+- evidence `319d2b910ac23008bcc5338f04a5f95a0ae5ac5b` / `34355148349/102477806191` SUCCESS; same-head CI `34355148286/102477834627` SUCCESS.
+- artifact `10105612793` / `sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240`; exact 3/3, false=1, true=2, mismatch/reselection 0/0, payload/control 0/0.
 
-## CLOSED CONTRACT — R3.18BN Outcome A
-- contract sha256 `904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`; exact_tuple_only; 2 complete eight-field tuples; multiplicity sum 2.
-- the one BK-false terminator remains outside header membership.
-
-## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BP
-- compare published R3.18BO against exactly the immutable three-row authority;
-- preserve false=1 no-header and true=2 exact BN headers;
-- require mismatch/reselection 0/0 and repeatability;
-- consume zero following-payload and zero second-later-control bits;
-- production mutation is forbidden.
+## ACTIVE READ-ONLY PAYLOAD EVIDENCE — R3.18BQ
+- direct authority is the BP artifact.
+- only two BP-true rows may enter payload decode.
+- Boolean width1; ActiveActor exact K2 width33.
+- current values/boundaries must match pinned Boxcars independently.
 
 ## CLOSED
-- header on the false terminator;
-- context outside exact R3.18BN membership;
-- following payload after R3.18BO;
-- second later property-control bit;
-- repeated/generalized property loop or generic cursor;
-- actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+- payload on the BP false terminator;
+- next control after BQ payload;
+- second payload/header;
+- historical payload coordinate/value inheritance;
+- generalized cursor and wider semantic/runtime behavior.
 
 # 1. Status vocabulary
 

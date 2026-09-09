@@ -1,17 +1,7 @@
 # MIMIR — Next Chat Handoff
 
-Canonical production is **R3.18BO** at `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111`.
+Canonical production remains **R3.18BO** at `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111`.
 
-**R3.18BM is CLOSED / Outcome A evidence.** Exact three-row lane false=1 / true=2; two true headers are native/Boxcars exact 2/2 through `payload_start`; contexts=2; payload/second-control=0/0; artifact `10097405795`.
+R3.18BP is **Outcome A / CLOSED** at `319d2b910ac23008bcc5338f04a5f95a0ae5ac5b`; run/job `34355148349/102477806191` SUCCESS; same-head CI `34355148286/102477834627` SUCCESS; artifact `10105612793` / `sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240`/ Exact lane 3/3: false=1, true=2, BN contexts=2/2, Boolean=1 / ActiveActor=1, mismatch/reselection=0/0, payload/control=0/0.
 
-**R3.18BN is CLOSED / Outcome A contract.** Exact contract `sha256:904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c` admits only `(72,6,95,Boolean,868,32,10,false)` x1 and `(110,6,66,ActiveActor,868,32,10,false)` x1.
-
-**R3.18BO is CLOSED / Outcome A production.** Exact BK lane false=1 successful no-header terminator; true=2 exact BN headers; stop=`payload_start`; payload/second-control=0/0. Builder `34346270277/102448481752`, candidate CI `34347518210/102452536398` and published-main CI `34348026122/102454170761` are SUCCESS.
-
-Active pass: **R3.18BP — Published R3.18BO Mixed Following-Header Differential**.
-
-R3.18BP is read-only. Reuse exactly the immutable three BM/BN/BK witnesses, require exact BN membership and zero mismatch/reselection, and consume no following payload or second later control.
-
-Read first: `MIMIR_CONTINUE_HERE.md`, BM decision, BN execution spec, BN contract, BN decision, BO execution spec, BO decision, BP execution spec, continuity state/current state/boundary locks, then the root knowledge graph chain.
-
-Before any dispatch/rerun inspect queued/waiting/in-progress equivalent runs and reuse an existing exact run.
+Active pass: **R3.18BQ — one following payload evidence**. Direct row authority is the BP artifact. Only two true rows may decode payload: Boolean one-bit scalar and ActiveActor exact K2 33-bit layout. Independently compare current payload values/boundaries with pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b`; no historical values/coordinates; no next control.

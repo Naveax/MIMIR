@@ -1970,3 +1970,15 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18BP — published R3.18BO mixed following-header differential` on exactly the immutable three-row authority.
+
+
+---
+
+## 2026-09-09 — R3.18BP — Published R3.18BO Mixed Following-Header Differential
+Outcome: **A — CLOSED / ADMITTED READ-ONLY EVIDENCE**
+
+Evidence `319d2b910ac23008bcc5338f04a5f95a0ae5ac5b` / `34355148349/102477806191` SUCCESS; same-head CI `34355148286/102477834627` SUCCESS; artifact `10105612793` / `sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240`; manifest `sha256:2e8fbf0b4a9c2d29d4fdb440dba54eabcd860c91bc25c49d486c969052bef174`.
+
+Result: exact 3/3; false=1 no-header; true=2 exact BN headers; BN contexts=2/2; Boolean=1 / ActiveActor=1; mismatch/reselection 0/0; payload/second-control 0/0; mutation 0/0/0/0/0; privacy PASS.
+
+Opened R3.18BQ exactly-one-payload evidence on the two BP-true rows. False-row payload access, next control, second payload/header, historical value/coordinate inheritance and generalized cursor remain closed.

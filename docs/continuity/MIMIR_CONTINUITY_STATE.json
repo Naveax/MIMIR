@@ -6,11 +6,11 @@
   "last_production_code_sha": "cbb823ce7d3fc871c35a83afc5ee21ae71945821",
   "last_production_milestone": "R3.18BO",
   "last_production_milestone_name": "bounded post-BK mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18BM",
-  "current_pass": "R3.18BP",
-  "current_pass_kind": "read-only published-production differential over the exact three-row BM/BN/BK mixed following-header authority",
-  "current_pass_goal": "Compare published R3.18BO against exactly the immutable three-row authority; preserve false=1 no-header and true=2 exact BN headers, mismatch/reselection 0/0, and stop without payload or later-control access.",
-  "current_pass_stop_boundary": "No following payload, no second later control, no header on the false terminator, no context outside exact R3.18BN membership, and no generalized cursor.",
+  "last_completed_read_only_audit": "R3.18BP",
+  "current_pass": "R3.18BQ",
+  "current_pass_kind": "read-only exactly-one-following-payload evidence on the two R3.18BP true rows",
+  "current_pass_goal": "Decode exactly one current payload on the two BP true rows and require pinned-Boxcars value/boundary equality: Boolean width1 and ActiveActor K2 width33.",
+  "current_pass_stop_boundary": "Stop at payload end. No payload on the BP false terminator, no next control, second payload/header or generalized cursor.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -185,7 +185,12 @@
     "header synthesis on the R3.18BO false terminator",
     "following-header contexts outside exact R3.18BN membership after R3.18BO",
     "generalized/repeated property loop or generic cursor after R3.18BO",
-    "production mutation during R3.18BP"
+    "production mutation during R3.18BP",
+    "payload access on the R3.18BP false terminator",
+    "next property-control bit after the R3.18BQ payload evidence boundary",
+    "second payload or following header after R3.18BQ",
+    "production composition of the R3.18BQ-observed payload before a later production pass",
+    "historical payload coordinate/value inheritance at R3.18BQ"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -345,6 +350,8 @@
     "docs/continuity/MIMIR_R3_18AZ_DECISION.md",
     "docs/continuity/MIMIR_R3_18BO_DECISION.md",
     "docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BP_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -3268,5 +3275,42 @@
       0,
       0
     ]
+  },
+  "r3_18bp": {
+    "status": "closed_outcome_a",
+    "head": "319d2b910ac23008bcc5338f04a5f95a0ae5ac5b",
+    "tree": "1fc7223296b71256681a885de7e20161114532a9",
+    "run": 34355148349,
+    "job": 102477806191,
+    "same_head_ci_run": 34355148286,
+    "same_head_ci_job": 102477834627,
+    "artifact": 10105612793,
+    "artifact_size": 7008,
+    "artifact_digest": "sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240",
+    "inner_manifest_sha256": "2e8fbf0b4a9c2d29d4fdb440dba54eabcd860c91bc25c49d486c969052bef174",
+    "rows": 3,
+    "false_no_header": 1,
+    "true_exact_header": 2,
+    "exact_bn_contexts": 2,
+    "tags": {
+      "Boolean": 1,
+      "ActiveActor": 1
+    },
+    "mismatch": 0,
+    "witness_reselection": 0,
+    "following_payload_consumed": 0,
+    "second_later_control_consumed": 0
+  },
+  "r3_18bq": {
+    "status": "active_read_only_payload_evidence",
+    "direct_row_authority_artifact": 10105612793,
+    "target_rows": 2,
+    "excluded_bp_false_rows": 1,
+    "expected_layouts": {
+      "Boolean": 1,
+      "ActiveActor": 33
+    },
+    "next_property_control_open": false,
+    "witness_reselection_allowed": false
   }
 }

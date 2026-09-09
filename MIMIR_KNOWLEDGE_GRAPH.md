@@ -98,7 +98,8 @@ R3.18BL published-R3.18BK mixed next-control differential / Outcome A CLOSED
 R3.18BM one following-property-header evidence after published R3.18BK mixed control / Outcome A CLOSED
 R3.18BN exact following-header context contract after R3.18BM / Outcome A CLOSED
 R3.18BO bounded post-BK mixed-continuation following-header production / PRODUCTION CLOSED
-R3.18BP published-R3.18BO mixed following-header differential / ACTIVE
+R3.18BP published-R3.18BO mixed following-header differential / Outcome A CLOSED
+R3.18BQ one following payload evidence / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -291,13 +292,15 @@ scripts/verify_mimir_knowledge_archive.ps1
 172. `docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md`
 173. `docs/continuity/MIMIR_R3_18BO_DECISION.md`
 174. `docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md`
-175. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
-176. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
-177. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
-178. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
-179. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
-180. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
-181. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+175. `docs/continuity/MIMIR_R3_18BP_DECISION.md`
+176. `docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md`
+177. `docs/continuity/MIMIR_PASS_PROTOCOL.md`
+178. `docs/continuity/MIMIR_BOUNDARY_LOCKS.md`
+179. `docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md`
+180. `MIMIR_ALL_SOURCES_SUPERBOOK.md`
+181. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
+182. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
+183. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1359,3 +1362,9 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - BN membership remains `sha256:904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c` with Boolean=1 / ActiveActor=1 and ordinal 7 on 2/2;
 - payload / second later control consumption is 0/0;
 - R3.18BP is ACTIVE and read-only; no wider capability is admitted.
+
+
+## CURRENT OVERRIDE — 2026-09-09 — R3.18BP CLOSED / R3.18BQ ACTIVE
+- BP `319d2b910ac23008bcc5338f04a5f95a0ae5ac5b` / `34355148349/102477806191` SUCCESS; same-head CI `34355148286/102477834627`; artifact `10105612793` / `sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240`.
+- exact 3/3; false=1 / true=2; BN contexts=2/2; Boolean=1 / ActiveActor=1; mismatch/reselection=0/0; payload/control=0/0.
+- R3.18BQ is read-only exactly-one-payload evidence on two BP-true rows: Boolean width1, ActiveActor K2 width33. Next control remains closed.
