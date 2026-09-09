@@ -2,30 +2,152 @@ name: CI
 
 on:
   push:
-  pull_request:
+    branches:
+      - automation/r318bn-contract-builder-v1
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: r318bn-contract-admission-builder-v1
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
+  actions: read
 
 jobs:
-  rust:
-    runs-on: windows-latest
-    timeout-minutes: 45
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 0e36965d2f469f8d2411535b359ac22f9e480fd6
+      BASE_TREE: fc87430df448aff995a4a59c6c87b2cb196da52e
+      GENERATOR_BLOB: 56777939ef35e3d8fbf96736acefeffbb4e9e68f
+      CANDIDATE_SHA: c2c25c6b3e6a1c68636b60c444baa608238b2b95
+      CANDIDATE_TREE: 50668fe5745bcc349a5e92bb9508992bd74f5f1a
+      CANDIDATE_CONTRACT_BLOB: 82e150ef95a2288737129191ff7d617e639d3843
+      VALID_RUN: '34340205828'
+      VALID_JOB: '102428959672'
+      KA_RUN: '34340205835'
+      KA_JOB: '102428960213'
+      CONTRACT_SHA256: 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c
+      CLEAN_BRANCH: continuity/r318bn-admit-open-r318bo-v1
 
     steps:
-      - name: Checkout
+      - name: Checkout exact helper head
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-      - name: Toolchain
-        shell: pwsh
+      - name: Freeze exact authority and validation receipts
+        shell: bash
         run: |
-          rustup show
-          rustup component add rustfmt clippy
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(gh api "repos/$repo/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          test "$(git rev-parse HEAD:tools/_tmp_r318bn_contract_admit.py)" = "$GENERATOR_BLOB"
 
-      - name: Repository verification
-        shell: pwsh
-        run: pwsh -NoProfile -File scripts/verify_repo.ps1
+          test "$(gh api "repos/$repo/actions/runs/$VALID_RUN" --jq .head_sha)" = "$CANDIDATE_SHA"
+          test "$(gh api "repos/$repo/actions/runs/$VALID_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$repo/actions/runs/$VALID_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/jobs/$VALID_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/runs/$KA_RUN" --jq .head_sha)" = "$CANDIDATE_SHA"
+          test "$(gh api "repos/$repo/actions/runs/$KA_RUN" --jq .status)" = completed
+          test "$(gh api "repos/$repo/actions/runs/$KA_RUN" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/actions/jobs/$KA_JOB" --jq .conclusion)" = success
+          test "$(gh api "repos/$repo/git/commits/$CANDIDATE_SHA" --jq .tree.sha)" = "$CANDIDATE_TREE"
+          test "$(git rev-parse "$CANDIDATE_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json")" = "$CANDIDATE_CONTRACT_BLOB"
+
+          if git ls-remote --exit-code --heads "https://github.com/$repo.git" "refs/heads/$CLEAN_BRANCH" >/dev/null 2>&1; then
+            echo "clean candidate already exists; refusing duplicate" >&2
+            exit 1
+          fi
+          echo R3_18BN_AUTHORITY_FREEZE=PASS
+
+      - name: Preserve generator and reset to canonical base
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tools/_tmp_r318bn_contract_admit.py "$RUNNER_TEMP/r318bn_contract_admit.py"
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path(os.environ['RUNNER_TEMP'])/'r318bn_contract_admit.py'
+          compile(p.read_text(encoding='utf-8'), str(p), 'exec')
+          print('R3_18BN_GENERATOR_SYNTAX=PASS')
+          PY
+          git reset --hard "$BASE_SHA"
+          git clean -fdx
+          git switch -C "$CLEAN_BRANCH" "$BASE_SHA"
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$BASE_TREE"
+
+      - name: Generate exact BN admission and BO spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$RUNNER_TEMP/r318bn_contract_admit.py"
+
+      - name: Validate exact ten-doc admission scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$RUNNER_TEMP/expected.txt"
+          actual="$RUNNER_TEMP/actual.txt"
+          cat > "$expected" <<'EOF'
+          MIMIR_CONTINUE_HERE.md
+          MIMIR_KNOWLEDGE_GRAPH.md
+          docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+          docs/continuity/MIMIR_CONTINUITY_STATE.json
+          docs/continuity/MIMIR_CURRENT_STATE.md
+          docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+          docs/continuity/MIMIR_PROGRESS_LEDGER.md
+          docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json
+          docs/continuity/MIMIR_R3_18BN_DECISION.md
+          docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md
+          EOF
+          sed -i 's/^          //' "$expected"
+          { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u > "$actual"
+          sort -o "$expected" "$expected"
+          diff -u "$expected" "$actual"
+          test "$(wc -l < "$actual")" -eq 10
+          git diff --check
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          python3 -m json.tool docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json >/dev/null
+          test "$(sha256sum docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json | awk '{print $1}')" = "$CONTRACT_SHA256"
+          grep -F 'R3.18BO — bounded post-BK mixed-continuation following-header production' MIMIR_CONTINUE_HERE.md
+          grep -F '168. `docs/continuity/MIMIR_R3_18BM_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '170. `docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '171. `docs/continuity/MIMIR_R3_18BN_DECISION.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '172. `docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md`' MIMIR_KNOWLEDGE_GRAPH.md
+          grep -F '**Outcome:** **A — ADMITTED / BOUNDARY-SPECIFIC EXACT-EIGHT-FIELD CONTRACT**' docs/continuity/MIMIR_R3_18BN_DECISION.md
+          grep -F '**Status:** ACTIVE' docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18BN_ADMISSION_SCOPE=PASS
+
+      - name: Commit and push clean candidate exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Naveax
+          git config user.email 79841922+Naveax@users.noreply.github.com
+          git add -- \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json \
+            docs/continuity/MIMIR_R3_18BN_DECISION.md \
+            docs/continuity/MIMIR_R3_18BO_EXECUTION_SPEC.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 10
+          git diff --cached --check
+          git commit -m 'Admit R3.18BN and open R3.18BO'
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          git push origin "$CLEAN_BRANCH:$CLEAN_BRANCH"
+          echo "R3_18BN_CLEAN_CANDIDATE=$(git rev-parse HEAD)"
+          echo "R3_18BN_CLEAN_TREE=$(git rev-parse 'HEAD^{tree}')"
