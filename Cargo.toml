@@ -33,7 +33,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tempfile = "3.13"
 thiserror = "2.0"
-toml = "0.8"
+toml = "1.1"
 
 mimir-anchor = { path = "crates/mimir-anchor" }
 mimir-branch = { path = "crates/mimir-branch" }
