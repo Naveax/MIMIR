@@ -1,0 +1,138 @@
+name: R3.18BR Next Property-Control Bit Evidence
+
+on:
+  push:
+    branches:
+      - evidence/r318br-next-control-v4
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318br-next-control-v4
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: 265b780dc554715a7bc6bfb5c8e0fbe7ee279265
+      MAIN_TREE: d19218dea425819c8ec8eee8464ab5e198945bb6
+      PROD_SHA: cbb823ce7d3fc871c35a83afc5ee21ae71945821
+      PROD_TREE: 146cb78edfb434fd43e532593efce8e35ee97111
+      BQ_DECISION_BLOB: a429bd2f5ad0f035d5944c427bf00a9ef4621169
+      BR_SPEC_BLOB: f7b805fa6725fb8d05e721140b4cbb72657af540
+      BQ_HEAD: 16c43f38e740c57ae9cb90c92084002ec83815e7
+      BQ_TREE: 58248877a59fb0ddad707e32f92b2cec91f6b434
+      BQ_RUN: '34457725716'
+      BQ_JOB: '102807933610'
+      BQ_CI_RUN: '34457725700'
+      BQ_CI_JOB: '102808516101'
+      BQ_ARTIFACT: '10144392560'
+      BQ_ARTIFACT_NAME: r318bq-one-following-payload-evidence
+      BQ_ARTIFACT_SIZE: '9464'
+      BQ_DIGEST: sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c
+      BQ_MANIFEST_SHA256: 332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9
+      MAIN_CI_RUN: '34469746500'
+      MAIN_CI_JOB: '102846609582'
+      MAIN_KA_RUN: '34469746351'
+      MAIN_KA_JOB: '102846608902'
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      BOXCARS_FRAME_BLOB: 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+      BOXCARS_ATTR_BLOB: 5e2d5bc1cd8187af30c3ea95193ad987645cb76e
+      BM_HEAD: 689b1a24b57a84c81dc19c9a308fb1423f191c4b
+      BM_RUN: '34334615939'
+      BM_JOB: '102410984005'
+      BM_ARTIFACT: '10097405795'
+      BM_ARTIFACT_NAME: r318bm-one-following-header-evidence
+      BM_ARTIFACT_SIZE: '8340'
+      BM_DIGEST: sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963
+      BM_MANIFEST_SHA256: 167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2
+      BM_PATCH_SHA256: 092d188a7485e98fc88dbb297a11d744bad71a1e7bdb686ae90d441ba20894ec
+
+    steps:
+      - name: Checkout exact BR evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mark BR evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending -f context='r318br/evidence' \
+            -f description='R3.18BR exact one-bit evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Execute deterministic R3.18BR evidence
+        shell: bash
+        env:
+          BR_PAYLOAD_BLOB: 6840dfb647baae11974a5632afdb386820ec9187
+          BR_PAYLOAD_SHA256: 4d320846b35748847263794d43750c4b991a9675d9a65bfb43c41f330e24c6cf
+          BR_RUN_SHA256: 0450f1da0151ff1da7e11b63cd0030cc98649fed7fb99622148b622af07e2964
+          BR_CONTROL_SHA256: 1a5168f48828f1dc126a36d4730f1516070574996423f3eafe3ca05ff9e7de3c
+          BR_BOXCARS_SHA256: 5baeed2d1fa300e4d4a0eaa85b733cd48e50ec0a82d799bb65d99727aa170b5e
+          BR_COMPARE_SHA256: 941abe5b9bd10bbd95c48898643cea62d5aca8000fd134d922b29c340a25308e
+          BR_PROBE_SHA256: 1db4f0acbd2960a71c21939b2387d2f80c12bc19b65619c6c78f78870e926489
+        run: |
+          set -euo pipefail
+          helpers="$RUNNER_TEMP/r318br-helpers"
+          mkdir -p "$helpers"
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$BR_PAYLOAD_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318br-payload.tar.gz"
+          test "$(sha256sum "$RUNNER_TEMP/r318br-payload.tar.gz" | awk '{print $1}')" = "$BR_PAYLOAD_SHA256"
+          tar -xzf "$RUNNER_TEMP/r318br-payload.tar.gz" -C "$helpers"
+          test "$(sha256sum "$helpers/r318br_run.sh" | awk '{print $1}')" = "$BR_RUN_SHA256"
+          test "$(sha256sum "$helpers/r318br_control.rs" | awk '{print $1}')" = "$BR_CONTROL_SHA256"
+          test "$(sha256sum "$helpers/r318br_boxcars.py" | awk '{print $1}')" = "$BR_BOXCARS_SHA256"
+          test "$(sha256sum "$helpers/r318br_compare.py" | awk '{print $1}')" = "$BR_COMPARE_SHA256"
+          test "$(sha256sum "$helpers/r318br_probe.rs" | awk '{print $1}')" = "$BR_PROBE_SHA256"
+          python3 -m py_compile "$helpers/r318br_boxcars.py" "$helpers/r318br_compare.py"
+          bash -n "$helpers/r318br_run.sh"
+          BR_HELPERS="$helpers" bash "$helpers/r318br_run.sh"
+
+      - name: Upload immutable R3.18BR evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318br-next-property-control-evidence
+          path: ${{ runner.temp }}/r318br-authority/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Verify receipt and mark Outcome A
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact=''
+          for attempt in $(seq 1 30); do
+            artifact="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" --jq '.artifacts[] | select(.name=="r318br-next-property-control-evidence") | [.id,.size_in_bytes,.digest] | @tsv' | head -n1)"
+            [ -n "$artifact" ] && break
+            sleep 2
+          done
+          test -n "$artifact"
+          IFS=$'\t' read -r artifact_id artifact_size artifact_digest <<<"$artifact"
+          echo "R3_18BR_ARTIFACT=${artifact_id}/${artifact_size}/${artifact_digest}"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318br/evidence' \
+            -f description='R3.18BR Outcome A exact one-bit evidence passed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Mark BR evidence failure
+        if: failure()
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=failure -f context='r318br/evidence' \
+            -f description='R3.18BR evidence failed; inspect exact run' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null || true
