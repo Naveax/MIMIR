@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+OUT="$RUNNER_TEMP/r318bq-out"
+BP_DIR="$RUNNER_TEMP/r318bq-bp"
+BM_DIR="$RUNNER_TEMP/r318bq-bm"
+BOXCARS="$RUNNER_TEMP/r318bq-boxcars"
+TEST_PATH="crates/mimir-replay/tests/r3_18bq_one_payload_probe.rs"
+rm -rf "$OUT" "$BP_DIR" "$BM_DIR" "$BOXCARS"
+mkdir -p "$OUT" "$BP_DIR" "$BM_DIR"
+trap 'rm -f "$TEST_PATH"' EXIT
+
+# Download the admitted BP row authority and the already-admitted BM Boxcars instrumentation base.
+gh run download "$BP_RUN" --repo "$GITHUB_REPOSITORY" --name "$BP_ARTIFACT_NAME" --dir "$BP_DIR"
+gh run download "$BM_RUN" --repo "$GITHUB_REPOSITORY" --name "$BM_ARTIFACT_NAME" --dir "$BM_DIR"
+
+test "$(sha256sum "$BP_DIR/r3_18bp_artifact_sha256.txt" | awk '{print $1}')" = "$BP_MANIFEST_SHA256"
+(cd "$BP_DIR" && sha256sum -c r3_18bp_artifact_sha256.txt)
+test "$(sha256sum "$BP_DIR/r3_18bp_published_bo.tsv" | awk '{print $1}')" = "$BP_ROWS_SHA256"
+grep -Fx 'R3_18BP_OUTCOME=A' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_ROWS=3/3' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_FALSE_TERMINATORS=1/1' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_TRUE_HEADERS=2/2' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_EXACT_BN_CONTEXTS=2/2' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_TAGS=Boolean:1,ActiveActor:1' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_PROPERTY_ORDINAL_7=2/2' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_PUBLISHED_BO_MISMATCH=0' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_WITNESS_RESELECTION=0' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' "$BP_DIR/r3_18bp_aggregate.txt"
+grep -Fx 'R3_18BP_SECOND_LATER_CONTROL_BITS_CONSUMED=0' "$BP_DIR/r3_18bp_aggregate.txt"
+
+test "$(sha256sum "$BM_DIR/r3_18bm_artifact_sha256.txt" | awk '{print $1}')" = "$BM_MANIFEST_SHA256"
+(cd "$BM_DIR" && sha256sum -c r3_18bm_artifact_sha256.txt)
+test "$(sha256sum "$BM_DIR/r3_18bm_boxcars_instrumentation.patch" | awk '{print $1}')" = "$BM_PATCH_SHA256"
+cp "$BP_DIR/r3_18bp_published_bo.tsv" "$OUT/r3_18bq_bp_authority.tsv"
+cp "$BP_DIR/r3_18bp_aggregate.txt" "$OUT/r3_18bq_bp_aggregate.txt"
+
+echo R3_18BQ_UPSTREAM_AUTHORITY=PASS
+
+cat > "$TEST_PATH" <<'RS'
+include!("r3_18bo_post_bk_following_header.rs");
+
+#[derive(Debug, Clone)]
+struct BqRow {
+    label: String,
+    frame_index: u32,
+    actor_ordinal: u32,
+    actor_context_object_id: u32,
+    bk_payload_end_bit: u64,
+    bk_control_start_bit: u64,
+    bk_control_end_bit: u64,
+    bk_property_present: bool,
+    bo_stop_bit: u64,
+    header_present: bool,
+    header_actor_object_index: Option<u32>,
+    header_property_present_start_bit: Option<u64>,
+    header_property_present_end_bit: Option<u64>,
+    stream_id_start_bit: Option<u64>,
+    stream_id: Option<u32>,
+    stream_id_bound: Option<u32>,
+    prop_id_bits: Option<u8>,
+    property_object_index: Option<u32>,
+    attribute_tag: Option<String>,
+    payload_start_bit: Option<u64>,
+    header_stop_bit: Option<u64>,
+    version_major: i32,
+    version_minor: i32,
+    net_version: i32,
+    is_rl_223: bool,
+}
+
+fn opt_u64(value: &str) -> Option<u64> {
+    (value != "-").then(|| value.parse().expect("u64 authority field"))
+}
+fn opt_u32(value: &str) -> Option<u32> {
+    (value != "-").then(|| value.parse().expect("u32 authority field"))
+}
+fn opt_u8(value: &str) -> Option<u8> {
+    (value != "-").then(|| value.parse().expect("u8 authority field"))
+}
+fn opt_string(value: &str) -> Option<String> {
+    (value != "-").then(|| value.to_owned())
+}
+
+fn bq_rows() -> Vec<BqRow> {
+    let text = std::fs::read_to_string(std::env::var("R318BQ_BP_ROWS").expect("R318BQ_BP_ROWS"))
+        .expect("read BP authority rows");
+    let mut lines = text.lines();
+    let header = lines.next().expect("BP TSV header");
+    assert!(header.starts_with("label\tframe_index\tactor_ordinal\tactor_context_object_id\t"));
+    let rows = lines
+        .filter(|line| !line.is_empty())
+        .map(|line| {
+            let f: Vec<&str> = line.split('\t').collect();
+            assert_eq!(f.len(), 26, "BP authority field count: {line}");
+            BqRow {
+                label: f[0].to_owned(),
+                frame_index: f[1].parse().unwrap(),
+                actor_ordinal: f[2].parse().unwrap(),
+                actor_context_object_id: f[3].parse().unwrap(),
+                bk_payload_end_bit: f[4].parse().unwrap(),
+                bk_control_start_bit: f[5].parse().unwrap(),
+                bk_control_end_bit: f[6].parse().unwrap(),
+                bk_property_present: f[7] == "1",
+                bo_stop_bit: f[9].parse().unwrap(),
+                header_present: f[10] == "1",
+                header_actor_object_index: opt_u32(f[11]),
+                header_property_present_start_bit: opt_u64(f[12]),
+                header_property_present_end_bit: opt_u64(f[13]),
+                stream_id_start_bit: opt_u64(f[14]),
+                stream_id: opt_u32(f[15]),
+                stream_id_bound: opt_u32(f[16]),
+                prop_id_bits: opt_u8(f[17]),
+                property_object_index: opt_u32(f[18]),
+                attribute_tag: opt_string(f[19]),
+                payload_start_bit: opt_u64(f[20]),
+                header_stop_bit: opt_u64(f[21]),
+                version_major: f[22].parse().unwrap(),
+                version_minor: f[23].parse().unwrap(),
+                net_version: f[24].parse().unwrap(),
+                is_rl_223: f[25] == "1",
+            }
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(rows.len(), 3);
+    rows
+}
+
+fn bq_label(path: &str) -> &str {
+    path.strip_prefix("../../").unwrap_or(path)
+}
+
+fn bq_guard(
+    row: &BqRow,
+    actor_object: u32,
+    start: u64,
+    tag: ReplayNetworkAttributeTagV1,
+    version_major: i32,
+    version_minor: i32,
+    net_version: i32,
+    is_rl_223: bool,
+) -> Result<(), &'static str> {
+    if Some(actor_object) != row.header_actor_object_index {
+        return Err("actor-object-mismatch");
+    }
+    if Some(start) != row.payload_start_bit {

@@ -1,0 +1,235 @@
+name: R3.18BQ One Following Payload Evidence
+
+on:
+  push:
+    branches: [evidence/r318bq-one-payload-v1]
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318bq-one-payload-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: e9028143f2bca342c58d88d9302d8e10702c6798
+      BASE_TREE: 9d636c7fe2c150ecec1c1d25b2b8a7441789fd03
+      PROD_SHA: cbb823ce7d3fc871c35a83afc5ee21ae71945821
+      PROD_TREE: 146cb78edfb434fd43e532593efce8e35ee97111
+      BO_TEST_BLOB: 5bfd9a81e0de21e70f93e24d8b43a4b540724e9c
+      BQ_SPEC_BLOB: 9daf9f45df8c82ae9e483839d8f36c4b492b80c0
+      BP_DECISION_BLOB: 9995e9f877c5f4c207e34bcfe0b228dd89f3fbeb
+      BN_CONTRACT_BLOB: c5f5a0cd0df3969646fecd8e137a2770c2daae71
+      BN_CONTRACT_SHA256: 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c
+      BP_HEAD: 319d2b910ac23008bcc5338f04a5f95a0ae5ac5b
+      BP_TREE: 1fc7223296b71256681a885de7e20161114532a9
+      BP_RUN: '34355148349'
+      BP_JOB: '102477806191'
+      BP_CI_RUN: '34355148286'
+      BP_CI_JOB: '102477834627'
+      BP_ARTIFACT: '10105612793'
+      BP_ARTIFACT_NAME: r318bp-published-bo-differential-evidence
+      BP_ARTIFACT_SIZE: '7008'
+      BP_DIGEST: sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240
+      BP_MANIFEST_SHA256: 2e8fbf0b4a9c2d29d4fdb440dba54eabcd860c91bc25c49d486c969052bef174
+      BP_ROWS_SHA256: ed2d6bbcfa18091eafdda87a4dbbffb20f91408c802cfb8e2b2efe4574a4717b
+      BM_HEAD: 689b1a24b57a84c81dc19c9a308fb1423f191c4b
+      BM_RUN: '34334615939'
+      BM_ARTIFACT: '10097405795'
+      BM_ARTIFACT_NAME: r318bm-one-following-header-evidence
+      BM_ARTIFACT_SIZE: '8340'
+      BM_DIGEST: sha256:bd51a612be2cdd87d9ce1eb141f3f77f47ae29d42aabc8fc16c260a175f27963
+      BM_MANIFEST_SHA256: 167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2
+      BM_PATCH_SHA256: 092d188a7485e98fc88dbb297a11d744bad71a1e7bdb686ae90d441ba20894ec
+      MAIN_CI_RUN: '34362734275'
+      MAIN_CI_JOB: '102503581991'
+      MAIN_KA_RUN: '34362735282'
+      MAIN_KA_JOB: '102503583216'
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      BOXCARS_FRAME_BLOB: 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+      BOXCARS_ATTR_BLOB: 5e2d5bc1cd8187af30c3ea95193ad987645cb76e
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending -f context='r318bq/evidence' \
+            -f description='R3.18BQ one-following-payload evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Freeze canonical authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "authority mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          check_run() {
+            local run="$1" job="$2" sha="$3" branch="$4"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_sha)" "$sha"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_branch)" "$branch"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .status)" completed
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" success
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .run_id)" "$run"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .conclusion)" success
+          }
+          eq "$(git rev-parse HEAD^)" "$BASE_SHA"
+          eq "$(git rev-parse "$BASE_SHA^{tree}")" "$BASE_TREE"
+          eq "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" "$BASE_SHA"
+          eq "$(git rev-parse "$PROD_SHA^{tree}")" "$PROD_TREE"
+          eq "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18bo_post_bk_following_header.rs")" "$BO_TEST_BLOB"
+          eq "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md")" "$BQ_SPEC_BLOB"
+          eq "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BP_DECISION.md")" "$BP_DECISION_BLOB"
+          eq "$(git rev-parse "$BASE_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json")" "$BN_CONTRACT_BLOB"
+          eq "$(git show "$BASE_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json" | sha256sum | awk '{print $1}')" "$BN_CONTRACT_SHA256"
+          eq "$(git rev-parse "$BP_HEAD^{tree}")" "$BP_TREE"
+          check_run "$BP_RUN" "$BP_JOB" "$BP_HEAD" evidence/r318bp-published-bo-v1
+          check_run "$BP_CI_RUN" "$BP_CI_JOB" "$BP_HEAD" evidence/r318bp-published-bo-v1
+          check_run "$MAIN_CI_RUN" "$MAIN_CI_JOB" "$BASE_SHA" main
+          check_run "$MAIN_KA_RUN" "$MAIN_KA_JOB" "$BASE_SHA" main
+          bp_meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BP_ARTIFACT")"
+          eq "$(jq -r .name <<<"$bp_meta")" "$BP_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$bp_meta")" "$BP_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$bp_meta")" "$BP_DIGEST"
+          eq "$(jq -r .expired <<<"$bp_meta")" false
+          eq "$(jq -r .workflow_run.id <<<"$bp_meta")" "$BP_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$bp_meta")" "$BP_HEAD"
+          eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BM_RUN" --jq .head_sha)" "$BM_HEAD"
+          eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BM_RUN" --jq .conclusion)" success
+          bm_meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BM_ARTIFACT")"
+          eq "$(jq -r .name <<<"$bm_meta")" "$BM_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$bm_meta")" "$BM_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$bm_meta")" "$BM_DIGEST"
+          eq "$(jq -r .expired <<<"$bm_meta")" false
+          eq "$(jq -r .workflow_run.id <<<"$bm_meta")" "$BM_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$bm_meta")" "$BM_HEAD"
+          echo R3_18BQ_AUTHORITY_FREEZE=PASS
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Execute deterministic R3.18BQ evidence
+        shell: bash
+        run: bash tools/_tmp_r318bq_run.sh
+
+      - name: Reuse and verify unique same-head natural CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bq-out"
+          workflow_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml" --jq .id)"
+          run_id=''
+          for attempt in $(seq 1 120); do
+            runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow_id}/runs?head_sha=${GITHUB_SHA}&event=push&per_page=100")"
+            count="$(jq '[.workflow_runs[] | select(.head_sha == env.GITHUB_SHA and .event == "push")] | length' <<<"$runs")"
+            [ "$count" -gt 1 ] && { echo "duplicate same-head CI runs: $count" >&2; exit 1; }
+            if [ "$count" -eq 1 ]; then run_id="$(jq -r '.workflow_runs[0].id' <<<"$runs")"; break; fi
+            sleep 5
+          done
+          test -n "$run_id"
+          for attempt in $(seq 1 240); do
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" --jq .status)"
+            [ "$state" = completed ] && break
+            sleep 5
+          done
+          ci="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}")"
+          test "$(jq -r .status <<<"$ci")" = completed
+          test "$(jq -r .conclusion <<<"$ci")" = success
+          test "$(jq -r .head_sha <<<"$ci")" = "$GITHUB_SHA"
+          jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/jobs?per_page=100")"
+          test "$(jq '.total_count' <<<"$jobs")" -eq 1
+          job_id="$(jq -r '.jobs[0].id' <<<"$jobs")"
+          test "$(jq -r '.jobs[0].conclusion' <<<"$jobs")" = success
+          {
+            echo R3_18BQ_SAME_HEAD_CI=PASS
+            echo CI_RUN_ID=$run_id
+            echo CI_JOB_ID=$job_id
+            echo CI_RUN_COUNT=1
+            echo CI_HEAD_SHA=$GITHUB_SHA
+          } | tee "$OUT/r3_18bq_same_head_ci_receipt.txt"
+          (cd "$OUT" && sha256sum \
+            r3_18bq_bp_authority.tsv \
+            r3_18bq_bp_aggregate.txt \
+            r3_18bq_native_rows.tsv \
+            r3_18bq_oracle_requests.tsv \
+            r3_18bq_oracle.log \
+            r3_18bq_boxcars_instrumentation.patch \
+            r3_18bq_boxcars_instrumentation_sha256.txt \
+            r3_18bq_comparison.json \
+            r3_18bq_negative_controls.txt \
+            r3_18bq_source_scope.txt \
+            r3_18bq_mutation.txt \
+            r3_18bq_validation.txt \
+            r3_18bq_privacy.txt \
+            r3_18bq_aggregate.txt \
+            r3_18bq_same_head_ci_receipt.txt \
+            > r3_18bq_artifact_sha256.txt)
+          test "$(wc -l < "$OUT/r3_18bq_artifact_sha256.txt")" -eq 15
+          (cd "$OUT" && sha256sum -c r3_18bq_artifact_sha256.txt)
+
+      - name: Upload immutable R3.18BQ evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bq-one-following-payload-evidence
+          path: ${{ runner.temp }}/r318bq-out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Verify receipt and mark Outcome A
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bq-out"
+          test -n "$ARTIFACT_ID"; test -n "$ARTIFACT_DIGEST"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r '.workflow_run.id' <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r '.workflow_run.head_sha' <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r .expired <<<"$meta")" = false
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$(jq -r .digest <<<"$meta")")" = "$(norm "$ARTIFACT_DIGEST")"
+          for line in \
+            'R3_18BQ_OUTCOME=A' \
+            'R3_18BQ_EVIDENCE=PASS' \
+            'R3_18BQ_BP_ROWS=3/3' \
+            'R3_18BQ_FALSE_TERMINATORS_EXCLUDED=1/1' \
+            'R3_18BQ_TRUE_PAYLOADS=2/2' \
+            'R3_18BQ_BOOLEAN_ROWS=1' \
+            'R3_18BQ_ACTIVE_ACTOR_ROWS=1' \
+            'R3_18BQ_BOOLEAN_WIDTH_BITS=1' \
+            'R3_18BQ_ACTIVE_ACTOR_WIDTH_BITS=33' \
+            'R3_18BQ_PROPERTY_ORDINAL_7=2/2' \
+            'R3_18BQ_NATIVE_ORACLE_MISMATCH=0' \
+            'R3_18BQ_WITNESS_RESELECTION=0' \
+            'R3_18BQ_FALSE_ROW_PAYLOAD_ACCESS=0' \
+            'R3_18BQ_NEXT_CONTROL_BITS_CONSUMED=0' \
+            'R3_18BQ_HISTORICAL_PAYLOAD_VALUE_COORDINATE_INHERITANCE=0' \
+            'R3_18BQ_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' \
+            'R3_18BQ_PRIVACY_SCAN=PASS'; do grep -Fx "$line" "$OUT/r3_18bq_aggregate.txt"; done
+          grep -Fx 'R3_18BQ_SAME_HEAD_CI=PASS' "$OUT/r3_18bq_same_head_ci_receipt.txt"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318bq/evidence' \
+            -f description='R3.18BQ Outcome A evidence verified' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo "R3_18BQ_AUTHORITY_RUN=$GITHUB_RUN_ID"
+          echo "R3_18BQ_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18BQ_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          echo R3_18BQ_IMMUTABLE_RECEIPT=PASS

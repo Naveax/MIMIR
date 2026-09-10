@@ -1,0 +1,95 @@
+        assert_eq!(Some(header.property_present_start_bit), row.header_property_present_start_bit, "{label}");
+        assert_eq!(Some(header.property_present_end_bit), row.header_property_present_end_bit, "{label}");
+        assert_eq!(header.stream_id_start_bit, row.stream_id_start_bit, "{label}");
+        assert_eq!(header.stream_id, row.stream_id, "{label}");
+        assert_eq!(header.stream_id_bound, row.stream_id_bound, "{label}");
+        assert_eq!(header.prop_id_bits, row.prop_id_bits, "{label}");
+        assert_eq!(header.resolved_property_object_index, row.property_object_index, "{label}");
+        assert_eq!(header.payload_start_bit, row.payload_start_bit, "{label}");
+        assert_eq!(Some(header.stop_bit), row.header_stop_bit, "{label}");
+
+        let tag = header.resolved_attribute_tag.expect("BQ exact tag");
+        let payload_start = header.payload_start_bit.expect("BQ payload start");
+        bq_guard(
+            row,
+            header.actor_object_index,
+            payload_start,
+            tag,
+            bo.context.version_major,
+            bo.context.version_minor,
+            bo.context.net_version,
+            bo.context.is_rl_223,
+        )
+        .expect("BQ current authority guard");
+
+        let (payload_end, payload_width, semantic_bool, semantic_active, semantic_actor) = match tag {
+            ReplayNetworkAttributeTagV1::Boolean => {
+                decoder_targets += 1;
+                let decoded = mimir_replay::decode_replay_network_primitive_scalar_v1(&network, payload_start, tag)
+                    .unwrap_or_else(|error| panic!("BQ Boolean {label}: {error}"));
+                assert_eq!(decoded.payload_start_bit, payload_start);
+                assert_eq!(decoded.payload_width, 1);
+                assert_eq!(decoded.payload_end_bit, payload_start + 1);
+                let semantic = match &decoded.value {
+                    mimir_replay::ReplayNetworkPrimitiveScalarValueV1::Boolean(value) => *value,
+                    other => panic!("BQ Boolean wrong variant {other:?}"),
+                };
+                let repeated = mimir_replay::decode_replay_network_primitive_scalar_v1(&network, payload_start, tag)
+                    .expect("BQ Boolean repeat");
+                assert_eq!(decoded, repeated);
+                repeat_ok += 1;
+                let required = usize::try_from(decoded.payload_end_bit.div_ceil(8)).unwrap();
+                assert!(mimir_replay::decode_replay_network_primitive_scalar_v1(&network[..required - 1], payload_start, tag).is_err());
+                truncation_ok += 1;
+                let mut poisoned = network.clone();
+                for bit in decoded.payload_end_bit..decoded.payload_end_bit.saturating_add(16) {
+                    flip_bit(&mut poisoned, bit);
+                }
+                let poisoned_decoded = mimir_replay::decode_replay_network_primitive_scalar_v1(&poisoned, payload_start, tag)
+                    .expect("BQ Boolean poison");
+                assert_eq!(decoded, poisoned_decoded);
+                poison_ok += 1;
+                (decoded.payload_end_bit, u64::from(decoded.payload_width), if semantic { "1" } else { "0" }.to_owned(), "na".to_owned(), "na".to_owned())
+            }
+            ReplayNetworkAttributeTagV1::ActiveActor => {
+                decoder_targets += 1;
+                let k2 = mimir_replay::ReplayNetworkK2DecodeContextV1 {
+                    net_version: bo.context.net_version,
+                    is_rl_223: bo.context.is_rl_223,
+                };
+                let decoded = mimir_replay::decode_replay_network_k2_v1(&network, payload_start, tag, k2)
+                    .unwrap_or_else(|error| panic!("BQ ActiveActor {label}: {error}"));
+                assert_eq!(decoded.payload_start_bit, payload_start);
+                assert_eq!(decoded.payload_width, 33);
+                assert_eq!(decoded.payload_end_bit, payload_start + 33);
+                let (active, actor) = match &decoded.value {
+                    mimir_replay::ReplayNetworkK2ValueV1::ActiveActor { active, actor } => (*active, *actor),
+                    other => panic!("BQ ActiveActor wrong variant {other:?}"),
+                };
+                let repeated = mimir_replay::decode_replay_network_k2_v1(&network, payload_start, tag, k2)
+                    .expect("BQ ActiveActor repeat");
+                assert_eq!(decoded, repeated);
+                repeat_ok += 1;
+                let required = usize::try_from(decoded.payload_end_bit.div_ceil(8)).unwrap();
+                assert!(mimir_replay::decode_replay_network_k2_v1(&network[..required - 1], payload_start, tag, k2).is_err());
+                truncation_ok += 1;
+                let mut poisoned = network.clone();
+                for bit in decoded.payload_end_bit..decoded.payload_end_bit.saturating_add(16) {
+                    flip_bit(&mut poisoned, bit);
+                }
+                let poisoned_decoded = mimir_replay::decode_replay_network_k2_v1(&poisoned, payload_start, tag, k2)
+                    .expect("BQ ActiveActor poison");
+                assert_eq!(decoded, poisoned_decoded);
+                poison_ok += 1;
+                (decoded.payload_end_bit, decoded.payload_width, "na".to_owned(), if active { "1" } else { "0" }.to_owned(), actor.to_string())
+            }
+            other => panic!("BQ unsupported admitted payload tag {other:?}"),
+        };
+
+        let wrong_tag = match tag {
+            ReplayNetworkAttributeTagV1::Boolean => ReplayNetworkAttributeTagV1::ActiveActor,
+            ReplayNetworkAttributeTagV1::ActiveActor => ReplayNetworkAttributeTagV1::Boolean,
+            _ => unreachable!(),
+        };
+        assert!(bq_guard(row, header.actor_object_index, payload_start, wrong_tag, row.version_major, row.version_minor, row.net_version, row.is_rl_223).is_err());
+        wrong_tag_ok += 1;

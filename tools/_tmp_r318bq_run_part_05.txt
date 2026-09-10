@@ -1,0 +1,103 @@
+                            let r3_18bq_payload_end_bit =
+                                r3_18bm_offset(bits, r3_18bm_total_bits);
+                            match (attr.attribute, &attribute) {
+                                (AttributeTag::Boolean, Attribute::Boolean(value)) => println!(
+                                    "R3_18BQ_ORACLE\\tlabel={}\\tframe_index={}\\tactor_ordinal={}\\tactor_context_object_id={}\\tproperty_ordinal={}\\tproperty_present_start_bit={}\\ttag=Boolean\\tpayload_start_bit={}\\tpayload_end_bit={}\\tpayload_width={}\\tsemantic_bool={}\\tsemantic_active=na\\tsemantic_actor=na",
+                                    r3_18bm_label(), frame_index, r3_18bm_current_actor_ordinal,
+                                    object_id.0, r3_18bm_property_ordinal,
+                                    r3_18bm_property_present_start_bit,
+                                    r3_18bm_payload_start_bit, r3_18bq_payload_end_bit,
+                                    r3_18bq_payload_end_bit.saturating_sub(r3_18bm_payload_start_bit),
+                                    u8::from(*value),
+                                ),
+                                (AttributeTag::ActiveActor, Attribute::ActiveActor(value)) => println!(
+                                    "R3_18BQ_ORACLE\\tlabel={}\\tframe_index={}\\tactor_ordinal={}\\tactor_context_object_id={}\\tproperty_ordinal={}\\tproperty_present_start_bit={}\\ttag=ActiveActor\\tpayload_start_bit={}\\tpayload_end_bit={}\\tpayload_width={}\\tsemantic_bool=na\\tsemantic_active={}\\tsemantic_actor={}",
+                                    r3_18bm_label(), frame_index, r3_18bm_current_actor_ordinal,
+                                    object_id.0, r3_18bm_property_ordinal,
+                                    r3_18bm_property_present_start_bit,
+                                    r3_18bm_payload_start_bit, r3_18bq_payload_end_bit,
+                                    r3_18bq_payload_end_bit.saturating_sub(r3_18bm_payload_start_bit),
+                                    u8::from(value.active), value.actor.0,
+                                ),
+                                _ => panic!("R3.18BQ current target resolved to unsupported payload pair: {:?} / {:?}", attr.attribute, attribute),
+                            }
+                        }
+
+'''
+if s.count(needle) != 1:
+    raise SystemExit(f'expected one BM property-ordinal increment, got {s.count(needle)}')
+s=s.replace(needle,block+needle,1)
+p.write_text(s,encoding='utf-8',newline='\n')
+print('R3_18BQ_BOXCARS_PAYLOAD_EXTENSION=PASS')
+PY
+
+git -C "$BOXCARS" diff --check
+cargo +stable build --manifest-path "$BOXCARS/Cargo.toml" --example r3_18bm_probe --quiet
+PROBE="$BOXCARS/target/debug/examples/r3_18bm_probe"
+test -x "$PROBE"
+: > "$OUT/r3_18bq_oracle.log"
+
+python3 - "$BP_DIR/r3_18bp_published_bo.tsv" "$OUT/r3_18bq_oracle_requests.tsv" <<'PY'
+import csv,sys
+from pathlib import Path
+src,dst=map(Path,sys.argv[1:])
+rows=list(csv.DictReader(src.open(encoding='utf-8'),delimiter='\t'))
+assert len(rows)==3
+true=[r for r in rows if r['header_present']=='1']
+false=[r for r in rows if r['header_present']=='0']
+assert len(true)==2 and len(false)==1
+assert {r['attribute_tag'] for r in true}=={'Boolean','ActiveActor'}
+with dst.open('w',encoding='utf-8',newline='') as f:
+    for r in true:
+        f.write('\t'.join([r['label'],r['frame_index'],r['actor_ordinal'],r['actor_context_object_id'],r['header_property_present_start_bit']])+'\n')
+print('R3_18BQ_ORACLE_REQUESTS=PASS true=2 false_excluded=1')
+PY
+
+while IFS=$'\t' read -r label frame actor_ordinal actor_object property_start; do
+  MIMIR_R3_18BM_LABEL="$label" \
+  MIMIR_R3_18BM_TARGET_FRAME="$frame" \
+  MIMIR_R3_18BM_TARGET_ACTOR_ORDINAL="$actor_ordinal" \
+  MIMIR_R3_18BM_TARGET_ACTOR_OBJECT="$actor_object" \
+  MIMIR_R3_18BM_TARGET_PROPERTY_START="$property_start" \
+    "$PROBE" "$GITHUB_WORKSPACE/$label" >> "$OUT/r3_18bq_oracle.log" 2>&1
+done < "$OUT/r3_18bq_oracle_requests.tsv"
+test "$(grep -c $'^R3_18BQ_ORACLE\t' "$OUT/r3_18bq_oracle.log")" -eq 2
+
+git -C "$BOXCARS" diff --binary -- Cargo.toml src/network/frame_decoder.rs examples/r3_18bm_probe.rs > "$OUT/r3_18bq_boxcars_instrumentation.patch"
+sha256sum "$OUT/r3_18bq_boxcars_instrumentation.patch" > "$OUT/r3_18bq_boxcars_instrumentation_sha256.txt"
+
+python3 - "$BP_DIR/r3_18bp_published_bo.tsv" "$OUT/r3_18bq_native_rows.tsv" "$OUT/r3_18bq_oracle.log" "$OUT/r3_18bq_comparison.json" <<'PY'
+import csv,json,sys
+from pathlib import Path
+bp_p,native_p,oracle_p,out_p=map(Path,sys.argv[1:])
+bp=list(csv.DictReader(bp_p.open(encoding='utf-8'),delimiter='\t'))
+native=list(csv.DictReader(native_p.open(encoding='utf-8'),delimiter='\t'))
+
+def parse_oracle(path):
+    out={}
+    for line in path.read_text(encoding='utf-8',errors='replace').splitlines():
+        if not line.startswith('R3_18BQ_ORACLE\t'):
+            continue
+        row={}
+        for item in line.split('\t')[1:]:
+            k,v=item.split('=',1); row[k]=v
+        assert row['label'] not in out
+        out[row['label']]=row
+    return out
+oracle=parse_oracle(oracle_p)
+true=[r for r in bp if r['header_present']=='1']
+false=[r for r in bp if r['header_present']=='0']
+assert len(bp)==3 and len(true)==2 and len(false)==1
+assert len(native)==2 and len(oracle)==2
+assert {r['label'] for r in true}=={r['label'] for r in native}==set(oracle)
+nmap={r['label']:r for r in native}
+rows=[]
+for a in true:
+    n=nmap[a['label']]; o=oracle[a['label']]
+    assert a['attribute_tag']==n['attribute_tag']==o['tag']
+    assert a['payload_start_bit']==n['payload_start_bit']==o['payload_start_bit']
+    assert a['frame_index']==n['frame_index']==o['frame_index']=='0'
+    assert a['actor_ordinal']==n['actor_ordinal']==o['actor_ordinal']
+    assert a['actor_context_object_id']==n['actor_context_object_id']==o['actor_context_object_id']
+    assert a['header_property_present_start_bit']==n['property_present_start_bit']==o['property_present_start_bit']
+    assert o['property_ordinal']=='7'

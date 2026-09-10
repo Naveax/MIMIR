@@ -1,0 +1,91 @@
+    expected='1' if a['attribute_tag']=='Boolean' else '33'
+    assert n['payload_width']==o['payload_width']==expected
+    assert n['payload_end_bit']==o['payload_end_bit']==str(int(a['payload_start_bit'])+int(expected))
+    for key in ('semantic_bool','semantic_active','semantic_actor'):
+        assert n[key]==o[key], (a['label'],key,n[key],o[key])
+    rows.append({
+        'label':a['label'],'tag':a['attribute_tag'],
+        'payload_start_bit':int(n['payload_start_bit']),'payload_end_bit':int(n['payload_end_bit']),
+        'payload_width':int(n['payload_width']),'semantic_bool':n['semantic_bool'],
+        'semantic_active':n['semantic_active'],'semantic_actor':n['semantic_actor'],
+        'property_ordinal':7,'native_oracle_exact':True,
+    })
+result={
+  'outcome':'A','bp_rows':3,'false_excluded':1,'true_rows':2,
+  'tags':{'Boolean':1,'ActiveActor':1},'widths':{'Boolean':1,'ActiveActor':33},
+  'native_oracle_mismatch':0,'witness_reselection':0,'next_control_bits_consumed':0,
+  'historical_payload_value_coordinate_inheritance':0,'rows':rows,
+}
+out_p.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+print('R3_18BQ_NATIVE_ORACLE_COMPARISON=PASS rows=2 Boolean=1 ActiveActor=1 mismatch=0 reselection=0 next_control=0')
+PY
+
+# Full repository validation. Remove ephemeral test before clean-scope checks.
+cargo +1.85.0 fmt --all --check
+cargo +1.85.0 check --workspace
+cargo +1.85.0 clippy --workspace --all-targets -- -D warnings
+cargo +1.85.0 test --workspace
+pwsh -NoLogo -NoProfile -File scripts/verify_repo.ps1
+git diff --check
+
+mapfile -t changed < <(git diff --name-only "$BASE_SHA" HEAD | sort)
+mapfile -t expected < <(printf '%s\n' '.github/workflows/_tmp_r318bq_evidence.yml' 'tools/_tmp_r318bq_run.sh' 'tools/_tmp_r318bq_run_part_01.txt' 'tools/_tmp_r318bq_run_part_02.txt' 'tools/_tmp_r318bq_run_part_03.txt' 'tools/_tmp_r318bq_run_part_04.txt' 'tools/_tmp_r318bq_run_part_05.txt' 'tools/_tmp_r318bq_run_part_06.txt' | sort)
+test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected[@]}")"
+git diff --exit-code "$BASE_SHA" HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+cat > "$OUT/r3_18bq_mutation.txt" <<'EOF'
+R3_18BQ_PRODUCTION_MUTATION=0
+R3_18BQ_CARGO_MUTATION=0
+R3_18BQ_FIXTURE_MUTATION=0
+R3_18BQ_CORPUS_MUTATION=0
+R3_18BQ_SUPPORT_MUTATION=0
+EOF
+cat > "$OUT/r3_18bq_validation.txt" <<'EOF'
+R3_18BQ_FMT=PASS
+R3_18BQ_CHECK=PASS
+R3_18BQ_CLIPPY=PASS
+R3_18BQ_TEST=PASS
+R3_18BQ_REPOSITORY_VERIFY=PASS
+R3_18BQ_DIFF_CHECK=PASS
+EOF
+
+# Normalize only ephemeral runner paths in evidence text before privacy scan.
+python3 - "$OUT" <<'PY'
+from pathlib import Path
+import os,sys
+root=Path(sys.argv[1])
+for path in root.rglob('*'):
+    if not path.is_file(): continue
+    try: text=path.read_text(encoding='utf-8')
+    except (OSError,UnicodeDecodeError): continue
+    for value,tag in ((os.environ.get('GITHUB_WORKSPACE'),'<workspace>'),(os.environ.get('RUNNER_TEMP'),'<runner-temp>')):
+        if value: text=text.replace(value,tag)
+    path.write_text(text,encoding='utf-8',newline='\n')
+PY
+! grep -RniE '/home/runner|C:\\Users\\|github_pat_|ghp_|Omersevik|Maximillan' "$OUT"
+echo R3_18BQ_PRIVACY_SCAN=PASS > "$OUT/r3_18bq_privacy.txt"
+
+cat > "$OUT/r3_18bq_aggregate.txt" <<'EOF'
+R3_18BQ_OUTCOME=A
+R3_18BQ_EVIDENCE=PASS
+R3_18BQ_BP_ROWS=3/3
+R3_18BQ_FALSE_TERMINATORS_EXCLUDED=1/1
+R3_18BQ_TRUE_PAYLOADS=2/2
+R3_18BQ_BOOLEAN_ROWS=1
+R3_18BQ_ACTIVE_ACTOR_ROWS=1
+R3_18BQ_BOOLEAN_WIDTH_BITS=1
+R3_18BQ_ACTIVE_ACTOR_WIDTH_BITS=33
+R3_18BQ_PROPERTY_ORDINAL_7=2/2
+R3_18BQ_NATIVE_ORACLE_MISMATCH=0
+R3_18BQ_WITNESS_RESELECTION=0
+R3_18BQ_REPEATABILITY=PASS 2/2
+R3_18BQ_TRUNCATION=PASS 2/2
+R3_18BQ_WRONG_TAG_START_CONTEXT=PASS 2/2
+R3_18BQ_POST_PAYLOAD_POISON=PASS 2/2
+R3_18BQ_FALSE_ROW_PAYLOAD_ACCESS=0
+R3_18BQ_NEXT_CONTROL_BITS_CONSUMED=0
+R3_18BQ_HISTORICAL_PAYLOAD_VALUE_COORDINATE_INHERITANCE=0
+R3_18BQ_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0
+R3_18BQ_PRIVACY_SCAN=PASS
+EOF
+
+echo R3_18BQ_RUNNER=PASS

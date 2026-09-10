@@ -1,0 +1,111 @@
+        return Err("payload-start-mismatch");
+    }
+    let tag_name = format!("{tag:?}");
+    if row.attribute_tag.as_deref() != Some(tag_name.as_str()) {
+        return Err("payload-tag-mismatch");
+    }
+    if (version_major, version_minor, net_version, is_rl_223)
+        != (row.version_major, row.version_minor, row.net_version, row.is_rl_223)
+    {
+        return Err("payload-context-mismatch");
+    }
+    Ok(())
+}
+
+fn flip_bit(bytes: &mut [u8], bit: u64) {
+    let index = usize::try_from(bit).expect("bit fits usize");
+    if index / 8 < bytes.len() {
+        bytes[index / 8] ^= 1u8 << (index % 8);
+    }
+}
+
+#[test]
+fn r3_18bq_exact_bp_true_rows_decode_one_payload_and_false_row_never_decodes() {
+    let authority = bq_rows();
+    let by_label: std::collections::BTreeMap<String, BqRow> = authority
+        .iter()
+        .cloned()
+        .map(|row| (row.label.clone(), row))
+        .collect();
+    assert_eq!(by_label.len(), 3);
+
+    let mut seen = std::collections::BTreeSet::new();
+    let mut excluded_au = 0usize;
+    let mut excluded_be = 0usize;
+    let mut bk_rows = 0usize;
+    let mut false_rows = 0usize;
+    let mut true_rows = 0usize;
+    let mut boolean_rows = 0usize;
+    let mut active_actor_rows = 0usize;
+    let mut decoder_targets = 0usize;
+    let mut repeat_ok = 0usize;
+    let mut truncation_ok = 0usize;
+    let mut wrong_tag_ok = 0usize;
+    let mut wrong_start_ok = 0usize;
+    let mut wrong_context_ok = 0usize;
+    let mut poison_ok = 0usize;
+    let mut out = String::from(
+        "label\tframe_index\tactor_ordinal\tactor_context_object_id\tproperty_present_start_bit\tproperty_present_end_bit\tstream_id_start_bit\tstream_id\tstream_id_bound\tprop_id_bits\tproperty_object_index\tattribute_tag\tversion_major\tversion_minor\tnet_version\tis_rl_223\tpayload_start_bit\tpayload_end_bit\tpayload_width\tsemantic_bool\tsemantic_active\tsemantic_actor\n",
+    );
+
+    for (index, (path, first_start, actor_object, _)) in au_cases().into_iter().enumerate() {
+        let (network, plan) = frozen_network_and_plan(path, &format!("r318bq_{index}"));
+        let (prior, control, an) = aq_from_frozen(&network, &plan, first_start, actor_object);
+        let aq = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+            &network, &prior, &control, &plan, k3_context(), &an,
+        ).unwrap_or_else(|error| panic!("BQ AQ prerequisite {index} {path}: {error}"));
+        let au = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+            &network, &prior, &control, &plan, k3_context(), &an, &aq,
+        ).unwrap_or_else(|error| panic!("BQ AU prerequisite {index} {path}: {error}"));
+        if au.following_header.is_none() {
+            excluded_au += 1;
+            continue;
+        }
+        let ay = decode_ay(&network, &prior, &control, &plan, k3_context(), &an, &au)
+            .unwrap_or_else(|error| panic!("BQ AY prerequisite {index} {path}: {error}"));
+        let ba = decode_ba(&network, &prior, &control, &plan, k3_context(), &an, &ay)
+            .unwrap_or_else(|error| panic!("BQ BA prerequisite {index} {path}: {error}"));
+        let be = decode_be(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba)
+            .unwrap_or_else(|error| panic!("BQ BE prerequisite {index} {path}: {error}"));
+        if be.following_header.is_none() {
+            excluded_be += 1;
+            continue;
+        }
+        let bi = decode_bi(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be)
+            .unwrap_or_else(|error| panic!("BQ BI prerequisite {index} {path}: {error}"));
+        let bk = decode_bk(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi)
+            .unwrap_or_else(|error| panic!("BQ BK prerequisite {index} {path}: {error}"));
+        bk_rows += 1;
+
+        let label = bq_label(path);
+        let row = by_label
+            .get(label)
+            .unwrap_or_else(|| panic!("BQ witness reselection: {label}"));
+        assert!(seen.insert(label.to_owned()), "duplicate BQ witness {label}");
+        assert_eq!(row.frame_index, 0, "{label}");
+        assert_eq!(row.actor_context_object_id, actor_object, "{label}");
+        assert_eq!(row.bk_payload_end_bit, bi.stop_bit, "{label}");
+        assert_eq!(row.bk_control_start_bit, bk.property_present_start_bit, "{label}");
+        assert_eq!(row.bk_control_end_bit, bk.property_present_end_bit, "{label}");
+        assert_eq!(row.bk_property_present, bk.property_present, "{label}");
+
+        let bo = decode_bo(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk)
+            .unwrap_or_else(|error| panic!("BQ published BO {index} {label}: {error}"));
+        assert_eq!(bo.stop_bit, row.bo_stop_bit, "{label}");
+        assert_eq!(bo.context.version_major, row.version_major, "{label}");
+        assert_eq!(bo.context.version_minor, row.version_minor, "{label}");
+        assert_eq!(bo.context.net_version, row.net_version, "{label}");
+        assert_eq!(bo.context.is_rl_223, row.is_rl_223, "{label}");
+
+        if !row.bk_property_present {
+            false_rows += 1;
+            assert!(!row.header_present, "{label}");
+            assert!(bo.following_header.is_none(), "false BP row exposed BO header {label}");
+            assert_eq!(bo.stop_bit, bk.stop_bit, "false BP stop drift {label}");
+            continue;
+        }
+
+        true_rows += 1;
+        assert!(row.header_present, "{label}");
+        let header = bo.following_header.as_ref().expect("BQ true BO header");
+        assert_eq!(Some(header.actor_object_index), row.header_actor_object_index, "{label}");

@@ -1,0 +1,123 @@
+        assert!(bq_guard(row, header.actor_object_index, payload_start + 1, tag, row.version_major, row.version_minor, row.net_version, row.is_rl_223).is_err());
+        wrong_start_ok += 1;
+        assert!(bq_guard(row, header.actor_object_index, payload_start, tag, row.version_major, row.version_minor + 1, row.net_version, row.is_rl_223).is_err());
+        wrong_context_ok += 1;
+
+        match tag {
+            ReplayNetworkAttributeTagV1::Boolean => boolean_rows += 1,
+            ReplayNetworkAttributeTagV1::ActiveActor => active_actor_rows += 1,
+            _ => unreachable!(),
+        }
+        out.push_str(&format!(
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:?}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+            row.label,
+            row.frame_index,
+            row.actor_ordinal,
+            row.actor_context_object_id,
+            row.header_property_present_start_bit.unwrap(),
+            row.header_property_present_end_bit.unwrap(),
+            row.stream_id_start_bit.unwrap(),
+            row.stream_id.unwrap(),
+            row.stream_id_bound.unwrap(),
+            row.prop_id_bits.unwrap(),
+            row.property_object_index.unwrap(),
+            tag,
+            row.version_major,
+            row.version_minor,
+            row.net_version,
+            u8::from(row.is_rl_223),
+            payload_start,
+            payload_end,
+            payload_width,
+            semantic_bool,
+            semantic_active,
+            semantic_actor,
+        ));
+    }
+
+    assert_eq!(excluded_au, 7);
+    assert_eq!(excluded_be, 37);
+    assert_eq!(bk_rows, 3);
+    assert_eq!(false_rows, 1);
+    assert_eq!(true_rows, 2);
+    assert_eq!(decoder_targets, 2);
+    assert_eq!(boolean_rows, 1);
+    assert_eq!(active_actor_rows, 1);
+    assert_eq!(repeat_ok, 2);
+    assert_eq!(truncation_ok, 2);
+    assert_eq!(wrong_tag_ok, 2);
+    assert_eq!(wrong_start_ok, 2);
+    assert_eq!(wrong_context_ok, 2);
+    assert_eq!(poison_ok, 2);
+    assert_eq!(seen.len(), 3);
+    for row in &authority {
+        assert!(seen.contains(&row.label), "missing BP authority row {}", row.label);
+    }
+
+    let output = std::env::var("R318BQ_NATIVE_OUT").expect("R318BQ_NATIVE_OUT");
+    std::fs::write(output, out).expect("write BQ native rows");
+    println!("R3_18BQ_NATIVE_SUMMARY true=2 false=1 au_excluded=7 be_excluded=37 Boolean=1 ActiveActor=1 width1=1 width33=1 decoder_targets=2 repeat=2 truncation=2 wrong_tag=2 wrong_start=2 wrong_context=2 poison=2 next_control=0 reselection=0");
+}
+RS
+
+export R318BQ_BP_ROWS="$BP_DIR/r3_18bp_published_bo.tsv"
+export R318BQ_NATIVE_OUT="$OUT/r3_18bq_native_rows.tsv"
+cargo +1.85.0 test -p mimir-replay --test r3_18bq_one_payload_probe r3_18bq_exact_bp_true_rows_decode_one_payload_and_false_row_never_decodes -- --nocapture 2>&1 | tee "$OUT/r3_18bq_native.log"
+grep -F 'R3_18BQ_NATIVE_SUMMARY true=2 false=1 au_excluded=7 be_excluded=37 Boolean=1 ActiveActor=1 width1=1 width33=1 decoder_targets=2 repeat=2 truncation=2 wrong_tag=2 wrong_start=2 wrong_context=2 poison=2 next_control=0 reselection=0' "$OUT/r3_18bq_native.log"
+test "$(($(wc -l < "$OUT/r3_18bq_native_rows.tsv") - 1))" -eq 2
+
+# Upstream focused negatives remain part of the current published-BO prerequisite.
+cargo +1.85.0 test -p mimir-replay --test r3_18bo_post_bk_following_header -- --nocapture
+cargo +1.85.0 test -p mimir-replay r3_18bo_exact_two_r3_18bn_contexts_are_admitted -- --nocapture
+cargo +1.85.0 test -p mimir-replay r3_18bo_exact_membership_rejects_widening_cross_boundary_and_fabrication -- --nocapture
+
+# Evidence-source scope: no raw next-control access or generalized cursor exists in the BQ helper.
+! grep -Fq '.read_bit(' "$TEST_PATH"
+! grep -Fq 'NetworkBitCursor' "$TEST_PATH"
+! grep -Fq 'following_property_present' "$TEST_PATH"
+cat > "$OUT/r3_18bq_source_scope.txt" <<'EOF'
+R3_18BQ_SOURCE_SCOPE=PASS
+R3_18BQ_TARGET_PAYLOAD_ROWS=2
+R3_18BQ_FALSE_ROW_PAYLOAD_DECODER_CALLS=0
+R3_18BQ_NEXT_CONTROL_READS=0
+R3_18BQ_GENERALIZED_CURSOR=0
+EOF
+
+cat > "$OUT/r3_18bq_negative_controls.txt" <<'EOF'
+R3_18BQ_FALSE_ROW_PAYLOAD_ACCESS=PASS 1/1
+R3_18BQ_REPEATABILITY=PASS 2/2
+R3_18BQ_TRUNCATION=PASS 2/2
+R3_18BQ_WRONG_TAG_GUARD=PASS 2/2
+R3_18BQ_WRONG_START_GUARD=PASS 2/2
+R3_18BQ_WRONG_CONTEXT_GUARD=PASS 2/2
+R3_18BQ_POST_PAYLOAD_POISON=PASS 2/2
+R3_18BQ_CORRUPT_BO_HEADER_PREREQUISITE=PASS via exact BP equality
+R3_18BQ_WRONG_ACTOR_UNRESOLVED_RL223_BN_WIDENING=PASS via focused published-BO negatives
+R3_18BQ_HISTORICAL_PAYLOAD_VALUE_COORDINATE_INHERITANCE=0
+R3_18BQ_NEXT_CONTROL_BITS_CONSUMED=0
+EOF
+
+rm -f "$TEST_PATH"
+
+# Independent current-row Boxcars oracle. The BM patch only instruments coordinates/property ordinal;
+# BP remains the row selector. We extend BM after the actual Boxcars attribute decode to emit value/end.
+git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+test "$(git -C "$BOXCARS" rev-parse HEAD:src/network/frame_decoder.rs)" = "$BOXCARS_FRAME_BLOB"
+test "$(git -C "$BOXCARS" rev-parse HEAD:src/network/attributes.rs)" = "$BOXCARS_ATTR_BLOB"
+git -C "$BOXCARS" apply "$BM_DIR/r3_18bm_boxcars_instrumentation.patch"
+
+python3 - "$BOXCARS/src/network/frame_decoder.rs" <<'PY'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1])
+s=p.read_text(encoding='utf-8')
+needle='''                        r3_18bm_property_ordinal += 1;\n'''
+block=r'''                        if frame_index == r3_18bm_target_usize("MIMIR_R3_18BM_TARGET_FRAME")
+                            && r3_18bm_current_actor_ordinal
+                                == r3_18bm_target_usize("MIMIR_R3_18BM_TARGET_ACTOR_ORDINAL")
+                            && object_id.0
+                                == r3_18bm_target_i32("MIMIR_R3_18BM_TARGET_ACTOR_OBJECT")
+                            && r3_18bm_property_present_start_bit
+                                == r3_18bm_target_usize("MIMIR_R3_18BM_TARGET_PROPERTY_START")
+                        {
