@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-09-09",
+  "updated_date": "2026-09-10",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "cbb823ce7d3fc871c35a83afc5ee21ae71945821",
   "last_production_milestone": "R3.18BO",
   "last_production_milestone_name": "bounded post-BK mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18BP",
-  "current_pass": "R3.18BQ",
-  "current_pass_kind": "read-only exactly-one-following-payload evidence on the two R3.18BP true rows",
-  "current_pass_goal": "Decode exactly one current payload on the two BP true rows and require pinned-Boxcars value/boundary equality: Boolean width1 and ActiveActor K2 width33.",
-  "current_pass_stop_boundary": "Stop at payload end. No payload on the BP false terminator, no next control, second payload/header or generalized cursor.",
+  "last_completed_read_only_audit": "R3.18BQ",
+  "current_pass": "R3.18BR",
+  "current_pass_kind": "read-only exactly-one-next-property-control-bit evidence on the two R3.18BQ payload rows",
+  "current_pass_goal": "From each exact R3.18BQ payload_end_bit, observe exactly one next property_present bit natively and with pinned Boxcars; record false/true without prior expectation.",
+  "current_pass_stop_boundary": "Stop one bit after BR control observation. No next stream/header/payload, second control, BP-false-row access or generalized cursor.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -187,10 +187,14 @@
     "generalized/repeated property loop or generic cursor after R3.18BO",
     "production mutation during R3.18BP",
     "payload access on the R3.18BP false terminator",
-    "next property-control bit after the R3.18BQ payload evidence boundary",
     "second payload or following header after R3.18BQ",
     "production composition of the R3.18BQ-observed payload before a later production pass",
-    "historical payload coordinate/value inheritance at R3.18BQ"
+    "historical payload coordinate/value inheritance at R3.18BQ",
+    "property-control access on the R3.18BP false terminator during R3.18BR",
+    "next stream/header/payload after the one R3.18BR control-bit evidence boundary",
+    "second later property-control bit after R3.18BR",
+    "production consumption of the R3.18BR-observed control bit before a later production pass",
+    "generalized/repeated property loop or generic cursor after R3.18BR"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -352,6 +356,8 @@
     "docs/continuity/MIMIR_R3_18BP_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BP_DECISION.md",
     "docs/continuity/MIMIR_R3_18BQ_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BQ_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BR_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_PASS_PROTOCOL.md",
     "docs/continuity/MIMIR_BOUNDARY_LOCKS.md",
     "docs/continuity/MIMIR_EXECUTION_ROADMAP_A_TO_Z.md",
@@ -3302,15 +3308,45 @@
     "second_later_control_consumed": 0
   },
   "r3_18bq": {
-    "status": "active_read_only_payload_evidence",
-    "direct_row_authority_artifact": 10105612793,
-    "target_rows": 2,
-    "excluded_bp_false_rows": 1,
-    "expected_layouts": {
+    "status": "closed_outcome_a",
+    "head": "16c43f38e740c57ae9cb90c92084002ec83815e7",
+    "tree": "58248877a59fb0ddad707e32f92b2cec91f6b434",
+    "run": 34457725716,
+    "job": 102807933610,
+    "same_head_ci_run": 34457725700,
+    "same_head_ci_job": 102808516101,
+    "same_head_ci_count": 1,
+    "artifact": 10144392560,
+    "artifact_size": 9464,
+    "artifact_digest": "sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c",
+    "inner_manifest_sha256": "332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9",
+    "bp_rows": 3,
+    "false_terminators_excluded": 1,
+    "true_payloads": 2,
+    "tags": {
+      "Boolean": 1,
+      "ActiveActor": 1
+    },
+    "widths": {
       "Boolean": 1,
       "ActiveActor": 33
     },
-    "next_property_control_open": false,
+    "property_ordinal": 7,
+    "native_oracle_mismatch": 0,
+    "witness_reselection": 0,
+    "false_row_payload_access": 0,
+    "next_control_bits_consumed": 0,
+    "historical_payload_value_coordinate_inheritance": 0
+  },
+  "r3_18br": {
+    "status": "active_read_only_next_property_control_evidence",
+    "direct_payload_authority_artifact": 10144392560,
+    "target_rows": 2,
+    "excluded_bp_false_rows": 1,
+    "expected_distribution": null,
+    "allowed_control_bits_per_row": 1,
+    "next_stream_header_payload_open": false,
+    "second_later_control_open": false,
     "witness_reselection_allowed": false
   }
 }

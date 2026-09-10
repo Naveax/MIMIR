@@ -1982,3 +1982,12 @@ Evidence `319d2b910ac23008bcc5338f04a5f95a0ae5ac5b` / `34355148349/102477806191`
 Result: exact 3/3; false=1 no-header; true=2 exact BN headers; BN contexts=2/2; Boolean=1 / ActiveActor=1; mismatch/reselection 0/0; payload/second-control 0/0; mutation 0/0/0/0/0; privacy PASS.
 
 Opened R3.18BQ exactly-one-payload evidence on the two BP-true rows. False-row payload access, next control, second payload/header, historical value/coordinate inheritance and generalized cursor remain closed.
+
+---
+
+## 2026-09-10 — R3.18BQ — One Following Payload Evidence
+Outcome: **A — CLOSED / ADMITTED READ-ONLY EVIDENCE**
+
+Evidence `16c43f38e740c57ae9cb90c92084002ec83815e7` / `34457725716/102807933610` SUCCESS; CI `34457725700/102808516101` SUCCESS / count 1; artifact `10144392560` / 9464 bytes / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c`; manifest `sha256:332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9`. Exact 3-row authority: false excluded=1, true payloads=2, Boolean=1x1, ActiveActor=1x33, ordinal7=2/2, mismatch/reselection=0/0, false access=0, next-control=0, historical inheritance=0, mutation=0/0/0/0/0, privacy/full validation PASS.
+
+Opened R3.18BR one-next-property-control-bit evidence at the exact two BQ payload ends. Distribution remains unknown until measured; adjacent reads, BP-false access, production consumption and generalized cursor remain closed.

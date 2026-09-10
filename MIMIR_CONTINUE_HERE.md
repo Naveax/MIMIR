@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BO — bounded post-BK mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BP — published R3.18BO differential Outcome A / exact 3/3 / false=1 true=2 / mismatch 0 / artifact 10105612793
+  R3.18BQ — one following payload Outcome A / true=2 / Boolean=1x1 / ActiveActor=1x33 / mismatch 0 / artifact 10144392560
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BN — exact following-header context contract / Outcome A / 2 exact eight-field tuples / multiplicity 2 / 1 false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c / older-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BP — published BO differential Outcome A / exact 3/3 / BN contexts=2/2 / payload=0 / second-control=0 / artifact 10105612793
+  R3.18BQ — exact two payloads / Boolean width1 / ActiveActor K2 width33 / mismatch=0 / next-control=0 / artifact 10144392560
 
 CURRENT_PASS:
-  R3.18BQ — one following payload evidence
+  R3.18BR — next property-control bit evidence after exact BQ payload end
 
 CURRENT_PASS_TYPE:
-  read-only exactly-one-payload boundary evidence / BP true rows=2 / Boolean width1 / ActiveActor K2 width33 / no next control
+  read-only exactly-one-control-bit differential evidence / BQ payload rows=2 / unknown false-true distribution / no next stream-header-payload
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4278,3 +4278,10 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - artifact: `10105612793` / `sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240` / manifest `sha256:2e8fbf0b4a9c2d29d4fdb440dba54eabcd860c91bc25c49d486c969052bef174`.
 - result: 3/3 / false=1 / true=2 / exact BN=2/2 / Boolean=1 ActiveActor=1 / mismatch-reselection=0/0 / payload-control=0/0.
 - active R3.18BQ: two true rows only; Boolean width1, ActiveActor exact K2 width33; pinned-Boxcars equality required; next control closed.
+
+# CURRENT OVERRIDE — 2026-09-10 — R3.18BQ CLOSED / R3.18BR ACTIVE
+
+- BQ `16c43f38e740c57ae9cb90c92084002ec83815e7` / `34457725716/102807933610` SUCCESS; same-head CI `34457725700/102808516101` SUCCESS / count 1.
+- artifact `10144392560` / 9464 bytes / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c` / inner manifest `sha256:332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9`.
+- exact: BP=3 / false excluded=1 / true payloads=2 / Boolean=1x1 / ActiveActor=1x33 / ordinal7=2/2 / mismatch-reselection=0/0 / false access=0 / next-control=0.
+- R3.18BR: same two payload rows only; exactly one `property_present` bit at exact payload end; distribution unknown; stop one bit later. Adjacent reads and production consumption remain closed.

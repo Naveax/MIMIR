@@ -6,30 +6,29 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BP differential closed / R3.18BQ payload evidence active
+# 0. Current override — R3.18BQ payload evidence closed / R3.18BR next-control evidence active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BO
 - `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111` remains canonical production.
-- following payload and later control remain unconsumed in production.
+- BQ payload composition and later control remain unconsumed in production.
 
-## CLOSED READ-ONLY DIFFERENTIAL — R3.18BP
-- evidence `319d2b910ac23008bcc5338f04a5f95a0ae5ac5b` / `34355148349/102477806191` SUCCESS; same-head CI `34355148286/102477834627` SUCCESS.
-- artifact `10105612793` / `sha256:ffa6613fc7703f148d388650466f164068e5d454cfeb0a926c548caacda47240`; exact 3/3, false=1, true=2, mismatch/reselection 0/0, payload/control 0/0.
+## CLOSED READ-ONLY PAYLOAD EVIDENCE — R3.18BQ
+- evidence `16c43f38e740c57ae9cb90c92084002ec83815e7` / `34457725716/102807933610` SUCCESS; same-head CI `34457725700/102808516101` SUCCESS / count 1.
+- artifact `10144392560` / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c` / inner manifest `332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9`.
+- false terminator excluded=1; true payloads=2; Boolean=1x1; ActiveActor=1x33; mismatch/reselection=0/0; next-control=0.
 
-## ACTIVE READ-ONLY PAYLOAD EVIDENCE — R3.18BQ
-- direct authority is the BP artifact.
-- only two BP-true rows may enter payload decode.
-- Boolean width1; ActiveActor exact K2 width33.
-- current values/boundaries must match pinned Boxcars independently.
+## ACTIVE READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BR
+- exactly the two BQ payload rows may reconstruct through payload end and observe one next `property_present` bit.
+- native and pinned Boxcars must match start/value/end exactly; distribution is output, not inherited.
 
 ## CLOSED
-- payload on the BP false terminator;
-- next control after BQ payload;
-- second payload/header;
-- historical payload coordinate/value inheritance;
-- generalized cursor and wider semantic/runtime behavior.
+- payload/control access on the BP false terminator;
+- next stream/header/payload after BR;
+- second later control;
+- production consumption of BR control;
+- generalized/repeated cursor and wider semantics/runtime.
 
 # 1. Status vocabulary
 
