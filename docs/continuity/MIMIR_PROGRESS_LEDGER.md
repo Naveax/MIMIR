@@ -1991,3 +1991,14 @@ Outcome: **A — CLOSED / ADMITTED READ-ONLY EVIDENCE**
 Evidence `16c43f38e740c57ae9cb90c92084002ec83815e7` / `34457725716/102807933610` SUCCESS; CI `34457725700/102808516101` SUCCESS / count 1; artifact `10144392560` / 9464 bytes / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c`; manifest `sha256:332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9`. Exact 3-row authority: false excluded=1, true payloads=2, Boolean=1x1, ActiveActor=1x33, ordinal7=2/2, mismatch/reselection=0/0, false access=0, next-control=0, historical inheritance=0, mutation=0/0/0/0/0, privacy/full validation PASS.
 
 Opened R3.18BR one-next-property-control-bit evidence at the exact two BQ payload ends. Distribution remains unknown until measured; adjacent reads, BP-false access, production consumption and generalized cursor remain closed.
+
+
+## 2026-09-11 — R3.18BR — Next Property-Control Bit Evidence
+Outcome: **A — CLOSED / ADMITTED READ-ONLY EVIDENCE**
+
+- Evidence `ff1daab35e2e75bf7446a98a07a1db67e5196dbd` / `34606677020/103286690781` SUCCESS; same-head CI `34606676915/103287920321` SUCCESS / count 1.
+- Artifact `10267123608` / 8783 bytes / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1`; inner manifest `f18ef70512227d5968a1fa0594bf522ae1924d9668a1bb353da8747618d3b7e1`.
+- Exact BQ rematerialization 2/2; native/oracle control exact 2/2; false=1 true=1; reselection=0; BP-false control access=0.
+- Boolean control `[11239,11240)` = false; ActiveActor control `[3238,3239)` = true.
+- Following stream/header/payload/second-control consumption `0/0/0/0`; production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`; privacy/full validation PASS.
+- Sequencing: production remains BO; R3.18BS opens bounded BQ-payload production before BR control semantics can be considered for production.

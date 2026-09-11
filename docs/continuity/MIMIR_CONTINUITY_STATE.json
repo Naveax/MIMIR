@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-09-10",
+  "updated_date": "2026-09-11",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "cbb823ce7d3fc871c35a83afc5ee21ae71945821",
   "last_production_milestone": "R3.18BO",
   "last_production_milestone_name": "bounded post-BK mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18BQ",
-  "current_pass": "R3.18BR",
-  "current_pass_kind": "read-only exactly-one-next-property-control-bit evidence on the two R3.18BQ payload rows",
-  "current_pass_goal": "From each exact R3.18BQ payload_end_bit, observe exactly one next property_present bit natively and with pinned Boxcars; record false/true without prior expectation.",
-  "current_pass_stop_boundary": "Stop one bit after BR control observation. No next stream/header/payload, second control, BP-false-row access or generalized cursor.",
+  "last_completed_read_only_audit": "R3.18BR",
+  "current_pass": "R3.18BS",
+  "current_pass_kind": "bounded post-BO one-following-payload production on the two R3.18BQ payload rows",
+  "current_pass_goal": "Publish exactly one BQ-admitted Boolean/1-bit or ActiveActor/33-bit payload after valid R3.18BO/R3.18BN authority and stop at payload end.",
+  "current_pass_stop_boundary": "Stop exactly at BS payload_end_bit. Do not consume the R3.18BR following control bit or any later stream/header/payload/control.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -388,7 +388,9 @@
     "docs/continuity/MIMIR_R3_18BL_DECISION.md",
     "docs/continuity/MIMIR_R3_18BM_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BM_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BR_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BS_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18BM",
   "last_completed_evidence_outcome": "A — three-row split exact; false=1 true=2; one following header exact 2/2; two exact eight-field contexts; mismatch/unclassified/reselection 0/0/0; payload/second-control 0/0; artifact 10097405795.",
@@ -3339,14 +3341,26 @@
     "historical_payload_value_coordinate_inheritance": 0
   },
   "r3_18br": {
-    "status": "active_read_only_next_property_control_evidence",
-    "direct_payload_authority_artifact": 10144392560,
+    "status": "closed_outcome_a",
+    "head": "ff1daab35e2e75bf7446a98a07a1db67e5196dbd",
+    "tree": "373d516dbab42b49216e50c09cbd6744863a88b1",
+    "run": 34606677020,
+    "job": 103286690781,
+    "same_head_ci_run": 34606676915,
+    "same_head_ci_job": 103287920321,
+    "artifact": 10267123608,
+    "artifact_size": 8783,
+    "artifact_digest": "sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1",
+    "inner_manifest_sha256": "f18ef70512227d5968a1fa0594bf522ae1924d9668a1bb353da8747618d3b7e1",
     "target_rows": 2,
-    "excluded_bp_false_rows": 1,
-    "expected_distribution": null,
-    "allowed_control_bits_per_row": 1,
-    "next_stream_header_payload_open": false,
-    "second_later_control_open": false,
-    "witness_reselection_allowed": false
+    "native_oracle_exact": 2,
+    "false": 1,
+    "true": 1,
+    "witness_reselection": 0,
+    "bp_false_control_access": 0,
+    "following_stream_consumed": 0,
+    "following_header_consumed": 0,
+    "following_payload_consumed": 0,
+    "second_later_control_consumed": 0
   }
 }

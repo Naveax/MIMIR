@@ -100,7 +100,8 @@ R3.18BN exact following-header context contract after R3.18BM / Outcome A CLOSED
 R3.18BO bounded post-BK mixed-continuation following-header production / PRODUCTION CLOSED
 R3.18BP published-R3.18BO mixed following-header differential / Outcome A CLOSED
 R3.18BQ one following payload evidence / Outcome A CLOSED
-R3.18BR next property-control bit evidence after exact BQ payload end / ACTIVE
+R3.18BR next property-control bit evidence after exact BQ payload end / Outcome A CLOSED
+R3.18BS bounded post-BO one-following-payload production / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -304,6 +305,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 183. `docs/chatgpt-archive/SOURCE_REGISTRY.md`
 184. `docs/chatgpt-archive/VALIDATION_MATRIX.md`
 185. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
+186. `docs/continuity/MIMIR_R3_18BR_DECISION.md`
+187. `docs/continuity/MIMIR_R3_18BS_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1376,3 +1379,15 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - BQ `16c43f38e740c57ae9cb90c92084002ec83815e7` / `34457725716/102807933610` SUCCESS; CI `34457725700/102808516101`; artifact `10144392560` / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c` / manifest `sha256:332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9`.
 - exact: false excluded=1; true payloads=2; Boolean=1x1; ActiveActor=1x33; mismatch/reselection=0/0; false access=0; next-control=0.
 - BR: read-only exactly one next `property_present` bit at exact BQ payload end on those same two rows; distribution not pre-admitted; adjacent reads closed.
+
+
+### R3.18BR next property-control evidence: Outcome A / CLOSED
+- evidence `ff1daab35e2e75bf7446a98a07a1db67e5196dbd`; run/job `34606677020/103286690781` SUCCESS; same-head CI `34606676915/103287920321` SUCCESS.
+- exact BQ rows 2/2; native/oracle exact 2/2; observed false=1 true=1; BP-false access=0; witness reselection=0; adjacent reads 0/0/0/0.
+- Boolean-row control `[11239,11240)` = false; ActiveActor-row control `[3238,3239)` = true.
+- artifact `10267123608` / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1`.
+
+### R3.18BS bounded post-BO one-following-payload production: ACTIVE
+- production remains R3.18BO until BS is actually published.
+- authority is exact BQ Boolean/1 + ActiveActor/33 payload evidence under BO/BN; BR control is evidence-only and must not be consumed.
+- stop exactly at payload end; no next control/stream/header/payload or generalized cursor.

@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BO — bounded post-BK mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BQ — one following payload Outcome A / true=2 / Boolean=1x1 / ActiveActor=1x33 / mismatch 0 / artifact 10144392560
+  R3.18BR — next property-control bit Outcome A / exact=2/2 / false=1 true=1 / mismatch 0 / artifact 10267123608
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BN — exact following-header context contract / Outcome A / 2 exact eight-field tuples / multiplicity 2 / 1 false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c / older-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BQ — exact two payloads / Boolean width1 / ActiveActor K2 width33 / mismatch=0 / next-control=0 / artifact 10144392560
+  R3.18BR — exact two next-control observations / Boolean-row=false / ActiveActor-row=true / mismatch=0 / adjacent reads=0 / artifact 10267123608
 
 CURRENT_PASS:
-  R3.18BR — next property-control bit evidence after exact BQ payload end
+  R3.18BS — bounded post-BO one-following-payload production
 
 CURRENT_PASS_TYPE:
-  read-only exactly-one-control-bit differential evidence / BQ payload rows=2 / unknown false-true distribution / no next stream-header-payload
+  bounded production implementation / exact BQ payload rows=2 / Boolean width1 + ActiveActor width33 / BR control consumption forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4285,3 +4285,11 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - artifact `10144392560` / 9464 bytes / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c` / inner manifest `sha256:332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9`.
 - exact: BP=3 / false excluded=1 / true payloads=2 / Boolean=1x1 / ActiveActor=1x33 / ordinal7=2/2 / mismatch-reselection=0/0 / false access=0 / next-control=0.
 - R3.18BR: same two payload rows only; exactly one `property_present` bit at exact payload end; distribution unknown; stop one bit later. Adjacent reads and production consumption remain closed.
+
+
+# CURRENT OVERRIDE — 2026-09-11 — R3.18BR CLOSED / R3.18BS ACTIVE
+
+- BR `ff1daab35e2e75bf7446a98a07a1db67e5196dbd` / `34606677020/103286690781` SUCCESS; same-head CI `34606676915/103287920321` SUCCESS / count 1.
+- artifact `10267123608` / 8783 bytes / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1` / inner manifest `sha256:f18ef70512227d5968a1fa0594bf522ae1924d9668a1bb353da8747618d3b7e1`.
+- exact controls: Boolean payload end 11239 -> `[11239,11240)` false; ActiveActor payload end 3238 -> `[3238,3239)` true; native/oracle 2/2; reselection 0; BP-false access 0; adjacent consumption 0/0/0/0.
+- active R3.18BS: publish exactly one BQ-admitted Boolean/1-bit or ActiveActor/33-bit payload after exact BO/BN authority and stop at payload end. BR control remains evidence-only and closed to BS.
