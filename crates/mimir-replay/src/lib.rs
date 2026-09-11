@@ -12947,6 +12947,200 @@ mod r3_18bo_exact_contract_tests {
 }
 // R3.18BO PRE-ADMISSION END bounded post-BK mixed-continuation following header
 
+// R3.18BS PRE-ADMISSION BEGIN bounded post-BO one-following-payload
+/// Exactly one R3.18BQ-admitted payload after the bounded R3.18BO following header.
+///
+/// This enum is deliberately closed to the two payload forms proven on the immutable
+/// R3.18BQ lane. It is not a generic property-payload carrier.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ReplayNetworkPostBoFollowingPayloadValueV1 {
+    Boolean(ReplayNetworkPrimitiveScalarDecodeV1),
+    ActiveActor(ReplayNetworkK2DecodeV1),
+}
+
+/// Bounded composition of one validated R3.18BO true following header plus exactly one
+/// R3.18BQ-admitted payload. The result stops at payload end and does not consume the
+/// R3.18BR following property-control bit.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkPostBoFollowingPayloadDecodeV1 {
+    pub header_composition: ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    pub following_payload: ReplayNetworkPostBoFollowingPayloadValueV1,
+    pub stop_bit: u64,
+}
+
+fn network_existing_actor_post_bo_following_payload_error(
+    category: &str,
+    detail: impl Into<String>,
+) -> MimirError {
+    MimirError::message(format!(
+        "replay network post-BO following-payload error: {category}: {}",
+        detail.into()
+    ))
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn decode_replay_network_post_bo_following_payload_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    control: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    lookup_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+    an_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    ay_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    ba_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    be_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    bi_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    bk_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    bo_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+) -> Result<ReplayNetworkPostBoFollowingPayloadDecodeV1> {
+    let expected_bo = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_control_following_header_v1(
+        network_bytes,
+        prior,
+        control,
+        lookup_plan,
+        context,
+        an_prior,
+        ay_prior,
+        ba_prior,
+        be_prior,
+        bi_prior,
+        bk_prior,
+    )?;
+    if &expected_bo != bo_prior {
+        return Err(network_existing_actor_post_bo_following_payload_error(
+            "invalid-r3-18bo-prior",
+            "supplied R3.18BO following-header result differs from recomputed published authority",
+        ));
+    }
+
+    let header = bo_prior.following_header.as_ref().ok_or_else(|| {
+        network_existing_actor_post_bo_following_payload_error(
+            "false-terminator-has-no-payload",
+            "R3.18BO false terminator is outside the R3.18BQ payload lane",
+        )
+    })?;
+    if !header.property_present || bo_prior.context != context {
+        return Err(network_existing_actor_post_bo_following_payload_error(
+            "invalid-r3-18bo-header",
+            "R3.18BO payload composition requires one present header in the exact supplied context",
+        ));
+    }
+
+    let payload_start_bit = header.payload_start_bit.ok_or_else(|| {
+        network_existing_actor_post_bo_following_payload_error(
+            "missing-payload-start",
+            "present R3.18BO following header has no payload start",
+        )
+    })?;
+    if header.stop_bit != payload_start_bit || bo_prior.stop_bit != payload_start_bit {
+        return Err(network_existing_actor_post_bo_following_payload_error(
+            "payload-start-boundary-mismatch",
+            format!(
+                "header stop={} BO stop={} payload_start={payload_start_bit}",
+                header.stop_bit, bo_prior.stop_bit,
+            ),
+        ));
+    }
+
+    let attribute_tag = header.resolved_attribute_tag.ok_or_else(|| {
+        network_existing_actor_post_bo_following_payload_error(
+            "missing-attribute-tag",
+            "R3.18BO following header did not retain its exact R3.18BN attribute tag",
+        )
+    })?;
+
+    let k2_context = ReplayNetworkK2DecodeContextV1 {
+        net_version: context.net_version,
+        is_rl_223: context.is_rl_223,
+    };
+
+    let (following_payload, stop_bit) = match attribute_tag {
+        ReplayNetworkAttributeTagV1::Boolean => {
+            let decoded = decode_replay_network_primitive_scalar_v1(
+                network_bytes,
+                payload_start_bit,
+                ReplayNetworkAttributeTagV1::Boolean,
+            )?;
+            let expected_end = payload_start_bit.checked_add(1).ok_or_else(|| {
+                network_existing_actor_post_bo_following_payload_error(
+                    "boolean-payload-end-overflow",
+                    "Boolean payload end overflows u64",
+                )
+            })?;
+            if decoded.attribute_tag != ReplayNetworkAttributeTagV1::Boolean
+                || decoded.payload_start_bit != payload_start_bit
+                || decoded.payload_width != 1
+                || decoded.payload_end_bit != expected_end
+                || decoded.stop_bit != expected_end
+                || !matches!(
+                    &decoded.value,
+                    ReplayNetworkPrimitiveScalarValueV1::Boolean(_)
+                )
+            {
+                return Err(network_existing_actor_post_bo_following_payload_error(
+                    "boolean-payload-boundary-mismatch",
+                    format!(
+                        "start={} end={} width={} stop={} expected=[{payload_start_bit},{expected_end})",
+                        decoded.payload_start_bit,
+                        decoded.payload_end_bit,
+                        decoded.payload_width,
+                        decoded.stop_bit,
+                    ),
+                ));
+            }
+            (
+                ReplayNetworkPostBoFollowingPayloadValueV1::Boolean(decoded),
+                expected_end,
+            )
+        }
+        ReplayNetworkAttributeTagV1::ActiveActor => {
+            let decoded = decode_replay_network_k2_v1(
+                network_bytes,
+                payload_start_bit,
+                ReplayNetworkAttributeTagV1::ActiveActor,
+                k2_context,
+            )?;
+            let expected_end = payload_start_bit.checked_add(33).ok_or_else(|| {
+                network_existing_actor_post_bo_following_payload_error(
+                    "active-actor-payload-end-overflow",
+                    "ActiveActor payload end overflows u64",
+                )
+            })?;
+            if decoded.attribute_tag != ReplayNetworkAttributeTagV1::ActiveActor
+                || decoded.payload_start_bit != payload_start_bit
+                || decoded.payload_width != 33
+                || decoded.payload_end_bit != expected_end
+                || !matches!(&decoded.value, ReplayNetworkK2ValueV1::ActiveActor { .. })
+            {
+                return Err(network_existing_actor_post_bo_following_payload_error(
+                    "active-actor-payload-boundary-mismatch",
+                    format!(
+                        "start={} end={} width={} expected=[{payload_start_bit},{expected_end})",
+                        decoded.payload_start_bit, decoded.payload_end_bit, decoded.payload_width,
+                    ),
+                ));
+            }
+            (
+                ReplayNetworkPostBoFollowingPayloadValueV1::ActiveActor(decoded),
+                expected_end,
+            )
+        }
+        other => {
+            return Err(network_existing_actor_post_bo_following_payload_error(
+                "unadmitted-r3-18bq-payload-tag",
+                format!("R3.18BQ admits only Boolean or ActiveActor, got {other:?}"),
+            ));
+        }
+    };
+
+    Ok(ReplayNetworkPostBoFollowingPayloadDecodeV1 {
+        header_composition: bo_prior.clone(),
+        following_payload,
+        stop_bit,
+    })
+}
+// R3.18BS PRE-ADMISSION END bounded post-BO one-following-payload
+
 #[cfg(test)]
 mod r3_18au_exact_contract_tests {
     use super::*;
