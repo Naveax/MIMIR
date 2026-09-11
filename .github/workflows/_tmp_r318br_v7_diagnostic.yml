@@ -1,0 +1,196 @@
+name: R3.18BR Focused Failure Diagnostic v7
+
+on:
+  push:
+    branches:
+      - evidence/r318br-next-control-v7
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318br-focused-diagnostic-v7
+  cancel-in-progress: false
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: 265b780dc554715a7bc6bfb5c8e0fbe7ee279265
+      MAIN_TREE: d19218dea425819c8ec8eee8464ab5e198945bb6
+      V6_HEAD: adf1aaaa486ba0e8ba5867ab9b4c3284297a42e6
+      V6_RUN: '34580206389'
+      V6_JOB: '103201754352'
+      V6_CI_RUN: '34580206367'
+    steps:
+      - name: Checkout exact diagnostic head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Freeze diagnostic authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "authority mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(git rev-parse HEAD^)" "$MAIN_SHA"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" "$MAIN_SHA"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/git/commits/$MAIN_SHA" --jq .tree.sha)" "$MAIN_TREE"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V6_RUN" --jq .head_sha)" "$V6_HEAD"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V6_RUN" --jq .conclusion)" failure
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$V6_JOB" --jq .run_id)" "$V6_RUN"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$V6_JOB" --jq .conclusion)" failure
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V6_CI_RUN" --jq .head_sha)" "$V6_HEAD"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V6_CI_RUN" --jq .conclusion)" success
+          echo R3_18BR_V7_AUTHORITY_FREEZE=PASS
+
+      - name: Extract focused v6 failure diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r318br-v7"
+          mkdir -p "$out"
+          raw="$RUNNER_TEMP/r318br-v6-job.log"
+          gh run view "$V6_RUN" --repo "$GITHUB_REPOSITORY" --job "$V6_JOB" --log > "$raw"
+          test -s "$raw"
+
+          python3 - "$raw" "$out/r318br_v6_failure_focus.txt" "$out/r318br_v6_failure_receipt.txt" <<'PY'
+          import os
+          import re
+          import sys
+          from pathlib import Path
+
+          src, focus_path, receipt_path = map(Path, sys.argv[1:])
+          lines = src.read_text(encoding='utf-8', errors='replace').splitlines()
+
+          success = re.compile(
+              r'test result:\s*ok|\b0 failed\b|\bPASS\b|MISMATCH\s*[=:]\s*0\b|'
+              r'NATIVE_ORACLE_MISMATCH\s*[=:]\s*0\b|finished .* target|running \d+ tests?',
+              re.I,
+          )
+          strong = re.compile(
+              r'Traceback \(most recent call last\):|AssertionError|assertion.*failed|'
+              r'thread .* panicked|panicked at|(?:^|\s)error(?:\[[A-Z0-9]+\]|:)|'
+              r'Caused by:|CalledProcessError|SystemExit|No such file or directory|'
+              r'patch failed|does not apply|expected .* (?:got|actual|found)|'
+              r'R3_18BR_.*MISMATCH\s*[=:]\s*[1-9]|native.*oracle.*mismatch|oracle.*native.*mismatch',
+              re.I,
+          )
+          useful = re.compile(
+              r'r318br_(?:compare|boxcars)\.py|R3_18BR_ORACLE|R3_18BR_NATIVE|'
+              r'comparison|compare|oracle|mismatch|payload_end|control_(?:start|end|value)',
+              re.I,
+          )
+
+          def strip_prefix(text):
+              text = re.sub(r'^\S+\s+\S+\s+', '', text)
+              text = re.sub(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z\s+', '', text)
+              return text
+
+          def sanitize(raw):
+              text = strip_prefix(raw.strip())
+              for value, tag in ((os.environ.get('GITHUB_WORKSPACE'), '<workspace>'),
+                                 (os.environ.get('RUNNER_TEMP'), '<tmp>')):
+                  if value:
+                      text = text.replace(value, tag)
+              text = re.sub(r'https?://\S+', '<url>', text)
+              text = re.sub(r'(?i)\b[\w.+-]+@[\w.-]+\.[A-Z]{2,}\b', '<email>', text)
+              text = re.sub(r'(?i)\b(?:github_pat_[A-Za-z0-9_]+|ghp_[A-Za-z0-9]+)\b', '<credential>', text)
+              text = re.sub(r'(?i)\b(?:Omersevik|Maximillan|Maximillian)\b', '<redacted>', text)
+              text = re.sub(r'/home/runner/[^\s\"\']+', '<runner-path>', text)
+              text = re.sub(r'\b[A-Fa-f0-9]{40,64}\b', '<sha>', text)
+              text = ' '.join(text.split())
+              return text[:220]
+
+          strong_idx = []
+          for i, raw in enumerate(lines):
+              clean = strip_prefix(raw)
+              if success.search(clean):
+                  continue
+              if strong.search(clean):
+                  if re.search(r'mismatch', clean, re.I) and re.search(r'mismatch\s*[=:]\s*0\b', clean, re.I):
+                      continue
+                  strong_idx.append(i)
+
+          selected_idx = []
+          if strong_idx:
+              anchor = strong_idx[-1]
+              lo = max(0, anchor - 5)
+              hi = min(len(lines), anchor + 6)
+              selected_idx.extend(range(lo, hi))
+              for i in reversed(strong_idx[:-1]):
+                  if len(selected_idx) >= 20:
+                      break
+                  selected_idx.append(i)
+          else:
+              useful_idx = [i for i, raw in enumerate(lines) if useful.search(strip_prefix(raw)) and not success.search(strip_prefix(raw))]
+              if useful_idx:
+                  anchor = useful_idx[-1]
+                  selected_idx.extend(range(max(0, anchor - 5), min(len(lines), anchor + 6)))
+              else:
+                  selected_idx.extend(range(max(0, len(lines) - 20), len(lines)))
+
+          selected = []
+          seen = set()
+          for i in selected_idx:
+              text = sanitize(lines[i])
+              if not text or success.search(text) or text in seen:
+                  continue
+              seen.add(text)
+              selected.append(text)
+              if len(selected) >= 20:
+                  break
+
+          if not selected:
+              raise SystemExit('R3.18BR v7 diagnostic extracted no usable lines')
+
+          focus_path.write_text('\n'.join(selected) + '\n', encoding='utf-8', newline='\n')
+          receipt_path.write_text(
+              'R3_18BR_V7_DIAGNOSTIC=PASS\n'
+              f'R3_18BR_V7_STRONG_MATCHES={len(strong_idx)}\n'
+              f'R3_18BR_V7_FOCUS_LINES={len(selected)}\n'
+              f'R3_18BR_V7_SOURCE_RUN={os.environ["V6_RUN"]}\n'
+              f'R3_18BR_V7_SOURCE_JOB={os.environ["V6_JOB"]}\n',
+              encoding='utf-8', newline='\n'
+          )
+          print(f'R3_18BR_V7_DIAGNOSTIC=PASS strong={len(strong_idx)} focus={len(selected)}')
+          PY
+
+          cat "$out/r318br_v6_failure_receipt.txt"
+          cat "$out/r318br_v6_failure_focus.txt"
+          sha256sum "$out/r318br_v6_failure_focus.txt" "$out/r318br_v6_failure_receipt.txt" > "$out/r318br_v7_sha256.txt"
+
+          i=0
+          while IFS= read -r line && [ "$i" -lt 4 ]; do
+            [ -n "$line" ] || continue
+            i=$((i + 1))
+            short="$(printf '%s' "$line" | cut -c1-104)"
+            sig="$(printf '%s' "$line" | sha256sum | awk '{print substr($1,1,10)}')"
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+              -f state=success -f context="r318br/v7-focus-${i}" \
+              -f description="${short};sig=${sig}" \
+              -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          done < "$out/r318br_v6_failure_focus.txt"
+
+      - name: Upload diagnostic receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318br-v6-failure-diagnostic-v7
+          path: ${{ runner.temp }}/r318br-v7/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Mark focused diagnostic success
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318br/v7-diagnostic' \
+            -f description='v6 immutable failure log classified; semantic contract unchanged' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
