@@ -3,14 +3,14 @@
   "updated_date": "2026-09-11",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "cbb823ce7d3fc871c35a83afc5ee21ae71945821",
-  "last_production_milestone": "R3.18BO",
-  "last_production_milestone_name": "bounded post-BK mixed-continuation following-header production",
+  "last_production_code_sha": "5ab14575d0a698d752db35db76f3dbb300cdec8d",
+  "last_production_milestone": "R3.18BS",
+  "last_production_milestone_name": "bounded post-BO one-following-payload production",
   "last_completed_read_only_audit": "R3.18BR",
-  "current_pass": "R3.18BS",
-  "current_pass_kind": "bounded post-BO one-following-payload production on the two R3.18BQ payload rows",
-  "current_pass_goal": "Publish exactly one BQ-admitted Boolean/1-bit or ActiveActor/33-bit payload after valid R3.18BO/R3.18BN authority and stop at payload end.",
-  "current_pass_stop_boundary": "Stop exactly at BS payload_end_bit. Do not consume the R3.18BR following control bit or any later stream/header/payload/control.",
+  "current_pass": "R3.18BT",
+  "current_pass_kind": "read-only published-R3.18BS one-following-payload differential on the two immutable R3.18BQ payload rows",
+  "current_pass_goal": "Validate published R3.18BS exactly against both BQ payload witnesses, preserve BP-false exclusion and stop at payload end without consuming the R3.18BR control bit.",
+  "current_pass_stop_boundary": "Stop exactly at published BS payload_end_bit. Do not consume the R3.18BR following control bit or any later stream/header/payload/control.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -194,7 +194,12 @@
     "next stream/header/payload after the one R3.18BR control-bit evidence boundary",
     "second later property-control bit after R3.18BR",
     "production consumption of the R3.18BR-observed control bit before a later production pass",
-    "generalized/repeated property loop or generic cursor after R3.18BR"
+    "generalized/repeated property loop or generic cursor after R3.18BR",
+    "payload access on the R3.18BP false terminator after published R3.18BS",
+    "production consumption of the R3.18BR-observed following control bit during R3.18BT",
+    "next stream/header/payload after published R3.18BS payload_end_bit",
+    "second later property-control bit after published R3.18BS",
+    "generalized/repeated property loop or generic cursor after published R3.18BS"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -390,10 +395,12 @@
     "docs/continuity/MIMIR_R3_18BM_DECISION.md",
     "docs/continuity/MIMIR_R3_18BN_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BR_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BS_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BS_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BS_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18BM",
-  "last_completed_evidence_outcome": "A — three-row split exact; false=1 true=2; one following header exact 2/2; two exact eight-field contexts; mismatch/unclassified/reselection 0/0/0; payload/second-control 0/0; artifact 10097405795.",
+  "last_completed_evidence_pass": "R3.18BR",
+  "last_completed_evidence_outcome": "A — exact two next-control observations after BQ payload end; false=1 true=1; mismatch/reselection 0/0; adjacent reads 0/0/0/0; artifact 10267123608.",
   "last_completed_contract_pass": "R3.18BN",
   "r3_14a": {
     "outcome": "A",
@@ -3362,5 +3369,40 @@
     "following_header_consumed": 0,
     "following_payload_consumed": 0,
     "second_later_control_consumed": 0
+  },
+  "r3_18bs": {
+    "status": "published_outcome_a",
+    "sha": "5ab14575d0a698d752db35db76f3dbb300cdec8d",
+    "tree": "1c0b4c0a50385a34ba730a52a98a89423ff56869",
+    "parent": "2f4f536d52a10a28a66bcc7b9b9dc84f7e29b2a6",
+    "lib_blob": "3428608283d6d0022d466671f90afc9304726dd0",
+    "test_blob": "706bbdee62a09f04af7bcf70e22567793084d0d6",
+    "builder_head": "40009f866344778be8b5e5d4c4577cf292bb1189",
+    "builder_run": 34617577982,
+    "builder_job": 103323236248,
+    "validation_pr": 218,
+    "validation_pr_merged": false,
+    "candidate_ci_run": 34617945689,
+    "candidate_ci_job": 103324450173,
+    "published_ci_run": 34618640843,
+    "published_ci_job": 103326748345,
+    "target_rows": 2,
+    "false_terminators_excluded": 1,
+    "boolean_rows": 1,
+    "boolean_width": 1,
+    "active_actor_rows": 1,
+    "active_actor_width": 33,
+    "following_control_consumed": 0,
+    "generalized_cursor": 0
+  },
+  "r3_18bt": {
+    "status": "active_read_only_published_payload_differential",
+    "production_sha": "5ab14575d0a698d752db35db76f3dbb300cdec8d",
+    "payload_authority_head": "16c43f38e740c57ae9cb90c92084002ec83815e7",
+    "payload_authority_artifact": 10144392560,
+    "target_rows": 2,
+    "bp_false_terminators_excluded": 1,
+    "following_control_consumption_allowed": false,
+    "production_mutation_allowed": false
   }
 }

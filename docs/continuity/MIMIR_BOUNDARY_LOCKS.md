@@ -6,27 +6,28 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BR next-control evidence closed / R3.18BS payload production active
+# 0. Current override — R3.18BS payload production closed / R3.18BT published differential active
 
 This current override supersedes older status wording later in this historical lock file.
 
-## PRODUCTION — R3.18BO
-- `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111` remains canonical production until BS is published.
-- BQ payload composition and BR later-control consumption remain absent from production.
+## PRODUCTION — R3.18BS
+- `5ab14575d0a698d752db35db76f3dbb300cdec8d` / `1c0b4c0a50385a34ba730a52a98a89423ff56869` is canonical production.
+- exactly one BQ-admitted Boolean/1-bit or ActiveActor/33-bit payload is composed after valid BO/BN authority and production stops at payload end.
+- the BP false terminator remains outside the payload lane; R3.18BR following-control consumption is zero.
 
 ## CLOSED READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BR
-- evidence `ff1daab35e2e75bf7446a98a07a1db67e5196dbd` / `34606677020/103286690781` SUCCESS; same-head CI `34606676915/103287920321` SUCCESS / count 1.
-- artifact `10267123608` / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1` / inner manifest `f18ef70512227d5968a1fa0594bf522ae1924d9668a1bb353da8747618d3b7e1`.
+- evidence `ff1daab35e2e75bf7446a98a07a1db67e5196dbd` / artifact `10267123608` / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1` remains evidence-only.
 - exact=2/2; false=1 true=1; BP-false access=0; adjacent stream/header/payload/second-control=0/0/0/0.
 
-## ACTIVE BOUNDED PAYLOAD PRODUCTION — R3.18BS
-- exactly the two BQ-admitted payload contexts may be implemented: Boolean/1 bit and ActiveActor/33 bits.
-- valid BO/BN authority is mandatory; stop exactly at payload end.
+## ACTIVE READ-ONLY PUBLISHED-PAYLOAD DIFFERENTIAL — R3.18BT
+- validate published BS against exactly the two immutable BQ payload witnesses.
+- require exact payload identity/boundaries and BP-false exclusion; stop at published payload end.
+- consume zero BR control bits and mutate no production source.
 
 ## CLOSED
 - payload access on the BP false terminator;
-- BR following-control consumption during BS;
-- next stream/header/payload after BS;
+- production consumption of the R3.18BR control bit;
+- next stream/header/payload after published BS/BT;
 - second later control;
 - generalized/repeated cursor and wider semantics/runtime.
 

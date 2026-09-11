@@ -101,7 +101,8 @@ R3.18BO bounded post-BK mixed-continuation following-header production / PRODUCT
 R3.18BP published-R3.18BO mixed following-header differential / Outcome A CLOSED
 R3.18BQ one following payload evidence / Outcome A CLOSED
 R3.18BR next property-control bit evidence after exact BQ payload end / Outcome A CLOSED
-R3.18BS bounded post-BO one-following-payload production / ACTIVE
+R3.18BS bounded post-BO one-following-payload production / PRODUCTION CLOSED
+R3.18BT published-R3.18BS one-following-payload differential / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -307,6 +308,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 185. `docs/chatgpt-archive/migration/HISTORICAL_TO_CURRENT_MAPPING.md`
 186. `docs/continuity/MIMIR_R3_18BR_DECISION.md`
 187. `docs/continuity/MIMIR_R3_18BS_EXECUTION_SPEC.md`
+188. `docs/continuity/MIMIR_R3_18BS_DECISION.md`
+189. `docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1391,3 +1394,15 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - production remains R3.18BO until BS is actually published.
 - authority is exact BQ Boolean/1 + ActiveActor/33 payload evidence under BO/BN; BR control is evidence-only and must not be consumed.
 - stop exactly at payload end; no next control/stream/header/payload or generalized cursor.
+
+
+### R3.18BS bounded post-BO one-following-payload production: PRODUCTION / CLOSED
+- production `5ab14575d0a698d752db35db76f3dbb300cdec8d` / tree `1c0b4c0a50385a34ba730a52a98a89423ff56869` / parent `2f4f536d52a10a28a66bcc7b9b9dc84f7e29b2a6`; exact clean scope lib.rs + `r3_18bs_post_bo_payload.rs`.
+- builder `34617577982/103323236248`, exact-head CI `34617945689/103324450173` and published-main CI `34618640843/103326748345` SUCCESS; validation PR #218 closed unmerged.
+- exact BQ payload lane published 2/2: Boolean width1 `[11238,11239)` / ActiveActor width33 `[3205,3238)`; BP false terminator excluded; following BR control consumption 0.
+- no next stream/header/payload, second later control, generalized/repeated property cursor or semantic/runtime widening admitted.
+
+### R3.18BT published-R3.18BS one-following-payload differential: ACTIVE
+- read-only differential on exactly the two immutable BQ payload rows under published BS.
+- require exact start/end/width/value identity, BP-false exclusion, repeatability and post-stop poison stability.
+- BR control remains evidence-only; BT consumes zero following-control bits and changes no production Rust.

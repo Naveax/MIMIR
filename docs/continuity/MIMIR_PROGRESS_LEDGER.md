@@ -2002,3 +2002,39 @@ Outcome: **A — CLOSED / ADMITTED READ-ONLY EVIDENCE**
 - Boolean control `[11239,11240)` = false; ActiveActor control `[3238,3239)` = true.
 - Following stream/header/payload/second-control consumption `0/0/0/0`; production/Cargo/fixture/corpus/support mutation `0/0/0/0/0`; privacy/full validation PASS.
 - Sequencing: production remains BO; R3.18BS opens bounded BQ-payload production before BR control semantics can be considered for production.
+
+---
+
+## 2026-09-11 — R3.18BS — Bounded Post-BO One-Following-Payload Production
+Outcome: **A — ADMITTED / PRODUCTION**
+
+Production base SHA: `2f4f536d52a10a28a66bcc7b9b9dc84f7e29b2a6`
+Production commit SHA: `5ab14575d0a698d752db35db76f3dbb300cdec8d`
+Production tree: `1c0b4c0a50385a34ba730a52a98a89423ff56869`
+Pass type: bounded production implementation + clean reconstruction + validation-only PR + force-free publication
+
+What changed:
+- added one boundary-specific post-BO payload result/value/API using existing admitted Boolean scalar and ActiveActor K2 decoders;
+- recomputes exact BO authority, rejects the BP false terminator and stops exactly at payload end;
+- exact clean production scope is lib.rs plus `r3_18bs_post_bo_payload.rs`;
+- BR following-control consumption remains zero.
+
+Validation:
+- builder `34617577982/103323236248` SUCCESS; focused BS integration suite 32/32 PASS; cargo check and Clippy `-D warnings` PASS;
+- validation-only PR #218 closed unmerged; exact-head CI `34617945689/103324450173` SUCCESS;
+- force=false publication and exact SHA/tree readback PASS; published-main CI `34618640843/103326748345` SUCCESS.
+
+Authority and exact lane:
+- BN contract `sha256:904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c` / exact two contexts / multiplicity 2;
+- BQ `16c43f38e740c57ae9cb90c92084002ec83815e7` / artifact `10144392560` / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c`;
+- Boolean `[11238,11239)` width1/value=true; ActiveActor `[3205,3238)` width33/active=true/actor=1; BP false terminator excluded;
+- post-stop poison including the BR control bit leaves BS result unchanged; following-control consumption 0.
+
+Boundaries opened:
+- R3.18BT may read-only differentially validate published BS on exactly the immutable two-row BQ lane.
+
+Boundaries still closed:
+- BR control production; next stream/header/payload; second later control; generalized/repeated property cursor; next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+
+Next exact pass:
+- `R3.18BT — published-R3.18BS one-following-payload differential`.

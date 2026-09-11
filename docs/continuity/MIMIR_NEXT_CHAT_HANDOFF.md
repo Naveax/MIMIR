@@ -1,9 +1,11 @@
 # MIMIR — Next Chat Handoff
 
-Canonical production remains **R3.18BO** at `cbb823ce7d3fc871c35a83afc5ee21ae71945821` / `146cb78edfb434fd43e532593efce8e35ee97111`.
+Canonical production is **R3.18BS** at `5ab14575d0a698d752db35db76f3dbb300cdec8d` / `1c0b4c0a50385a34ba730a52a98a89423ff56869` with parent `2f4f536d52a10a28a66bcc7b9b9dc84f7e29b2a6`.
 
-R3.18BQ is **Outcome A / CLOSED** at `16c43f38e740c57ae9cb90c92084002ec83815e7`; artifact `10144392560` / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c`. Exact lane: one Boolean/1-bit payload and one ActiveActor/33-bit payload; the BP false terminator remained excluded.
+R3.18BQ remains **Outcome A / CLOSED** at `16c43f38e740c57ae9cb90c92084002ec83815e7`; artifact `10144392560` / `sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c`. Exact payload authority is two rows only: Boolean `[11238,11239)` width1/value=true and ActiveActor `[3205,3238)` width33/active=true/actor=1; the BP false terminator is excluded.
 
-R3.18BR is **Outcome A / CLOSED** at `ff1daab35e2e75bf7446a98a07a1db67e5196dbd` / `373d516dbab42b49216e50c09cbd6744863a88b1`; run/job `34606677020/103286690781` SUCCESS; same-head CI `34606676915/103287920321` SUCCESS / count 1; artifact `10267123608` / 8783 bytes / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1`; inner manifest `f18ef70512227d5968a1fa0594bf522ae1924d9668a1bb353da8747618d3b7e1`. Exact observed controls: Boolean row `[11239,11240)` = false; ActiveActor row `[3238,3239)` = true; native/oracle exact=2/2; BP-false access=0; adjacent consumption=0/0/0/0.
+R3.18BR remains **Outcome A / CLOSED READ-ONLY EVIDENCE** at `ff1daab35e2e75bf7446a98a07a1db67e5196dbd`; artifact `10267123608` / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1`. Its next-control split is false=1 / true=1 and is not production authority.
 
-Active pass: **R3.18BS — bounded post-BO one-following-payload production**. Publish exactly one BQ-admitted Boolean/1-bit or ActiveActor/33-bit payload after valid BO/BN authority and stop exactly at payload end. BR control consumption remains forbidden in BS. Production/Cargo/fixture/corpus/support scope must remain narrowly bounded and all historical cross-boundary inference stays fail-closed.
+R3.18BS is **Outcome A / PUBLISHED**. Builder `34617577982/103323236248` SUCCESS; validation-only PR #218 closed unmerged with exact-head CI `34617945689/103324450173` SUCCESS; published-main CI `34618640843/103326748345` SUCCESS. Clean production scope is exactly lib.rs plus `r3_18bs_post_bo_payload.rs`; production stops at payload end and consumes zero BR control bits.
+
+Active pass: **R3.18BT — published-R3.18BS one-following-payload differential**. Validate exactly the two immutable BQ payload rows against published BS, preserve BP-false exclusion and stop at payload end. Production mutation, BR control consumption, next stream/header/payload, second control and generalized cursor remain forbidden.

@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  cbb823ce7d3fc871c35a83afc5ee21ae71945821
+  5ab14575d0a698d752db35db76f3dbb300cdec8d
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18BO — bounded post-BK mixed-continuation following-header production
+  R3.18BS — bounded post-BO one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BR — next property-control bit Outcome A / exact=2/2 / false=1 true=1 / mismatch 0 / artifact 10267123608
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BR — exact two next-control observations / Boolean-row=false / ActiveActor-row=true / mismatch=0 / adjacent reads=0 / artifact 10267123608
 
 CURRENT_PASS:
-  R3.18BS — bounded post-BO one-following-payload production
+  R3.18BT — published-R3.18BS one-following-payload differential
 
 CURRENT_PASS_TYPE:
-  bounded production implementation / exact BQ payload rows=2 / Boolean width1 + ActiveActor width33 / BR control consumption forbidden
+  read-only published-production differential / exact BS payload rows=2 / BQ identity comparison / BR control consumption forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4293,3 +4293,13 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - artifact `10267123608` / 8783 bytes / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1` / inner manifest `sha256:f18ef70512227d5968a1fa0594bf522ae1924d9668a1bb353da8747618d3b7e1`.
 - exact controls: Boolean payload end 11239 -> `[11239,11240)` false; ActiveActor payload end 3238 -> `[3238,3239)` true; native/oracle 2/2; reselection 0; BP-false access 0; adjacent consumption 0/0/0/0.
 - active R3.18BS: publish exactly one BQ-admitted Boolean/1-bit or ActiveActor/33-bit payload after exact BO/BN authority and stop at payload end. BR control remains evidence-only and closed to BS.
+
+
+# CURRENT OVERRIDE — 2026-09-11 — R3.18BS CLOSED / R3.18BT ACTIVE
+
+- canonical production is R3.18BS `5ab14575d0a698d752db35db76f3dbb300cdec8d` / tree `1c0b4c0a50385a34ba730a52a98a89423ff56869` / parent `2f4f536d52a10a28a66bcc7b9b9dc84f7e29b2a6`.
+- clean production scope is exactly `crates/mimir-replay/src/lib.rs` plus `crates/mimir-replay/tests/r3_18bs_post_bo_payload.rs`; lib/test blobs `3428608283d6d0022d466671f90afc9304726dd0` / `706bbdee62a09f04af7bcf70e22567793084d0d6`.
+- builder `34617577982/103323236248` SUCCESS; validation-only PR #218 closed unmerged; exact-head CI `34617945689/103324450173` SUCCESS; published-main CI `34618640843/103326748345` SUCCESS.
+- exact production lane remains the two BQ payload witnesses only: Boolean `[11238,11239)` width1/value=true and ActiveActor `[3205,3238)` width33/active=true/actor=1; BP false terminator remains excluded.
+- R3.18BS stops exactly at payload end and consumes zero R3.18BR control bits; no next stream/header/payload, second later control or generalized/repeated cursor was admitted.
+- active R3.18BT is read-only: differentially validate published BS against the immutable two-row BQ authority, preserve BP-false exclusion and stop at published payload end. BR control remains evidence-only and closed to BT consumption.
