@@ -1,0 +1,88 @@
+name: R3.18BR v9 Raw v6 Job Log Diagnostic
+
+on:
+  push:
+    branches:
+      - evidence/r318br-next-control-v9
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: r318br-raw-log-v9
+  cancel-in-progress: false
+
+jobs:
+  raw-log:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN_SHA: 265b780dc554715a7bc6bfb5c8e0fbe7ee279265
+      EXPECTED_BRANCH: evidence/r318br-next-control-v9
+      EXPECTED_FILE: .github/workflows/_tmp_r318br_v9_raw_log_dump.yml
+      V6_HEAD: adf1aaaa486ba0e8ba5867ab9b4c3284297a42e6
+      V6_RUN: '34580206389'
+      V6_JOB: '103201754352'
+
+    steps:
+      - name: Checkout exact diagnostic head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze diagnostic authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "$EXPECTED_BRANCH"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_MAIN_SHA"
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN_SHA"
+          mapfile -t changed < <(git diff --name-only "$EXPECTED_MAIN_SHA"..HEAD)
+          test "${#changed[@]}" = "1"
+          test "${changed[0]}" = "$EXPECTED_FILE"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V6_RUN" --jq .head_sha)" = "$V6_HEAD"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V6_RUN" --jq .conclusion)" = failure
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$V6_JOB" --jq .run_id)" = "$V6_RUN"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$V6_JOB" --jq .conclusion)" = failure
+          echo "R3_18BR_V9_AUTHORITY_FREEZE=PASS"
+
+      - name: Export immutable v6 job log without semantic filtering
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r318br-v9-raw-log"
+          mkdir -p "$out"
+          raw="$out/v6-job-103201754352.log"
+
+          gh run view "$V6_RUN" --repo "$GITHUB_REPOSITORY" --job "$V6_JOB" --log > "$raw"
+          test -s "$raw"
+
+          sha256sum "$raw" > "$out/sha256.txt"
+          cat > "$out/receipt.txt" <<EOF
+          purpose=R3.18BR v9 immutable v6 raw job-log extraction only
+          admission_claim=false
+          candidate_sha=$GITHUB_SHA
+          base_sha=$EXPECTED_MAIN_SHA
+          source_v6_sha=$V6_HEAD
+          source_v6_run_id=$V6_RUN
+          source_v6_job_id=$V6_JOB
+          production_code_changed=false
+          semantic_filtering=false
+          EOF
+
+          wc -l -c "$raw"
+          cat "$out/receipt.txt"
+          cat "$out/sha256.txt"
+
+      - name: Upload immutable raw log
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318br-v6-raw-job-log-v9
+          path: ${{ runner.temp }}/r318br-v9-raw-log/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
