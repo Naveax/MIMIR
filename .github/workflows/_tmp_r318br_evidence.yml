@@ -1,0 +1,227 @@
+name: R3.18BR Next Property-Control Bit Evidence v10
+
+on:
+  push:
+    branches:
+      - evidence/r318br-next-control-v10
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318br-next-control-v10
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: 265b780dc554715a7bc6bfb5c8e0fbe7ee279265
+      MAIN_TREE: d19218dea425819c8ec8eee8464ab5e198945bb6
+      PROD_SHA: cbb823ce7d3fc871c35a83afc5ee21ae71945821
+      PROD_TREE: 146cb78edfb434fd43e532593efce8e35ee97111
+      BQ_DECISION_BLOB: a429bd2f5ad0f035d5944c427bf00a9ef4621169
+      BR_SPEC_BLOB: f7b805fa6725fb8d05e721140b4cbb72657af540
+      BQ_HEAD: 16c43f38e740c57ae9cb90c92084002ec83815e7
+      BQ_TREE: 58248877a59fb0ddad707e32f92b2cec91f6b434
+      BQ_RUN: '34457725716'
+      BQ_JOB: '102807933610'
+      BQ_CI_RUN: '34457725700'
+      BQ_CI_JOB: '102808516101'
+      BQ_ARTIFACT: '10144392560'
+      BQ_ARTIFACT_NAME: r318bq-one-following-payload-evidence
+      BQ_ARTIFACT_SIZE: '9464'
+      BQ_DIGEST: sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c
+      BQ_MANIFEST_SHA256: 332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9
+      MAIN_CI_RUN: '34469746500'
+      MAIN_CI_JOB: '102846609582'
+      MAIN_KA_RUN: '34469746351'
+      MAIN_KA_JOB: '102846608902'
+      BM_RUN: '34334615939'
+      BM_ARTIFACT: '10097405795'
+      BM_ARTIFACT_NAME: r318bm-one-following-header-evidence
+      BM_MANIFEST_SHA256: 167021cca2259c4d2ef16e9da50503007f381349219adb0f5684849f69f2cbd2
+      BM_PATCH_SHA256: 092d188a7485e98fc88dbb297a11d744bad71a1e7bdb686ae90d441ba20894ec
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      BOXCARS_FRAME_BLOB: 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+      BOXCARS_ATTR_BLOB: 5e2d5bc1cd8187af30c3ea95193ad987645cb76e
+
+    steps:
+      - name: Checkout exact BR evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze v10 candidate and mark pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$MAIN_SHA"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$MAIN_SHA"
+          mapfile -t changed < <(git diff --name-only "$MAIN_SHA"..HEAD)
+          test "${#changed[@]}" = "1"
+          test "${changed[0]}" = '.github/workflows/_tmp_r318br_evidence.yml'
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending -f context='r318br/evidence' \
+            -f description='R3.18BR exact one-bit evidence v10 running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo "R3_18BR_V10_SCOPE=PASS head=$GITHUB_SHA"
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Execute deterministic R3.18BR evidence with path-neutral manifests
+        shell: bash
+        env:
+          BR_PAYLOAD_BLOB: a115e35e8e93f269f7f22637bee8d9b6fe9757f6
+          BR_PAYLOAD_SHA256: 824a30883f6173a7799e49b2d05f78c2061818ae41f882329dd9cb3f2681bde1
+          BR_RUN_SHA256: 91b0ef827783357d4bc6c43819df62c19b9d4d41a5f6698e86c4a1549499b95c
+          BR_RUN_V10_SHA256: 681b0f62c5a0cab9ef3606b4283c5a9649d9fe58301e8ec6664eeedcc9dff6d0
+          BR_CONTROL_SHA256: 1a5168f48828f1dc126a36d4730f1516070574996423f3eafe3ca05ff9e7de3c
+          BR_BOXCARS_SHA256: 5baeed2d1fa300e4d4a0eaa85b733cd48e50ec0a82d799bb65d99727aa170b5e
+          BR_COMPARE_SHA256: 941abe5b9bd10bbd95c48898643cea62d5aca8000fd134d922b29c340a25308e
+        run: |
+          set -euo pipefail
+          helpers="$RUNNER_TEMP/r318br-helpers"
+          bm="$RUNNER_TEMP/r318br-bm"
+          shim="$RUNNER_TEMP/r318br-bin"
+          mkdir -p "$helpers" "$bm" "$shim"
+
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$BR_PAYLOAD_BLOB" --jq .content | tr -d '\n' | base64 -d > "$RUNNER_TEMP/r318br-payload.tar.gz"
+          test "$(sha256sum "$RUNNER_TEMP/r318br-payload.tar.gz" | awk '{print $1}')" = "$BR_PAYLOAD_SHA256"
+          tar -xzf "$RUNNER_TEMP/r318br-payload.tar.gz" -C "$helpers"
+          test "$(sha256sum "$helpers/r318br_run.sh" | awk '{print $1}')" = "$BR_RUN_SHA256"
+          test "$(sha256sum "$helpers/r318br_control.rs" | awk '{print $1}')" = "$BR_CONTROL_SHA256"
+          test "$(sha256sum "$helpers/r318br_boxcars.py" | awk '{print $1}')" = "$BR_BOXCARS_SHA256"
+          test "$(sha256sum "$helpers/r318br_compare.py" | awk '{print $1}')" = "$BR_COMPARE_SHA256"
+
+          python3 - "$helpers/r318br_run.sh" <<'PYFIX'
+          from pathlib import Path
+          import sys
+          p = Path(sys.argv[1])
+          s = p.read_text(encoding='utf-8')
+          replacements = [
+              ('sha256sum "$BQ_DIR/r3_18bq_native_rows.tsv" > "$OUT/r3_18br_bq_native_authority_sha256.txt"',
+               '(cd "$BQ_DIR" && sha256sum r3_18bq_native_rows.tsv) > "$OUT/r3_18br_bq_native_authority_sha256.txt"'),
+              ('sha256sum "$OUT/r3_18br_boxcars_instrumentation.patch" > "$OUT/r3_18br_boxcars_instrumentation_sha256.txt"',
+               '(cd "$OUT" && sha256sum r3_18br_boxcars_instrumentation.patch) > "$OUT/r3_18br_boxcars_instrumentation_sha256.txt"'),
+          ]
+          for old, new in replacements:
+              if s.count(old) != 1:
+                  raise SystemExit(f'R3.18BR v10 patch authority mismatch count={s.count(old)} for {old}')
+              s = s.replace(old, new)
+          p.write_text(s, encoding='utf-8', newline='\n')
+          print('R3_18BR_V10_PRIVACY_MANIFEST_PATCH=PASS replacements=2')
+          PYFIX
+          test "$(sha256sum "$helpers/r318br_run.sh" | awk '{print $1}')" = "$BR_RUN_V10_SHA256"
+          python3 -m py_compile "$helpers/r318br_boxcars.py" "$helpers/r318br_compare.py"
+          bash -n "$helpers/r318br_run.sh"
+
+          gh run download "$BM_RUN" --repo "$GITHUB_REPOSITORY" --name "$BM_ARTIFACT_NAME" --dir "$bm"
+          test "$(sha256sum "$bm/r3_18bm_artifact_sha256.txt" | awk '{print $1}')" = "$BM_MANIFEST_SHA256"
+          (cd "$bm" && sha256sum -c r3_18bm_artifact_sha256.txt)
+          test "$(sha256sum "$bm/r3_18bm_boxcars_instrumentation.patch" | awk '{print $1}')" = "$BM_PATCH_SHA256"
+
+          export BR_REAL_CARGO="$(command -v cargo)"
+          export BR_BM_PATCH="$bm/r3_18bm_boxcars_instrumentation.patch"
+          cat > "$shim/cargo" <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if [[ " $* " == *" --example r3_18bm_probe "* ]]; then
+            args=("$@")
+            manifest=''
+            for ((i=0; i<${#args[@]}; i++)); do
+              if [[ "${args[$i]}" == '--manifest-path' ]]; then
+                manifest="${args[$((i+1))]}"
+                break
+              fi
+            done
+            test -n "$manifest"
+            root="$(dirname "$manifest")"
+            test "$(git -C "$root" rev-parse HEAD)" = "$BOXCARS_SHA"
+            if [[ ! -f "$root/examples/r3_18bm_probe.rs" ]]; then
+              git -C "$root" apply --include=examples/r3_18bm_probe.rs "$BR_BM_PATCH"
+            fi
+            test -f "$root/examples/r3_18bm_probe.rs"
+            python3 - "$manifest" <<'PYBRDEV'
+          from pathlib import Path
+          import sys
+          manifest = Path(sys.argv[1])
+          text = manifest.read_text(encoding='utf-8')
+          required = ['criterion = "0.8"\n', 'gungraun = "0.19.0"\n']
+          counts = [text.count(line) for line in required]
+          if counts == [1, 1]:
+              for line in required:
+                  text = text.replace(line, '', 1)
+              manifest.write_text(text, encoding='utf-8', newline='\n')
+          elif counts != [0, 0]:
+              raise SystemExit(f'R3.18BR Boxcars benchmark dev-dependency authority mismatch counts={counts}')
+          post = manifest.read_text(encoding='utf-8')
+          if any(line in post for line in required):
+              raise SystemExit('R3.18BR Boxcars benchmark dev-dependency strip did not persist')
+          print(f'R3_18BR_BOXCARS_BENCH_DEVDEPS=PASS before={counts[0]},{counts[1]} after=0,0')
+          PYBRDEV
+          fi
+          exec "$BR_REAL_CARGO" "$@"
+          SH
+          chmod +x "$shim/cargo"
+          export PATH="$shim:$PATH"
+
+          log="$RUNNER_TEMP/r318br_execute_v10.log"
+          set +e
+          BR_HELPERS="$helpers" bash "$helpers/r318br_run.sh" >"$log" 2>&1
+          rc=$?
+          set -e
+          cat "$log"
+          if [ "$rc" -ne 0 ]; then
+            sig="$(sha256sum "$log" | awk '{print substr($1,1,12)}')"
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+              -f state=failure -f context='r318br/evidence' \
+              -f description="R3.18BR v10 helper failed rc=${rc};sig=${sig}" \
+              -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null || true
+            exit "$rc"
+          fi
+          test -d "$RUNNER_TEMP/r318br-authority"
+          grep -Fx 'R3_18BR_OUTCOME=A' "$RUNNER_TEMP/r318br-authority/r3_18br_aggregate.txt"
+          grep -Fx 'R3_18BR_NATIVE_ORACLE_EXACT=2/2' "$RUNNER_TEMP/r318br-authority/r3_18br_aggregate.txt"
+          grep -Fx 'R3_18BR_PRIVACY_SCAN=PASS' "$RUNNER_TEMP/r318br-authority/r3_18br_aggregate.txt"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318br/diagnostic' \
+            -f description='deterministic v10 helper completed; privacy manifests path-neutral' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Upload immutable R3.18BR evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318br-next-property-control-evidence-v10
+          path: ${{ runner.temp }}/r318br-authority/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Bind exact artifact and mark Outcome A
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact=''
+          for attempt in $(seq 1 30); do
+            artifact="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" --jq '.artifacts[] | select(.name=="r318br-next-property-control-evidence-v10") | [.id,.size_in_bytes,.digest] | @tsv' | head -n1)"
+            [ -n "$artifact" ] && break
+            sleep 2
+          done
+          test -n "$artifact"
+          IFS=$'\t' read -r artifact_id artifact_size artifact_digest <<<"$artifact"
+          test -n "$artifact_id"
+          test -n "$artifact_digest"
+          echo "R3_18BR_V10_ARTIFACT=${artifact_id}/${artifact_size}/${artifact_digest}"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318br/evidence' \
+            -f description="Outcome A; artifact=${artifact_id}; exact one-bit differential PASS" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
