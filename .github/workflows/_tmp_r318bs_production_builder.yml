@@ -1,0 +1,104 @@
+name: R3.18BS Production Builder
+
+on:
+  push:
+    branches:
+      - automation/r318bs-production-builder-v5
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout builder
+        uses: actions/checkout@v6
+
+      - name: Toolchain
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          rustup show
+          rustup component add rustfmt clippy
+          if ($LASTEXITCODE -ne 0) { throw "rustup failed: $LASTEXITCODE" }
+
+      - name: Build exact clean candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ExpectedBase = '2f4f536d52a10a28a66bcc7b9b9dc84f7e29b2a6'
+          $CandidateBranch = 'production/r318bs-bounded-payload-v1'
+          $Patch = Join-Path $env:RUNNER_TEMP 'r318bs_builder.py'
+          $Normalize = Join-Path $env:RUNNER_TEMP 'r318bs_normalize.py'
+
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch main failed: $LASTEXITCODE" }
+          $FreshMain = (git rev-parse origin/main).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "git rev-parse origin/main failed: $LASTEXITCODE" }
+          if ($FreshMain -ne $ExpectedBase) {
+            throw "fresh main drift: expected $ExpectedBase got $FreshMain"
+          }
+
+          Copy-Item tools/_tmp_r318bs_production_builder.py $Patch
+          Copy-Item tools/_tmp_r318bs_v5_normalize.py $Normalize
+          git switch --detach $ExpectedBase
+          if ($LASTEXITCODE -ne 0) { throw "git switch exact base failed: $LASTEXITCODE" }
+          git switch -c $CandidateBranch
+          if ($LASTEXITCODE -ne 0) { throw "git switch candidate failed: $LASTEXITCODE" }
+
+          python $Patch
+          if ($LASTEXITCODE -ne 0) { throw "R3.18BS patch failed: $LASTEXITCODE" }
+          python $Normalize
+          if ($LASTEXITCODE -ne 0) { throw "R3.18BS normalization failed: $LASTEXITCODE" }
+
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed: $LASTEXITCODE" }
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt check failed: $LASTEXITCODE" }
+          cargo test -p mimir-replay --test r3_18bs_post_bo_payload -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw "focused R3.18BS test failed: $LASTEXITCODE" }
+          cargo check -p mimir-replay --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { throw "mimir-replay check failed: $LASTEXITCODE" }
+          cargo clippy -p mimir-replay --all-targets --all-features -- -D warnings
+          if ($LASTEXITCODE -ne 0) { throw "mimir-replay clippy failed: $LASTEXITCODE" }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed: $LASTEXITCODE" }
+
+          $ExpectedFiles = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18bs_post_bo_payload.rs'
+          )
+          $ChangedFiles = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { throw "git diff --name-only failed: $LASTEXITCODE" }
+          $ScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($ChangedFiles | Sort-Object))
+          if ($ScopeDiff.Count -ne 0) {
+            throw "unexpected clean candidate scope: $($ChangedFiles -join ', ')"
+          }
+
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- $ExpectedFiles
+          if ($LASTEXITCODE -ne 0) { throw "git add failed: $LASTEXITCODE" }
+          $CachedFiles = @(git diff --cached --name-only)
+          if ($LASTEXITCODE -ne 0) { throw "git cached diff failed: $LASTEXITCODE" }
+          $CachedScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($CachedFiles | Sort-Object))
+          if ($CachedScopeDiff.Count -ne 0) {
+            throw "unexpected cached scope: $($CachedFiles -join ', ')"
+          }
+
+          git commit -m 'Implement R3.18BS bounded post-BO following payload'
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed: $LASTEXITCODE" }
+          $CandidateSha = (git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "git rev-parse candidate failed: $LASTEXITCODE" }
+          $ParentSha = (git rev-parse HEAD^).Trim()
+          if ($ParentSha -ne $ExpectedBase) {
+            throw "candidate parent drift: expected $ExpectedBase got $ParentSha"
+          }
+
+          git push origin "HEAD:refs/heads/$CandidateBranch"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed: $LASTEXITCODE" }
+          Write-Host "R3_18BS_CANDIDATE_SHA=$CandidateSha"
+          Write-Host "R3_18BS_CANDIDATE_PARENT=$ParentSha"
