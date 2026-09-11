@@ -1,0 +1,97 @@
+name: R3.18BS Continuity Sync Builder
+
+on:
+  push:
+    branches:
+      - automation/r318bs-continuity-sync-v1
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout builder
+        uses: actions/checkout@v6
+
+      - name: Build exact docs-only continuity candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ExpectedBase = '5ab14575d0a698d752db35db76f3dbb300cdec8d'
+          $CandidateBranch = 'continuity/r318bs-admission-v1'
+          $Sync = Join-Path $env:RUNNER_TEMP 'r318bs_continuity_sync.py'
+
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch main failed: $LASTEXITCODE" }
+          $FreshMain = (git rev-parse origin/main).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "git rev-parse origin/main failed: $LASTEXITCODE" }
+          if ($FreshMain -ne $ExpectedBase) {
+            throw "fresh main drift: expected $ExpectedBase got $FreshMain"
+          }
+
+          Copy-Item tools/_tmp_r318bs_continuity_sync.py $Sync
+          git switch --detach $ExpectedBase
+          if ($LASTEXITCODE -ne 0) { throw "git switch exact base failed: $LASTEXITCODE" }
+          git switch -c $CandidateBranch
+          if ($LASTEXITCODE -ne 0) { throw "git switch candidate failed: $LASTEXITCODE" }
+
+          python $Sync
+          if ($LASTEXITCODE -ne 0) { throw "continuity sync failed: $LASTEXITCODE" }
+
+          python -c "import json; json.load(open('docs/continuity/MIMIR_CONTINUITY_STATE.json', encoding='utf-8')); print('continuity JSON PASS')"
+          if ($LASTEXITCODE -ne 0) { throw "continuity JSON validation failed: $LASTEXITCODE" }
+
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed: $LASTEXITCODE" }
+
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed: $LASTEXITCODE" }
+
+          $ExpectedFiles = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md',
+            'docs/continuity/MIMIR_R3_18BS_DECISION.md',
+            'docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md'
+          )
+          $TrackedFiles = @(git diff --name-only)
+          if ($LASTEXITCODE -ne 0) { throw "git diff --name-only failed: $LASTEXITCODE" }
+          $UntrackedFiles = @(git ls-files --others --exclude-standard)
+          if ($LASTEXITCODE -ne 0) { throw "git ls-files --others failed: $LASTEXITCODE" }
+          $ChangedFiles = @($TrackedFiles + $UntrackedFiles | Sort-Object -Unique)
+          $ScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($ChangedFiles | Sort-Object))
+          if ($ScopeDiff.Count -ne 0) {
+            throw "unexpected continuity candidate scope: $($ChangedFiles -join ', ')"
+          }
+
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- $ExpectedFiles
+          if ($LASTEXITCODE -ne 0) { throw "git add failed: $LASTEXITCODE" }
+          $CachedFiles = @(git diff --cached --name-only)
+          if ($LASTEXITCODE -ne 0) { throw "git cached diff failed: $LASTEXITCODE" }
+          $CachedScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($CachedFiles | Sort-Object))
+          if ($CachedScopeDiff.Count -ne 0) {
+            throw "unexpected cached continuity scope: $($CachedFiles -join ', ')"
+          }
+
+          git commit -m 'Admit R3.18BS and open R3.18BT'
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed: $LASTEXITCODE" }
+          $CandidateSha = (git rev-parse HEAD).Trim()
+          $ParentSha = (git rev-parse HEAD^).Trim()
+          if ($ParentSha -ne $ExpectedBase) {
+            throw "continuity candidate parent drift: expected $ExpectedBase got $ParentSha"
+          }
+
+          git push origin "HEAD:refs/heads/$CandidateBranch"
+          if ($LASTEXITCODE -ne 0) { throw "continuity candidate push failed: $LASTEXITCODE" }
+          Write-Host "R3_18BS_CONTINUITY_CANDIDATE_SHA=$CandidateSha"
+          Write-Host "R3_18BS_CONTINUITY_PARENT=$ParentSha"
