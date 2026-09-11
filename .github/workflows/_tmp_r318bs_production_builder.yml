@@ -3,7 +3,7 @@ name: R3.18BS Production Builder
 on:
   push:
     branches:
-      - automation/r318bs-production-builder-v7
+      - automation/r318bs-production-builder-v8
 
 permissions:
   contents: write
@@ -71,8 +71,11 @@ jobs:
             'crates/mimir-replay/src/lib.rs',
             'crates/mimir-replay/tests/r3_18bs_post_bo_payload.rs'
           )
-          $ChangedFiles = @(git diff --name-only)
+          $TrackedFiles = @(git diff --name-only)
           if ($LASTEXITCODE -ne 0) { throw "git diff --name-only failed: $LASTEXITCODE" }
+          $UntrackedFiles = @(git ls-files --others --exclude-standard)
+          if ($LASTEXITCODE -ne 0) { throw "git ls-files --others failed: $LASTEXITCODE" }
+          $ChangedFiles = @($TrackedFiles + $UntrackedFiles | Sort-Object -Unique)
           $ScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($ChangedFiles | Sort-Object))
           if ($ScopeDiff.Count -ne 0) {
             throw "unexpected clean candidate scope: $($ChangedFiles -join ', ')"
