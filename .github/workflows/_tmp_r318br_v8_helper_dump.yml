@@ -1,0 +1,98 @@
+name: R3.18BR v8 Helper Source Diagnostic
+
+on:
+  push:
+    branches:
+      - evidence/r318br-next-control-v8
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r318br-next-control-v8
+  cancel-in-progress: false
+
+jobs:
+  helper-dump:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN_SHA: 265b780dc554715a7bc6bfb5c8e0fbe7ee279265
+      EXPECTED_BRANCH: evidence/r318br-next-control-v8
+      EXPECTED_FILE: .github/workflows/_tmp_r318br_v8_helper_dump.yml
+      BR_PAYLOAD_BLOB: a115e35e8e93f269f7f22637bee8d9b6fe9757f6
+      BR_PAYLOAD_SHA256: 824a30883f6173a7799e49b2d05f78c2061818ae41f882329dd9cb3f2681bde1
+
+    steps:
+      - name: Checkout exact diagnostic head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify evidence-only candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "$EXPECTED_BRANCH"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_MAIN_SHA"
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN_SHA"
+          test "$(git rev-list --count "$EXPECTED_MAIN_SHA"..HEAD)" = "1"
+          test "$(git rev-list --count HEAD.."$EXPECTED_MAIN_SHA")" = "0"
+          mapfile -t changed < <(git diff --name-only "$EXPECTED_MAIN_SHA"..HEAD)
+          test "${#changed[@]}" = "1"
+          test "${changed[0]}" = "$EXPECTED_FILE"
+          echo "R3_18BR_V8_CANDIDATE=$GITHUB_SHA"
+          echo "R3_18BR_V8_BASE=$EXPECTED_MAIN_SHA"
+          echo "R3_18BR_V8_DIFF=${changed[0]}"
+
+      - name: Extract exact v6 helper package
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/r318br-v8-helper-source"
+          mkdir -p "$out/helpers"
+          archive="$out/r318br-v6-helper-package.tar.gz"
+
+          gh api "repos/$GITHUB_REPOSITORY/git/blobs/$BR_PAYLOAD_BLOB" --jq .content \
+            | tr -d '\n' | base64 -d > "$archive"
+
+          actual="$(sha256sum "$archive" | awk '{print $1}')"
+          test "$actual" = "$BR_PAYLOAD_SHA256"
+          tar -tzf "$archive" | sort > "$out/tar-members.txt"
+          tar -xzf "$archive" -C "$out/helpers"
+
+          for f in r318br_run.sh r318br_control.rs r318br_boxcars.py r318br_compare.py; do
+            test -f "$out/helpers/$f"
+          done
+
+          (
+            cd "$out"
+            sha256sum r318br-v6-helper-package.tar.gz > sha256.txt
+            find helpers -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum >> sha256.txt
+          )
+
+          cat > "$out/receipt.txt" <<EOF
+          purpose=R3.18BR v8 diagnostic helper-source extraction only
+          admission_claim=false
+          candidate_sha=$GITHUB_SHA
+          base_sha=$EXPECTED_MAIN_SHA
+          source_v6_blob=$BR_PAYLOAD_BLOB
+          source_v6_package_sha256=$BR_PAYLOAD_SHA256
+          production_code_changed=false
+          EOF
+
+          cat "$out/receipt.txt"
+          cat "$out/sha256.txt"
+          cat "$out/tar-members.txt"
+
+      - name: Upload exact helper sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318br-v6-helper-source-v8
+          path: ${{ runner.temp }}/r318br-v8-helper-source/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
