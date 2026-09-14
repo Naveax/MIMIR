@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
+      GH_TOKEN: ${{ github.token }}
       RUSTUP_TOOLCHAIN: 1.85.0
       CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
       BASE_SHA: d4b0e84adf5603a6c2fe106a7f466cd497efdd43
