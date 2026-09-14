@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BU — bounded post-BS next property-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BV — published-R3.18BU one-control differential Outcome A / exact=2/2 / BS prerequisite=2/2 / false=1 true=1 / mismatch 0 / adjacent consumption 0/0/0/0 / artifact 10341754652
+  R3.18BW — one-following-header evidence Outcome A / BU rows=2 / false terminator=1 / true header=1 / exact header=1/1 / mismatch 0 / artifact 10346819501
 
 LAST_COMPLETED_CONTRACT_PASS:
-  R3.18BN — exact following-header context contract / Outcome A / 2 exact eight-field tuples / multiplicity 2 / 1 false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c / older-contract inheritance false / RL223 retained
+  R3.18BX — exact following-header context contract / Outcome A / 1 exact eight-field tuple / multiplicity 1 / 1 false terminator outside membership / contract 37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576 / historical-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BV — exact published-BU differential / two control rows / false terminator 1 / true continuation 1 / repeatability 2/2 / post-stop poison 2/2 / artifact 10341754652
+  R3.18BW — exact one-following-header evidence / two BU rows / false terminator 1 / true continuation 1 / one header exact 1/1 / payload/control consumption 0/0 / artifact 10346819501
 
 CURRENT_PASS:
-  R3.18BW — one following-property-header evidence after published R3.18BU mixed control
+  R3.18BY — bounded post-BU mixed-continuation following-header production
 
 CURRENT_PASS_TYPE:
-  read-only boundary evidence / exact BV rows=2 / false terminator=1 / true continuation=1 / observe one following header through payload_start only
+  bounded production implementation / validate exact BU result / false=no-header terminator / true=one exact R3.18BX header / stop at payload_start
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4333,3 +4333,13 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - Outcome A: published BU exact 2/2 with independently reconstructed BS prerequisite 2/2; Boolean row false `[11239,11240)`, ActiveActor row true `[3238,3239)`; mismatch/reselection 0/0; repeatability and post-stop poison 2/2; following stream/header/payload/second-control consumption 0/0/0/0.
 - active R3.18BW preserves both BV identities: the false Boolean row terminates at BU stop with zero header access; only the true ActiveActor row may expose exactly one following property header through `payload_start`, compared with pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b`, then stop.
 - following payload, second later control, false-row header access, witness reselection, production mutation, generalized/repeated cursor and wider semantics remain closed.
+
+
+# CURRENT OVERRIDE — 2026-09-14 — R3.18BW + R3.18BX CLOSED / R3.18BY ACTIVE
+
+- canonical production remains R3.18BU `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4`; BW/BX are read-only/docs-only and changed no production Rust.
+- R3.18BW evidence `778b12988046da4d186248877bd577eb2a533a58` / `5a6e7bd95c95f3e38db34a543b396aec747db985`; runner `34843377101/103973337631` SUCCESS; same-head natural CI `34843377045/103976995152` SUCCESS; artifact `10346819501` / `sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd`.
+- BW Outcome A: exact BU lane 2/2; false terminator 1/1; true continuation 1/1; one following header exact 1/1; exact context `(110,6,67,LoadoutsOnline,868,32,10,false)` x1; mismatch/reselection/header-on-false 0/0/0; payload/second-control 0/0.
+- R3.18BX Outcome A admits only that complete eight-field tuple; exact contract `sha256:37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`; validation candidate `6520e8c8aa47d14f8c2b457b7552aa6fb763d5fd` / `757fcf1824a9c0c82d92ef21c7b46498af15db3b`; candidate CI and knowledge archive, PR #221 CI/knowledge and exact prevalidation all SUCCESS.
+- active R3.18BY may validate one published BU result: false returns no-header at BU stop with zero post-BU reads; true may invoke exactly one existing-actor header suffix, require exact BX membership and stop at payload_start 3245.
+- following payload, second later control, false-row header synthesis, historical-contract inheritance, generalized cursor and wider semantics remain closed.

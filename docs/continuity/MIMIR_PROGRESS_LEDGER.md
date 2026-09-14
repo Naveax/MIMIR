@@ -2091,3 +2091,46 @@ Results:
 Admission consequence:
 - R3.18BV closes Outcome A without production mutation;
 - R3.18BW may inspect one following property header only on the exact true ActiveActor continuation row, while the false Boolean row remains a terminator.
+
+---
+
+## 2026-09-14 — R3.18BW — One Following-Property-Header Evidence
+Outcome: **A — ADMITTED / READ-ONLY EVIDENCE**
+
+Evidence head/tree: `778b12988046da4d186248877bd577eb2a533a58` / `5a6e7bd95c95f3e38db34a543b396aec747db985`
+Runner: `34843377101/103973337631` SUCCESS
+Same-head natural CI: `34843377045/103976995152` SUCCESS
+Artifact: `10346819501` / 3582 bytes / `sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd`
+Production authority: unchanged R3.18BU `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4`
+
+Results:
+- exact BU control rows 2/2; false terminator=1; true continuation=1;
+- one following header exact 1/1; unique context `(110,6,67,LoadoutsOnline,868,32,10,false)` x1; property ordinal 8;
+- mismatch/unclassified/reselection/false-header-access=0/0/0/0;
+- following payload/second-control=0/0; production/Cargo/fixture/corpus/support mutation=0/0/0/0/0.
+
+Admission consequence:
+- open R3.18BX exact context contract only; production header composition remains closed until contract admission.
+
+---
+
+## 2026-09-14 — R3.18BX — Exact Following-Header Context Contract
+Outcome: **A — ADMITTED / EXACT-EIGHT-FIELD CONTRACT**
+
+Contract: `docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json`
+Contract SHA-256: `37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`
+Candidate: `6520e8c8aa47d14f8c2b457b7552aa6fb763d5fd` / `757fcf1824a9c0c82d92ef21c7b46498af15db3b`
+Candidate CI: `34844530873/103977139973` SUCCESS
+Candidate knowledge archive: `34844530915/103977139602` SUCCESS
+Validation PR #221 CI: `34844544326/103977183134` SUCCESS
+Validation PR knowledge: `34844544534/103977183772` SUCCESS
+Exact prevalidation: `34844773598/103977940876` SUCCESS
+
+Results:
+- exact_tuple_only one complete eight-field context, multiplicity one;
+- one BU=false terminator outside membership;
+- tag/component/ordinal/Cartesian/versionless/RL223/historical-contract/fabricated widening rejected;
+- no production/Cargo/fixture/corpus/support mutation.
+
+Admission consequence:
+- open R3.18BY bounded post-BU following-header production.

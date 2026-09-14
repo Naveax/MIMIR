@@ -105,7 +105,9 @@ R3.18BS bounded post-BO one-following-payload production / PRODUCTION CLOSED
 R3.18BT published-R3.18BS one-following-payload differential / Outcome A CLOSED
 R3.18BU bounded post-BS next property-control production / CLOSED
 R3.18BV published-R3.18BU one-control differential / Outcome A CLOSED
-R3.18BW one following-property-header evidence after published R3.18BU mixed control / ACTIVE
+R3.18BW one following-property-header evidence after published R3.18BU mixed control / Outcome A CLOSED
+R3.18BX exact following-header context contract after R3.18BW / Outcome A CLOSED
+R3.18BY bounded post-BU mixed-continuation following-header production / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -319,6 +321,11 @@ scripts/verify_mimir_knowledge_archive.ps1
 193. `docs/continuity/MIMIR_R3_18BV_EXECUTION_SPEC.md`
 194. `docs/continuity/MIMIR_R3_18BV_DECISION.md`
 195. `docs/continuity/MIMIR_R3_18BW_EXECUTION_SPEC.md`
+196. `docs/continuity/MIMIR_R3_18BW_DECISION.md`
+197. `docs/continuity/MIMIR_R3_18BX_EXECUTION_SPEC.md`
+198. `docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json`
+199. `docs/continuity/MIMIR_R3_18BX_DECISION.md`
+200. `docs/continuity/MIMIR_R3_18BY_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1450,3 +1457,19 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - only ActiveActor=true row may enter one following-header observation from BU stop 3239 through exact `payload_start`.
 - compare native structure to pinned Boxcars; classify the complete observed header/context tuple; stop at payload_start.
 - no payload decode, no second later control, no false-row header access, no reselection and no generalized cursor.
+
+
+### R3.18BW one following-property-header evidence after published R3.18BU mixed control: OUTCOME A / CLOSED
+- evidence `778b12988046da4d186248877bd577eb2a533a58` / `5a6e7bd95c95f3e38db34a543b396aec747db985`; runner `34843377101/103973337631` SUCCESS; same-head CI `34843377045/103976995152` SUCCESS.
+- artifact `10346819501` / `sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd`; BU rows 2/2; false/true=1/1; one header exact 1/1; context `(110,6,67,LoadoutsOnline,868,32,10,false)` x1; mismatch/reselection/false-header 0/0/0.
+- following payload/second-control 0/0; production mutation 0.
+
+### R3.18BX exact following-header context contract: OUTCOME A / CLOSED
+- exact_tuple_only membership; one complete eight-field tuple; multiplicity one; one BU=false terminator outside membership.
+- contract `sha256:37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`; candidate `6520e8c8aa47d14f8c2b457b7552aa6fb763d5fd`; candidate CI/knowledge, validation PR #221 CI/knowledge and exact prevalidation SUCCESS.
+- tag/component/ordinal/Cartesian/versionless/RL223-drop-or-flip/historical-contract/fabricated membership rejected.
+
+### R3.18BY bounded post-BU mixed-continuation following-header production: ACTIVE
+- false validated BU result must return no-header at BU stop with zero post-BU reads.
+- true validated BU result may invoke exactly one existing-actor header suffix, require exact R3.18BX membership and stop at payload_start.
+- no following payload, later control or generalized cursor.

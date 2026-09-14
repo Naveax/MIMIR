@@ -6,25 +6,31 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BV differential closed / R3.18BW one-header evidence active
+# 0. Current override — R3.18BW/BX closed / R3.18BY bounded production active
 
-## PRODUCTION — R3.18BU
+## PRODUCTION AUTHORITY — R3.18BU
 - `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` remains canonical production.
 - exact controls: Boolean false `[11239,11240)` and ActiveActor true `[3238,3239)`.
 
-## CLOSED READ-ONLY DIFFERENTIAL — R3.18BV
-- `45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c` / runner `34830085977/103932439559` / same-head CI `34830086065/103931122833` SUCCESS.
-- artifact `10341754652` / `sha256:d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982`; exact 2/2; BS prerequisite 2/2; false/true 1/1; mismatch/reselection 0/0; adjacent consumption 0/0/0/0.
+## CLOSED READ-ONLY EVIDENCE — R3.18BW
+- `778b12988046da4d186248877bd577eb2a533a58`; runner `34843377101/103973337631`; same-head CI `34843377045/103976995152` SUCCESS.
+- artifact `10346819501` / `sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd`; false/true=1/1; one header exact=1/1; false-row header access=0; payload/control=0/0.
 
-## ACTIVE READ-ONLY BOUNDARY EVIDENCE — R3.18BW
-- preserve both exact BV identities; false Boolean row terminates with no header access.
-- only the exact true ActiveActor row may observe one following property header through `payload_start`; compare native structure with pinned Boxcars and stop there.
+## CLOSED EXACT CONTRACT — R3.18BX
+- `exact_tuple_only`: `(110,6,67,LoadoutsOnline,868,32,10,false)` x1.
+- one BU=false terminator is outside membership.
+- contract `sha256:37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`.
+
+## ACTIVE BOUNDED PRODUCTION — R3.18BY
+- false BU: successful no-header terminator, zero post-BU reads.
+- true BU: at most one header suffix, exact BX membership, stop at payload_start 3245.
 
 ## CLOSED
-- following-header access on the false BU row;
-- witness substitution/reselection;
-- following payload decode or production header composition;
+- following payload after BY header;
 - second later property-control bit;
+- header synthesis on the BU=false terminator;
+- context outside exact R3.18BX membership;
+- historical-contract inheritance;
 - generalized/repeated property loop/cursor and wider runtime semantics.
 
 # 1. Status vocabulary

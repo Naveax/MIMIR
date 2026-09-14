@@ -6,11 +6,11 @@
   "last_production_code_sha": "43c5d6248e2ea606b2eb0fd95f5c50758c372356",
   "last_production_milestone": "R3.18BU",
   "last_production_milestone_name": "bounded post-BS next property-control production",
-  "last_completed_read_only_audit": "R3.18BV",
-  "current_pass": "R3.18BW",
-  "current_pass_kind": "read-only one-following-property-header evidence after published R3.18BU mixed control",
-  "current_pass_goal": "Preserve the exact BV two-row lane; keep the false Boolean row terminated and compare one following header through payload_start on only the exact true ActiveActor row against pinned Boxcars.",
-  "current_pass_stop_boundary": "False row stops at BU stop 11240. True row stops exactly at the observed following header payload_start; consume no payload or second later control.",
+  "last_completed_read_only_audit": "R3.18BW",
+  "current_pass": "R3.18BY",
+  "current_pass_kind": "bounded post-BU mixed-continuation following-header production",
+  "current_pass_goal": "Validate one exact published BU result; false returns no-header with zero post-BU reads; true composes one header suffix under exact R3.18BX membership and stops at payload_start.",
+  "current_pass_stop_boundary": "False stops at BU stop 11240. True stops exactly at following header payload_start 3245; consume no payload or second later control.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -199,7 +199,13 @@
     "production consumption of the R3.18BR-observed following control bit during R3.18BT",
     "next stream/header/payload after published R3.18BS payload_end_bit",
     "second later property-control bit after published R3.18BS",
-    "generalized/repeated property loop or generic cursor after published R3.18BS"
+    "generalized/repeated property loop or generic cursor after published R3.18BS",
+    "following payload after the R3.18BW/R3.18BX header payload_start",
+    "second later property-control bit after R3.18BW/R3.18BX",
+    "header synthesis on the R3.18BU false terminator during R3.18BY",
+    "following-header contexts outside exact R3.18BX membership",
+    "historical following-header contract inheritance at R3.18BX/R3.18BY",
+    "generalized/repeated property loop or generic cursor after R3.18BY"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -403,11 +409,16 @@
     "docs/continuity/MIMIR_R3_18BU_DECISION.md",
     "docs/continuity/MIMIR_R3_18BV_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BV_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BW_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BW_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BW_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BX_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json",
+    "docs/continuity/MIMIR_R3_18BX_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BY_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18BV",
-  "last_completed_evidence_outcome": "A — published R3.18BU differential exact 2/2; BS prerequisite 2/2; false/true 1/1; mismatch/reselection 0/0; adjacent consumption 0/0/0/0; artifact 10341754652.",
-  "last_completed_contract_pass": "R3.18BN",
+  "last_completed_evidence_pass": "R3.18BW",
+  "last_completed_evidence_outcome": "A — BU rows 2/2; false/true 1/1; one following header exact 1/1; mismatch/reselection/false-header 0/0/0; artifact 10346819501.",
+  "last_completed_contract_pass": "R3.18BX",
   "r3_14a": {
     "outcome": "A",
     "production_source_changed": false,
@@ -914,7 +925,7 @@
     "receipt_manifest_sha256": "400aa0b52a5e120b7791e34e9a364d4e40a2362c46d6770dad3c5292db8dc7cc",
     "next_pass": "R3.17F"
   },
-  "last_completed_contract_outcome": "A — exact_tuple_only / 2 complete eight-field contexts / multiplicity 2 / one false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c.",
+  "last_completed_contract_outcome": "A — exact_tuple_only one eight-field context; multiplicity 1; false terminator outside membership; contract 37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576.",
   "r3_17f": {
     "outcome": "A — admitted / contract complete",
     "production_source_changed": false,
@@ -3491,5 +3502,46 @@
       0,
       0
     ]
+  },
+  "r3_18bw_admission": {
+    "outcome": "A",
+    "evidence_head": "778b12988046da4d186248877bd577eb2a533a58",
+    "evidence_tree": "5a6e7bd95c95f3e38db34a543b396aec747db985",
+    "run": 34843377101,
+    "job": 103973337631,
+    "same_head_ci_run": 34843377045,
+    "same_head_ci_job": 103976995152,
+    "artifact": 10346819501,
+    "artifact_size": 3582,
+    "artifact_digest": "ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd",
+    "false_rows": 1,
+    "true_rows": 1,
+    "header_rows": 1,
+    "unique_contexts": 1,
+    "mismatch": 0,
+    "reselection": 0,
+    "false_header_access": 0,
+    "following_payload_bits": 0,
+    "second_later_control_bits": 0
+  },
+  "r3_18bx_admission": {
+    "outcome": "A",
+    "contract_sha256": "37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576",
+    "candidate_head": "6520e8c8aa47d14f8c2b457b7552aa6fb763d5fd",
+    "candidate_tree": "757fcf1824a9c0c82d92ef21c7b46498af15db3b",
+    "candidate_ci_run": 34844530873,
+    "candidate_ci_job": 103977139973,
+    "candidate_knowledge_run": 34844530915,
+    "candidate_knowledge_job": 103977139602,
+    "validation_pr": 221,
+    "validation_pr_ci_run": 34844544326,
+    "validation_pr_ci_job": 103977183134,
+    "validation_pr_knowledge_run": 34844544534,
+    "validation_pr_knowledge_job": 103977183772,
+    "prevalidation_run": 34844773598,
+    "prevalidation_job": 103977940876,
+    "membership_policy": "exact_tuple_only",
+    "context_count": 1,
+    "false_terminator_count": 1
   }
 }
