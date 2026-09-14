@@ -1,0 +1,593 @@
+name: R3.18BW One Following Header Evidence
+
+on:
+  push:
+    branches: [evidence/r318bw-following-header-v1]
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318bw-one-following-header-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 64f81e106338493476954f207a997a2bc7c25c9a
+      BASE_TREE: 3f023aa0fb0f4d1c695b5d1e3eaab7b3321ff797
+      PROD_SHA: 43c5d6248e2ea606b2eb0fd95f5c50758c372356
+      PROD_TREE: d1b7b40ed4e361d9c047e0494fb821688ef7d7b4
+      LIB_BLOB: 1c4db09cff43e0ab56f5efb5e8078da3a1189937
+      BU_TEST_BLOB: e6170f90b47e3f04bd798edbc61f2fa59e5213dd
+      BU_SPEC_BLOB: ac1ce2120320bd552e5be24e2309fea23d5a2a50
+      BV_SPEC_BLOB: f6d37f928e7171ac1d100447d1f4775b948abb2a
+      BV_HEAD: 45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c
+      BV_RUN: '34830085977'
+      BV_JOB: '103932439559'
+      BV_CI_RUN: '34830086065'
+      BV_CI_JOB: '103931122833'
+      BV_ARTIFACT: '10341754652'
+      BV_ARTIFACT_SIZE: '2596'
+      BV_DIGEST: sha256:d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982
+      BR_HEAD: ff1daab35e2e75bf7446a98a07a1db67e5196dbd
+      BR_ARTIFACT: '10267123608'
+      BR_DIGEST: sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1
+      BM_RUN: '34334615939'
+      BM_ARTIFACT: '10097405795'
+      BM_ARTIFACT_NAME: r318bm-one-following-header-evidence
+      BM_PATCH_SHA256: 092d188a7485e98fc88dbb297a11d744bad71a1e7bdb686ae90d441ba20894ec
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      TRUE_REPLAY: test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay
+      FALSE_REPLAY: external_fixtures/sample_002.replay
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Freeze current authority and exact scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "authority mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(git rev-parse HEAD^)" "$BASE_SHA"
+          eq "$(git rev-parse "$BASE_SHA^{tree}")" "$BASE_TREE"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" "$BASE_SHA"
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA...$GITHUB_SHA" | sort)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = '.github/workflows/_tmp_r318bw_evidence.yml'
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/src/lib.rs?ref=$BASE_SHA" --jq .sha)" "$LIB_BLOB"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/r3_18bu_post_bs_following_control.rs?ref=$BASE_SHA" --jq .sha)" "$BU_TEST_BLOB"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18BU_EXECUTION_SPEC.md?ref=$BASE_SHA" --jq .sha)" "$BU_SPEC_BLOB"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18BV_EXECUTION_SPEC.md?ref=$BASE_SHA" --jq .sha)" "$BV_SPEC_BLOB"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BV_RUN" --jq .head_sha)" "$BV_HEAD"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BV_RUN" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BV_JOB" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BV_CI_RUN" --jq .head_sha)" "$BV_HEAD"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BV_CI_RUN" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BV_CI_JOB" --jq .conclusion)" success
+          bv_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BV_ARTIFACT")"
+          eq "$(jq -r .size_in_bytes <<<"$bv_meta")" "$BV_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$bv_meta")" "$BV_DIGEST"
+          eq "$(jq -r .workflow_run.id <<<"$bv_meta")" "$BV_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$bv_meta")" "$BV_HEAD"
+          br_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BR_ARTIFACT")"
+          eq "$(jq -r .digest <<<"$br_meta")" "$BR_DIGEST"
+          eq "$(jq -r .workflow_run.head_sha <<<"$br_meta")" "$BR_HEAD"
+          echo R3_18BW_AUTHORITY_FREEZE=PASS
+
+      - name: Mark evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending -f context='r318bw/evidence' \
+            -f description='R3.18BW one-following-header evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Install Rust floor
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Materialize and run native bounded observer
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST=crates/mimir-replay/tests/_tmp_r318bw_evidence.rs
+          cat > "$TEST" <<'RS'
+          include!("r3_18bu_post_bs_following_control.rs");
+
+          #[test]
+          fn r3_18bw_exact_bv_lane_observes_one_header_on_true_row_only() {
+              let (mut false_rows, mut true_rows, mut header_rows, mut header_attempts) =
+                  (0usize, 0usize, 0usize, 0usize);
+
+              for (index, (path, first_start, actor_object, _)) in au_cases().into_iter().enumerate() {
+                  let (network, plan) = frozen_network_and_plan(path, &format!("r318bw_{index}"));
+                  let (prior, control, an) = aq_from_frozen(&network, &plan, first_start, actor_object);
+                  let aq = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1(
+                      &network, &prior, &control, &plan, k3_context(), &an,
+                  )
+                  .unwrap_or_else(|error| panic!("AQ prerequisite row {index} {path}: {error}"));
+                  let au = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(
+                      &network, &prior, &control, &plan, k3_context(), &an, &aq,
+                  )
+                  .unwrap_or_else(|error| panic!("AU prerequisite row {index} {path}: {error}"));
+                  if au.following_header.is_none() {
+                      continue;
+                  }
+                  let ay = decode_ay(&network, &prior, &control, &plan, k3_context(), &an, &au)
+                      .unwrap_or_else(|error| panic!("AY prerequisite row {index} {path}: {error}"));
+                  let ba = decode_ba(&network, &prior, &control, &plan, k3_context(), &an, &ay)
+                      .unwrap_or_else(|error| panic!("BA prerequisite row {index} {path}: {error}"));
+                  let be = decode_be(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                      &ay,
+                      &ba,
+                  )
+                  .unwrap_or_else(|error| panic!("BE prerequisite row {index} {path}: {error}"));
+                  if be.following_header.is_none() {
+                      continue;
+                  }
+                  let bi = decode_bi(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                      &ay,
+                      &ba,
+                      &be,
+                  )
+                  .unwrap_or_else(|error| panic!("BI prerequisite row {index} {path}: {error}"));
+                  let bk = decode_bk(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                      &ay,
+                      &ba,
+                      &be,
+                      &bi,
+                  )
+                  .unwrap_or_else(|error| panic!("BK prerequisite row {index} {path}: {error}"));
+                  let bo = decode_bo(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                      &ay,
+                      &ba,
+                      &be,
+                      &bi,
+                      &bk,
+                  )
+                  .unwrap_or_else(|error| panic!("BO prerequisite row {index} {path}: {error}"));
+                  if bo.following_header.is_none() {
+                      continue;
+                  }
+                  let bs = decode_bs(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                      &ay,
+                      &ba,
+                      &be,
+                      &bi,
+                      &bk,
+                      &bo,
+                  )
+                  .unwrap_or_else(|error| panic!("BS prerequisite row {index} {path}: {error}"));
+                  let bu = decode_bu(
+                      &network,
+                      &prior,
+                      &control,
+                      &plan,
+                      k3_context(),
+                      &an,
+                      &ay,
+                      &ba,
+                      &be,
+                      &bi,
+                      &bk,
+                      &bo,
+                      &bs,
+                  )
+                  .unwrap_or_else(|error| panic!("BU prerequisite row {index} {path}: {error}"));
+
+                  let expected = expected_bu_control(path)
+                      .expect("only exact BV/BU authority rows may reach BW");
+                  assert_eq!(bu.property_control, expected, "{path}");
+                  if !bu.property_control {
+                      false_rows += 1;
+                      assert!(path.ends_with("external_fixtures/sample_002.replay"));
+                      assert_eq!(bu.control_start_bit, 11239);
+                      assert_eq!(bu.control_end_bit, 11240);
+                      assert_eq!(bu.stop_bit, 11240);
+                      println!("R3_18BW_FALSE\texternal_fixtures/sample_002.replay\t11239\t11240\t11240");
+                      continue;
+                  }
+
+                  true_rows += 1;
+                  assert!(path.ends_with(
+                      "test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay"
+                  ));
+                  assert_eq!(actor_object, 117);
+                  assert_eq!(bu.control_start_bit, 3238);
+                  assert_eq!(bu.control_end_bit, 3239);
+                  assert_eq!(bu.stop_bit, 3239);
+
+                  header_attempts += 1;
+                  let header =
+                      mimir_replay::decode_replay_network_existing_actor_first_property_header_v1(
+                          &network,
+                          bu.control_start_bit,
+                          actor_object,
+                          &plan,
+                      )
+                      .unwrap_or_else(|error| panic!("BW one-header row {path}: {error}"));
+
+                  assert!(header.property_present);
+                  assert_eq!(header.property_present_start_bit, 3238);
+                  assert_eq!(header.property_present_end_bit, 3239);
+                  assert_eq!(header.stream_id_start_bit, Some(3239));
+                  assert_eq!(header.stream_id_end_bit, Some(3245));
+                  assert_eq!(header.stream_id, Some(61));
+                  assert_eq!(header.stream_id_bound, Some(110));
+                  assert_eq!(header.prop_id_bits, Some(6));
+                  assert_eq!(header.resolved_property_object_index, Some(67));
+                  assert_eq!(
+                      header.resolved_property_object_name.as_deref(),
+                      Some("TAGame.PRI_TA:ClientLoadoutsOnline")
+                  );
+                  assert_eq!(
+                      header.resolved_attribute_tag,
+                      Some(mimir_replay::ReplayNetworkAttributeTagV1::LoadoutsOnline)
+                  );
+                  assert_eq!(header.payload_start_bit, Some(3245));
+                  assert_eq!(header.stop_bit, 3245);
+
+                  let repeated =
+                      mimir_replay::decode_replay_network_existing_actor_first_property_header_v1(
+                          &network,
+                          bu.control_start_bit,
+                          actor_object,
+                          &plan,
+                      )
+                      .expect("repeat BW one-header observation");
+                  assert_eq!(repeated, header);
+
+                  let mut poisoned = network.clone();
+                  let poison_bit = usize::try_from(header.stop_bit).expect("poison bit fits usize");
+                  let old = raw_lsb(&poisoned, header.stop_bit);
+                  set_bit(&mut poisoned, poison_bit, !old);
+                  let after_poison =
+                      mimir_replay::decode_replay_network_existing_actor_first_property_header_v1(
+                          &poisoned,
+                          bu.control_start_bit,
+                          actor_object,
+                          &plan,
+                      )
+                      .expect("payload-start poison must not affect BW header");
+                  assert_eq!(after_poison, header);
+
+                  let control_carrier =
+                      usize::try_from(bu.control_start_bit / 8).expect("carrier cut fits usize");
+                  assert!(
+                      mimir_replay::decode_replay_network_existing_actor_first_property_header_v1(
+                          &network[..control_carrier],
+                          bu.control_start_bit,
+                          actor_object,
+                          &plan,
+                      )
+                      .is_err()
+                  );
+
+                  let mut missing_lookup = plan.clone();
+                  let actor_slot = usize::try_from(actor_object).expect("actor object fits usize");
+                  missing_lookup.object_lookups[actor_slot] = None;
+                  assert!(
+                      mimir_replay::decode_replay_network_existing_actor_first_property_header_v1(
+                          &network,
+                          bu.control_start_bit,
+                          actor_object,
+                          &missing_lookup,
+                      )
+                      .is_err()
+                  );
+
+                  println!(
+                      "R3_18BW_NATIVE\ttest_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay\t0\t26\t117\t8\t3238\t3239\t3239\t3245\t61\t110\t6\t67\tLoadoutsOnline\t868\t32\t10\tfalse\t3245"
+                  );
+                  header_rows += 1;
+              }
+
+              assert_eq!(false_rows, 1);
+              assert_eq!(true_rows, 1);
+              assert_eq!(header_rows, 1);
+              assert_eq!(header_attempts, 1);
+              println!("R3_18BW_BV_ROWS=2/2");
+              println!("R3_18BW_FALSE_TERMINATOR_NO_HEADER=PASS 1/1");
+              println!("R3_18BW_TRUE_ROWS=1/1");
+              println!("R3_18BW_ONE_FOLLOWING_HEADER_NATIVE=PASS 1/1");
+              println!("R3_18BW_HEADER_ATTEMPTS=1");
+              println!("R3_18BW_REPEATABILITY=PASS 1/1");
+              println!("R3_18BW_HEADER_TRUNCATION=PASS 1/1");
+              println!("R3_18BW_UNRESOLVED_LOOKUP=PASS 1/1");
+              println!("R3_18BW_POST_PAYLOAD_START_POISON=PASS 1/1");
+              println!("R3_18BW_FOLLOWING_PAYLOAD_BITS_CONSUMED=0");
+              println!("R3_18BW_SECOND_LATER_CONTROL_BITS_CONSUMED=0");
+              println!("R3_18BW_WITNESS_RESELECTION=0");
+          }
+          RS
+          rustfmt +1.85.0 "$TEST"
+          cargo +1.85.0 test -p mimir-replay --test _tmp_r318bw_evidence \
+            r3_18bw_exact_bv_lane_observes_one_header_on_true_row_only -- --nocapture \
+            | tee "$RUNNER_TEMP/r318bw-native.log"
+          grep -Fx $'R3_18BW_FALSE\texternal_fixtures/sample_002.replay\t11239\t11240\t11240' "$RUNNER_TEMP/r318bw-native.log"
+          grep -Fx $'R3_18BW_NATIVE\ttest_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay\t0\t26\t117\t8\t3238\t3239\t3239\t3245\t61\t110\t6\t67\tLoadoutsOnline\t868\t32\t10\tfalse\t3245' "$RUNNER_TEMP/r318bw-native.log"
+          rm -f "$TEST"
+          test -z "$(git status --porcelain --untracked-files=all | grep -v '^?? target/' || true)"
+
+      - name: Run pinned Boxcars structural oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          BM="$RUNNER_TEMP/r318bm-tooling"
+          mkdir -p "$BM"
+          gh run download "$BM_RUN" -n "$BM_ARTIFACT_NAME" -D "$BM"
+          PATCH="$BM/r3_18bm_boxcars_instrumentation.patch"
+          test -f "$PATCH"
+          test "$(sha256sum "$PATCH" | awk '{print $1}')" = "$BM_PATCH_SHA256"
+          bm_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BM_ARTIFACT")"
+          test "$(jq -r .workflow_run.id <<<"$bm_meta")" = "$BM_RUN"
+          test "$(jq -r .name <<<"$bm_meta")" = "$BM_ARTIFACT_NAME"
+
+          BOX="$RUNNER_TEMP/boxcars-r318bw"
+          git clone -q https://github.com/nickbabcock/boxcars "$BOX"
+          git -C "$BOX" checkout -q "$BOXCARS_SHA"
+          test "$(git -C "$BOX" rev-parse HEAD)" = "$BOXCARS_SHA"
+          git -C "$BOX" apply "$PATCH"
+
+          export MIMIR_R3_18BM_LABEL="$TRUE_REPLAY"
+          export MIMIR_R3_18BM_TARGET_FRAME=0
+          export MIMIR_R3_18BM_TARGET_ACTOR_ORDINAL=26
+          export MIMIR_R3_18BM_TARGET_ACTOR_OBJECT=117
+          export MIMIR_R3_18BM_TARGET_PROPERTY_START=3238
+          cargo +1.85.0 run --quiet --manifest-path "$BOX/Cargo.toml" --example r3_18bm_probe -- \
+            "$GITHUB_WORKSPACE/$TRUE_REPLAY" | tee "$RUNNER_TEMP/r318bw-boxcars.log"
+          test "$(grep -c '^R3_18BM_HEADER' "$RUNNER_TEMP/r318bw-boxcars.log")" -eq 1
+          line="$(grep '^R3_18BM_HEADER' "$RUNNER_TEMP/r318bw-boxcars.log")"
+          for field in \
+            'frame_index=0' \
+            'actor_ordinal=26' \
+            'actor_context_object_id=117' \
+            'property_ordinal=8' \
+            'property_present_start_bit=3238' \
+            'property_present_end_bit=3239' \
+            'stream_id_start_bit=3239' \
+            'stream_id_end_bit=3245' \
+            'stream_id=61' \
+            'stream_id_bound=110' \
+            'prop_id_bits=6' \
+            'property_object_id=67' \
+            'attribute_tag=LoadoutsOnline' \
+            'version_major=868' \
+            'version_minor=32' \
+            'net_version=10' \
+            'payload_start_bit=3245'; do
+              grep -Fq "$field" <<<"$line" || { echo "missing Boxcars field: $field" >&2; exit 1; }
+          done
+          printf '%s\n' "$line" > "$RUNNER_TEMP/r318bw-boxcars-row.txt"
+          echo R3_18BW_BOXCARS_ORACLE=PASS
+
+      - name: Build privacy-safe immutable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bw-out"
+          mkdir -p "$OUT"
+          printf '%s\n' \
+            'base_sha=64f81e106338493476954f207a997a2bc7c25c9a' \
+            'production_sha=43c5d6248e2ea606b2eb0fd95f5c50758c372356' \
+            'bv_head=45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c' \
+            'bv_artifact=10341754652' \
+            'br_head=ff1daab35e2e75bf7446a98a07a1db67e5196dbd' \
+            'br_artifact=10267123608' \
+            'boxcars_sha=c70e77df7af81b436cb545d070bb90c82f562d0b' \
+            'historical_instrumentation_sha256=092d188a7485e98fc88dbb297a11d744bad71a1e7bdb686ae90d441ba20894ec' \
+            > "$OUT/r3_18bw_upstream_receipts.txt"
+          printf '%s\n' \
+            '.github/workflows/_tmp_r318bw_evidence.yml' \
+            'production_rust_mutation=0' \
+            'cargo_mutation=0' \
+            'fixture_mutation=0' \
+            'corpus_mutation=0' \
+            'support_mutation=0' \
+            > "$OUT/r3_18bw_source_scope.txt"
+          printf '%s\n' \
+            'external_fixtures/sample_002.replay\t11239\t11240\tfalse\tterminator\theader_access=0' \
+            'test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay\t3238\t3239\ttrue\tcontinuation\theader_access=1' \
+            > "$OUT/r3_18bw_frozen_control_rows.tsv"
+          cp "$RUNNER_TEMP/r318bw-boxcars-row.txt" "$OUT/r3_18bw_boxcars_oracle_row.txt"
+          python3 - "$OUT" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          out = Path(sys.argv[1])
+          row = {
+              "label": "test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay",
+              "frame_index": 0,
+              "actor_ordinal": 26,
+              "actor_context_object_id": 117,
+              "property_ordinal": 8,
+              "property_present_start_bit": 3238,
+              "property_present_end_bit": 3239,
+              "stream_id_start_bit": 3239,
+              "stream_id_end_bit": 3245,
+              "stream_id": 61,
+              "stream_id_bound": 110,
+              "prop_id_bits": 6,
+              "resolved_property_object_index": 67,
+              "resolved_property_object_name": "TAGame.PRI_TA:ClientLoadoutsOnline",
+              "resolved_attribute_tag": "LoadoutsOnline",
+              "version_major": 868,
+              "version_minor": 32,
+              "net_version": 10,
+              "is_rl_223": False,
+              "payload_start_bit": 3245,
+              "header_stop_bit": 3245,
+              "native_oracle_exact": True,
+              "following_payload_bits_consumed": 0,
+              "second_later_control_bits_consumed": 0,
+          }
+          payload = {
+              "rows": [row],
+              "aggregate": {
+                  "source_control_rows": 2,
+                  "false_terminators": 1,
+                  "true_rows": 1,
+                  "rows": 1,
+                  "unique_exact_contexts": 1,
+                  "contexts": [{
+                      "stream_id_bound": 110,
+                      "prop_id_bits": 6,
+                      "property_object_index": 67,
+                      "attribute_tag": "LoadoutsOnline",
+                      "version_major": 868,
+                      "version_minor": 32,
+                      "net_version": 10,
+                      "is_rl_223": False,
+                      "observed_count": 1,
+                  }],
+                  "property_ordinals": {"8": 1},
+                  "native_oracle_mismatch": 0,
+                  "unclassified": 0,
+                  "witness_reselection": 0,
+                  "following_payload_bits_consumed": 0,
+                  "second_later_control_bits_consumed": 0,
+              },
+          }
+          (out / "r3_18bw_header_rows.json").write_text(
+              json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          PY
+          printf '%s\n' \
+            'repeatability=PASS 1/1' \
+            'header_truncation=PASS 1/1' \
+            'unresolved_lookup=PASS 1/1' \
+            'post_payload_start_poison=PASS 1/1' \
+            'false_terminator_no_header=PASS 1/1' \
+            'fabricated_or_substituted_continuation=NOT_USED' \
+            > "$OUT/r3_18bw_negative_controls.txt"
+          printf '%s\n' \
+            'R3_18BW_OUTCOME=A' \
+            'R3_18BW_EVIDENCE=PASS' \
+            'R3_18BW_FROZEN_CONTROL_ROWS=2/2' \
+            'R3_18BW_FALSE_TERMINATORS=1/1' \
+            'R3_18BW_TRUE_ROWS=1/1' \
+            'R3_18BW_ONE_FOLLOWING_HEADER_EXACT=1/1' \
+            'R3_18BW_UNIQUE_EXACT_CONTEXTS=1' \
+            'R3_18BW_PROPERTY_ORDINAL=8' \
+            'R3_18BW_NATIVE_ORACLE_MISMATCH=0' \
+            'R3_18BW_UNCLASSIFIED=0' \
+            'R3_18BW_WITNESS_RESELECTION=0' \
+            'R3_18BW_FALSE_TERMINATOR_HEADER_ACCESS=0' \
+            'R3_18BW_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' \
+            'R3_18BW_SECOND_LATER_CONTROL_BITS_CONSUMED=0' \
+            'R3_18BW_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' \
+            'R3_18BW_PRIVACY_SCAN=PASS' \
+            > "$OUT/r3_18bw_aggregate.txt"
+          grep -RniE '/home/runner|C:\\Users\\|github_pat_|ghp_|Omersevik|Maximillan' "$OUT" && exit 1 || true
+          echo R3_18BW_PRIVACY_SCAN=PASS
+
+      - name: Validate repository with evidence helpers removed
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 fmt --all -- --check
+          cargo +1.85.0 test -p mimir-replay --test r3_18bu_post_bs_following_control
+          cargo +1.85.0 check --workspace
+          cargo +1.85.0 test --workspace
+          cargo +1.85.0 clippy --workspace --all-targets -- -D warnings
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git diff --check "$BASE_SHA"
+          OUT="$RUNNER_TEMP/r318bw-out"
+          printf '%s\n' \
+            'rust_1_85_fmt=PASS' \
+            'r3_18bu_regression=PASS' \
+            'workspace_check=PASS' \
+            'workspace_test=PASS' \
+            'workspace_clippy=PASS' \
+            'knowledge_archive_verifier=PASS' \
+            'git_diff_check=PASS' \
+            > "$OUT/r3_18bw_validation.txt"
+          (cd "$OUT" && sha256sum \
+            r3_18bw_source_scope.txt \
+            r3_18bw_frozen_control_rows.tsv \
+            r3_18bw_boxcars_oracle_row.txt \
+            r3_18bw_header_rows.json \
+            r3_18bw_negative_controls.txt \
+            r3_18bw_validation.txt \
+            r3_18bw_aggregate.txt \
+            r3_18bw_upstream_receipts.txt \
+            > r3_18bw_artifact_sha256.txt)
+          test "$(wc -l < "$OUT/r3_18bw_artifact_sha256.txt")" -eq 8
+          (cd "$OUT" && sha256sum -c r3_18bw_artifact_sha256.txt)
+
+      - name: Upload immutable R3.18BW evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bw-one-following-header-evidence
+          if-no-files-found: error
+          retention-days: 90
+          path: ${{ runner.temp }}/r318bw-out/
+
+      - name: Seal immutable receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r .expired <<<"$meta")" = false
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$(jq -r .digest <<<"$meta")")" = "$(norm "$ARTIFACT_DIGEST")"
+          grep -Fx 'R3_18BW_OUTCOME=A' "$RUNNER_TEMP/r318bw-out/r3_18bw_aggregate.txt"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318bw/evidence' \
+            -f description='R3.18BW Outcome A immutable evidence sealed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo R3_18BW_IMMUTABLE_RECEIPT=PASS
