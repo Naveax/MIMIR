@@ -1,0 +1,153 @@
+name: R3.18BX Contract Prevalidation
+
+on:
+  push:
+    branches:
+      - automation/r318bx-contract-prevalidate-v1
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: r318bx-contract-prevalidate-v1
+  cancel-in-progress: false
+
+jobs:
+  prevalidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 64f81e106338493476954f207a997a2bc7c25c9a
+      CANDIDATE_SHA: 6520e8c8aa47d14f8c2b457b7552aa6fb763d5fd
+      CONTRACT_SHA256: 18dad57f84f1bf6d43ec1270c800fb0158f494b4c10d1156e0de5f6c6adb5851
+      SPEC_SHA256: 2c870690c62e6c689e37723edd7467c4f961daef51ec466432f2aa7ef74445a9
+      BW_HEAD: 778b12988046da4d186248877bd577eb2a533a58
+      BW_RUN: '34843377101'
+      BW_JOB: '103973337631'
+      BW_ARTIFACT: '10346819501'
+      BW_ARTIFACT_SIZE: '3582'
+      BW_ARTIFACT_DIGEST: sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd
+
+    steps:
+      - name: Checkout automation head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+
+      - name: Freeze candidate and automation scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse "$CANDIDATE_SHA^")" = "$BASE_SHA"
+          mapfile -t auto_changed < <(git diff --name-only "$CANDIDATE_SHA...HEAD" | sort)
+          test "${#auto_changed[@]}" -eq 1
+          test "${auto_changed[0]}" = '.github/workflows/_tmp_r318bx_contract_prevalidate.yml'
+          mapfile -t candidate_changed < <(git diff --name-only "$BASE_SHA...$CANDIDATE_SHA" | sort)
+          expected=(
+            'docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json'
+            'docs/continuity/MIMIR_R3_18BX_EXECUTION_SPEC.md'
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "$(printf '%s\n' "${candidate_changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
+
+      - name: Validate exact contract candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json | cut -d' ' -f1)" = "$CONTRACT_SHA256"
+          test "$(sha256sum docs/continuity/MIMIR_R3_18BX_EXECUTION_SPEC.md | cut -d' ' -f1)" = "$SPEC_SHA256"
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path('docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json')
+          d = json.loads(p.read_text(encoding='utf-8'))
+          fields = [
+              'stream_id_bound', 'prop_id_bits', 'property_object_index', 'attribute_tag',
+              'version_major', 'version_minor', 'net_version', 'is_rl_223'
+          ]
+          exact = (110, 6, 67, 'LoadoutsOnline', 868, 32, 10, False)
+          assert d['status'] == 'candidate_pending_same_head_ci'
+          assert d['membership_policy'] == 'exact_tuple_only'
+          assert d['tuple_fields'] == fields
+          assert d['frozen_source_control_row_count'] == 2
+          assert d['false_terminator_count'] == 1
+          assert d['observed_header_row_count'] == 1
+          assert d['unique_exact_context_count'] == 1
+          rows = d['admitted_contexts']
+          assert len(rows) == 1
+          assert tuple(rows[0][k] for k in fields) == exact
+          assert rows[0]['observed_count'] == 1
+          assert d['observed_tag_counts'] == {'LoadoutsOnline': 1}
+          assert d['observed_property_ordinal_counts'] == {'8': 1}
+          assert d['terminator_policy'] == {
+              'false_rows_are_terminators': True,
+              'false_terminator_count': 1,
+              'false_terminators_produce_header_membership': False,
+          }
+          assert all(v is False for v in d['anti_widening'].values())
+          allowed = {exact}
+          def member(x): return tuple(x) in allowed
+          assert member(exact)
+          assert not member((110, 6, 66, 'ActiveActor', 868, 32, 10, False))
+          assert not member((110, 6, 67, 'LoadoutsOnline', 868, 32, 10, True))
+          assert not member((110, 6, 67, 'Boolean', 868, 32, 10, False))
+          assert not member((72, 6, 67, 'LoadoutsOnline', 868, 32, 10, False))
+          assert not member((110, 6, 999, 'LoadoutsOnline', 868, 32, 10, False))
+          a = d['authority']
+          assert a['r3_18bw_evidence_head'] == '778b12988046da4d186248877bd577eb2a533a58'
+          assert a['r3_18bw_run'] == 34843377101
+          assert a['r3_18bw_job'] == 103973337631
+          assert a['r3_18bw_artifact_id'] == 10346819501
+          assert a['native_oracle_mismatch'] == 0
+          assert a['unclassified_rows'] == 0
+          assert a['witness_reselection'] == 0
+          assert a['false_terminator_header_access'] == 0
+          assert a['following_payload_bits_consumed'] == 0
+          assert a['second_later_control_bits_consumed'] == 0
+          print('R3_18BX_CONTRACT_CANDIDATE=PASS')
+          PY
+
+      - name: Reverify immutable R3.18BW evidence artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BW_RUN")"
+          test "$(jq -r .head_sha <<<"$run")" = "$BW_HEAD"
+          test "$(jq -r .status <<<"$run")" = completed
+          test "$(jq -r .conclusion <<<"$run")" = success
+          job="$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BW_JOB")"
+          test "$(jq -r .conclusion <<<"$job")" = success
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BW_ARTIFACT")"
+          test "$(jq -r .size_in_bytes <<<"$meta")" = "$BW_ARTIFACT_SIZE"
+          test "$(jq -r .digest <<<"$meta")" = "$BW_ARTIFACT_DIGEST"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$BW_HEAD"
+          test "$(jq -r .expired <<<"$meta")" = false
+
+          mkdir -p "$RUNNER_TEMP/bw"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BW_ARTIFACT/zip" > "$RUNNER_TEMP/bw.zip"
+          unzip -q "$RUNNER_TEMP/bw.zip" -d "$RUNNER_TEMP/bw"
+          cd "$RUNNER_TEMP/bw"
+          sha256sum -c r3_18bw_artifact_sha256.txt
+          grep -Fx 'R3_18BW_OUTCOME=A' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_FROZEN_CONTROL_ROWS=2/2' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_FALSE_TERMINATORS=1/1' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_TRUE_ROWS=1/1' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_ONE_FOLLOWING_HEADER_EXACT=1/1' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_UNIQUE_EXACT_CONTEXTS=1' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_PROPERTY_ORDINAL=8' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_NATIVE_ORACLE_MISMATCH=0' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_WITNESS_RESELECTION=0' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_FALSE_TERMINATOR_HEADER_ACCESS=0' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' r3_18bw_aggregate.txt
+          grep -Fx 'R3_18BW_SECOND_LATER_CONTROL_BITS_CONSUMED=0' r3_18bw_aggregate.txt
+
+      - name: Diff check
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check "$BASE_SHA...HEAD"
+          echo R3_18BX_PREVALIDATION=PASS
