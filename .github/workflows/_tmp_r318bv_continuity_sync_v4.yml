@@ -1,0 +1,124 @@
+name: R3.18BV Continuity Sync Builder v4
+
+on:
+  push:
+    branches:
+      - automation/r318bv-continuity-sync-v4
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  sync:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout builder
+        uses: actions/checkout@v6
+
+      - name: Build docs-only R3.18BV admission candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ExpectedBase = '58d7e0ac79e4e098215c06e0bc1d365cd5720d61'
+          $ExpectedMainRun = '34828927079'
+          $ExpectedMainJob = '103927394760'
+          $ExpectedEvidenceHead = '45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c'
+          $ExpectedEvidenceRun = '34830085977'
+          $ExpectedEvidenceJob = '103932439559'
+          $ExpectedEvidenceCiRun = '34830086065'
+          $ExpectedEvidenceCiJob = '103931122833'
+          $ExpectedArtifact = '10341754652'
+          $ExpectedArtifactName = 'r318bv-published-bu-differential-evidence'
+          $ExpectedArtifactSize = 2596
+          $ExpectedArtifactDigest = 'sha256:d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982'
+          $CandidateBranch = 'continuity/r318bv-admission-v4'
+          $Sync = Join-Path $env:RUNNER_TEMP 'r318bv_continuity_sync.py'
+          $Repair = Join-Path $env:RUNNER_TEMP 'r318bv_continuity_receipt_repair_v3.py'
+
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch main failed: $LASTEXITCODE" }
+          $FreshMain = (git rev-parse origin/main).Trim()
+          if ($FreshMain -ne $ExpectedBase) { throw "fresh main drift: expected $ExpectedBase got $FreshMain" }
+
+          $MainRun = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$ExpectedMainRun" | ConvertFrom-Json
+          if ($MainRun.head_sha -ne $ExpectedBase -or $MainRun.status -ne 'completed' -or $MainRun.conclusion -ne 'success') { throw 'canonical base main CI gate mismatch' }
+          $MainJob = gh api "repos/$env:GITHUB_REPOSITORY/actions/jobs/$ExpectedMainJob" | ConvertFrom-Json
+          if ($MainJob.conclusion -ne 'success') { throw 'canonical base main CI job mismatch' }
+
+          $EvidenceRun = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$ExpectedEvidenceRun" | ConvertFrom-Json
+          if ($EvidenceRun.head_sha -ne $ExpectedEvidenceHead -or $EvidenceRun.status -ne 'completed' -or $EvidenceRun.conclusion -ne 'success') { throw 'BV evidence run gate mismatch' }
+          $EvidenceJob = gh api "repos/$env:GITHUB_REPOSITORY/actions/jobs/$ExpectedEvidenceJob" | ConvertFrom-Json
+          if ($EvidenceJob.conclusion -ne 'success') { throw 'BV evidence job gate mismatch' }
+
+          $EvidenceCiRun = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$ExpectedEvidenceCiRun" | ConvertFrom-Json
+          if ($EvidenceCiRun.head_sha -ne $ExpectedEvidenceHead -or $EvidenceCiRun.status -ne 'completed' -or $EvidenceCiRun.conclusion -ne 'success') { throw 'BV same-head CI run gate mismatch' }
+          $EvidenceCiJob = gh api "repos/$env:GITHUB_REPOSITORY/actions/jobs/$ExpectedEvidenceCiJob" | ConvertFrom-Json
+          if ($EvidenceCiJob.conclusion -ne 'success') { throw 'BV same-head CI job mismatch' }
+
+          $Artifacts = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$ExpectedEvidenceRun/artifacts?per_page=100" | ConvertFrom-Json
+          $Matches = @($Artifacts.artifacts | Where-Object { [string]$_.id -eq $ExpectedArtifact -and $_.name -eq $ExpectedArtifactName })
+          if ($Matches.Count -ne 1) { throw "BV artifact lookup mismatch: found $($Matches.Count)" }
+          $A = $Matches[0]
+          if ([string]$A.workflow_run.head_sha -ne $ExpectedEvidenceHead) { throw 'BV artifact head mismatch' }
+          if ([string]$A.digest -ne $ExpectedArtifactDigest) { throw "BV artifact digest mismatch: $($A.digest)" }
+          if ([int64]$A.size_in_bytes -ne $ExpectedArtifactSize) { throw "BV artifact size mismatch: $($A.size_in_bytes)" }
+          if ([bool]$A.expired) { throw 'BV artifact unexpectedly expired' }
+
+          Copy-Item tools/_tmp_r318bv_continuity_sync.py $Sync
+          Copy-Item tools/_tmp_r318bv_continuity_receipt_repair_v3.py $Repair
+          git switch --detach $ExpectedBase
+          if ($LASTEXITCODE -ne 0) { throw "detach base failed: $LASTEXITCODE" }
+          git switch -c $CandidateBranch
+          if ($LASTEXITCODE -ne 0) { throw "candidate branch creation failed: $LASTEXITCODE" }
+
+          python $Sync
+          if ($LASTEXITCODE -ne 0) { throw "BV continuity sync failed: $LASTEXITCODE" }
+          python $Repair
+          if ($LASTEXITCODE -ne 0) { throw "BV continuity receipt repair failed: $LASTEXITCODE" }
+
+          python -c "import json; s=json.load(open('docs/continuity/MIMIR_CONTINUITY_STATE.json', encoding='utf-8')); a=s['r3_18bv_admission']; assert s['last_production_code_sha']=='43c5d6248e2ea606b2eb0fd95f5c50758c372356'; assert s['last_completed_read_only_audit']=='R3.18BV'; assert s['last_completed_evidence_pass']=='R3.18BV'; assert a['same_head_ci_job']==103931122833; assert a['artifact']==10341754652; assert a['artifact_size']==2596; assert a['artifact_digest']=='d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982'; assert s['current_pass']=='R3.18BW'; print('R3_18BV_CONTINUITY_JSON=PASS')"
+          if ($LASTEXITCODE -ne 0) { throw 'continuity JSON validation failed' }
+
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'git diff --check failed' }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed: $LASTEXITCODE" }
+
+          $ExpectedFiles = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md',
+            'docs/continuity/MIMIR_R3_18BV_DECISION.md',
+            'docs/continuity/MIMIR_R3_18BW_EXECUTION_SPEC.md'
+          )
+          $Tracked = @(git diff --name-only)
+          $Untracked = @(git ls-files --others --exclude-standard)
+          $Changed = @($Tracked + $Untracked | Sort-Object -Unique)
+          $ScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($Changed | Sort-Object))
+          if ($ScopeDiff.Count -ne 0) { throw "unexpected continuity scope: $($Changed -join ', ')" }
+
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- $ExpectedFiles
+          if ($LASTEXITCODE -ne 0) { throw "git add failed: $LASTEXITCODE" }
+          $Cached = @(git diff --cached --name-only)
+          $CachedDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($Cached | Sort-Object))
+          if ($CachedDiff.Count -ne 0) { throw "unexpected cached scope: $($Cached -join ', ')" }
+
+          git commit -m 'Admit R3.18BV and open R3.18BW'
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed: $LASTEXITCODE" }
+          $CandidateSha = (git rev-parse HEAD).Trim()
+          $ParentSha = (git rev-parse HEAD^).Trim()
+          if ($ParentSha -ne $ExpectedBase) { throw "candidate parent drift: $ParentSha" }
+          git push origin "HEAD:refs/heads/$CandidateBranch"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed: $LASTEXITCODE" }
+          Write-Host "R3_18BV_CONTINUITY_CANDIDATE_SHA=$CandidateSha"
