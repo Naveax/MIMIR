@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BU — bounded post-BS next property-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BT — published-R3.18BS one-following-payload differential Outcome A / exact=2/2 / BQ identity=2/2 / mismatch 0 / BR control consumed 0 / artifact 10336951993
+  R3.18BV — published-R3.18BU one-control differential Outcome A / exact=2/2 / BS prerequisite=2/2 / false=1 true=1 / mismatch 0 / adjacent consumption 0/0/0/0 / artifact 10341754652
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BN — exact following-header context contract / Outcome A / 2 exact eight-field tuples / multiplicity 2 / 1 false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c / older-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BT — exact published-BS differential / two payload rows / false terminator excluded / repeatability 2/2 / post-stop poison 2/2 / artifact 10336951993
+  R3.18BV — exact published-BU differential / two control rows / false terminator 1 / true continuation 1 / repeatability 2/2 / post-stop poison 2/2 / artifact 10341754652
 
 CURRENT_PASS:
-  R3.18BV — published-R3.18BU one-control differential
+  R3.18BW — one following-property-header evidence after published R3.18BU mixed control
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / exact BU control rows=2 / BR identity comparison / adjacent consumption forbidden
+  read-only boundary evidence / exact BV rows=2 / false terminator=1 / true continuation=1 / observe one following header through payload_start only
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4323,3 +4323,13 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - builder `34823631010/103910607381` SUCCESS; validation PR #219 CLOSED UNMERGED; exact-head CI `34826521464/103919838545` SUCCESS; published-main CI `34827065398/103921549254` SUCCESS.
 - exact lane: Boolean control `[11239,11240)` = false; ActiveActor control `[3238,3239)` = true; BP false terminator excluded.
 - BV is read-only: exact BU-vs-BR value/start/end/stop/prerequisite identity, repeatability and post-stop poison only. Following stream/header/payload, second control, witness reselection, production mutation and generic cursor remain closed.
+
+
+# CURRENT OVERRIDE — 2026-09-14 — R3.18BV CLOSED / R3.18BW ACTIVE
+
+- canonical production remains R3.18BU `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` / parent `9a86252e02d383ebc2ff9665e678f4c2319f47d9`; BV was read-only and changed no production Rust.
+- R3.18BV evidence `45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c` / `68da2ace745390781ea7e5ade25aaf2c051098d3`; runner `34830085977/103932439559` SUCCESS; same-head natural CI `34830086065/103931122833` SUCCESS.
+- immutable artifact `10341754652` / 2596 bytes / `sha256:d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982`; workflow blob `30d772fc07c7c290418cee5a0dc8160e2cf6b00f`.
+- Outcome A: published BU exact 2/2 with independently reconstructed BS prerequisite 2/2; Boolean row false `[11239,11240)`, ActiveActor row true `[3238,3239)`; mismatch/reselection 0/0; repeatability and post-stop poison 2/2; following stream/header/payload/second-control consumption 0/0/0/0.
+- active R3.18BW preserves both BV identities: the false Boolean row terminates at BU stop with zero header access; only the true ActiveActor row may expose exactly one following property header through `payload_start`, compared with pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b`, then stop.
+- following payload, second later control, false-row header access, witness reselection, production mutation, generalized/repeated cursor and wider semantics remain closed.

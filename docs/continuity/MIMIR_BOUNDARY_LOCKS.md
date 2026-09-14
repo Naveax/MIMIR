@@ -6,18 +6,26 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BU production closed / R3.18BV differential active
+# 0. Current override — R3.18BV differential closed / R3.18BW one-header evidence active
 
 ## PRODUCTION — R3.18BU
-- `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` is canonical production.
-- only two exact authority rows: Boolean false `[11239,11240)` and ActiveActor true `[3238,3239)`.
-- builder `34823631010/103910607381`, exact-head CI `34826521464/103919838545`, published-main CI `34827065398/103921549254` SUCCESS.
+- `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` remains canonical production.
+- exact controls: Boolean false `[11239,11240)` and ActiveActor true `[3238,3239)`.
 
-## ACTIVE READ-ONLY — R3.18BV
-- validate published BU against immutable BR on exactly those two rows; production mutation/reselection forbidden.
+## CLOSED READ-ONLY DIFFERENTIAL — R3.18BV
+- `45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c` / runner `34830085977/103932439559` / same-head CI `34830086065/103931122833` SUCCESS.
+- artifact `10341754652` / `sha256:d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982`; exact 2/2; BS prerequisite 2/2; false/true 1/1; mismatch/reselection 0/0; adjacent consumption 0/0/0/0.
+
+## ACTIVE READ-ONLY BOUNDARY EVIDENCE — R3.18BW
+- preserve both exact BV identities; false Boolean row terminates with no header access.
+- only the exact true ActiveActor row may observe one following property header through `payload_start`; compare native structure with pinned Boxcars and stop there.
 
 ## CLOSED
-- BP-false control access; success outside exact authority; following stream/header/payload; second later control; generalized/repeated cursor; wider runtime semantics.
+- following-header access on the false BU row;
+- witness substitution/reselection;
+- following payload decode or production header composition;
+- second later property-control bit;
+- generalized/repeated property loop/cursor and wider runtime semantics.
 
 # 1. Status vocabulary
 

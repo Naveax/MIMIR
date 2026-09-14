@@ -2069,3 +2069,25 @@ Outcome: **ADMITTED / PUBLISHED PRODUCTION**
 Production `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` / parent `9a86252e02d383ebc2ff9665e678f4c2319f47d9`. Blobs: lib `1c4db09cff43e0ab56f5efb5e8078da3a1189937`, test `e6170f90b47e3f04bd798edbc61f2fa59e5213dd`, spec `ac1ce2120320bd552e5be24e2309fea23d5a2a50`. Builder `34823631010/103910607381` SUCCESS; PR #219 CLOSED UNMERGED; exact-head CI `34826521464/103919838545` SUCCESS; published-main CI `34827065398/103921549254` SUCCESS.
 
 Admitted exact lane: Boolean false `[11239,11240)` and ActiveActor true `[3238,3239)`; BP false terminator excluded; exact BS prerequisite required; one control bit consumed; following stream/header/payload/second-control consumption 0/0/0/0; no generic cursor widening. R3.18BV opens read-only.
+
+---
+
+## 2026-09-14 — R3.18BV — Published R3.18BU One-Control Differential
+Outcome: **A — ADMITTED / READ-ONLY EVIDENCE**
+
+Evidence head/tree: `45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c` / `68da2ace745390781ea7e5ade25aaf2c051098d3`
+Runner: `34830085977/103932439559` SUCCESS
+Same-head natural CI: `34830086065/103931122833` SUCCESS
+Artifact: `10341754652` / 2596 bytes / `sha256:d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982`
+Production authority: unchanged R3.18BU `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4`
+
+Results:
+- exact published-BU control rows: 2/2; independently reconstructed BS prerequisite: 2/2;
+- Boolean row false `[11239,11240)`; ActiveActor row true `[3238,3239)`; false/true=1/1;
+- mismatch=0; witness reselection=0; BP false terminator excluded=1/1;
+- repeatability=2/2; post-stop poison=2/2; following stream/header/payload/second-control=0/0/0/0;
+- production/Cargo/fixture/corpus/support mutation=0/0/0/0/0; validation/privacy PASS.
+
+Admission consequence:
+- R3.18BV closes Outcome A without production mutation;
+- R3.18BW may inspect one following property header only on the exact true ActiveActor continuation row, while the false Boolean row remains a terminator.

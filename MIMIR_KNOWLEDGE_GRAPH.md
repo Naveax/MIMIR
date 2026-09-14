@@ -104,7 +104,8 @@ R3.18BR next property-control bit evidence after exact BQ payload end / Outcome 
 R3.18BS bounded post-BO one-following-payload production / PRODUCTION CLOSED
 R3.18BT published-R3.18BS one-following-payload differential / Outcome A CLOSED
 R3.18BU bounded post-BS next property-control production / CLOSED
-R3.18BV published-R3.18BU one-control differential / ACTIVE
+R3.18BV published-R3.18BU one-control differential / Outcome A CLOSED
+R3.18BW one following-property-header evidence after published R3.18BU mixed control / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -316,6 +317,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 191. `docs/continuity/MIMIR_R3_18BU_EXECUTION_SPEC.md`
 192. `docs/continuity/MIMIR_R3_18BU_DECISION.md`
 193. `docs/continuity/MIMIR_R3_18BV_EXECUTION_SPEC.md`
+194. `docs/continuity/MIMIR_R3_18BV_DECISION.md`
+195. `docs/continuity/MIMIR_R3_18BW_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1435,3 +1438,15 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - read-only exact two-row differential against immutable BR authority.
 - require exact published BS prerequisite, BU value/bounds/stop, repeatability and post-stop poison.
 - no following structure, second control, reselection, production mutation or generalized cursor.
+
+
+### R3.18BV published-R3.18BU one-control differential: OUTCOME A / CLOSED
+- evidence `45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c` / `68da2ace745390781ea7e5ade25aaf2c051098d3`; runner `34830085977/103932439559` SUCCESS; same-head CI `34830086065/103931122833` SUCCESS.
+- artifact `10341754652` / `sha256:d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982`; exact published-BU 2/2; BS prerequisite 2/2; false/true 1/1; mismatch/reselection 0/0.
+- repeatability 2/2; post-stop poison 2/2; following stream/header/payload/second-control 0/0/0/0; production mutation 0.
+
+### R3.18BW one following-property-header evidence after published R3.18BU mixed control: ACTIVE
+- preserve exact BV 2-row lane; Boolean=false row is a terminator at 11240.
+- only ActiveActor=true row may enter one following-header observation from BU stop 3239 through exact `payload_start`.
+- compare native structure to pinned Boxcars; classify the complete observed header/context tuple; stop at payload_start.
+- no payload decode, no second later control, no false-row header access, no reselection and no generalized cursor.

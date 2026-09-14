@@ -6,11 +6,11 @@
   "last_production_code_sha": "43c5d6248e2ea606b2eb0fd95f5c50758c372356",
   "last_production_milestone": "R3.18BU",
   "last_production_milestone_name": "bounded post-BS next property-control production",
-  "last_completed_read_only_audit": "R3.18BT",
-  "current_pass": "R3.18BV",
-  "current_pass_kind": "read-only published-R3.18BU one-control differential on exactly two authority rows",
-  "current_pass_goal": "Validate published R3.18BU against immutable R3.18BR with exact published-BS prerequisite, control value/bounds/stop identity, repeatability and post-stop poison stability.",
-  "current_pass_stop_boundary": "Stop at BU stop_bit after one control bit; consume no following stream/header/payload or second later control.",
+  "last_completed_read_only_audit": "R3.18BV",
+  "current_pass": "R3.18BW",
+  "current_pass_kind": "read-only one-following-property-header evidence after published R3.18BU mixed control",
+  "current_pass_goal": "Preserve the exact BV two-row lane; keep the false Boolean row terminated and compare one following header through payload_start on only the exact true ActiveActor row against pinned Boxcars.",
+  "current_pass_stop_boundary": "False row stops at BU stop 11240. True row stops exactly at the observed following header payload_start; consume no payload or second later control.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -401,10 +401,12 @@
     "docs/continuity/MIMIR_R3_18BT_DECISION.md",
     "docs/continuity/MIMIR_R3_18BU_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BU_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BV_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BV_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BV_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BW_EXECUTION_SPEC.md"
   ],
-  "last_completed_evidence_pass": "R3.18BT",
-  "last_completed_evidence_outcome": "A — published R3.18BS differential exact 2/2 against BQ; false terminator excluded; repeatability and post-stop poison 2/2; BR control consumed 0; artifact 10336951993.",
+  "last_completed_evidence_pass": "R3.18BV",
+  "last_completed_evidence_outcome": "A — published R3.18BU differential exact 2/2; BS prerequisite 2/2; false/true 1/1; mismatch/reselection 0/0; adjacent consumption 0/0/0/0; artifact 10341754652.",
   "last_completed_contract_pass": "R3.18BN",
   "r3_14a": {
     "outcome": "A",
@@ -3430,15 +3432,15 @@
     "production_mutation": 0
   },
   "current_pass_contract": {
-    "pass": "R3.18BV",
+    "pass": "R3.18BW",
     "rows": 2,
+    "false_terminators": 1,
+    "true_continuations": 1,
+    "header_observations": 1,
+    "pinned_boxcars": "c70e77df7af81b436cb545d070bb90c82f562d0b",
     "production_mutation": false,
     "witness_reselection": false,
-    "must_match_br": true,
-    "must_match_published_bs_prerequisite": true,
-    "repeatability": true,
-    "post_stop_poison": true,
-    "following_structure": false,
+    "following_payload": false,
     "second_control": false,
     "generic_cursor": false
   },
@@ -3461,5 +3463,33 @@
     "false": 1,
     "true": 1,
     "adjacent_consumption": 0
+  },
+  "r3_18bv_admission": {
+    "status": "outcome_a_read_only",
+    "head": "45c6a5b57ee96c8e4b8b472e548c6b1f2d4c426c",
+    "tree": "68da2ace745390781ea7e5ade25aaf2c051098d3",
+    "run": 34830085977,
+    "job": 103932439559,
+    "same_head_ci_run": 34830086065,
+    "same_head_ci_job": 103931122833,
+    "artifact": 10341754652,
+    "artifact_size": 2596,
+    "artifact_digest": "d63f87d75c9c745cfab9b04116cbb3249bcdede7329a0ec8ea5371379548b982",
+    "workflow_blob": "30d772fc07c7c290418cee5a0dc8160e2cf6b00f",
+    "rows": 2,
+    "published_bu_exact": 2,
+    "bs_prerequisite_exact": 2,
+    "false": 1,
+    "true": 1,
+    "mismatch": 0,
+    "witness_reselection": 0,
+    "repeatability": 2,
+    "post_stop_poison": 2,
+    "following_stream_header_payload_second_control": [
+      0,
+      0,
+      0,
+      0
+    ]
   }
 }
