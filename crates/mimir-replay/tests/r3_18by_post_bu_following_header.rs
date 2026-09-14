@@ -164,7 +164,7 @@ fn r3_18by_exact_two_row_lane_terminates_false_and_decodes_one_true_header() {
             assert_eq!(header.stop_bit, 3245, "{path}");
             assert_eq!(got.stop_bit, 3245, "{path}");
 
-            let truncation_bytes = usize::try_from((bu.stop_bit + 7) / 8)
+            let truncation_bytes = usize::try_from(bu.stop_bit.div_ceil(8))
                 .expect("true-row truncation byte count fits usize");
             assert!(truncation_bytes < network.len(), "{path}");
             assert!(
