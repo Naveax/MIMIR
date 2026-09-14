@@ -53,6 +53,17 @@ jobs:
           set -euo pipefail
           PATCH_SCRIPT="$RUNNER_TEMP/r318by_build_candidate.py"
           cp tools/_tmp_r318by_build_candidate.py "$PATCH_SCRIPT"
+          python3 - "$PATCH_SCRIPT" <<'PY'
+          from pathlib import Path
+          import sys
+          p = Path(sys.argv[1])
+          s = p.read_text(encoding='utf-8')
+          old = '''    let decode_header_suffix = decode_replay_network_existing_actor_property_header_suffix_v1;\n    let following_header = decode_header_suffix(\n'''
+          new = '''    let following_header = decode_replay_network_existing_actor_property_header_suffix_v1(\n'''
+          if s.count(old) != 1:
+              raise SystemExit(f'expected one BY suffix alias block, got {s.count(old)}')
+          p.write_text(s.replace(old, new), encoding='utf-8')
+          PY
           git switch --detach "$BASE_SHA"
           git switch -c "$CANDIDATE_BRANCH"
           python3 "$PATCH_SCRIPT"
