@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: r318by-production-builder-v1
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -30,15 +30,20 @@ jobs:
       - name: Checkout automation branch
         uses: actions/checkout@v6
         with:
-          fetch-depth: 4
+          fetch-depth: 0
 
       - name: Freeze exact base
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
           test "$(git rev-parse "$BASE_SHA^{tree}")" = "$BASE_TREE"
+          test "$(git merge-base HEAD "$BASE_SHA")" = "$BASE_SHA"
           test "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" = "$BASE_SHA"
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA...HEAD" | sort)
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 2
+          test "${changed[0]}" = '.github/workflows/_tmp_r318by_production_builder.yml'
+          test "${changed[1]}" = 'tools/_tmp_r318by_build_candidate.py'
 
       - name: Install Rust floor
         shell: bash
