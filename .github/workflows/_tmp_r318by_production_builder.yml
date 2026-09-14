@@ -1,0 +1,97 @@
+name: R3.18BY Production Candidate Builder
+
+on:
+  push:
+    branches:
+      - automation/r318by-production-builder-v1
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318by-production-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      BASE_SHA: d4b0e84adf5603a6c2fe106a7f466cd497efdd43
+      BASE_TREE: 7bd3ef4f2750efa4aa074ff43dc54015f87c0992
+      CANDIDATE_BRANCH: candidate/r318by-production-v1
+
+    steps:
+      - name: Checkout automation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 4
+
+      - name: Build and validate clean production candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $base = gh api "repos/$env:GITHUB_REPOSITORY/commits/$env:BASE_SHA" | ConvertFrom-Json
+          if ($base.commit.tree.sha -ne $env:BASE_TREE) {
+            throw "base tree mismatch: expected $env:BASE_TREE got $($base.commit.tree.sha)"
+          }
+
+          $PatchScript = Join-Path $env:RUNNER_TEMP 'r318by_build_candidate.py'
+          Copy-Item tools/_tmp_r318by_build_candidate.py $PatchScript
+
+          git switch --detach $env:BASE_SHA
+          if ($LASTEXITCODE -ne 0) { throw "detach base failed: $LASTEXITCODE" }
+          git switch -c $env:CANDIDATE_BRANCH
+          if ($LASTEXITCODE -ne 0) { throw "candidate branch creation failed: $LASTEXITCODE" }
+
+          python $PatchScript
+          if ($LASTEXITCODE -ne 0) { throw "BY patch script failed: $LASTEXITCODE" }
+
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw "cargo fmt failed: $LASTEXITCODE" }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed: $LASTEXITCODE" }
+
+          $ExpectedFiles = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18by_post_bu_following_header.rs'
+          )
+          $Changed = @(git status --porcelain | ForEach-Object { $_.Substring(3) } | Sort-Object -Unique)
+          $ScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($Changed | Sort-Object))
+          if ($ScopeDiff.Count -ne 0) { throw "unexpected candidate scope: $($Changed -join ', ')" }
+
+          cargo test -p mimir-replay --test r3_18by_post_bu_following_header
+          if ($LASTEXITCODE -ne 0) { throw "focused BY test failed: $LASTEXITCODE" }
+          cargo test -p mimir-replay --test r3_18bu_post_bs_following_control
+          if ($LASTEXITCODE -ne 0) { throw "BU regression failed: $LASTEXITCODE" }
+          cargo test -p mimir-replay --test r3_18bs_post_bo_payload
+          if ($LASTEXITCODE -ne 0) { throw "BS regression failed: $LASTEXITCODE" }
+          cargo test -p mimir-replay --test r3_18bo_post_bk_following_header
+          if ($LASTEXITCODE -ne 0) { throw "BO regression failed: $LASTEXITCODE" }
+          cargo check --workspace --all-targets
+          if ($LASTEXITCODE -ne 0) { throw "workspace check failed: $LASTEXITCODE" }
+          cargo clippy --workspace --all-targets -- -D warnings
+          if ($LASTEXITCODE -ne 0) { throw "clippy failed: $LASTEXITCODE" }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed: $LASTEXITCODE" }
+
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- $ExpectedFiles
+          if ($LASTEXITCODE -ne 0) { throw "git add failed: $LASTEXITCODE" }
+          $Cached = @(git diff --cached --name-only)
+          $CachedDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($Cached | Sort-Object))
+          if ($CachedDiff.Count -ne 0) { throw "unexpected cached scope: $($Cached -join ', ')" }
+
+          git commit -m 'Implement R3.18BY bounded post-BU following header'
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed: $LASTEXITCODE" }
+          $CandidateSha = (git rev-parse HEAD).Trim()
+          $ParentSha = (git rev-parse HEAD^).Trim()
+          if ($ParentSha -ne $env:BASE_SHA) { throw "candidate parent drift: $ParentSha" }
+
+          git push origin "HEAD:refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed: $LASTEXITCODE" }
+          Write-Host "R3_18BY_PRODUCTION_CANDIDATE_SHA=$CandidateSha"
