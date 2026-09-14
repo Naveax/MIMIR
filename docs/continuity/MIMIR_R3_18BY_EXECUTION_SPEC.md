@@ -58,7 +58,7 @@ A boundary-specific result should contain, at minimum:
 
 - the validated/recomputed R3.18BU result;
 - the exact K3 context;
-- `following_header: Option<ReplayNetworkExistingActorFirstPropertyHeaderDecodeV1>` or an equivalently narrow header identity;
+- `following_header: Option<ReplayNetworkExistingActorFirstPropertyHeaderV1>` or an equivalently narrow header identity;
 - `stop_bit`.
 
 False path: `following_header=None`, `stop_bit=bu.stop_bit`.
