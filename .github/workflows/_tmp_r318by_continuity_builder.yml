@@ -41,14 +41,16 @@ jobs:
       - name: Checkout builder branch
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Freeze production and validation gates
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          git fetch origin main $env:BZ_PREP_BRANCH
-          if ($LASTEXITCODE -ne 0) { throw "git fetch failed: $LASTEXITCODE" }
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          if ($LASTEXITCODE -ne 0) { throw "main fetch failed: $LASTEXITCODE" }
+          git fetch --no-tags origin "+refs/heads/$($env:BZ_PREP_BRANCH):refs/remotes/origin/$($env:BZ_PREP_BRANCH)"
+          if ($LASTEXITCODE -ne 0) { throw "BZ prep fetch failed: $LASTEXITCODE" }
           $freshMain = (git rev-parse origin/main).Trim()
           if ($freshMain -ne $env:PROD_SHA) { throw "fresh main drift: expected $env:PROD_SHA got $freshMain" }
           $tree = (git rev-parse "$env:PROD_SHA^{tree}").Trim()
