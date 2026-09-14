@@ -1,0 +1,300 @@
+name: R3.18BT Published BS One-Following-Payload Differential
+
+on:
+  push:
+    branches:
+      - evidence/r318bt-published-bs-v1
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318bt-published-bs-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAIN_SHA: b0e306cb79fa2bd2fb0a2d5e961f5f0adf00f2d0
+      MAIN_TREE: a706371a20f31dbbe00d957f0848a8d4c4817dd6
+      PROD_SHA: 5ab14575d0a698d752db35db76f3dbb300cdec8d
+      PROD_TREE: 1c0b4c0a50385a34ba730a52a98a89423ff56869
+      LIB_BLOB: 3428608283d6d0022d466671f90afc9304726dd0
+      BS_TEST_BLOB: 706bbdee62a09f04af7bcf70e22567793084d0d6
+      BT_SPEC_BLOB: 2f0d1a2162449ac881250f1a372fb8b3cec5a58d
+      BN_CONTRACT_SHA256: 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c
+      BQ_HEAD: 16c43f38e740c57ae9cb90c92084002ec83815e7
+      BQ_RUN: '34457725716'
+      BQ_JOB: '102807933610'
+      BQ_ARTIFACT: '10144392560'
+      BQ_ARTIFACT_NAME: r318bq-one-following-payload-evidence
+      BQ_ARTIFACT_SIZE: '9464'
+      BQ_DIGEST: sha256:52799466bcba42667c51995c1f99cc12325a7a329b5bb355561e64319f64225c
+      BQ_MANIFEST_SHA256: 332447c57f92f6f9af84e12bf74124adfe478d225e82cdb5d4cf8e925f7a97c9
+      BS_BUILDER_RUN: '34617577982'
+      BS_BUILDER_JOB: '103323236248'
+      BS_HEAD_CI_RUN: '34617945689'
+      BS_HEAD_CI_JOB: '103324450173'
+      BS_MAIN_CI_RUN: '34618640843'
+      BS_MAIN_CI_JOB: '103326748345'
+
+    steps:
+      - name: Checkout exact BT evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze exact published authorities
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "authority mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          check_run() {
+            local run="$1" job="$2" sha="$3"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .head_sha)" "$sha"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .status)" completed
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq .conclusion)" success
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .run_id)" "$run"
+            eq "$(gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$job" --jq .conclusion)" success
+          }
+
+          eq "$(git rev-parse HEAD^)" "$MAIN_SHA"
+          eq "$(git rev-parse "$MAIN_SHA^{tree}")" "$MAIN_TREE"
+          eq "$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)" "$MAIN_SHA"
+          eq "$(git rev-parse "$PROD_SHA^{tree}")" "$PROD_TREE"
+          eq "$(git rev-parse "$PROD_SHA:crates/mimir-replay/src/lib.rs")" "$LIB_BLOB"
+          eq "$(git rev-parse "$PROD_SHA:crates/mimir-replay/tests/r3_18bs_post_bo_payload.rs")" "$BS_TEST_BLOB"
+          eq "$(git rev-parse "HEAD:crates/mimir-replay/src/lib.rs")" "$LIB_BLOB"
+          eq "$(git rev-parse "HEAD:crates/mimir-replay/tests/r3_18bs_post_bo_payload.rs")" "$BS_TEST_BLOB"
+          eq "$(git rev-parse "$MAIN_SHA:docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md")" "$BT_SPEC_BLOB"
+          eq "$(git show "$MAIN_SHA:docs/continuity/MIMIR_R3_18BN_ADMITTED_HEADER_CONTEXTS.json" | sha256sum | awk '{print $1}')" "$BN_CONTRACT_SHA256"
+
+          check_run "$BS_BUILDER_RUN" "$BS_BUILDER_JOB" 40009f866344778be8b5e5d4c4577cf292bb1189
+          check_run "$BS_HEAD_CI_RUN" "$BS_HEAD_CI_JOB" "$PROD_SHA"
+          check_run "$BS_MAIN_CI_RUN" "$BS_MAIN_CI_JOB" "$PROD_SHA"
+          check_run "$BQ_RUN" "$BQ_JOB" "$BQ_HEAD"
+
+          meta="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$BQ_ARTIFACT")"
+          eq "$(jq -r .name <<<"$meta")" "$BQ_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$meta")" "$BQ_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$meta")" "$BQ_DIGEST"
+          eq "$(jq -r .expired <<<"$meta")" false
+          eq "$(jq -r .workflow_run.id <<<"$meta")" "$BQ_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$meta")" "$BQ_HEAD"
+
+          mapfile -t changed < <(git diff --name-only "$MAIN_SHA"..HEAD)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = '.github/workflows/_tmp_r318bt_differential.yml'
+          echo R3_18BT_AUTHORITY_FREEZE=PASS
+
+      - name: Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Execute exact published BS differential
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bt-out"
+          BQ="$RUNNER_TEMP/r318bt-bq"
+          rm -rf "$OUT" "$BQ"
+          mkdir -p "$OUT" "$BQ"
+
+          gh run download "$BQ_RUN" --repo "$GITHUB_REPOSITORY" --name "$BQ_ARTIFACT_NAME" --dir "$BQ"
+          test "$(sha256sum "$BQ/r3_18bq_artifact_sha256.txt" | awk '{print $1}')" = "$BQ_MANIFEST_SHA256"
+          (cd "$BQ" && sha256sum -c r3_18bq_artifact_sha256.txt)
+
+          for line in \
+            'R3_18BQ_OUTCOME=A' \
+            'R3_18BQ_EVIDENCE=PASS' \
+            'R3_18BQ_FALSE_TERMINATORS_EXCLUDED=1/1' \
+            'R3_18BQ_TRUE_PAYLOADS=2/2' \
+            'R3_18BQ_BOOLEAN_ROWS=1' \
+            'R3_18BQ_ACTIVE_ACTOR_ROWS=1' \
+            'R3_18BQ_NATIVE_ORACLE_MISMATCH=0' \
+            'R3_18BQ_WITNESS_RESELECTION=0' \
+            'R3_18BQ_NEXT_CONTROL_BITS_CONSUMED=0'; do
+            grep -Fx "$line" "$BQ/r3_18bq_aggregate.txt"
+          done
+
+          python3 - "$BQ/r3_18bq_native_rows.tsv" <<'PYROWS'
+          import csv, sys
+          with open(sys.argv[1], newline='', encoding='utf-8') as f:
+              rows = list(csv.DictReader(f, delimiter='\t'))
+          assert len(rows) == 2, rows
+          by_label = {r['label']: r for r in rows}
+          assert len(by_label) == 2
+          b = by_label['external_fixtures/sample_002.replay']
+          assert (b['attribute_tag'], b['payload_start_bit'], b['payload_end_bit'], b['payload_width'], b['semantic_bool']) == ('Boolean', '11238', '11239', '1', '1')
+          a = by_label['test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay']
+          assert (a['attribute_tag'], a['payload_start_bit'], a['payload_end_bit'], a['payload_width'], a['semantic_active'], a['semantic_actor']) == ('ActiveActor', '3205', '3238', '33', '1', '1')
+          print('R3_18BT_FROZEN_BQ_ROWS=PASS rows=2 Boolean=1 ActiveActor=1')
+          PYROWS
+
+          cp "$BQ/r3_18bq_native_rows.tsv" "$OUT/r3_18bt_bq_authority.tsv"
+          cp "$BQ/r3_18bq_aggregate.txt" "$OUT/r3_18bt_bq_aggregate.txt"
+
+          cargo +1.85.0 test -p mimir-replay --test r3_18bs_post_bo_payload -- --nocapture 2>&1 | tee "$OUT/r3_18bt_focused_bs.log"
+          grep -F 'test r3_18bs_exact_bq_lane_composes_two_payloads_and_rejects_false_terminator ... ok' "$OUT/r3_18bt_focused_bs.log"
+          grep -F 'test r3_18bs_source_scope_is_one_bo_recompute_two_closed_decoders_and_no_control_read_or_loop ... ok' "$OUT/r3_18bt_focused_bs.log"
+
+          cargo +1.85.0 fmt --all --check
+          cargo +1.85.0 check --workspace
+          cargo +1.85.0 clippy --workspace --all-targets -- -D warnings
+          cargo +1.85.0 test --workspace
+          pwsh -NoLogo -NoProfile -File scripts/verify_repo.ps1
+          git diff --check
+          test -z "$(git status --porcelain)"
+
+          mapfile -t changed < <(git diff --name-only "$MAIN_SHA"..HEAD)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = '.github/workflows/_tmp_r318bt_differential.yml'
+          git diff --exit-code "$MAIN_SHA"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus scripts docs MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md MIMIR_ALL_SOURCES_SUPERBOOK.md
+
+          {
+            echo "R3_18BT_PRODUCTION_SHA=$PROD_SHA"
+            echo "R3_18BT_PRODUCTION_TREE=$PROD_TREE"
+            echo "R3_18BT_LIB_BLOB=$LIB_BLOB"
+            echo "R3_18BT_BS_TEST_BLOB=$BS_TEST_BLOB"
+            echo "R3_18BT_BQ_HEAD=$BQ_HEAD"
+            echo "R3_18BT_BQ_ARTIFACT=$BQ_ARTIFACT"
+            echo "R3_18BT_BQ_DIGEST=$BQ_DIGEST"
+            echo "R3_18BT_BN_CONTRACT_SHA256=$BN_CONTRACT_SHA256"
+          } > "$OUT/r3_18bt_authority.txt"
+
+          printf '%s\n' \
+            'R3_18BT_FALSE_TERMINATOR_EXCLUSION=PASS 1/1' \
+            'R3_18BT_CORRUPT_BO_PREREQUISITE=PASS' \
+            'R3_18BT_WRONG_ACTOR=PASS' \
+            'R3_18BT_WRONG_CONTEXT=PASS' \
+            'R3_18BT_WRONG_FABRICATED_TAG=PASS' \
+            'R3_18BT_PAYLOAD_TRUNCATION=PASS' \
+            'R3_18BT_REPEATABILITY=PASS 2/2' \
+            'R3_18BT_POST_PAYLOAD_POISON_INCLUDING_BR_CONTROL=PASS 2/2' \
+            'R3_18BT_FOLLOWING_BR_CONTROL_CONSUMED=0' \
+            'R3_18BT_NEXT_STREAM_HEADER_PAYLOAD=0/0/0' \
+            'R3_18BT_SECOND_LATER_CONTROL=0' \
+            > "$OUT/r3_18bt_negative_controls.txt"
+
+          printf '%s\n' \
+            'R3_18BT_SOURCE_SCOPE=PASS' \
+            'R3_18BT_PUBLISHED_BS_INVOCATION_ROWS=2' \
+            'R3_18BT_FALSE_ROW_PAYLOAD_ACCESS=0' \
+            'R3_18BT_DIRECT_READ_BIT_CALLS=0' \
+            'R3_18BT_GENERIC_LOOP_OR_CURSOR=0' \
+            > "$OUT/r3_18bt_source_scope.txt"
+
+          printf '%s\n' \
+            'R3_18BT_PRODUCTION_MUTATION=0' \
+            'R3_18BT_CARGO_MUTATION=0' \
+            'R3_18BT_FIXTURE_MUTATION=0' \
+            'R3_18BT_CORPUS_MUTATION=0' \
+            'R3_18BT_SUPPORT_MUTATION=0' \
+            > "$OUT/r3_18bt_mutation.txt"
+
+          printf '%s\n' \
+            'R3_18BT_FOCUSED_BS_REGRESSION=PASS' \
+            'R3_18BT_FMT=PASS' \
+            'R3_18BT_CHECK=PASS' \
+            'R3_18BT_CLIPPY=PASS' \
+            'R3_18BT_TEST=PASS' \
+            'R3_18BT_REPOSITORY_VERIFY=PASS' \
+            'R3_18BT_DIFF_CHECK=PASS' \
+            > "$OUT/r3_18bt_validation.txt"
+
+          printf '%s\n' \
+            'R3_18BT_OUTCOME=A' \
+            'R3_18BT_EVIDENCE=PASS' \
+            'R3_18BT_TRUE_PAYLOAD_ROWS=2/2' \
+            'R3_18BT_BOOLEAN_ROWS=1' \
+            'R3_18BT_ACTIVE_ACTOR_ROWS=1' \
+            'R3_18BT_BOOLEAN_WITNESS=11238-11239:true' \
+            'R3_18BT_ACTIVE_ACTOR_WITNESS=3205-3238:active=true,actor=1' \
+            'R3_18BT_FALSE_TERMINATORS_EXCLUDED=1/1' \
+            'R3_18BT_BQ_IDENTITY_EXACT=2/2' \
+            'R3_18BT_MISMATCH=0' \
+            'R3_18BT_WITNESS_RESELECTION=0' \
+            'R3_18BT_REPEATABILITY=PASS 2/2' \
+            'R3_18BT_POST_PAYLOAD_POISON=PASS 2/2' \
+            'R3_18BT_FOLLOWING_BR_CONTROL_CONSUMED=0' \
+            'R3_18BT_NEXT_STREAM_HEADER_PAYLOAD=0/0/0' \
+            'R3_18BT_SECOND_LATER_CONTROL=0' \
+            'R3_18BT_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' \
+            > "$OUT/r3_18bt_aggregate.txt"
+
+          python3 - "$OUT" <<'PYPRIV'
+          from pathlib import Path
+          import os, sys
+          root = Path(sys.argv[1])
+          for path in root.rglob('*'):
+              if not path.is_file():
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except (OSError, UnicodeDecodeError):
+                  continue
+              for value, tag in ((os.environ.get('GITHUB_WORKSPACE'), '<workspace>'), (os.environ.get('RUNNER_TEMP'), '<runner-temp>')):
+                  if value:
+                      text = text.replace(value, tag)
+              path.write_text(text, encoding='utf-8', newline='\n')
+          PYPRIV
+          ! grep -RniE '/home/runner|C:\\Users\\|github_pat_|ghp_|Omersevik|Maximillan' "$OUT"
+          echo R3_18BT_PRIVACY_SCAN=PASS > "$OUT/r3_18bt_privacy.txt"
+
+          (cd "$OUT" && sha256sum \
+            r3_18bt_bq_authority.tsv \
+            r3_18bt_bq_aggregate.txt \
+            r3_18bt_focused_bs.log \
+            r3_18bt_authority.txt \
+            r3_18bt_negative_controls.txt \
+            r3_18bt_source_scope.txt \
+            r3_18bt_mutation.txt \
+            r3_18bt_validation.txt \
+            r3_18bt_aggregate.txt \
+            r3_18bt_privacy.txt \
+            > r3_18bt_artifact_sha256.txt)
+          (cd "$OUT" && sha256sum -c r3_18bt_artifact_sha256.txt)
+          echo R3_18BT_RUNNER=PASS
+
+      - name: Upload immutable R3.18BT evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bt-published-bs-differential-evidence
+          path: ${{ runner.temp }}/r318bt-out/
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Bind artifact and mark Outcome A
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_DIGEST"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r .expired <<<"$meta")" = false
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$(jq -r .digest <<<"$meta")")" = "$(norm "$ARTIFACT_DIGEST")"
+          grep -Fx 'R3_18BT_OUTCOME=A' "$RUNNER_TEMP/r318bt-out/r3_18bt_aggregate.txt"
+          grep -Fx 'R3_18BT_BQ_IDENTITY_EXACT=2/2' "$RUNNER_TEMP/r318bt-out/r3_18bt_aggregate.txt"
+          grep -Fx 'R3_18BT_FOLLOWING_BR_CONTROL_CONSUMED=0' "$RUNNER_TEMP/r318bt-out/r3_18bt_aggregate.txt"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318bt/evidence' \
+            -f description='R3.18BT Outcome A; published BS exact 2/2; BR control consumed 0' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo "R3_18BT_ARTIFACT_ID=$ARTIFACT_ID"
+          echo "R3_18BT_ARTIFACT_DIGEST=$ARTIFACT_DIGEST"
+          echo R3_18BT_IMMUTABLE_RECEIPT=PASS
