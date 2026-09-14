@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  5ab14575d0a698d752db35db76f3dbb300cdec8d
+  43c5d6248e2ea606b2eb0fd95f5c50758c372356
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18BS — bounded post-BO one-following-payload production
+  R3.18BU — bounded post-BS next property-control production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BT — published-R3.18BS one-following-payload differential Outcome A / exact=2/2 / BQ identity=2/2 / mismatch 0 / BR control consumed 0 / artifact 10336951993
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BT — exact published-BS differential / two payload rows / false terminator excluded / repeatability 2/2 / post-stop poison 2/2 / artifact 10336951993
 
 CURRENT_PASS:
-  R3.18BU — bounded post-BS next property-control production
+  R3.18BV — published-R3.18BU one-control differential
 
 CURRENT_PASS_TYPE:
-  bounded production implementation / exact BT-admitted rows=2 / consume exactly one BR-observed control bit / stop immediately after that bit
+  read-only published-production differential / exact BU control rows=2 / BR identity comparison / adjacent consumption forbidden
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4314,3 +4314,12 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - active R3.18BU may compose exactly one R3.18BR-observed property-control bit after a valid exact R3.18BS result on only those two admitted rows: Boolean row=false, ActiveActor row=true.
 - R3.18BU must recompute BS, require exact supplied equality, require `control_start_bit == bs.stop_bit`, read exactly one checked LSB-first bit, return `stop_bit = control_start_bit + 1`, and read nothing after it.
 - BP false terminator, next stream/header/payload, second later control, generic/repeated cursor and all wider semantics remain closed.
+
+
+# CURRENT OVERRIDE — 2026-09-14 — R3.18BU CLOSED / R3.18BV ACTIVE
+
+- canonical production: R3.18BU `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` / parent `9a86252e02d383ebc2ff9665e678f4c2319f47d9`.
+- exact production blobs: lib `1c4db09cff43e0ab56f5efb5e8078da3a1189937`; BU test `e6170f90b47e3f04bd798edbc61f2fa59e5213dd`; execution spec `ac1ce2120320bd552e5be24e2309fea23d5a2a50`.
+- builder `34823631010/103910607381` SUCCESS; validation PR #219 CLOSED UNMERGED; exact-head CI `34826521464/103919838545` SUCCESS; published-main CI `34827065398/103921549254` SUCCESS.
+- exact lane: Boolean control `[11239,11240)` = false; ActiveActor control `[3238,3239)` = true; BP false terminator excluded.
+- BV is read-only: exact BU-vs-BR value/start/end/stop/prerequisite identity, repeatability and post-stop poison only. Following stream/header/payload, second control, witness reselection, production mutation and generic cursor remain closed.

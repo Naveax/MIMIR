@@ -6,30 +6,18 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BT published differential closed / R3.18BU one-control production active
+# 0. Current override — R3.18BU production closed / R3.18BV differential active
 
-This current override supersedes older status wording later in this historical lock file.
+## PRODUCTION — R3.18BU
+- `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` is canonical production.
+- only two exact authority rows: Boolean false `[11239,11240)` and ActiveActor true `[3238,3239)`.
+- builder `34823631010/103910607381`, exact-head CI `34826521464/103919838545`, published-main CI `34827065398/103921549254` SUCCESS.
 
-## PRODUCTION — R3.18BS
-- `5ab14575d0a698d752db35db76f3dbb300cdec8d` / `1c0b4c0a50385a34ba730a52a98a89423ff56869` remains canonical production while BU is active.
-- BS composes exactly one BQ-admitted payload and stops at payload end.
-
-## CLOSED READ-ONLY DIFFERENTIAL — R3.18BT
-- `b687f700a7bf00f28671ca3adbb6613b582e7848` / runner `34816904695/103889382147` / same-head CI `34816904663/103889381782` all SUCCESS.
-- artifact `10336951993` / `sha256:fef0df77821475ac3ee5acb417b500aa40708a573d286d30c5c42bcf23ef473d`.
-- exact 2/2 BQ identity; false terminator excluded; mismatch/reselection 0; BR control consumed 0; production mutation 0.
-
-## ACTIVE BOUNDED PRODUCTION — R3.18BU
-- only the exact two BT-admitted payload rows may continue.
-- use immutable BR authority: Boolean row=false, ActiveActor row=true.
-- recompute BS and require exact supplied equality; consume exactly one checked LSB-first control bit at BS stop; stop immediately after that bit.
+## ACTIVE READ-ONLY — R3.18BV
+- validate published BU against immutable BR on exactly those two rows; production mutation/reselection forbidden.
 
 ## CLOSED
-- control access on the BP false terminator;
-- success outside the two exact BT/BQ/BR rows;
-- next stream/header/payload after the one BU control bit;
-- second later property-control bit;
-- generalized/repeated cursor and wider semantics/runtime.
+- BP-false control access; success outside exact authority; following stream/header/payload; second later control; generalized/repeated cursor; wider runtime semantics.
 
 # 1. Status vocabulary
 

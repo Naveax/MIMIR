@@ -2060,3 +2060,12 @@ Results:
 Admission consequence:
 - R3.18BT closes Outcome A without changing production;
 - R3.18BU may consume exactly one immutable BR-observed control bit on only the two admitted rows.
+
+---
+
+## 2026-09-14 — R3.18BU — Bounded Post-BS Next Property-Control Production
+Outcome: **ADMITTED / PUBLISHED PRODUCTION**
+
+Production `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` / parent `9a86252e02d383ebc2ff9665e678f4c2319f47d9`. Blobs: lib `1c4db09cff43e0ab56f5efb5e8078da3a1189937`, test `e6170f90b47e3f04bd798edbc61f2fa59e5213dd`, spec `ac1ce2120320bd552e5be24e2309fea23d5a2a50`. Builder `34823631010/103910607381` SUCCESS; PR #219 CLOSED UNMERGED; exact-head CI `34826521464/103919838545` SUCCESS; published-main CI `34827065398/103921549254` SUCCESS.
+
+Admitted exact lane: Boolean false `[11239,11240)` and ActiveActor true `[3238,3239)`; BP false terminator excluded; exact BS prerequisite required; one control bit consumed; following stream/header/payload/second-control consumption 0/0/0/0; no generic cursor widening. R3.18BV opens read-only.
