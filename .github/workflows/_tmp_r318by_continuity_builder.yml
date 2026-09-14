@@ -1,0 +1,143 @@
+name: R3.18BY Continuity Admission Builder
+
+on:
+  push:
+    branches:
+      - automation/r318by-continuity-builder-v1
+    paths:
+      - '.github/workflows/_tmp_r318by_continuity_builder.yml'
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318by-continuity-admission-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PROD_SHA: 3b07e223fdf326e8100412fad9410bb1b66d2cb9
+      PROD_TREE: 68b32f61d61c863b25e393cfa77575bac55217d7
+      PROD_BASE: d4b0e84adf5603a6c2fe106a7f466cd497efdd43
+      BUILDER_RUN: '34849180581'
+      BUILDER_JOB: '103992470153'
+      PUSH_CI_RUN: '34856781439'
+      PUSH_CI_JOB: '104018278890'
+      PR_CI_RUN: '34856787577'
+      PR_CI_JOB: '104018300863'
+      MAIN_CI_RUN: '34857720437'
+      MAIN_CI_JOB: '104021486939'
+      VALIDATION_PR: '223'
+      CANDIDATE_BRANCH: continuity/r318by-admission-v1
+      BZ_PREP_BRANCH: prep/r318bz-evidence-tooling-v1
+
+    steps:
+      - name: Checkout builder branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze production and validation gates
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git fetch origin main $env:BZ_PREP_BRANCH
+          if ($LASTEXITCODE -ne 0) { throw "git fetch failed: $LASTEXITCODE" }
+          $freshMain = (git rev-parse origin/main).Trim()
+          if ($freshMain -ne $env:PROD_SHA) { throw "fresh main drift: expected $env:PROD_SHA got $freshMain" }
+          $tree = (git rev-parse "$env:PROD_SHA^{tree}").Trim()
+          if ($tree -ne $env:PROD_TREE) { throw "production tree drift: $tree" }
+
+          function Assert-Run([string]$RunId, [string]$HeadSha, [string]$Branch) {
+            $r = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$RunId" | ConvertFrom-Json
+            if ($r.head_sha -ne $HeadSha -or $r.head_branch -ne $Branch -or $r.status -ne 'completed' -or $r.conclusion -ne 'success') {
+              throw "run gate mismatch run=$RunId head=$($r.head_sha) branch=$($r.head_branch) status=$($r.status) conclusion=$($r.conclusion)"
+            }
+          }
+          function Assert-Job([string]$JobId, [string]$RunId) {
+            $j = gh api "repos/$env:GITHUB_REPOSITORY/actions/jobs/$JobId" | ConvertFrom-Json
+            if ([string]$j.run_id -ne $RunId -or $j.status -ne 'completed' -or $j.conclusion -ne 'success') {
+              throw "job gate mismatch job=$JobId run=$($j.run_id) status=$($j.status) conclusion=$($j.conclusion)"
+            }
+          }
+
+          Assert-Run $env:BUILDER_RUN '74e112beee8fbc8e9a929c9e2e2f9b5073d0570f' 'automation/r318by-production-builder-v1'
+          Assert-Job $env:BUILDER_JOB $env:BUILDER_RUN
+          Assert-Run $env:PUSH_CI_RUN $env:PROD_SHA 'candidate/r318by-production-v1'
+          Assert-Job $env:PUSH_CI_JOB $env:PUSH_CI_RUN
+          Assert-Run $env:PR_CI_RUN $env:PROD_SHA 'candidate/r318by-production-v1'
+          Assert-Job $env:PR_CI_JOB $env:PR_CI_RUN
+          Assert-Run $env:MAIN_CI_RUN $env:PROD_SHA 'main'
+          Assert-Job $env:MAIN_CI_JOB $env:MAIN_CI_RUN
+
+          $pr = gh api "repos/$env:GITHUB_REPOSITORY/pulls/$env:VALIDATION_PR" | ConvertFrom-Json
+          if ($pr.state -ne 'closed' -or $pr.merged -ne $false -or $pr.head.sha -ne $env:PROD_SHA) { throw 'validation PR state/head mismatch' }
+          Write-Host 'R3_18BY_CONTINUITY_GATES=PASS'
+
+      - name: Build docs-only continuity candidate
+        shell: pwsh
+        env:
+          R318BY_MAIN_CI_RUN: '34857720437'
+          R318BY_MAIN_CI_JOB: '104021486939'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sync = Join-Path $env:RUNNER_TEMP 'r318by_continuity_sync.py'
+          Copy-Item tools/_tmp_r318by_continuity_sync.py $sync
+
+          git switch --detach $env:PROD_SHA
+          if ($LASTEXITCODE -ne 0) { throw "detach production failed: $LASTEXITCODE" }
+          git switch -c $env:CANDIDATE_BRANCH
+          if ($LASTEXITCODE -ne 0) { throw "candidate branch creation failed: $LASTEXITCODE" }
+
+          git show "origin/$env:BZ_PREP_BRANCH`:docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md" | Set-Content -Encoding utf8NoBOM docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md
+          if ($LASTEXITCODE -ne 0) { throw "copy BZ spec failed: $LASTEXITCODE" }
+          python $sync
+          if ($LASTEXITCODE -ne 0) { throw "continuity sync failed: $LASTEXITCODE" }
+
+          $expected = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md',
+            'docs/continuity/MIMIR_R3_18BY_DECISION.md',
+            'docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md'
+          )
+          $tracked = @(git diff --name-only)
+          $untracked = @(git ls-files --others --exclude-standard)
+          $changed = @($tracked + $untracked | Sort-Object -Unique)
+          $scopeDiff = @(Compare-Object ($expected | Sort-Object) ($changed | Sort-Object))
+          if ($scopeDiff.Count -ne 0) { throw "unexpected continuity scope: $($changed -join ', ')" }
+
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'git diff --check failed' }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed: $LASTEXITCODE" }
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed: $LASTEXITCODE" }
+
+          python -c "import json; s=json.load(open('docs/continuity/MIMIR_CONTINUITY_STATE.json', encoding='utf-8')); assert s['last_completed_production_pass']=='R3.18BY'; assert s['current_pass']=='R3.18BZ'; print('R3_18BY_MACHINE_STATE=PASS')"
+          if ($LASTEXITCODE -ne 0) { throw 'machine-state assertion failed' }
+
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- $expected
+          if ($LASTEXITCODE -ne 0) { throw "git add failed: $LASTEXITCODE" }
+          $cached = @(git diff --cached --name-only)
+          $cachedDiff = @(Compare-Object ($expected | Sort-Object) ($cached | Sort-Object))
+          if ($cachedDiff.Count -ne 0) { throw "unexpected cached scope: $($cached -join ', ')" }
+          git commit -m 'Admit R3.18BY and open R3.18BZ'
+          if ($LASTEXITCODE -ne 0) { throw "continuity commit failed: $LASTEXITCODE" }
+          $candidate = (git rev-parse HEAD).Trim()
+          if ((git rev-parse HEAD^).Trim() -ne $env:PROD_SHA) { throw 'continuity candidate parent drift' }
+          git push origin "HEAD:refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "continuity candidate push failed: $LASTEXITCODE" }
+          Write-Host "R3_18BY_CONTINUITY_CANDIDATE_SHA=$candidate"
