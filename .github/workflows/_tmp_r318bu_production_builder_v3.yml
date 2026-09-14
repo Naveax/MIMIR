@@ -1,0 +1,106 @@
+name: R3.18BU Production Builder v3
+
+on:
+  push:
+    branches:
+      - automation/r318bu-production-builder-v3
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout builder branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build and validate clean R3.18BU candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $ExpectedBase = '9a86252e02d383ebc2ff9665e678f4c2319f47d9'
+          $CandidateBranch = 'production/r318bu-bounded-control-v3'
+          $Helper = Join-Path $env:RUNNER_TEMP 'r318bu_build.py'
+          $Relocate = Join-Path $env:RUNNER_TEMP 'r318bu_relocate.py'
+
+          $fresh = (git ls-remote origin refs/heads/main).Split()[0]
+          if ($fresh -ne $ExpectedBase) {
+            throw "fresh main drift: expected $ExpectedBase got $fresh"
+          }
+
+          Copy-Item 'tools/_tmp_r318bu_production_builder.py' $Helper -Force
+          Copy-Item 'tools/_tmp_r318bu_relocate.py' $Relocate -Force
+          git fetch origin $ExpectedBase --depth=1
+          git checkout --detach $ExpectedBase
+          git switch -c $CandidateBranch
+
+          python $Helper
+          if ($LASTEXITCODE -ne 0) { throw 'R3.18BU staging failed' }
+          python $Relocate
+          if ($LASTEXITCODE -ne 0) { throw 'R3.18BU relocation failed' }
+
+          cargo fmt --all
+          if ($LASTEXITCODE -ne 0) { throw 'cargo fmt apply failed' }
+
+          cargo test -p mimir-replay --test r3_18bu_post_bs_following_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw 'focused R3.18BU tests failed' }
+
+          cargo test -p mimir-replay --test r3_18w_following_payload_control -- --nocapture
+          if ($LASTEXITCODE -ne 0) { throw 'legacy R3.18W EOF-scope regression failed' }
+
+          cargo fmt --all -- --check
+          if ($LASTEXITCODE -ne 0) { throw 'cargo fmt check failed' }
+
+          cargo check --workspace --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { throw 'workspace check failed' }
+
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          if ($LASTEXITCODE -ne 0) { throw 'workspace clippy failed' }
+
+          cargo test --workspace --all-targets --all-features
+          if ($LASTEXITCODE -ne 0) { throw 'workspace tests failed' }
+
+          & pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'repository verification failed' }
+
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'git diff check failed' }
+
+          $changed = @()
+          $changed += @(git diff --name-only)
+          $changed += @(git ls-files --others --exclude-standard)
+          $changed = @($changed | Where-Object { $_ } | Sort-Object -Unique)
+          $expected = @(
+            'crates/mimir-replay/src/lib.rs',
+            'crates/mimir-replay/tests/r3_18bu_post_bs_following_control.rs'
+          ) | Sort-Object
+          if (($changed -join "`n") -ne ($expected -join "`n")) {
+            throw "unexpected candidate scope:`n$($changed -join "`n")"
+          }
+
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- 'crates/mimir-replay/src/lib.rs' 'crates/mimir-replay/tests/r3_18bu_post_bs_following_control.rs'
+          git commit -m 'Implement R3.18BU bounded post-BS control'
+          if ($LASTEXITCODE -ne 0) { throw 'candidate commit failed' }
+
+          $parent = (git rev-parse HEAD^).Trim()
+          if ($parent -ne $ExpectedBase) {
+            throw "candidate parent drift: expected $ExpectedBase got $parent"
+          }
+
+          $existing = git ls-remote --heads origin "refs/heads/$CandidateBranch"
+          if ($existing) {
+            throw "candidate branch already exists: $CandidateBranch"
+          }
+
+          git push origin "HEAD:refs/heads/$CandidateBranch"
+          if ($LASTEXITCODE -ne 0) { throw 'candidate push failed' }
+
+          $candidate = (git rev-parse HEAD).Trim()
+          Write-Host "R3_18BU_PRODUCTION_CANDIDATE_SHA=$candidate"
+          Write-Host "R3_18BU_PRODUCTION_PARENT=$parent"
