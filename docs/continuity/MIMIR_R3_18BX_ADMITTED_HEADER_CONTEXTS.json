@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "contract": "MIMIR_R3_18BX_POST_BU_TRUE_CONTINUATION_FOLLOWING_HEADER_CONTEXTS",
+  "status": "candidate_pending_same_head_ci",
+  "admission_date": null,
+  "boundary": "exactly one existing-actor following property header after a valid published R3.18BU true control on the immutable R3.18BW two-row lane; the BU false control terminates before header membership",
+  "membership_policy": "exact_tuple_only",
+  "tuple_fields": [
+    "stream_id_bound",
+    "prop_id_bits",
+    "property_object_index",
+    "attribute_tag",
+    "version_major",
+    "version_minor",
+    "net_version",
+    "is_rl_223"
+  ],
+  "frozen_source_control_row_count": 2,
+  "false_terminator_count": 1,
+  "observed_header_row_count": 1,
+  "unique_exact_context_count": 1,
+  "authority": {
+    "canonical_main_sha": "64f81e106338493476954f207a997a2bc7c25c9a",
+    "canonical_main_tree": "3f023aa0fb0f4d1c695b5d1e3eaab7b3321ff797",
+    "production_sha": "43c5d6248e2ea606b2eb0fd95f5c50758c372356",
+    "production_tree": "d1b7b40ed4e361d9c047e0494fb821688ef7d7b4",
+    "r3_18bw_evidence_head": "778b12988046da4d186248877bd577eb2a533a58",
+    "r3_18bw_evidence_tree": "5a6e7bd95c95f3e38db34a543b396aec747db985",
+    "r3_18bw_run": 34843377101,
+    "r3_18bw_job": 103973337631,
+    "r3_18bw_artifact_id": 10346819501,
+    "r3_18bw_artifact_size": 3582,
+    "r3_18bw_artifact_sha256": "ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd",
+    "r3_18bw_header_rows_sha256": "003d956cd7b4a8eb266c51d4514f9533a3c147eb4923f3113e08673323fb3a38",
+    "r3_18bw_aggregate_sha256": "12abc510fe9821c6fe3ef21e1ecdc3dc53a9b4235b75ca318a6ba77cd574fa4d",
+    "r3_18bw_negative_controls_sha256": "f47d318ecfdf47098a697ea2f94e2fdd4a37221925dd260496107ac133858edc",
+    "r3_18bw_validation_sha256": "8dd144e6f69992f8c8a31ac0c196c04a59a2ecea199164fe4860f2e50479f445",
+    "r3_18bw_source_scope_sha256": "d91a11794cabcb5e001fe59e66c8b5fcd75ea70a73ce7bf4d925c6af723a8582",
+    "r3_18bw_boxcars_oracle_row_sha256": "d4e31655b0f808fa5bb42f50af96b76bfd65c0e596da13ec8b01409fff4c35e7",
+    "r3_18bw_same_head_ci_run": 34843377045,
+    "r3_18bw_same_head_ci_status_at_candidate_creation": "pending",
+    "pinned_boxcars_sha": "c70e77df7af81b436cb545d070bb90c82f562d0b",
+    "native_oracle_mismatch": 0,
+    "unclassified_rows": 0,
+    "witness_reselection": 0,
+    "false_terminator_header_access": 0,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0
+  },
+  "observed_tag_counts": {
+    "LoadoutsOnline": 1
+  },
+  "observed_property_ordinal_counts": {
+    "8": 1
+  },
+  "admitted_contexts": [
+    {
+      "stream_id_bound": 110,
+      "prop_id_bits": 6,
+      "property_object_index": 67,
+      "attribute_tag": "LoadoutsOnline",
+      "version_major": 868,
+      "version_minor": 32,
+      "net_version": 10,
+      "is_rl_223": false,
+      "observed_count": 1
+    }
+  ],
+  "terminator_policy": {
+    "false_rows_are_terminators": true,
+    "false_terminator_count": 1,
+    "false_terminators_produce_header_membership": false
+  },
+  "anti_widening": {
+    "tag_only_membership": false,
+    "component_only_membership": false,
+    "property_ordinal_only_membership": false,
+    "cartesian_product_membership": false,
+    "versionless_membership": false,
+    "rl223_field_dropped_membership": false,
+    "rl223_false_to_true_membership": false,
+    "r3_18bn_cross_boundary_inheritance": false,
+    "r3_18bd_cross_boundary_inheritance": false,
+    "r3_18at_cross_boundary_inheritance": false,
+    "false_terminator_header_synthesis": false,
+    "fabricated_second_tuple_admitted": false,
+    "multiplicity_is_runtime_frequency_promise": false,
+    "contexts_outside_exact_set_admitted": false
+  }
+}
