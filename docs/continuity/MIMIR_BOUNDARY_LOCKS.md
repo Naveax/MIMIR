@@ -6,30 +6,32 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BW/BX closed / R3.18BY bounded production active
+# 0. Current override — R3.18BY closed / R3.18BZ read-only differential active
 
-## PRODUCTION AUTHORITY — R3.18BU
-- `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4` remains canonical production.
-- exact controls: Boolean false `[11239,11240)` and ActiveActor true `[3238,3239)`.
+## PRODUCTION AUTHORITY — R3.18BY
+- `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7` is canonical production; exact base `d4b0e84adf5603a6c2fe106a7f466cd497efdd43`, final parent `16e21d91f8e60db7b7e7b76d66494327de6936cc`.
+- exact production scope is `crates/mimir-replay/src/lib.rs` + `crates/mimir-replay/tests/r3_18by_post_bu_following_header.rs`.
+- false BU control `[11239,11240)` terminates without header; true BU control `[3238,3239)` composes exactly one R3.18BX member header and stops at 3245.
 
 ## CLOSED READ-ONLY EVIDENCE — R3.18BW
-- `778b12988046da4d186248877bd577eb2a533a58`; runner `34843377101/103973337631`; same-head CI `34843377045/103976995152` SUCCESS.
-- artifact `10346819501` / `sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd`; false/true=1/1; one header exact=1/1; false-row header access=0; payload/control=0/0.
+- `778b12988046da4d186248877bd577eb2a533a58`; runner `34843377101/103973337631`; artifact `10346819501` / `sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd`.
+- false/true=1/1; one header exact=1/1; false-row header access=0; payload/control=0/0.
 
 ## CLOSED EXACT CONTRACT — R3.18BX
-- `exact_tuple_only`: `(110,6,67,LoadoutsOnline,868,32,10,false)` x1.
-- one BU=false terminator is outside membership.
-- contract `sha256:37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`.
+- `exact_tuple_only`: `(110,6,67,LoadoutsOnline,868,32,10,false)` x1; contract `sha256:37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`.
+- one BU=false terminator remains outside membership.
 
-## ACTIVE BOUNDED PRODUCTION — R3.18BY
-- false BU: successful no-header terminator, zero post-BU reads.
-- true BU: at most one header suffix, exact BX membership, stop at payload_start 3245.
+## ACTIVE READ-ONLY DIFFERENTIAL — R3.18BZ
+- exact published BY rows only: false terminator 1/1, true exact header 1/1.
+- compare published BY against frozen BW/BX and the shared stateless header primitive; witness reselection 0.
+- consume no following payload and no second later property-control bit.
 
 ## CLOSED
 - following payload after BY header;
 - second later property-control bit;
 - header synthesis on the BU=false terminator;
 - context outside exact R3.18BX membership;
+- production mutation during R3.18BZ;
 - historical-contract inheritance;
 - generalized/repeated property loop/cursor and wider runtime semantics.
 

@@ -2134,3 +2134,26 @@ Results:
 
 Admission consequence:
 - open R3.18BY bounded post-BU following-header production.
+
+---
+
+## 2026-09-14 — R3.18BY — Bounded Post-BU Mixed-Continuation Following-Header Production
+Outcome: **A — ADMITTED / PUBLISHED PRODUCTION**
+
+Canonical production: `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7`. Canonical base: `d4b0e84adf5603a6c2fe106a7f466cd497efdd43`. Final parent: `16e21d91f8e60db7b7e7b76d66494327de6936cc`. Blobs: lib `beadbb35ec5bcda427260f6f6c5afeb7780cdbc5`, test `07e0e4bdb346833d550248609b96af8e255d4c11`, spec `727c971cc1ac6d59d59bcbc3677d71e7a4f3267b`.
+
+Validation:
+- builder `34849180581/103992470153` SUCCESS;
+- final exact-head push CI `34856781439/104018278890` SUCCESS;
+- validation PR #223 CLOSED UNMERGED; final PR CI `34856787577/104018300863` SUCCESS;
+- published-main CI `34857720437/104021486939` SUCCESS;
+- publication force=false; exact main readback PASS.
+
+Admitted exact lane:
+- `external_fixtures/sample_002.replay`: BU false `[11239,11240)`, no following header, stop 11240;
+- `test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay`: BU true `[3238,3239)`, one header stream `[3239,3245)`, stream 61/bound 110/prop bits 6/object 67/LoadoutsOnline/context 868.32/net10/non-RL223, stop payload_start 3245;
+- exact R3.18BX membership only; following payload and second later control consumption 0/0; no generalized/repeated cursor.
+
+Admission consequence:
+- R3.18BY is canonical production;
+- R3.18BZ opens read-only on exactly these two published rows; production mutation and payload/later-control access remain forbidden.

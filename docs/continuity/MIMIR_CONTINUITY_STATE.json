@@ -3,14 +3,14 @@
   "updated_date": "2026-09-14",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
-  "last_production_code_sha": "43c5d6248e2ea606b2eb0fd95f5c50758c372356",
-  "last_production_milestone": "R3.18BU",
-  "last_production_milestone_name": "bounded post-BS next property-control production",
+  "last_production_code_sha": "3b07e223fdf326e8100412fad9410bb1b66d2cb9",
+  "last_production_milestone": "R3.18BY",
+  "last_production_milestone_name": "bounded post-BU mixed-continuation following-header production",
   "last_completed_read_only_audit": "R3.18BW",
-  "current_pass": "R3.18BY",
-  "current_pass_kind": "bounded post-BU mixed-continuation following-header production",
-  "current_pass_goal": "Validate one exact published BU result; false returns no-header with zero post-BU reads; true composes one header suffix under exact R3.18BX membership and stops at payload_start.",
-  "current_pass_stop_boundary": "False stops at BU stop 11240. True stops exactly at following header payload_start 3245; consume no payload or second later control.",
+  "current_pass": "R3.18BZ",
+  "current_pass_kind": "read-only published-R3.18BY mixed following-header differential",
+  "current_pass_goal": "Audit exactly the two published R3.18BY rows against immutable R3.18BW/R3.18BX authority and the shared stateless header primitive; preserve false no-header 1/1 and true exact header 1/1.",
+  "current_pass_stop_boundary": "False remains stopped at 11240. True remains stopped at following-header payload_start 3245. Consume no following payload or second later control.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -205,7 +205,12 @@
     "header synthesis on the R3.18BU false terminator during R3.18BY",
     "following-header contexts outside exact R3.18BX membership",
     "historical following-header contract inheritance at R3.18BX/R3.18BY",
-    "generalized/repeated property loop or generic cursor after R3.18BY"
+    "generalized/repeated property loop or generic cursor after R3.18BY",
+    "production mutation during R3.18BZ",
+    "following payload consumption during R3.18BZ",
+    "second later property-control consumption during R3.18BZ",
+    "false-row following-header access during R3.18BZ",
+    "witness reselection during R3.18BZ"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -414,7 +419,9 @@
     "docs/continuity/MIMIR_R3_18BX_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json",
     "docs/continuity/MIMIR_R3_18BX_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BY_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BY_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BY_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18BW",
   "last_completed_evidence_outcome": "A — BU rows 2/2; false/true 1/1; one following header exact 1/1; mismatch/reselection/false-header 0/0/0; artifact 10346819501.",
@@ -959,8 +966,8 @@
     "privacy_safe_test_policy": "synthetic identities/text only",
     "next_pass": "R3.17G"
   },
-  "last_completed_production_pass": "R3.18BU",
-  "last_completed_production_outcome": "A — bounded post-BS next property-control production published at 43c5d6248e2ea606b2eb0fd95f5c50758c372356; exact two-row Boolean=false / ActiveActor=true lane; one control bit only; exact-head and published-main CI SUCCESS.",
+  "last_completed_production_pass": "R3.18BY",
+  "last_completed_production_outcome": "A — bounded post-BU mixed-continuation following-header production published at 3b07e223fdf326e8100412fad9410bb1b66d2cb9; exact two-row lane, false no-header terminator 1/1, true exact R3.18BX header 1/1, stop at payload_start 3245; exact-head and published-main CI SUCCESS.",
   "r3_17g": {
     "outcome": "admitted / production",
     "pre_pass_main_sha": "4638aeabca8e971805d2e294fea0f24543e9e5a8",
@@ -3543,5 +3550,31 @@
     "membership_policy": "exact_tuple_only",
     "context_count": 1,
     "false_terminator_count": 1
+  },
+  "r3_18by_production": {
+    "outcome": "A — admitted / published production",
+    "production_sha": "3b07e223fdf326e8100412fad9410bb1b66d2cb9",
+    "production_tree": "68b32f61d61c863b25e393cfa77575bac55217d7",
+    "canonical_base_sha": "d4b0e84adf5603a6c2fe106a7f466cd497efdd43",
+    "final_parent_sha": "16e21d91f8e60db7b7e7b76d66494327de6936cc",
+    "lib_blob": "beadbb35ec5bcda427260f6f6c5afeb7780cdbc5",
+    "focused_test_blob": "07e0e4bdb346833d550248609b96af8e255d4c11",
+    "execution_spec_blob": "727c971cc1ac6d59d59bcbc3677d71e7a4f3267b",
+    "builder_run": 34849180581,
+    "builder_job": 103992470153,
+    "exact_head_push_ci_run": 34856781439,
+    "exact_head_push_ci_job": 104018278890,
+    "validation_pr": 223,
+    "validation_pr_merged": false,
+    "validation_pr_ci_run": 34856787577,
+    "validation_pr_ci_job": 104018300863,
+    "published_main_ci_run": 34857720437,
+    "published_main_ci_job": 104021486939,
+    "false_rows": 1,
+    "true_rows": 1,
+    "true_exact_header_rows": 1,
+    "following_payload_bits_consumed": 0,
+    "second_later_control_bits_consumed": 0,
+    "contract_sha256": "37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576"
   }
 }

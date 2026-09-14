@@ -107,7 +107,8 @@ R3.18BU bounded post-BS next property-control production / CLOSED
 R3.18BV published-R3.18BU one-control differential / Outcome A CLOSED
 R3.18BW one following-property-header evidence after published R3.18BU mixed control / Outcome A CLOSED
 R3.18BX exact following-header context contract after R3.18BW / Outcome A CLOSED
-R3.18BY bounded post-BU mixed-continuation following-header production / ACTIVE
+R3.18BY bounded post-BU mixed-continuation following-header production / PRODUCTION CLOSED
+R3.18BZ published-R3.18BY mixed following-header differential / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -326,6 +327,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 198. `docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json`
 199. `docs/continuity/MIMIR_R3_18BX_DECISION.md`
 200. `docs/continuity/MIMIR_R3_18BY_EXECUTION_SPEC.md`
+201. `docs/continuity/MIMIR_R3_18BY_DECISION.md`
+202. `docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1473,3 +1476,14 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - false validated BU result must return no-header at BU stop with zero post-BU reads.
 - true validated BU result may invoke exactly one existing-actor header suffix, require exact R3.18BX membership and stop at payload_start.
 - no following payload, later control or generalized cursor.
+
+### R3.18BY bounded post-BU mixed-continuation following-header production: CLOSED / PUBLISHED
+- canonical production `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7`; base `d4b0e84adf5603a6c2fe106a7f466cd497efdd43`; final parent `16e21d91f8e60db7b7e7b76d66494327de6936cc`; exact blobs lib/test/spec `beadbb35ec5bcda427260f6f6c5afeb7780cdbc5` / `07e0e4bdb346833d550248609b96af8e255d4c11` / `727c971cc1ac6d59d59bcbc3677d71e7a4f3267b`.
+- builder `34849180581/103992470153` SUCCESS; exact-head push CI `34856781439/104018278890` SUCCESS; PR #223 CLOSED UNMERGED; final PR CI `34856787577/104018300863` SUCCESS; published-main CI `34857720437/104021486939` SUCCESS.
+- false BU row terminates with no header at 11240; true BU row composes exactly one R3.18BX-admitted LoadoutsOnline header and stops at payload_start 3245.
+- following payload/second later control remain 0/0; no generalized cursor or context widening admitted.
+
+### R3.18BZ published-R3.18BY mixed following-header differential: ACTIVE
+- audit exactly the immutable two-row BY lane against R3.18BW/BX authority and the shared stateless header primitive.
+- expected false/true=1/1, exact true header=1/1, mismatch/reselection=0/0, following payload/second-control=0/0.
+- production mutation, false-row header access and any wider semantic/runtime behavior remain forbidden.

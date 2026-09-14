@@ -46,10 +46,10 @@ LANGUAGE: Rust 2024 workspace
 RUST_VERSION_FLOOR: 1.85
 
 LAST_PRODUCTION_CODE_SHA:
-  43c5d6248e2ea606b2eb0fd95f5c50758c372356
+  3b07e223fdf326e8100412fad9410bb1b66d2cb9
 
 LAST_PRODUCTION_MILESTONE:
-  R3.18BU — bounded post-BS next property-control production
+  R3.18BY — bounded post-BU mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
   R3.18BW — one-following-header evidence Outcome A / BU rows=2 / false terminator=1 / true header=1 / exact header=1/1 / mismatch 0 / artifact 10346819501
@@ -61,10 +61,10 @@ LAST_COMPLETED_EVIDENCE_PASS:
   R3.18BW — exact one-following-header evidence / two BU rows / false terminator 1 / true continuation 1 / one header exact 1/1 / payload/control consumption 0/0 / artifact 10346819501
 
 CURRENT_PASS:
-  R3.18BY — bounded post-BU mixed-continuation following-header production
+  R3.18BZ — published-R3.18BY mixed following-header differential
 
 CURRENT_PASS_TYPE:
-  bounded production implementation / validate exact BU result / false=no-header terminator / true=one exact R3.18BX header / stop at payload_start
+  read-only published-production differential / exact BY two-row lane / false=no-header terminator / true=one exact R3.18BX header / payload and later-control consumption 0/0
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4343,3 +4343,11 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - R3.18BX Outcome A admits only that complete eight-field tuple; exact contract `sha256:37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`; validation candidate `6520e8c8aa47d14f8c2b457b7552aa6fb763d5fd` / `757fcf1824a9c0c82d92ef21c7b46498af15db3b`; candidate CI and knowledge archive, PR #221 CI/knowledge and exact prevalidation all SUCCESS.
 - active R3.18BY may validate one published BU result: false returns no-header at BU stop with zero post-BU reads; true may invoke exactly one existing-actor header suffix, require exact BX membership and stop at payload_start 3245.
 - following payload, second later control, false-row header synthesis, historical-contract inheritance, generalized cursor and wider semantics remain closed.
+
+# CURRENT OVERRIDE — 2026-09-14 — R3.18BY CLOSED / R3.18BZ ACTIVE
+
+- canonical production is R3.18BY `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7`; exact base `d4b0e84adf5603a6c2fe106a7f466cd497efdd43`, final parent `16e21d91f8e60db7b7e7b76d66494327de6936cc`.
+- final production scope from the canonical base is exactly `crates/mimir-replay/src/lib.rs` plus `crates/mimir-replay/tests/r3_18by_post_bu_following_header.rs`; lib/test/spec blobs `beadbb35ec5bcda427260f6f6c5afeb7780cdbc5` / `07e0e4bdb346833d550248609b96af8e255d4c11` / `727c971cc1ac6d59d59bcbc3677d71e7a4f3267b`.
+- production builder `34849180581/103992470153` SUCCESS; final exact-head push CI `34856781439/104018278890` SUCCESS; validation PR #223 CLOSED UNMERGED with final PR CI `34856787577/104018300863` SUCCESS; published-main CI `34857720437/104021486939` SUCCESS.
+- exact BY lane remains two rows: `sample_002` BU=false terminates at 11240 with no header; `largest_100/079...` BU=true exposes exactly one R3.18BX member header `(110,6,67,LoadoutsOnline,868,32,10,false)` and stops at payload_start 3245.
+- R3.18BZ is ACTIVE as a read-only published-BY differential on only those two immutable rows. Following payload, second later control, false-row header access, witness reselection, production mutation and generalized/repeated property cursors remain closed.
