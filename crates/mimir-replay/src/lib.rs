@@ -13404,3 +13404,149 @@ pub fn decode_replay_network_existing_actor_after_first_primitive_second_propert
         },
     )
 }
+
+// R3.18BU PRE-ADMISSION BEGIN bounded post-BS next property-control
+/// Bounded composition of the published R3.18BS payload plus exactly one
+/// R3.18BR-observed property-control bit. The result stops immediately after
+/// that bit and does not consume any later stream/header/payload/control data.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayNetworkPostBsFollowingControlDecodeV1 {
+    pub payload_composition: ReplayNetworkPostBoFollowingPayloadDecodeV1,
+    pub property_control: bool,
+    pub control_start_bit: u64,
+    pub control_end_bit: u64,
+    pub stop_bit: u64,
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn decode_replay_network_post_bs_following_control_v1(
+    network_bytes: &[u8],
+    prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    control: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    authority_plan: &ReplayNetworkLookupPlanV1,
+    context: ReplayNetworkK3DecodeContextV1,
+    an_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    ay_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    ba_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    be_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    bi_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadV1,
+    bk_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlV1,
+    bo_prior: &ReplayNetworkExistingActorAfterFirstPrimitiveSecondPropertyPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderPayloadFollowingPayloadControlFollowingHeaderV1,
+    bs_prior: &ReplayNetworkPostBoFollowingPayloadDecodeV1,
+) -> Result<ReplayNetworkPostBsFollowingControlDecodeV1> {
+    let expected_bs = decode_replay_network_post_bo_following_payload_v1(
+        network_bytes,
+        prior,
+        control,
+        authority_plan,
+        context,
+        an_prior,
+        ay_prior,
+        ba_prior,
+        be_prior,
+        bi_prior,
+        bk_prior,
+        bo_prior,
+    )?;
+
+    if &expected_bs != bs_prior {
+        return Err(network_bit_error(
+            "r3.18bu-mismatched-bs-prerequisite",
+            "supplied R3.18BS result does not equal the exact recomputed prerequisite",
+        ));
+    }
+
+    let (expected_control, payload_end_bit) = match &expected_bs.following_payload {
+        ReplayNetworkPostBoFollowingPayloadValueV1::Boolean(decoded) => {
+            let exact = decoded.attribute_tag == ReplayNetworkAttributeTagV1::Boolean
+                && decoded.payload_start_bit == 11238
+                && decoded.payload_width == 1
+                && decoded.payload_end_bit == 11239
+                && decoded.stop_bit == 11239
+                && decoded.value == ReplayNetworkPrimitiveScalarValueV1::Boolean(true);
+            if !exact {
+                return Err(network_bit_error(
+                    "r3.18bu-non-authority-boolean-row",
+                    "Boolean payload is outside the immutable R3.18BT/BQ/BR row",
+                ));
+            }
+            (false, 11239u64)
+        }
+        ReplayNetworkPostBoFollowingPayloadValueV1::ActiveActor(decoded) => {
+            let exact = decoded.attribute_tag == ReplayNetworkAttributeTagV1::ActiveActor
+                && decoded.payload_start_bit == 3205
+                && decoded.payload_width == 33
+                && decoded.payload_end_bit == 3238
+                && decoded.value
+                    == ReplayNetworkK2ValueV1::ActiveActor {
+                        active: true,
+                        actor: 1,
+                    };
+            if !exact {
+                return Err(network_bit_error(
+                    "r3.18bu-non-authority-active-actor-row",
+                    "ActiveActor payload is outside the immutable R3.18BT/BQ/BR row",
+                ));
+            }
+            (true, 3238u64)
+        }
+    };
+
+    if expected_bs.stop_bit != payload_end_bit {
+        return Err(network_bit_error(
+            "r3.18bu-payload-stop-mismatch",
+            format!(
+                "R3.18BS stop {} does not equal immutable payload end {payload_end_bit}",
+                expected_bs.stop_bit
+            ),
+        ));
+    }
+
+    let control_start_bit = expected_bs.stop_bit;
+    let bit_position = usize::try_from(control_start_bit).map_err(|_| {
+        network_bit_error(
+            "r3.18bu-invalid-control-position",
+            format!("control start {control_start_bit} does not fit usize"),
+        )
+    })?;
+    let total_bits = network_bytes.len().checked_mul(8).ok_or_else(|| {
+        network_bit_error(
+            "r3.18bu-invalid-network-length",
+            "network bit length overflows usize",
+        )
+    })?;
+    if bit_position >= total_bits {
+        return Err(network_bit_error(
+            "r3.18bu-insufficient-control-bit",
+            format!("need one control bit at {control_start_bit}, but no bit remains"),
+        ));
+    }
+
+    let byte_index = bit_position / 8;
+    let bit_index = bit_position % 8;
+    let property_control = ((network_bytes[byte_index] >> bit_index) & 1) != 0;
+    if property_control != expected_control {
+        return Err(network_bit_error(
+            "r3.18bu-immutable-control-mismatch",
+            format!(
+                "observed control bit {property_control} does not equal immutable R3.18BR authority {expected_control}"
+            ),
+        ));
+    }
+
+    let control_end_bit = control_start_bit.checked_add(1).ok_or_else(|| {
+        network_bit_error(
+            "r3.18bu-control-end-overflow",
+            "control end bit overflows u64",
+        )
+    })?;
+
+    Ok(ReplayNetworkPostBsFollowingControlDecodeV1 {
+        payload_composition: expected_bs,
+        property_control,
+        control_start_bit,
+        control_end_bit,
+        stop_bit: control_end_bit,
+    })
+}
+// R3.18BU PRE-ADMISSION END bounded post-BS next property-control
