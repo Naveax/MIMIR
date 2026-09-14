@@ -2,19 +2,18 @@
 
 **Continuity date:** 2026-09-14
 **Repository:** `Naveax/MIMIR`
-**Canonical production SHA:** `5ab14575d0a698d752db35db76f3dbb300cdec8d`
-**Production tree:** `1c0b4c0a50385a34ba730a52a98a89423ff56869`
-**Production milestone:** `R3.18BS — bounded post-BO one-following-payload production`
-**Last read-only evidence/audit:** `R3.18BT — Outcome A / exact BQ identity 2/2 / mismatch 0 / BR control consumed 0 / artifact 10336951993`
-**Last completed contract:** `R3.18BN — exact_tuple_only / 2 contexts / multiplicity 2 / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c`
-**Current exact pass:** `R3.18BU — bounded post-BS next property-control production`
+**Canonical production SHA:** `43c5d6248e2ea606b2eb0fd95f5c50758c372356`
+**Production tree:** `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4`
+**Production milestone:** `R3.18BU — bounded post-BS next property-control production`
+**Last read-only evidence/audit:** `R3.18BT — Outcome A / artifact 10336951993`
+**Current exact pass:** `R3.18BV — published-R3.18BU one-control differential`
 
 ## Truthful boundary
 
-R3.18BS remains canonical production. R3.18BT closed read-only with exact published-BS/BQ identity on both payload rows, BP-false exclusion, repeatability and post-stop poison stability. Runner `34816904695/103889382147` and same-head CI `34816904663/103889381782` are SUCCESS; immutable artifact `10336951993` / `sha256:fef0df77821475ac3ee5acb417b500aa40708a573d286d30c5c42bcf23ef473d`.
+BU is published production. Builder `34823631010/103910607381`, validation PR #219 exact-head CI `34826521464/103919838545` and published-main CI `34827065398/103921549254` are SUCCESS. Exact lane is Boolean=false `[11239,11240)` and ActiveActor=true `[3238,3239)` after exact BS.
 
-R3.18BU may now consume exactly one R3.18BR-observed control bit after valid exact BS on only the two admitted rows: Boolean=false and ActiveActor=true. It must recompute BS, require exact supplied equality and exact boundary equality, consume one checked LSB-first bit, then stop immediately.
+BV is read-only and must prove exact BU/BR identity, repeatability, prerequisite identity and post-stop poison stability on those two rows.
 
 ## Hard stop
 
-No BP-false access, no success outside the exact two rows, no next stream/header/payload, no second later control, no generalized/repeated cursor and no wider semantic/runtime behavior.
+No BP-false access, following stream/header/payload, second later control, reselection, generalized cursor or production mutation.

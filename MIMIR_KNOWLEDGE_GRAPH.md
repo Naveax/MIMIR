@@ -103,7 +103,8 @@ R3.18BQ one following payload evidence / Outcome A CLOSED
 R3.18BR next property-control bit evidence after exact BQ payload end / Outcome A CLOSED
 R3.18BS bounded post-BO one-following-payload production / PRODUCTION CLOSED
 R3.18BT published-R3.18BS one-following-payload differential / Outcome A CLOSED
-R3.18BU bounded post-BS next property-control production / ACTIVE
+R3.18BU bounded post-BS next property-control production / CLOSED
+R3.18BV published-R3.18BU one-control differential / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -313,6 +314,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 189. `docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md`
 190. `docs/continuity/MIMIR_R3_18BT_DECISION.md`
 191. `docs/continuity/MIMIR_R3_18BU_EXECUTION_SPEC.md`
+192. `docs/continuity/MIMIR_R3_18BU_DECISION.md`
+193. `docs/continuity/MIMIR_R3_18BV_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1421,3 +1424,14 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - Boolean row consumes exactly one false control bit; ActiveActor row consumes exactly one true control bit.
 - recompute and exactly match BS, read one checked LSB-first bit at `bs.stop_bit`, stop at +1, and read nothing later.
 - BP false terminator, next stream/header/payload, second later control and generic/repeated cursor remain closed.
+
+
+### R3.18BU bounded post-BS next property-control production: CLOSED / PUBLISHED
+- `43c5d6248e2ea606b2eb0fd95f5c50758c372356` / `d1b7b40ed4e361d9c047e0494fb821688ef7d7b4`; exact blobs `1c4db09cff43e0ab56f5efb5e8078da3a1189937` / `e6170f90b47e3f04bd798edbc61f2fa59e5213dd`.
+- builder `34823631010/103910607381`, exact-head CI `34826521464/103919838545`, published-main CI `34827065398/103921549254` all SUCCESS; PR #219 closed unmerged.
+- Boolean false `[11239,11240)` + ActiveActor true `[3238,3239)` only; one bit consumed; adjacent consumption 0.
+
+### R3.18BV published-R3.18BU one-control differential: ACTIVE
+- read-only exact two-row differential against immutable BR authority.
+- require exact published BS prerequisite, BU value/bounds/stop, repeatability and post-stop poison.
+- no following structure, second control, reselection, production mutation or generalized cursor.
