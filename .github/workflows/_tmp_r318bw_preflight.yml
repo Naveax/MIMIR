@@ -1,0 +1,43 @@
+name: R3.18BW Temp Test Preflight
+
+on:
+  push:
+    branches: [preflight/r318bw-test-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+    steps:
+      - uses: actions/checkout@v6
+      - name: Exact temporary test scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 64f81e106338493476954f207a997a2bc7c25c9a
+          mapfile -t changed < <(git diff --name-only HEAD^...HEAD | sort)
+          expected=(
+            '.github/workflows/_tmp_r318bw_preflight.yml'
+            'crates/mimir-replay/tests/_tmp_r318bw_following_header.rs'
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq 2
+          test "$(printf '%s\n' "${changed[@]}")" = "$(printf '%s\n' "${expected_sorted[@]}")"
+      - name: Toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+      - name: Compile and run exact BW temporary test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 test -p mimir-replay --test _tmp_r318bw_following_header r3_18bw_exact_bv_lane_observes_one_header_on_true_row_only -- --nocapture
+          cargo +1.85.0 fmt --all -- --check
+          git diff --check HEAD^
+          echo R3_18BW_TEMP_TEST_PREFLIGHT=PASS
