@@ -2038,3 +2038,25 @@ Boundaries still closed:
 
 Next exact pass:
 - `R3.18BT — published-R3.18BS one-following-payload differential`.
+
+---
+
+## 2026-09-14 — R3.18BT — Published R3.18BS One-Following-Payload Differential
+Outcome: **A — ADMITTED / READ-ONLY EVIDENCE**
+
+Evidence head/tree: `b687f700a7bf00f28671ca3adbb6613b582e7848` / `f573860e733689fa03767702f6f1750e222664c3`
+Runner: `34816904695/103889382147` SUCCESS
+Same-head natural CI: `34816904663/103889381782` SUCCESS
+Artifact: `10336951993` / `5213` bytes / `sha256:fef0df77821475ac3ee5acb417b500aa40708a573d286d30c5c42bcf23ef473d`
+Production authority: unchanged R3.18BS `5ab14575d0a698d752db35db76f3dbb300cdec8d` / `1c0b4c0a50385a34ba730a52a98a89423ff56869`
+
+Results:
+- exact immutable BQ payload identity: 2/2; Boolean `[11238,11239)` true and ActiveActor `[3205,3238)` active=true actor=1;
+- BP false terminator excluded 1/1; mismatch=0; witness reselection=0;
+- repeatability=2/2; post-payload poison including BR control=2/2; following BR control consumed=0;
+- next stream/header/payload=0/0/0; second later control=0;
+- production/Cargo/fixture/corpus/support mutation=0/0/0/0/0; full validation PASS.
+
+Admission consequence:
+- R3.18BT closes Outcome A without changing production;
+- R3.18BU may consume exactly one immutable BR-observed control bit on only the two admitted rows.

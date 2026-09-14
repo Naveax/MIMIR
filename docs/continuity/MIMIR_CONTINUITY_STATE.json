@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-09-11",
+  "updated_date": "2026-09-14",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "5ab14575d0a698d752db35db76f3dbb300cdec8d",
   "last_production_milestone": "R3.18BS",
   "last_production_milestone_name": "bounded post-BO one-following-payload production",
-  "last_completed_read_only_audit": "R3.18BR",
-  "current_pass": "R3.18BT",
-  "current_pass_kind": "read-only published-R3.18BS one-following-payload differential on the two immutable R3.18BQ payload rows",
-  "current_pass_goal": "Validate published R3.18BS exactly against both BQ payload witnesses, preserve BP-false exclusion and stop at payload end without consuming the R3.18BR control bit.",
-  "current_pass_stop_boundary": "Stop exactly at published BS payload_end_bit. Do not consume the R3.18BR following control bit or any later stream/header/payload/control.",
+  "last_completed_read_only_audit": "R3.18BT",
+  "current_pass": "R3.18BU",
+  "current_pass_kind": "bounded post-BS next property-control production on exactly the two BT-admitted payload rows",
+  "current_pass_goal": "Recompute exact R3.18BS, consume exactly one immutable R3.18BR-observed control bit (Boolean=false, ActiveActor=true), and stop immediately after it.",
+  "current_pass_stop_boundary": "Stop exactly one bit after published BS payload_end_bit. Do not consume any next stream/header/payload or second later control.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -397,7 +397,9 @@
     "docs/continuity/MIMIR_R3_18BR_DECISION.md",
     "docs/continuity/MIMIR_R3_18BS_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BS_DECISION.md",
-    "docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18BT_DECISION.md",
+    "docs/continuity/MIMIR_R3_18BU_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18BR",
   "last_completed_evidence_outcome": "A — exact two next-control observations after BQ payload end; false=1 true=1; mismatch/reselection 0/0; adjacent reads 0/0/0/0; artifact 10267123608.",
@@ -3404,5 +3406,39 @@
     "bp_false_terminators_excluded": 1,
     "following_control_consumption_allowed": false,
     "production_mutation_allowed": false
+  },
+  "r3_18bt_admission": {
+    "outcome": "A",
+    "head_sha": "b687f700a7bf00f28671ca3adbb6613b582e7848",
+    "tree_sha": "f573860e733689fa03767702f6f1750e222664c3",
+    "run_id": 34816904695,
+    "job_id": 103889382147,
+    "same_head_ci_run_id": 34816904663,
+    "same_head_ci_job_id": 103889381782,
+    "artifact_id": 10336951993,
+    "artifact_size": 5213,
+    "artifact_sha256": "fef0df77821475ac3ee5acb417b500aa40708a573d286d30c5c42bcf23ef473d",
+    "bq_identity_exact": "2/2",
+    "false_terminator_excluded": "1/1",
+    "mismatch": 0,
+    "witness_reselection": 0,
+    "repeatability": "2/2",
+    "post_payload_poison": "2/2",
+    "following_br_control_consumed": 0,
+    "production_mutation": 0
+  },
+  "current_pass_contract": {
+    "pass": "R3.18BU",
+    "authority_rows": 2,
+    "boolean_row_control": false,
+    "active_actor_row_control": true,
+    "must_recompute_bs": true,
+    "supplied_bs_must_match_exactly": true,
+    "control_start_equals_bs_stop": true,
+    "bits_consumed": 1,
+    "false_terminator_allowed": false,
+    "next_stream_header_payload_allowed": false,
+    "second_later_control_allowed": false,
+    "generic_repeated_cursor_allowed": false
   }
 }

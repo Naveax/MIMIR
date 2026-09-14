@@ -6,29 +6,29 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BS payload production closed / R3.18BT published differential active
+# 0. Current override — R3.18BT published differential closed / R3.18BU one-control production active
 
 This current override supersedes older status wording later in this historical lock file.
 
 ## PRODUCTION — R3.18BS
-- `5ab14575d0a698d752db35db76f3dbb300cdec8d` / `1c0b4c0a50385a34ba730a52a98a89423ff56869` is canonical production.
-- exactly one BQ-admitted Boolean/1-bit or ActiveActor/33-bit payload is composed after valid BO/BN authority and production stops at payload end.
-- the BP false terminator remains outside the payload lane; R3.18BR following-control consumption is zero.
+- `5ab14575d0a698d752db35db76f3dbb300cdec8d` / `1c0b4c0a50385a34ba730a52a98a89423ff56869` remains canonical production while BU is active.
+- BS composes exactly one BQ-admitted payload and stops at payload end.
 
-## CLOSED READ-ONLY NEXT-CONTROL EVIDENCE — R3.18BR
-- evidence `ff1daab35e2e75bf7446a98a07a1db67e5196dbd` / artifact `10267123608` / `sha256:bf9a7c52296cea0f4d8fe6a4f64d26e8c232ea26bd0589be49ba6afa589c28d1` remains evidence-only.
-- exact=2/2; false=1 true=1; BP-false access=0; adjacent stream/header/payload/second-control=0/0/0/0.
+## CLOSED READ-ONLY DIFFERENTIAL — R3.18BT
+- `b687f700a7bf00f28671ca3adbb6613b582e7848` / runner `34816904695/103889382147` / same-head CI `34816904663/103889381782` all SUCCESS.
+- artifact `10336951993` / `sha256:fef0df77821475ac3ee5acb417b500aa40708a573d286d30c5c42bcf23ef473d`.
+- exact 2/2 BQ identity; false terminator excluded; mismatch/reselection 0; BR control consumed 0; production mutation 0.
 
-## ACTIVE READ-ONLY PUBLISHED-PAYLOAD DIFFERENTIAL — R3.18BT
-- validate published BS against exactly the two immutable BQ payload witnesses.
-- require exact payload identity/boundaries and BP-false exclusion; stop at published payload end.
-- consume zero BR control bits and mutate no production source.
+## ACTIVE BOUNDED PRODUCTION — R3.18BU
+- only the exact two BT-admitted payload rows may continue.
+- use immutable BR authority: Boolean row=false, ActiveActor row=true.
+- recompute BS and require exact supplied equality; consume exactly one checked LSB-first control bit at BS stop; stop immediately after that bit.
 
 ## CLOSED
-- payload access on the BP false terminator;
-- production consumption of the R3.18BR control bit;
-- next stream/header/payload after published BS/BT;
-- second later control;
+- control access on the BP false terminator;
+- success outside the two exact BT/BQ/BR rows;
+- next stream/header/payload after the one BU control bit;
+- second later property-control bit;
 - generalized/repeated cursor and wider semantics/runtime.
 
 # 1. Status vocabulary

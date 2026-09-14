@@ -102,7 +102,8 @@ R3.18BP published-R3.18BO mixed following-header differential / Outcome A CLOSED
 R3.18BQ one following payload evidence / Outcome A CLOSED
 R3.18BR next property-control bit evidence after exact BQ payload end / Outcome A CLOSED
 R3.18BS bounded post-BO one-following-payload production / PRODUCTION CLOSED
-R3.18BT published-R3.18BS one-following-payload differential / ACTIVE
+R3.18BT published-R3.18BS one-following-payload differential / Outcome A CLOSED
+R3.18BU bounded post-BS next property-control production / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -310,6 +311,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 187. `docs/continuity/MIMIR_R3_18BS_EXECUTION_SPEC.md`
 188. `docs/continuity/MIMIR_R3_18BS_DECISION.md`
 189. `docs/continuity/MIMIR_R3_18BT_EXECUTION_SPEC.md`
+190. `docs/continuity/MIMIR_R3_18BT_DECISION.md`
+191. `docs/continuity/MIMIR_R3_18BU_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1406,3 +1409,15 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - read-only differential on exactly the two immutable BQ payload rows under published BS.
 - require exact start/end/width/value identity, BP-false exclusion, repeatability and post-stop poison stability.
 - BR control remains evidence-only; BT consumes zero following-control bits and changes no production Rust.
+
+
+### R3.18BT published-R3.18BS one-following-payload differential: OUTCOME A / CLOSED
+- evidence `b687f700a7bf00f28671ca3adbb6613b582e7848` / `f573860e733689fa03767702f6f1750e222664c3`, runner `34816904695/103889382147` SUCCESS, same-head CI `34816904663/103889381782` SUCCESS.
+- immutable artifact `10336951993` / `sha256:fef0df77821475ac3ee5acb417b500aa40708a573d286d30c5c42bcf23ef473d`; BQ payload identity 2/2, mismatch 0, reselection 0, false terminator excluded 1/1.
+- repeatability 2/2 and post-payload poison 2/2; following BR control consumed 0; production mutation 0.
+
+### R3.18BU bounded post-BS next property-control production: ACTIVE
+- exact two-row lane only, gated by BT Outcome A and immutable BR control authority.
+- Boolean row consumes exactly one false control bit; ActiveActor row consumes exactly one true control bit.
+- recompute and exactly match BS, read one checked LSB-first bit at `bs.stop_bit`, stop at +1, and read nothing later.
+- BP false terminator, next stream/header/payload, second later control and generic/repeated cursor remain closed.

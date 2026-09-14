@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BS — bounded post-BO one-following-payload production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BR — next property-control bit Outcome A / exact=2/2 / false=1 true=1 / mismatch 0 / artifact 10267123608
+  R3.18BT — published-R3.18BS one-following-payload differential Outcome A / exact=2/2 / BQ identity=2/2 / mismatch 0 / BR control consumed 0 / artifact 10336951993
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BN — exact following-header context contract / Outcome A / 2 exact eight-field tuples / multiplicity 2 / 1 false terminator outside membership / contract 904a6c69d716964f756000d71e9b36c10400176057003dc5b811b1d8eb87040c / older-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BR — exact two next-control observations / Boolean-row=false / ActiveActor-row=true / mismatch=0 / adjacent reads=0 / artifact 10267123608
+  R3.18BT — exact published-BS differential / two payload rows / false terminator excluded / repeatability 2/2 / post-stop poison 2/2 / artifact 10336951993
 
 CURRENT_PASS:
-  R3.18BT — published-R3.18BS one-following-payload differential
+  R3.18BU — bounded post-BS next property-control production
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / exact BS payload rows=2 / BQ identity comparison / BR control consumption forbidden
+  bounded production implementation / exact BT-admitted rows=2 / consume exactly one BR-observed control bit / stop immediately after that bit
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4303,3 +4303,14 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - exact production lane remains the two BQ payload witnesses only: Boolean `[11238,11239)` width1/value=true and ActiveActor `[3205,3238)` width33/active=true/actor=1; BP false terminator remains excluded.
 - R3.18BS stops exactly at payload end and consumes zero R3.18BR control bits; no next stream/header/payload, second later control or generalized/repeated cursor was admitted.
 - active R3.18BT is read-only: differentially validate published BS against the immutable two-row BQ authority, preserve BP-false exclusion and stop at published payload end. BR control remains evidence-only and closed to BT consumption.
+
+
+# CURRENT OVERRIDE — 2026-09-14 — R3.18BT CLOSED / R3.18BU ACTIVE
+
+- canonical production remains R3.18BS `5ab14575d0a698d752db35db76f3dbb300cdec8d` / tree `1c0b4c0a50385a34ba730a52a98a89423ff56869`; R3.18BT was read-only and changed no production Rust.
+- R3.18BT exact evidence head `b687f700a7bf00f28671ca3adbb6613b582e7848` / tree `f573860e733689fa03767702f6f1750e222664c3`; runner `34816904695/103889382147` SUCCESS; same-head natural CI `34816904663/103889381782` SUCCESS.
+- immutable R3.18BT artifact `10336951993` / size `5213` / `sha256:fef0df77821475ac3ee5acb417b500aa40708a573d286d30c5c42bcf23ef473d`; workflow blob `69ecc8d1bbf3096be459582203350f541e558561`.
+- Outcome A: published BS matches immutable BQ authority exactly 2/2; Boolean `[11238,11239)` value=true and ActiveActor `[3205,3238)` active=true/actor=1; BP false terminator excluded 1/1; mismatch=0; witness reselection=0; repeatability=2/2; post-payload poison=2/2; following BR control consumed=0.
+- active R3.18BU may compose exactly one R3.18BR-observed property-control bit after a valid exact R3.18BS result on only those two admitted rows: Boolean row=false, ActiveActor row=true.
+- R3.18BU must recompute BS, require exact supplied equality, require `control_start_bit == bs.stop_bit`, read exactly one checked LSB-first bit, return `stop_bit = control_start_bit + 1`, and read nothing after it.
+- BP false terminator, next stream/header/payload, second later control, generic/repeated cursor and all wider semantics remain closed.
