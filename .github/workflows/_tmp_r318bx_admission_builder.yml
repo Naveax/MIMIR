@@ -1,0 +1,169 @@
+name: R3.18BX Admission Continuity Builder
+
+on:
+  push:
+    branches:
+      - automation/r318bx-admission-builder-v1
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: r318bx-admission-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 64f81e106338493476954f207a997a2bc7c25c9a
+      BW_HEAD: 778b12988046da4d186248877bd577eb2a533a58
+      BW_RUN: '34843377101'
+      BW_JOB: '103973337631'
+      BW_CI_RUN: '34843377045'
+      BW_CI_JOB: '103976995152'
+      BW_ARTIFACT: '10346819501'
+      BW_ARTIFACT_SIZE: '3582'
+      BW_ARTIFACT_DIGEST: sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd
+      BX_CANDIDATE: 6520e8c8aa47d14f8c2b457b7552aa6fb763d5fd
+      BX_CANDIDATE_TREE: 757fcf1824a9c0c82d92ef21c7b46498af15db3b
+      BX_CI_RUN: '34844530873'
+      BX_CI_JOB: '103977139973'
+      BX_KNOWLEDGE_RUN: '34844530915'
+      BX_KNOWLEDGE_JOB: '103977139602'
+      BX_PR: '221'
+      BX_PR_CI_RUN: '34844544326'
+      BX_PR_CI_JOB: '103977183134'
+      BX_PR_KNOWLEDGE_RUN: '34844544534'
+      BX_PR_KNOWLEDGE_JOB: '103977183772'
+      BX_PREVALIDATE_HEAD: 6559be76ba9d66cdd949856f78624a836ea57c2e
+      BX_PREVALIDATE_RUN: '34844773598'
+      BX_PREVALIDATE_JOB: '103977940876'
+      CONTRACT_SHA256: 37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576
+      CANDIDATE_BRANCH: continuity/r318bx-admission-v1
+
+    steps:
+      - name: Checkout admission builder
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 3
+
+      - name: Freeze all admission gates
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git fetch origin main
+          if ($LASTEXITCODE -ne 0) { throw "git fetch main failed: $LASTEXITCODE" }
+          $FreshMain = (git rev-parse origin/main).Trim()
+          if ($FreshMain -ne $env:BASE_SHA) { throw "fresh main drift: expected $env:BASE_SHA got $FreshMain" }
+
+          function Assert-Run([string]$RunId, [string]$HeadSha) {
+            $r = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$RunId" | ConvertFrom-Json
+            if ($r.head_sha -ne $HeadSha -or $r.status -ne 'completed' -or $r.conclusion -ne 'success') {
+              throw "run gate mismatch run=$RunId head=$($r.head_sha) status=$($r.status) conclusion=$($r.conclusion)"
+            }
+          }
+          function Assert-Job([string]$JobId) {
+            $j = gh api "repos/$env:GITHUB_REPOSITORY/actions/jobs/$JobId" | ConvertFrom-Json
+            if ($j.status -ne 'completed' -or $j.conclusion -ne 'success') {
+              throw "job gate mismatch job=$JobId status=$($j.status) conclusion=$($j.conclusion)"
+            }
+          }
+
+          Assert-Run $env:BW_RUN $env:BW_HEAD
+          Assert-Job $env:BW_JOB
+          Assert-Run $env:BW_CI_RUN $env:BW_HEAD
+          Assert-Job $env:BW_CI_JOB
+
+          $artifact = gh api "repos/$env:GITHUB_REPOSITORY/actions/artifacts/$env:BW_ARTIFACT" | ConvertFrom-Json
+          if ([string]$artifact.size_in_bytes -ne $env:BW_ARTIFACT_SIZE) { throw 'BW artifact size mismatch' }
+          if ([string]$artifact.digest -ne $env:BW_ARTIFACT_DIGEST) { throw 'BW artifact digest mismatch' }
+          if ([string]$artifact.workflow_run.head_sha -ne $env:BW_HEAD) { throw 'BW artifact head mismatch' }
+          if ([bool]$artifact.expired) { throw 'BW artifact expired' }
+
+          $candidate = gh api "repos/$env:GITHUB_REPOSITORY/commits/$env:BX_CANDIDATE" | ConvertFrom-Json
+          if ($candidate.parents[0].sha -ne $env:BASE_SHA) { throw 'BX candidate parent mismatch' }
+          if ($candidate.commit.tree.sha -ne $env:BX_CANDIDATE_TREE) { throw 'BX candidate tree mismatch' }
+
+          Assert-Run $env:BX_CI_RUN $env:BX_CANDIDATE
+          Assert-Job $env:BX_CI_JOB
+          Assert-Run $env:BX_KNOWLEDGE_RUN $env:BX_CANDIDATE
+          Assert-Job $env:BX_KNOWLEDGE_JOB
+          Assert-Run $env:BX_PR_CI_RUN $env:BX_CANDIDATE
+          Assert-Job $env:BX_PR_CI_JOB
+          Assert-Run $env:BX_PR_KNOWLEDGE_RUN $env:BX_CANDIDATE
+          Assert-Job $env:BX_PR_KNOWLEDGE_JOB
+          Assert-Run $env:BX_PREVALIDATE_RUN $env:BX_PREVALIDATE_HEAD
+          Assert-Job $env:BX_PREVALIDATE_JOB
+
+          $pr = gh api "repos/$env:GITHUB_REPOSITORY/pulls/$env:BX_PR" | ConvertFrom-Json
+          if ($pr.head.sha -ne $env:BX_CANDIDATE -or $pr.base.sha -ne $env:BASE_SHA) { throw 'BX validation PR head/base mismatch' }
+
+          Write-Host 'R3_18BX_ALL_ADMISSION_GATES=PASS'
+
+      - name: Build clean admission candidate
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Sync = Join-Path $env:RUNNER_TEMP 'r318bx_admission_sync.py'
+          Copy-Item tools/_tmp_r318bx_admission_sync.py $Sync
+
+          git switch --detach $env:BASE_SHA
+          if ($LASTEXITCODE -ne 0) { throw "detach base failed: $LASTEXITCODE" }
+          git switch -c $env:CANDIDATE_BRANCH
+          if ($LASTEXITCODE -ne 0) { throw "candidate branch creation failed: $LASTEXITCODE" }
+
+          python $Sync
+          if ($LASTEXITCODE -ne 0) { throw "admission sync failed: $LASTEXITCODE" }
+
+          $contractHash = (Get-FileHash -Algorithm SHA256 'docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json').Hash.ToLowerInvariant()
+          if ($contractHash -ne $env:CONTRACT_SHA256) { throw "final contract hash mismatch: $contractHash" }
+
+          $ExpectedFiles = @(
+            'MIMIR_CONTINUE_HERE.md',
+            'MIMIR_KNOWLEDGE_GRAPH.md',
+            'docs/continuity/MIMIR_BOUNDARY_LOCKS.md',
+            'docs/continuity/MIMIR_CONTINUITY_STATE.json',
+            'docs/continuity/MIMIR_CURRENT_STATE.md',
+            'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md',
+            'docs/continuity/MIMIR_PROGRESS_LEDGER.md',
+            'docs/continuity/MIMIR_R3_18BW_DECISION.md',
+            'docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json',
+            'docs/continuity/MIMIR_R3_18BX_EXECUTION_SPEC.md',
+            'docs/continuity/MIMIR_R3_18BX_DECISION.md',
+            'docs/continuity/MIMIR_R3_18BY_EXECUTION_SPEC.md'
+          )
+          $Tracked = @(git diff --name-only)
+          $Untracked = @(git ls-files --others --exclude-standard)
+          $Changed = @($Tracked + $Untracked | Sort-Object -Unique)
+          $ScopeDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($Changed | Sort-Object))
+          if ($ScopeDiff.Count -ne 0) { throw "unexpected admission scope: $($Changed -join ', ')" }
+
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'git diff --check failed' }
+          pwsh -NoProfile -File scripts/verify_repo.ps1
+          if ($LASTEXITCODE -ne 0) { throw "repository verification failed: $LASTEXITCODE" }
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          if ($LASTEXITCODE -ne 0) { throw "knowledge archive verification failed: $LASTEXITCODE" }
+
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- $ExpectedFiles
+          if ($LASTEXITCODE -ne 0) { throw "git add failed: $LASTEXITCODE" }
+          $Cached = @(git diff --cached --name-only)
+          $CachedDiff = @(Compare-Object ($ExpectedFiles | Sort-Object) ($Cached | Sort-Object))
+          if ($CachedDiff.Count -ne 0) { throw "unexpected cached scope: $($Cached -join ', ')" }
+
+          git commit -m 'Admit R3.18BW and R3.18BX; open R3.18BY'
+          if ($LASTEXITCODE -ne 0) { throw "git commit failed: $LASTEXITCODE" }
+          $CandidateSha = (git rev-parse HEAD).Trim()
+          $ParentSha = (git rev-parse HEAD^).Trim()
+          if ($ParentSha -ne $env:BASE_SHA) { throw "candidate parent drift: $ParentSha" }
+
+          git push origin "HEAD:refs/heads/$env:CANDIDATE_BRANCH"
+          if ($LASTEXITCODE -ne 0) { throw "candidate push failed: $LASTEXITCODE" }
+          Write-Host "R3_18BX_ADMISSION_CANDIDATE_SHA=$CandidateSha"
