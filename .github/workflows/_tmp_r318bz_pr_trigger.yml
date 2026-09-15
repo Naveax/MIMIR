@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   admit:
-    if: github.event.head_commit.message == 'Repair R3.18BZ admission trigger'
+    if: github.event.head_commit.message == 'Normalize R3.18BZ admission docs whitespace'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -106,6 +106,10 @@ jobs:
           body = textwrap.dedent(body)
           compile(body, '<r318bz-admission-patch>', 'exec')
           exec(body, {'__name__': '__main__'})
+
+          ca = Path('docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md')
+          normalized = '\n'.join(line.rstrip() for line in ca.read_text(encoding='utf-8').splitlines()) + '\n'
+          ca.write_text(normalized, encoding='utf-8', newline='\n')
           PY
 
       - name: Validate archive and staged docs-only final tree
