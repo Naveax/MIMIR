@@ -1,21 +1,23 @@
-name: R3.18BZ Admission PR Trigger
+name: R3.18BZ Admission Repair Runner
 
 on:
-  pull_request:
-    types: [opened]
-    branches: [main]
+  push:
+    branches:
+      - admit/r318bz-outcome-a
+    paths:
+      - .github/workflows/_tmp_r318bz_pr_trigger.yml
 
 permissions:
   contents: write
   actions: read
 
 concurrency:
-  group: r318bz-outcome-a-admission-pr
+  group: r318bz-outcome-a-admission-repair
   cancel-in-progress: false
 
 jobs:
   admit:
-    if: github.event.pull_request.head.ref == 'admit/r318bz-outcome-a'
+    if: github.event.head_commit.message == 'Repair R3.18BZ admission trigger'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -31,17 +33,17 @@ jobs:
       EVIDENCE_MANIFEST_SHA256: f298edbe583571ac1a1b477d74fde61f76b92983b0e4016a01639fd2de8930af
 
     steps:
-      - name: Checkout exact PR head
+      - name: Checkout exact admission branch
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      - name: Freeze main and immutable R3.18BZ evidence
+      - name: Freeze fresh main and immutable R3.18BZ evidence
         shell: bash
         run: |
           set -euo pipefail
           eq() { [ "$1" = "$2" ] || { echo "mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+
           eq "$(git merge-base HEAD "$BASE_SHA")" "$BASE_SHA"
           eq "$(git rev-parse "$BASE_SHA^{tree}")" "$BASE_TREE"
           eq "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" "$BASE_SHA"
@@ -87,7 +89,7 @@ jobs:
             grep -Fx "$line" "$out/r3_18bz_aggregate.txt"
           done
 
-      - name: Reuse the frozen admission patch script
+      - name: Reuse frozen admission patch
         shell: bash
         run: |
           set -euo pipefail
@@ -106,7 +108,7 @@ jobs:
           exec(body, {'__name__': '__main__'})
           PY
 
-      - name: Validate archive and exact docs-only surface
+      - name: Validate archive and staged docs-only final tree
         shell: bash
         run: |
           set -euo pipefail
@@ -116,8 +118,11 @@ jobs:
 
           git rm .github/workflows/_tmp_r318bz_admission_builder.yml
           git rm .github/workflows/_tmp_r318bz_pr_trigger.yml
+          git add -A
+          git diff --cached --check
 
-          mapfile -t changed < <(git diff --name-only "$BASE_SHA" | sort)
+          mapfile -t changed < <(git diff --cached --name-only "$BASE_SHA" | sort)
+          printf '%s\n' "${changed[@]}"
           expected=(
             MIMIR_CONTINUE_HERE.md
             MIMIR_KNOWLEDGE_GRAPH.md
@@ -135,7 +140,7 @@ jobs:
             test "${changed[$i]}" = "${expected_sorted[$i]}"
           done
 
-          test -z "$(git diff --name-only "$BASE_SHA" -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures test_corpus || true)"
+          test -z "$(git diff --cached --name-only "$BASE_SHA" -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures test_corpus || true)"
 
       - name: Commit canonical admission surface
         shell: bash
@@ -143,7 +148,5 @@ jobs:
           set -euo pipefail
           git config user.name 'MIMIR GitHub Builder'
           git config user.email 'actions@users.noreply.github.com'
-          git add -A
-          git diff --cached --check
           git commit -m 'Admit R3.18BZ and open R3.18CA'
           git push origin HEAD:admit/r318bz-outcome-a
