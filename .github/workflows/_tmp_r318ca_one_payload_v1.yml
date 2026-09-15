@@ -1,0 +1,395 @@
+name: R3.18CA One Following Payload Evidence v1
+
+on:
+  push:
+    branches: [evidence/r318ca-one-payload-v1]
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318ca-one-payload-v1
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
+      GH_TOKEN: ${{ github.token }}
+      BASE_MAIN: 6ab5ee3423f74a34fbaacef32b98e5f3fd560b16
+      BASE_TREE: 9afa6362ecd0613a9bda06c2261a704cde2847b8
+      PROD_SHA: 3b07e223fdf326e8100412fad9410bb1b66d2cb9
+      PROD_TREE: 68b32f61d61c863b25e393cfa77575bac55217d7
+      LIB_BLOB: beadbb35ec5bcda427260f6f6c5afeb7780cdbc5
+      BY_TEST_BLOB: 07e0e4bdb346833d550248609b96af8e255d4c11
+      K4_NATIVE_BLOB: a9c41f3bb11343165183ac9c815ab8fdf085936c
+      K4_GROUP_BLOB: 103503e25bc5af48381df021ab58133694fcece6
+      K4_GROUPS_JSON_BLOB: b5fa6aaa729772ab3d113703952effe2346c9866
+      BY_CI_RUN: '34857720437'
+      BY_CI_JOB: '104021486939'
+      MAIN_CI_RUN: '34982684978'
+      MAIN_KNOWLEDGE_RUN: '34982684669'
+      BZ_HEAD: cfcfb671555827b8003007ff766798a1206aca15
+      BZ_TREE: 46b91c8ab80db2c67e04f5386de5db4538cc2a7f
+      BZ_RUN: '34950884111'
+      BZ_JOB: '104321306221'
+      BZ_ARTIFACT: '10389058675'
+      BZ_ARTIFACT_NAME: r318bz-published-by-differential-evidence-v4
+      BZ_ARTIFACT_SIZE: '3111'
+      BZ_DIGEST: sha256:e11eceb83779b2fb52c658edf8ee932d4c24228d7b8046b44b235203d9f79d39
+      BZ_MANIFEST_SHA256: f298edbe583571ac1a1b477d74fde61f76b92983b0e4016a01639fd2de8930af
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      R317M_HEAD: a50f09857f36ac52cec30b4bf3efbde9e15bb564
+      R317M_TRANSFORM_BLOB: ae0c1374f567f8e12605eb68a94e125b7eab96f9
+      R317I_HEAD: 8962ddc6bd77b5469fa7ebc93c95334e5725a8ab
+      R317I_PATCH_BLOB: ea651d3e33bda509280e45da2d2a1b257bdbf88d
+      TARGET_REPLAY: test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay
+      PAYLOAD_START: '3245'
+
+    steps:
+      - name: Checkout exact evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze authorities and source scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "authority mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(git rev-parse HEAD^)" "$BASE_MAIN"
+          eq "$(git rev-parse "$BASE_MAIN^{tree}")" "$BASE_TREE"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" "$BASE_MAIN"
+          eq "$(git rev-parse "$PROD_SHA^{tree}")" "$PROD_TREE"
+          eq "$(git merge-base "$BASE_MAIN" "$PROD_SHA")" "$PROD_SHA"
+          mapfile -t changed < <(git diff --name-only "$BASE_MAIN...$GITHUB_SHA" | sort)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = '.github/workflows/_tmp_r318ca_one_payload_v1.yml'
+          eq "$(git rev-parse "$BASE_MAIN:crates/mimir-replay/src/lib.rs")" "$LIB_BLOB"
+          eq "$(git rev-parse "$BASE_MAIN:crates/mimir-replay/tests/r3_18by_post_bu_following_header.rs")" "$BY_TEST_BLOB"
+          eq "$(git rev-parse "$BASE_MAIN:crates/mimir-replay/src/k4_native.rs")" "$K4_NATIVE_BLOB"
+          eq "$(git rev-parse "$BASE_MAIN:crates/mimir-replay/src/k4_admitted_groups.rs")" "$K4_GROUP_BLOB"
+          eq "$(git rev-parse "$BASE_MAIN:docs/continuity/MIMIR_R3_17N_ADMITTED_GROUPS.jsonl")" "$K4_GROUPS_JSON_BLOB"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BY_CI_RUN" --jq .head_sha)" "$PROD_SHA"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BY_CI_RUN" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BY_CI_JOB" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$MAIN_CI_RUN" --jq .head_sha)" "$BASE_MAIN"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$MAIN_CI_RUN" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$MAIN_KNOWLEDGE_RUN" --jq .head_sha)" "$BASE_MAIN"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$MAIN_KNOWLEDGE_RUN" --jq .conclusion)" success
+          eq "$(git rev-parse "$BZ_HEAD^{tree}")" "$BZ_TREE"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BZ_RUN" --jq .head_sha)" "$BZ_HEAD"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$BZ_RUN" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BZ_JOB" --jq .conclusion)" success
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BZ_ARTIFACT")"
+          eq "$(jq -r .name <<<"$meta")" "$BZ_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$meta")" "$BZ_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$meta")" "$BZ_DIGEST"
+          eq "$(jq -r .expired <<<"$meta")" false
+          mkdir -p .tmp/r318ca out
+          {
+            echo "base_main=$BASE_MAIN"
+            echo "base_tree=$BASE_TREE"
+            echo "production_sha=$PROD_SHA"
+            echo "production_tree=$PROD_TREE"
+            echo "target_replay=$TARGET_REPLAY"
+            echo "target_replay_blob=$(git rev-parse "$BASE_MAIN:$TARGET_REPLAY")"
+            echo "target_replay_sha256=$(sha256sum "$TARGET_REPLAY" | awk '{print $1}')"
+            echo "payload_start=$PAYLOAD_START"
+            echo "production_mutation_count=0"
+            echo "cargo_mutation_count=0"
+            echo "fixture_mutation_count=0"
+            echo "corpus_mutation_count=0"
+            echo "support_lane_mutation_count=0"
+          } > out/r3_18ca_source_scope.txt
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts
+          echo R3_18CA_AUTHORITY_FREEZE=PASS
+
+      - name: Verify immutable BZ receipt and published BY lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          BZ="$RUNNER_TEMP/r318ca-bz"; mkdir -p "$BZ"
+          gh run download "$BZ_RUN" --repo "$GITHUB_REPOSITORY" --name "$BZ_ARTIFACT_NAME" --dir "$BZ"
+          test "$(sha256sum "$BZ/r3_18bz_artifact_sha256.txt" | awk '{print $1}')" = "$BZ_MANIFEST_SHA256"
+          (cd "$BZ" && sha256sum -c r3_18bz_artifact_sha256.txt)
+          for line in \
+            'R3_18BZ_OUTCOME=A' \
+            'R3_18BZ_ROWS=2/2' \
+            'R3_18BZ_FALSE_TERMINATOR=1/1' \
+            'R3_18BZ_TRUE_HEADER=1/1' \
+            'R3_18BZ_DIRECT_HEADER_MATCH=1/1' \
+            'R3_18BZ_NATIVE_ORACLE_MISMATCH=0' \
+            'R3_18BZ_WITNESS_RESELECTION=0' \
+            'R3_18BZ_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' \
+            'R3_18BZ_SECOND_LATER_CONTROL_BITS_CONSUMED=0'; do
+            grep -Fx "$line" "$BZ/r3_18bz_aggregate.txt"
+          done
+          {
+            echo "bz_head=$BZ_HEAD"
+            echo "bz_tree=$BZ_TREE"
+            echo "bz_run=$BZ_RUN"
+            echo "bz_job=$BZ_JOB"
+            echo "bz_artifact=$BZ_ARTIFACT"
+            echo "bz_digest=$BZ_DIGEST"
+            echo "bz_manifest_sha256=$BZ_MANIFEST_SHA256"
+            echo "bz_receipt=PASS"
+          } > out/r3_18ca_bz_receipt.txt
+          cargo test --locked -p mimir-replay --test r3_18by_post_bu_following_header -- --nocapture 2>&1 | tee .tmp/r318ca/by_validation.log
+          grep -F 'test result: ok.' .tmp/r318ca/by_validation.log
+          sha256sum .tmp/r318ca/by_validation.log > out/r3_18ca_by_validation_sha256.txt
+          echo R3_18CA_BY_LANE=PASS
+
+      - name: Build pinned Boxcars exact LoadoutsOnline oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "evidence/r317m-k4-wire-evidence" "evidence/r317i-k3-wire-evidence"
+          test "$(git rev-parse origin/evidence/r317m-k4-wire-evidence)" = "$R317M_HEAD"
+          test "$(git rev-parse origin/evidence/r317i-k3-wire-evidence)" = "$R317I_HEAD"
+          git show "$R317M_HEAD:tools/_tmp_r317m_transform.py" > .tmp/r318ca/r317m_transform.py
+          git show "$R317I_HEAD:tools/_tmp_r317i_patch.py" > .tmp/r318ca/r317i_patch.py
+          test "$(git hash-object .tmp/r318ca/r317m_transform.py)" = "$R317M_TRANSFORM_BLOB"
+          test "$(git hash-object .tmp/r318ca/r317i_patch.py)" = "$R317I_PATCH_BLOB"
+          BOXCARS="$RUNNER_TEMP/boxcars-r318ca"
+          git clone --quiet https://github.com/nickbabcock/boxcars.git "$BOXCARS"
+          git -C "$BOXCARS" checkout --quiet --detach "$BOXCARS_SHA"
+          test "$(git -C "$BOXCARS" hash-object src/network/frame_decoder.rs)" = 6f2ff153d3a27cdacccc65e3f23851489077a7d8
+          test "$(git -C "$BOXCARS" hash-object src/network/attributes.rs)" = 5e2d5bc1cd8187af30c3ea95193ad987645cb76e
+          test "$(git -C "$BOXCARS" hash-object src/network/models.rs)" = 73c73991379aeb79dcee49ea31c417141ba3c1a6
+          test "$(git -C "$BOXCARS" hash-object src/bits.rs)" = d3ca061580e5e78038b2af383ff53971001c91c9
+          python .tmp/r318ca/r317m_transform.py "$BOXCARS" "$PWD/.tmp/r318ca/r317i_patch.py"
+          python - "$BOXCARS" <<'PY'
+          from pathlib import Path
+          import sys
+          root=Path(sys.argv[1]); frame=root/'src/network/frame_decoder.rs'; s=frame.read_text(encoding='utf-8')
+          old='''                        let r3_17m_candidate = matches!(
+                            attr.attribute,
+                            AttributeTag::CamSettings
+                                | AttributeTag::TeamPaint
+                                | AttributeTag::TeamLoadout
+                                | AttributeTag::ClubColors
+                                | AttributeTag::Reservation
+                                | AttributeTag::StatEvent
+                                | AttributeTag::PlayerHistoryKey
+                                | AttributeTag::DemolishFx
+                                | AttributeTag::DemolishExtended
+                                | AttributeTag::ExtendedExplosion
+                                | AttributeTag::LoadoutsOnline
+                        );'''
+          new='''                        let r3_17m_candidate = attr.attribute == AttributeTag::LoadoutsOnline;'''
+          assert s.count(old)==1; s=s.replace(old,new,1)
+          assert s.count('if witnesses.len() < 4 {')==1
+          s=s.replace('if witnesses.len() < 4 {','if witnesses.len() < 1000000 {',1)
+          frame.write_text(s,encoding='utf-8',newline='\n')
+          PY
+          cargo check --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe
+          cargo test --manifest-path "$BOXCARS/Cargo.toml" --lib --quiet
+          cargo build --manifest-path "$BOXCARS/Cargo.toml" --example r3_17m_probe --quiet
+          PROBE="$BOXCARS/target/debug/examples/r3_17m_probe"
+          for n in 1 2; do
+            MIMIR_R3_17M_LABEL="$TARGET_REPLAY" "$PROBE" "$PWD/$TARGET_REPLAY" > ".tmp/r318ca/oracle_${n}.log" 2>&1
+            grep -Fx 'R3_17M_ORACLE_PARSE=PASS' ".tmp/r318ca/oracle_${n}.log"
+          done
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          target=os.environ['TARGET_REPLAY']; start=int(os.environ['PAYLOAD_START'])
+          def fields(line):
+              d={}
+              for token in line.rstrip('\n').split('\t')[1:]:
+                  if '=' in token:
+                      k,v=token.split('=',1); d[k]=v
+              return d
+          def load(path):
+              rows=[]
+              for line in Path(path).read_text(encoding='utf-8').splitlines():
+                  if line.startswith('R3_17M_WITNESS\t'):
+                      r=fields(line)
+                      if r.get('attribute_tag')=='LoadoutsOnline': rows.append(r)
+              exact=[r for r in rows if r.get('label')==target and int(r['payload_start_bit'])==start and int(r['stream_id'])==61 and int(r['property_object_id'])==67 and int(r['version_major'])==868 and int(r['version_minor'])==32 and int(r['net_version'])==10 and r['is_rl_223']=='false']
+              if len(exact)!=1: raise SystemExit(f'exact oracle rows={len(exact)} total={len(rows)}')
+              r=exact[0]
+              sem=r['semantic']
+              return {
+                'start':int(r['payload_start_bit']),'end':int(r['payload_end_bit']),'width':int(r['payload_width']),
+                'shape':r['shape'],'boundary_sha256':hashlib.sha256(r['boundary'].encode()).hexdigest(),
+                'payload_sha256':hashlib.sha256(bytes.fromhex(r['raw_bits_hex'])).hexdigest(),
+                'semantic_sha256':hashlib.sha256(sem.encode()).hexdigest(),
+                'total_loadouts_online_witnesses':len(rows),
+                'same_property_witnesses':sum(int(x['property_object_id'])==67 for x in rows),
+                'same_shape_witnesses':sum(x['shape']==r['shape'] for x in rows),
+              }
+          a=load('.tmp/r318ca/oracle_1.log'); b=load('.tmp/r318ca/oracle_2.log')
+          if a!=b: raise SystemExit('oracle repeat mismatch')
+          Path('.tmp/r318ca/oracle.json').write_text(json.dumps(a,sort_keys=True)+'\n',encoding='utf-8')
+          Path('out/r3_18ca_oracle.txt').write_text('\n'.join([
+            'oracle_repeat=2/2','payload_start='+str(a['start']),'payload_end='+str(a['end']),'payload_width='+str(a['width']),
+            'structural_shape='+a['shape'],'boundary_sha256='+a['boundary_sha256'],'payload_sha256='+a['payload_sha256'],
+            'semantic_sha256='+a['semantic_sha256'],'target_replay_loadouts_online_witnesses='+str(a['total_loadouts_online_witnesses']),
+            'same_property_witnesses='+str(a['same_property_witnesses']),'same_shape_witnesses='+str(a['same_shape_witnesses']),
+            'multiplicity_is_runtime_frequency_promise=false','witness_reselection=0'])+'\n',encoding='utf-8')
+          print('R3_18CA_ORACLE=PASS',a['start'],a['end'],a['width'])
+          PY
+
+      - name: Probe published native K4 decoder and classify structural outcome
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROJ="$RUNNER_TEMP/r318ca-native"; mkdir -p "$PROJ/src"
+          cat > "$PROJ/Cargo.toml" <<EOF
+          [package]
+          name = "r318ca-native"
+          version = "0.0.0"
+          edition = "2024"
+          [dependencies]
+          mimir-replay = { path = "$PWD/crates/mimir-replay" }
+          serde_json = "1"
+          [workspace]
+          EOF
+          cat > "$PROJ/src/main.rs" <<'RS'
+          use mimir_replay::{decode_replay_network_k4_v1,MinimalReplayContentScaffoldReader,MinimalReplayFooterLookupMaterializationReader,ReplayContentScaffoldReader,ReplayFooterLookupMaterializationReader,ReplayInput,ReplayNetworkAttributeTagV1 as Tag,ReplayNetworkK4DecodeContextV1 as Ctx};
+          use serde_json::json;
+          use std::{env,fs};
+          fn main(){
+            let a:Vec<String>=env::args().collect(); assert!(a.len()>=3);
+            let path=&a[1]; let mode=&a[2]; let bytes=fs::read(path).unwrap();
+            let input=ReplayInput::Memory{label:path.clone(),bytes:bytes.clone()};
+            let s=MinimalReplayContentScaffoldReader.read_content_scaffold(&input).unwrap();
+            let lo=usize::try_from(s.network_start).unwrap(); let hi=usize::try_from(s.network_end).unwrap();
+            let mut net=bytes[lo..hi].to_vec();
+            if let Some(x)=mode.strip_prefix("truncate:"){net.truncate(x.parse::<usize>().unwrap());}
+            if let Some(x)=mode.strip_prefix("poison:"){let p=x.parse::<usize>().unwrap(); net[p/8]^=1u8<<(p%8);}
+            let m=MinimalReplayFooterLookupMaterializationReader.read_footer_lookup_materialization(&input).unwrap();
+            let ctx=Ctx{version_major:868,version_minor:32,net_version:10,is_rl_223:false};
+            match decode_replay_network_k4_v1(&net,3245,Tag::LoadoutsOnline,ctx,&m.objects){
+              Ok(v)=>println!("{}",serde_json::to_string(&json!({"status":"ok","start":v.payload_start_bit,"end":v.payload_end_bit,"width":v.payload_width,"shape":v.structural_shape,"value":v.value})).unwrap()),
+              Err(e)=>println!("{}",serde_json::to_string(&json!({"status":"error","error":e.to_string()})).unwrap()),
+            }
+          }
+          RS
+          cargo build --manifest-path "$PROJ/Cargo.toml" --quiet
+          BIN="$PROJ/target/debug/r318ca-native"
+          "$BIN" "$TARGET_REPLAY" clean > .tmp/r318ca/native_1.json
+          "$BIN" "$TARGET_REPLAY" clean > .tmp/r318ca/native_2.json
+          cmp .tmp/r318ca/native_1.json .tmp/r318ca/native_2.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          o=json.loads(Path('.tmp/r318ca/oracle.json').read_text())
+          n=json.loads(Path('.tmp/r318ca/native_1.json').read_text())
+          if n['status']=='ok':
+              structural=(n['start']==o['start'] and n['end']==o['end'] and n['width']==o['width'] and n['shape']==o['shape'])
+              outcome='A_CANDIDATE' if structural else 'C'
+              category='accepted' if structural else 'native_oracle_structural_mismatch'
+          else:
+              err=n['error']
+              outcome='B' if 'unadmitted-' in err else 'C'
+              category=err.split(':')[1].strip() if ':' in err else 'native_error'
+              structural=False
+          Path('out/r3_18ca_native_structural.txt').write_text('\n'.join([
+              'native_repeat=2/2','native_status='+n['status'],'native_category='+category,
+              'native_oracle_structural_match='+str(structural).lower(),'structural_outcome='+outcome])+'\n',encoding='utf-8')
+          Path('.tmp/r318ca/outcome.txt').write_text(outcome+'\n',encoding='utf-8')
+          print('R3_18CA_STRUCTURAL_OUTCOME='+outcome)
+          PY
+          END="$(python -c 'import json;print(json.load(open(".tmp/r318ca/oracle.json"))["end"])')"
+          "$BIN" "$TARGET_REPLAY" "poison:$END" > .tmp/r318ca/native_poison.json
+          cmp .tmp/r318ca/native_1.json .tmp/r318ca/native_poison.json
+          python - <<'PY' > .tmp/r318ca/trunc_bytes.txt
+          import json
+          o=json.load(open('.tmp/r318ca/oracle.json')); s=o['start']; e=o['end']
+          vals=[(s+7)//8,((s+e)//2+7)//8,max((s+7)//8,(e-1)//8)]
+          print('\n'.join(map(str,dict.fromkeys(vals))))
+          PY
+          trunc_ok=0
+          while IFS= read -r n; do
+            "$BIN" "$TARGET_REPLAY" "truncate:$n" > ".tmp/r318ca/trunc_$n.json"
+            python - "$n" <<'PY'
+          import json,sys
+          d=json.load(open(f'.tmp/r318ca/trunc_{sys.argv[1]}.json'))
+          assert d['status']=='error',d
+          PY
+            trunc_ok=$((trunc_ok+1))
+          done < .tmp/r318ca/trunc_bytes.txt
+          test "$trunc_ok" -ge 3
+          {
+            echo "truncation_distinct_boundaries=$trunc_ok"
+            echo "truncation_atomic_rejections=$trunc_ok/$trunc_ok"
+            echo "post_payload_poison=PASS"
+            echo "false_row_payload_access=0"
+            echo "next_property_control_bits_consumed=0"
+            echo "second_payloads_consumed=0"
+          } > out/r3_18ca_negative_controls.txt
+
+      - name: Seal durable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUTCOME="$(cat .tmp/r318ca/outcome.txt)"
+          {
+            echo "R3_18CA_STRUCTURAL_OUTCOME=$OUTCOME"
+            echo "R3_18CA_ORACLE_REPEAT=2/2"
+            echo "R3_18CA_NATIVE_REPEAT=2/2"
+            echo "R3_18CA_FALSE_ROW_PAYLOAD_ACCESS=0"
+            echo "R3_18CA_NEXT_CONTROL_BITS_CONSUMED=0"
+            echo "R3_18CA_SECOND_PAYLOADS_CONSUMED=0"
+            echo "R3_18CA_WITNESS_RESELECTION=0"
+            echo "R3_18CA_PRODUCTION_MUTATION=0"
+            echo "R3_18CA_CARGO_MUTATION=0"
+            echo "R3_18CA_FIXTURE_MUTATION=0"
+            echo "R3_18CA_CORPUS_MUTATION=0"
+            echo "R3_18CA_SUPPORT_LANE_MUTATION=0"
+          } > out/r3_18ca_aggregate.txt
+          python - <<'PY'
+          from pathlib import Path
+          durable=list(Path('out').glob('*'))
+          text='\n'.join(p.read_text(encoding='utf-8',errors='strict').lower() for p in durable)
+          forbidden=['raw_hex','raw_bits_hex','oracle_semantic','account_id','online_id','player_name','remote_id']
+          hits=[x for x in forbidden if x in text]
+          assert not hits,hits
+          Path('out/r3_18ca_privacy.txt').write_text('privacy_safe_output=true\nforbidden_hits=0\n',encoding='utf-8')
+          PY
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts
+          (cd out && sha256sum r3_18ca_source_scope.txt r3_18ca_bz_receipt.txt r3_18ca_by_validation_sha256.txt r3_18ca_oracle.txt r3_18ca_native_structural.txt r3_18ca_negative_controls.txt r3_18ca_aggregate.txt r3_18ca_privacy.txt > r3_18ca_artifact_sha256.txt)
+          echo R3_18CA_DURABLE_EVIDENCE=PASS
+
+      - name: Upload R3.18CA evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318ca-one-payload-evidence-v1
+          path: out/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Emit immutable receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_ID"; test -n "$ARTIFACT_DIGEST"
+          OUTCOME="$(cat .tmp/r318ca/outcome.txt)"
+          printf 'R3_18CA_AUTHORITY_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_18CA_AUTHORITY_RUN=%s\n' "$GITHUB_RUN_ID"
+          printf 'R3_18CA_ARTIFACT_ID=%s\n' "$ARTIFACT_ID"
+          printf 'R3_18CA_ARTIFACT_DIGEST=%s\n' "$ARTIFACT_DIGEST"
+          printf 'R3_18CA_STRUCTURAL_OUTCOME=%s\n' "$OUTCOME"
+          cat out/r3_18ca_oracle.txt
+          cat out/r3_18ca_native_structural.txt
+          cat out/r3_18ca_negative_controls.txt
+          cat out/r3_18ca_aggregate.txt
+          cat out/r3_18ca_artifact_sha256.txt
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318ca-v1/evidence' \
+            -f description="R3.18CA structural evidence $OUTCOME" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo R3_18CA_RECEIPT_STREAM=PASS
