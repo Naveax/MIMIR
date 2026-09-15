@@ -1,0 +1,427 @@
+name: R3.18BZ Published BY Differential Evidence v4
+
+on:
+  push:
+    branches: [evidence/r318bz-published-by-differential-v4]
+
+permissions:
+  contents: read
+  actions: read
+  statuses: write
+
+concurrency:
+  group: r318bz-published-by-differential-v4
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: 1.85.0
+      CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 3c90dd10fb775ca45c8bd23b8330290f6ebafbbc
+      BASE_TREE: d2ef61ef1c34630db6139dde28f6d952e0a67e4a
+      PROD_SHA: 3b07e223fdf326e8100412fad9410bb1b66d2cb9
+      PROD_TREE: 68b32f61d61c863b25e393cfa77575bac55217d7
+      LIB_BLOB: beadbb35ec5bcda427260f6f6c5afeb7780cdbc5
+      BY_TEST_BLOB: 07e0e4bdb346833d550248609b96af8e255d4c11
+      V1_HEAD: 6f88ac31fad2498e761d6c0c3c91f63016240204
+      V1_TREE: 95d5128af97bcc689bd874eeb776b8b10080fbc5
+      V1_RUN: '34949240686'
+      V1_JOB: '104315973361'
+      V1_ARTIFACT: '10388082827'
+      V1_ARTIFACT_NAME: r318bz-published-by-differential-evidence
+      V1_ARTIFACT_SIZE: '2346'
+      V1_DIGEST: sha256:139d52f24f8a42a6651f6328a96a3c88c19fbc10456914dd605d208b6715969e
+      V1_MANIFEST_SHA256: 905d54d8a251e6dd14553f1c13d1c270aaf1bd74e91b8f749130c95e7a7d79b8
+      BW_HEAD: 778b12988046da4d186248877bd577eb2a533a58
+      BW_RUN: '34843377101'
+      BW_JOB: '103973337631'
+      BW_ARTIFACT: '10346819501'
+      BW_ARTIFACT_NAME: r318bw-one-following-header-evidence
+      BW_DIGEST: sha256:ee8a1878241b45765a7fa57c64c179c40090836096055fc5626a58724b5796fd
+      BW_MANIFEST_SHA256: f4bd2b805ab452fb4ab29145b21561fe67746af7b4927f40e37db64fc92ce2be
+      BX_CONTRACT_SHA256: 37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576
+
+    steps:
+      - name: Checkout exact v4 evidence head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Freeze canonical authorities and v1 immutable core
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "authority mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(git rev-parse HEAD^)" "$BASE_SHA"
+          eq "$(git rev-parse "$BASE_SHA^{tree}")" "$BASE_TREE"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" "$BASE_SHA"
+          eq "$(git rev-parse "$PROD_SHA^{tree}")" "$PROD_TREE"
+          eq "$(git merge-base "$BASE_SHA" "$PROD_SHA")" "$PROD_SHA"
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA...$GITHUB_SHA" | sort)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = '.github/workflows/_tmp_r318bz_published_by_differential_v4.yml'
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/src/lib.rs?ref=$BASE_SHA" --jq .sha)" "$LIB_BLOB"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/contents/crates/mimir-replay/tests/r3_18by_post_bu_following_header.rs?ref=$BASE_SHA" --jq .sha)" "$BY_TEST_BLOB"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V1_RUN" --jq .head_sha)" "$V1_HEAD"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V1_RUN" --jq .status)" completed
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$V1_RUN" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$V1_JOB" --jq .run_id)" "$V1_RUN"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$V1_JOB" --jq .conclusion)" success
+          v1_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$V1_ARTIFACT")"
+          eq "$(jq -r .name <<<"$v1_meta")" "$V1_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$v1_meta")" "$V1_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$v1_meta")" "$V1_DIGEST"
+          eq "$(jq -r .workflow_run.id <<<"$v1_meta")" "$V1_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$v1_meta")" "$V1_HEAD"
+          echo R3_18BZ_V4_AUTHORITY_FREEZE=PASS
+
+      - name: Mark v4 evidence pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=pending -f context='r318bz-v4/evidence' \
+            -f description='R3.18BZ completeness evidence running' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+
+      - name: Install Rust floor
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustc +1.85.0 --version | grep -F 'rustc 1.85.0 '
+
+      - name: Verify v1 core and exact BW reconciliation
+        shell: bash
+        run: |
+          set -euo pipefail
+          V1="$RUNNER_TEMP/r318bz-v1"; BW="$RUNNER_TEMP/r318bw"; mkdir -p "$V1" "$BW"
+          gh run download "$V1_RUN" --repo "$GITHUB_REPOSITORY" --name "$V1_ARTIFACT_NAME" --dir "$V1"
+          test "$(sha256sum "$V1/r3_18bz_artifact_sha256.txt" | awk '{print $1}')" = "$V1_MANIFEST_SHA256"
+          (cd "$V1" && sha256sum -c r3_18bz_artifact_sha256.txt)
+          for line in \
+            'R3_18BZ_OUTCOME=A' \
+            'R3_18BZ_ROWS=2/2' \
+            'R3_18BZ_FALSE_TERMINATOR=1/1' \
+            'R3_18BZ_TRUE_HEADER=1/1' \
+            'R3_18BZ_DIRECT_HEADER_MATCH=1/1' \
+            'R3_18BZ_NATIVE_ORACLE_MISMATCH=0' \
+            'R3_18BZ_WITNESS_RESELECTION=0' \
+            'R3_18BZ_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' \
+            'R3_18BZ_SECOND_LATER_CONTROL_BITS_CONSUMED=0'; do
+            grep -Fx "$line" "$V1/r3_18bz_aggregate.txt"
+          done
+          bw_meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$BW_ARTIFACT")"
+          eq() { [ "$1" = "$2" ] || { echo "authority mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(jq -r .name <<<"$bw_meta")" "$BW_ARTIFACT_NAME"
+          eq "$(jq -r .digest <<<"$bw_meta")" "$BW_DIGEST"
+          eq "$(jq -r .workflow_run.id <<<"$bw_meta")" "$BW_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$bw_meta")" "$BW_HEAD"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$BW_JOB" --jq .conclusion)" success
+          gh run download "$BW_RUN" --repo "$GITHUB_REPOSITORY" --name "$BW_ARTIFACT_NAME" --dir "$BW"
+          test "$(sha256sum "$BW/r3_18bw_artifact_sha256.txt" | awk '{print $1}')" = "$BW_MANIFEST_SHA256"
+          (cd "$BW" && sha256sum -c r3_18bw_artifact_sha256.txt)
+          cmp "$V1/r3_18bz_rows.tsv" "$BW/r3_18bw_frozen_control_rows.tsv"
+          cmp "$V1/r3_18bz_boxcars_oracle_row.txt" "$BW/r3_18bw_boxcars_oracle_row.txt"
+          contract="$RUNNER_TEMP/r318bx-contract.json"
+          gh api -H 'Accept: application/vnd.github.raw+json' \
+            "repos/${GITHUB_REPOSITORY}/contents/docs/continuity/MIMIR_R3_18BX_ADMITTED_HEADER_CONTEXTS.json?ref=$BASE_SHA" > "$contract"
+          eq "$(sha256sum "$contract" | awk '{print $1}')" "$BX_CONTRACT_SHA256"
+          echo R3_18BZ_V4_BW_RECONCILIATION=PASS
+
+      - name: Run completeness negative controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST=crates/mimir-replay/tests/_tmp_r318bz_v4_negatives.rs
+          cat > "$TEST" <<'RS'
+          include!("r3_18by_post_bu_following_header.rs");
+
+          #[test]
+          fn r3_18bz_v4_completes_published_by_negative_matrix() {
+              let mut rows = 0usize;
+              let mut repeat_ok = 0usize;
+              let mut corrupt_bu_ok = 0usize;
+              let mut poison_ok = 0usize;
+              let mut context_ok = 0usize;
+              let mut false_no_header_ok = 0usize;
+              let mut truncation_ok = 0usize;
+              let mut unresolved_actor_ok = 0usize;
+              let mut unresolved_property_ok = 0usize;
+              let mut direct_header_ok = 0usize;
+
+              for (index, (path, first_start, actor_object, _)) in au_cases().into_iter().enumerate() {
+                  if expected_bu_control(path).is_none() {
+                      continue;
+                  }
+                  let (network, plan) = frozen_network_and_plan(path, &format!("r318bz_v4_{index}"));
+                  let (prior, control, an) = aq_from_frozen(&network, &plan, first_start, actor_object);
+                  let aq = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_v1(&network, &prior, &control, &plan, k3_context(), &an).expect("AQ prerequisite");
+                  let au = decode_replay_network_existing_actor_after_first_primitive_second_property_payload_following_payload_control_following_header_payload_following_payload_control_following_header_payload_following_payload_control_following_header_v1(&network, &prior, &control, &plan, k3_context(), &an, &aq).expect("AU prerequisite");
+                  let ay = decode_ay(&network, &prior, &control, &plan, k3_context(), &an, &au).expect("AY prerequisite");
+                  let ba = decode_ba(&network, &prior, &control, &plan, k3_context(), &an, &ay).expect("BA prerequisite");
+                  let be = decode_be(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba).expect("BE prerequisite");
+                  let bi = decode_bi(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be).expect("BI prerequisite");
+                  let bk = decode_bk(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi).expect("BK prerequisite");
+                  let bo = decode_bo(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk).expect("BO prerequisite");
+                  let bs = decode_bs(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo).expect("BS prerequisite");
+                  let bu = decode_bu(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs).expect("BU prerequisite");
+                  let got = mimir_replay::decode_replay_network_post_bu_following_header_v1(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &bu).expect("published BY");
+                  rows += 1;
+
+                  let repeated = mimir_replay::decode_replay_network_post_bu_following_header_v1(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &bu).expect("repeat BY");
+                  assert_eq!(repeated, got);
+                  repeat_ok += 1;
+
+                  let mut corrupt_bu = bu.clone();
+                  corrupt_bu.stop_bit += 1;
+                  assert!(mimir_replay::decode_replay_network_post_bu_following_header_v1(&network, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &corrupt_bu).is_err());
+                  corrupt_bu_ok += 1;
+
+                  let mut poisoned = network.clone();
+                  let poison_bit = usize::try_from(got.stop_bit).expect("stop fits usize");
+                  let old = raw_lsb(&poisoned, got.stop_bit);
+                  set_bit(&mut poisoned, poison_bit, !old);
+                  let after_poison = mimir_replay::decode_replay_network_post_bu_following_header_v1(&poisoned, &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &bu).expect("post-stop poison");
+                  assert_eq!(after_poison, got);
+                  poison_ok += 1;
+
+                  for context in [
+                      mimir_replay::ReplayNetworkK3DecodeContextV1 { version_major: 869, version_minor: 32, net_version: 10, is_rl_223: false },
+                      mimir_replay::ReplayNetworkK3DecodeContextV1 { version_major: 868, version_minor: 33, net_version: 10, is_rl_223: false },
+                      mimir_replay::ReplayNetworkK3DecodeContextV1 { version_major: 868, version_minor: 32, net_version: 11, is_rl_223: false },
+                      mimir_replay::ReplayNetworkK3DecodeContextV1 { version_major: 868, version_minor: 32, net_version: 10, is_rl_223: true },
+                  ] {
+                      assert!(mimir_replay::decode_replay_network_post_bu_following_header_v1(&network, &prior, &control, &plan, context, &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &bu).is_err());
+                      context_ok += 1;
+                  }
+
+                  if !bu.property_control {
+                      assert!(got.following_header.is_none());
+                      assert_eq!(got.stop_bit, bu.stop_bit);
+                      false_no_header_ok += 1;
+                      continue;
+                  }
+
+                  let header = got.following_header.as_ref().expect("true header");
+                  let direct = mimir_replay::decode_replay_network_existing_actor_first_property_header_v1(&network, bu.control_start_bit, header.actor_object_index, &plan).expect("direct header");
+                  assert_eq!(&direct, header);
+                  direct_header_ok += 1;
+
+                  let truncation_bytes = usize::try_from(bu.stop_bit.div_ceil(8)).expect("truncation byte count");
+                  assert!(mimir_replay::decode_replay_network_post_bu_following_header_v1(&network[..truncation_bytes], &prior, &control, &plan, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &bu).is_err());
+                  truncation_ok += 1;
+
+                  let mut unresolved_actor = plan.clone();
+                  let actor_index = usize::try_from(header.actor_object_index).expect("actor index");
+                  unresolved_actor.object_lookups[actor_index] = None;
+                  assert!(mimir_replay::decode_replay_network_post_bu_following_header_v1(&network, &prior, &control, &unresolved_actor, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &bu).is_err());
+                  unresolved_actor_ok += 1;
+
+                  let mut unresolved_property = plan.clone();
+                  let stream_id = header.stream_id.expect("stream id");
+                  let actor_lookup = unresolved_property.object_lookups[actor_index]
+                      .as_mut()
+                      .expect("actor lookup");
+                  assert!(actor_lookup.properties.iter().any(|property| property.stream_id == stream_id));
+                  actor_lookup.properties.retain(|property| property.stream_id != stream_id);
+                  assert!(!actor_lookup.properties.iter().any(|property| property.stream_id == stream_id));
+                  let error = mimir_replay::decode_replay_network_post_bu_following_header_v1(&network, &prior, &control, &unresolved_property, k3_context(), &an, &ay, &ba, &be, &bi, &bk, &bo, &bs, &bu).expect_err("unresolved property stream must fail closed");
+                  assert!(format!("{error}").contains("unresolved-stream-id"));
+                  unresolved_property_ok += 1;
+              }
+
+              assert_eq!(rows, 2);
+              assert_eq!(repeat_ok, 2);
+              assert_eq!(corrupt_bu_ok, 2);
+              assert_eq!(poison_ok, 2);
+              assert_eq!(context_ok, 8);
+              assert_eq!(false_no_header_ok, 1);
+              assert_eq!(truncation_ok, 1);
+              assert_eq!(unresolved_actor_ok, 1);
+              assert_eq!(unresolved_property_ok, 1);
+              assert_eq!(direct_header_ok, 1);
+              println!("R3_18BZ_V4_NEG rows=2 repeat=2 corrupt_bu=2 poison=2 context=8 false_no_header=1 truncation=1 unresolved_actor=1 unresolved_property=1 direct_header=1");
+          }
+          RS
+          rustfmt +1.85.0 "$TEST"
+          cargo +1.85.0 test -p mimir-replay --test _tmp_r318bz_v4_negatives r3_18bz_v4_completes_published_by_negative_matrix -- --nocapture | tee "$RUNNER_TEMP/r318bz-v4-neg.log"
+          grep -Fx 'R3_18BZ_V4_NEG rows=2 repeat=2 corrupt_bu=2 poison=2 context=8 false_no_header=1 truncation=1 unresolved_actor=1 unresolved_property=1 direct_header=1' "$RUNNER_TEMP/r318bz-v4-neg.log"
+          rm -f "$TEST"
+
+      - name: Prove exact source scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' | tee "$RUNNER_TEMP/r318bz-v4-source-scope.txt"
+          from pathlib import Path
+          s = Path('crates/mimir-replay/src/lib.rs').read_text(encoding='utf-8')
+          begin_marker = '// R3.18BY PRE-ADMISSION BEGIN bounded post-BU mixed-continuation following header'
+          end_marker = '// R3.18BY PRE-ADMISSION END bounded post-BU mixed-continuation following header'
+          begin = s.index(begin_marker)
+          end = s.index(end_marker, begin) + len(end_marker)
+          block = s[begin:end]
+          assert block.count('decode_replay_network_post_bs_following_control_v1(') == 1
+          suffix = 'let decode_header_suffix = decode_replay_network_existing_actor_property_header_suffix_v1;'
+          assert block.count(suffix) == 1
+          false_branch = 'if !expected_bu.property_control {'
+          assert block.index(false_branch) < block.index(suffix)
+          assert block.count('decode_replay_network_primitive_scalar_v1(') == 0
+          assert block.count('decode_replay_network_k2_v1(') == 0
+          assert block.count('decode_replay_network_k4_v1(') == 0
+          assert block.count('.read_bit(') == 0
+          assert 'NetworkBitCursor' not in block
+          assert 'while ' not in block
+          assert 'loop {' not in block
+          print('R3_18BZ_V4_SOURCE_SCOPE=PASS')
+          print('R3_18BZ_V4_BU_RECOMPUTE=1')
+          print('R3_18BZ_V4_HEADER_SUFFIX_BINDING=1')
+          print('R3_18BZ_V4_FALSE_BRANCH_BEFORE_SUFFIX=PASS')
+          print('R3_18BZ_V4_PAYLOAD_DECODER_CALLS=0')
+          print('R3_18BZ_V4_EXTRA_READ_BIT_CALLS=0')
+          print('R3_18BZ_V4_GENERIC_CURSOR_LOOP=0')
+          PY
+
+      - name: Validate and build complete immutable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.0 fmt --all -- --check
+          cargo +1.85.0 test -p mimir-replay --test r3_18by_post_bu_following_header
+          cargo +1.85.0 check --workspace
+          cargo +1.85.0 test --workspace
+          cargo +1.85.0 clippy --workspace --all-targets -- -D warnings
+          pwsh -NoLogo -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+          git diff --check "$BASE_SHA"
+
+          V1="$RUNNER_TEMP/r318bz-v1"
+          OUT="$RUNNER_TEMP/r318bz-v4-out"; mkdir -p "$OUT"
+          cp "$V1/r3_18bz_rows.tsv" "$OUT/r3_18bz_rows.tsv"
+          cp "$V1/r3_18bz_boxcars_oracle_row.txt" "$OUT/r3_18bz_boxcars_oracle_row.txt"
+          cp "$RUNNER_TEMP/r318bz-v4-source-scope.txt" "$OUT/r3_18bz_source_scope.txt"
+          cat > "$OUT/r3_18bz_negative_controls.txt" <<'EOF'
+          repeatability=PASS 2/2
+          corrupt_bu_authority=PASS 2/2
+          post_stop_poison=PASS 2/2
+          version_major_minor_net_rl223_mutations=PASS 8/8
+          false_terminator_no_header=PASS 1/1
+          true_header_truncation=PASS 1/1
+          unresolved_actor_lookup=PASS 1/1
+          unresolved_property_stream_lookup=PASS 1/1
+          direct_header_structural_equality=PASS 1/1
+          false_branch_before_header_suffix=PASS
+          no_following_payload_decoder=PASS
+          no_second_later_control_read=PASS
+          no_generic_cursor_or_loop=PASS
+          EOF
+          sed -i 's/^          //' "$OUT/r3_18bz_negative_controls.txt"
+          cat > "$OUT/r3_18bz_aggregate.txt" <<'EOF'
+          R3_18BZ_OUTCOME=A
+          R3_18BZ_ROWS=2/2
+          R3_18BZ_FALSE_TERMINATOR=1/1
+          R3_18BZ_TRUE_HEADER=1/1
+          R3_18BZ_EXACT_BX_CONTEXT=1/1
+          R3_18BZ_DIRECT_HEADER_MATCH=1/1
+          R3_18BZ_BW_ROW_RECONCILIATION=2/2
+          R3_18BZ_NATIVE_ORACLE_MISMATCH=0
+          R3_18BZ_WITNESS_RESELECTION=0
+          R3_18BZ_NEGATIVE_CONTROLS=PASS
+          R3_18BZ_FOLLOWING_PAYLOAD_BITS_CONSUMED=0
+          R3_18BZ_SECOND_LATER_CONTROL_BITS_CONSUMED=0
+          R3_18BZ_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0
+          R3_18BZ_PRIVACY_SCAN=PASS
+          EOF
+          sed -i 's/^          //' "$OUT/r3_18bz_aggregate.txt"
+          cat > "$OUT/r3_18bz_upstream_receipts.txt" <<EOF
+          continuity_base_sha=$BASE_SHA
+          continuity_base_tree=$BASE_TREE
+          published_by_sha=$PROD_SHA
+          published_by_tree=$PROD_TREE
+          v1_evidence_head=$V1_HEAD
+          v1_evidence_tree=$V1_TREE
+          v1_run_job=$V1_RUN/$V1_JOB
+          v1_artifact=$V1_ARTIFACT
+          v1_artifact_digest=$V1_DIGEST
+          bw_head=$BW_HEAD
+          bw_run_job=$BW_RUN/$BW_JOB
+          bw_artifact=$BW_ARTIFACT
+          bw_artifact_digest=$BW_DIGEST
+          bx_contract_sha256=$BX_CONTRACT_SHA256
+          EOF
+          sed -i 's/^          //' "$OUT/r3_18bz_upstream_receipts.txt"
+          cat > "$OUT/r3_18bz_validation.txt" <<'EOF'
+          rust_1_85_fmt=PASS
+          r3_18by_regression=PASS
+          r3_18bz_v4_negative_matrix=PASS
+          source_scope=PASS
+          workspace_check=PASS
+          workspace_test=PASS
+          workspace_clippy=PASS
+          knowledge_archive_verifier=PASS
+          git_diff_check=PASS
+          EOF
+          sed -i 's/^          //' "$OUT/r3_18bz_validation.txt"
+          grep -RniE '/home/runner|C:\\Users\\|github_pat_|ghp_|Omersevik|Maximillan' "$OUT" && exit 1 || true
+          (cd "$OUT" && sha256sum \
+            r3_18bz_rows.tsv \
+            r3_18bz_boxcars_oracle_row.txt \
+            r3_18bz_source_scope.txt \
+            r3_18bz_negative_controls.txt \
+            r3_18bz_aggregate.txt \
+            r3_18bz_upstream_receipts.txt \
+            r3_18bz_validation.txt \
+            > r3_18bz_artifact_sha256.txt)
+          test "$(wc -l < "$OUT/r3_18bz_artifact_sha256.txt")" -eq 7
+          (cd "$OUT" && sha256sum -c r3_18bz_artifact_sha256.txt)
+
+      - name: Upload complete immutable R3.18BZ evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: r318bz-published-by-differential-evidence-v4
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+          path: ${{ runner.temp }}/r318bz-v4-out/
+
+      - name: Seal v4 immutable receipt
+        shell: bash
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/r318bz-v4-out"
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}")"
+          test "$(jq -r .workflow_run.id <<<"$meta")" = "$GITHUB_RUN_ID"
+          test "$(jq -r .workflow_run.head_sha <<<"$meta")" = "$GITHUB_SHA"
+          test "$(jq -r .expired <<<"$meta")" = false
+          norm() { printf '%s' "${1#sha256:}" | tr '[:upper:]' '[:lower:]'; }
+          test "$(norm "$(jq -r .digest <<<"$meta")")" = "$(norm "$ARTIFACT_DIGEST")"
+          for line in \
+            'R3_18BZ_OUTCOME=A' \
+            'R3_18BZ_ROWS=2/2' \
+            'R3_18BZ_FALSE_TERMINATOR=1/1' \
+            'R3_18BZ_TRUE_HEADER=1/1' \
+            'R3_18BZ_EXACT_BX_CONTEXT=1/1' \
+            'R3_18BZ_DIRECT_HEADER_MATCH=1/1' \
+            'R3_18BZ_BW_ROW_RECONCILIATION=2/2' \
+            'R3_18BZ_NATIVE_ORACLE_MISMATCH=0' \
+            'R3_18BZ_WITNESS_RESELECTION=0' \
+            'R3_18BZ_NEGATIVE_CONTROLS=PASS' \
+            'R3_18BZ_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' \
+            'R3_18BZ_SECOND_LATER_CONTROL_BITS_CONSUMED=0' \
+            'R3_18BZ_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' \
+            'R3_18BZ_PRIVACY_SCAN=PASS'; do
+            grep -Fx "$line" "$OUT/r3_18bz_aggregate.txt"
+          done
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success -f context='r318bz-v4/evidence' \
+            -f description='R3.18BZ complete Outcome A evidence sealed' \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+          echo R3_18BZ_V4_IMMUTABLE_RECEIPT=PASS
