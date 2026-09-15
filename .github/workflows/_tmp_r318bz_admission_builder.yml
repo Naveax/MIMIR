@@ -1,0 +1,325 @@
+name: R3.18BZ Outcome A Admission Builder
+
+on:
+  push:
+    branches:
+      - admit/r318bz-outcome-a
+    paths:
+      - .github/workflows/_tmp_r318bz_admission_builder.yml
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318bz-outcome-a-admission
+  cancel-in-progress: false
+
+jobs:
+  admit:
+    if: github.event.head_commit.message == 'Bootstrap R3.18BZ admission builder'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_SHA: 3c90dd10fb775ca45c8bd23b8330290f6ebafbbc
+      BASE_TREE: d2ef61ef1c34630db6139dde28f6d952e0a67e4a
+      PROD_SHA: 3b07e223fdf326e8100412fad9410bb1b66d2cb9
+      PROD_TREE: 68b32f61d61c863b25e393cfa77575bac55217d7
+      EVIDENCE_SHA: cfcfb671555827b8003007ff766798a1206aca15
+      EVIDENCE_TREE: 46b91c8ab80db2c67e04f5386de5db4538cc2a7f
+      EVIDENCE_RUN: '34950884111'
+      EVIDENCE_JOB: '104321306221'
+      EVIDENCE_ARTIFACT: '10389058675'
+      EVIDENCE_ARTIFACT_NAME: r318bz-published-by-differential-evidence-v4
+      EVIDENCE_ARTIFACT_SIZE: '3111'
+      EVIDENCE_DIGEST: sha256:e11eceb83779b2fb52c658edf8ee932d4c24228d7b8046b44b235203d9f79d39
+      EVIDENCE_MANIFEST_SHA256: f298edbe583571ac1a1b477d74fde61f76b92983b0e4016a01639fd2de8930af
+
+    steps:
+      - name: Checkout admission branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze main and immutable R3.18BZ evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(git rev-parse HEAD^)" "$BASE_SHA"
+          eq "$(git rev-parse "$BASE_SHA^{tree}")" "$BASE_TREE"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq .commit.sha)" "$BASE_SHA"
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA...HEAD" | sort)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = '.github/workflows/_tmp_r318bz_admission_builder.yml'
+
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$EVIDENCE_RUN" --jq .head_sha)" "$EVIDENCE_SHA"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$EVIDENCE_RUN" --jq .status)" completed
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$EVIDENCE_RUN" --jq .conclusion)" success
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$EVIDENCE_JOB" --jq .run_id)" "$EVIDENCE_RUN"
+          eq "$(gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/$EVIDENCE_JOB" --jq .conclusion)" success
+
+          meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/$EVIDENCE_ARTIFACT")"
+          eq "$(jq -r .name <<<"$meta")" "$EVIDENCE_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$meta")" "$EVIDENCE_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$meta")" "$EVIDENCE_DIGEST"
+          eq "$(jq -r .workflow_run.id <<<"$meta")" "$EVIDENCE_RUN"
+          eq "$(jq -r .workflow_run.head_sha <<<"$meta")" "$EVIDENCE_SHA"
+
+          out="$RUNNER_TEMP/r318bz"
+          mkdir -p "$out"
+          gh run download "$EVIDENCE_RUN" --repo "$GITHUB_REPOSITORY" --name "$EVIDENCE_ARTIFACT_NAME" --dir "$out"
+          eq "$(sha256sum "$out/r3_18bz_artifact_sha256.txt" | awk '{print $1}')" "$EVIDENCE_MANIFEST_SHA256"
+          (cd "$out" && sha256sum -c r3_18bz_artifact_sha256.txt)
+
+          for line in \
+            'R3_18BZ_OUTCOME=A' \
+            'R3_18BZ_ROWS=2/2' \
+            'R3_18BZ_FALSE_TERMINATOR=1/1' \
+            'R3_18BZ_TRUE_HEADER=1/1' \
+            'R3_18BZ_EXACT_BX_CONTEXT=1/1' \
+            'R3_18BZ_DIRECT_HEADER_MATCH=1/1' \
+            'R3_18BZ_BW_ROW_RECONCILIATION=2/2' \
+            'R3_18BZ_NATIVE_ORACLE_MISMATCH=0' \
+            'R3_18BZ_WITNESS_RESELECTION=0' \
+            'R3_18BZ_NEGATIVE_CONTROLS=PASS' \
+            'R3_18BZ_FOLLOWING_PAYLOAD_BITS_CONSUMED=0' \
+            'R3_18BZ_SECOND_LATER_CONTROL_BITS_CONSUMED=0' \
+            'R3_18BZ_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' \
+            'R3_18BZ_PRIVACY_SCAN=PASS'; do
+            grep -Fx "$line" "$out/r3_18bz_aggregate.txt"
+          done
+          grep -Fx 'repeatability=PASS 2/2' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'corrupt_bu_authority=PASS 2/2' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'post_stop_poison=PASS 2/2' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'false_terminator_no_header=PASS 1/1' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'true_header_truncation=PASS 1/1' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'unresolved_actor_lookup=PASS 1/1' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'unresolved_property_stream_lookup=PASS 1/1' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'direct_header_structural_equality=PASS 1/1' "$out/r3_18bz_negative_controls.txt"
+          grep -Fx 'workspace_check=PASS' "$out/r3_18bz_validation.txt"
+          grep -Fx 'workspace_test=PASS' "$out/r3_18bz_validation.txt"
+          grep -Fx 'workspace_clippy=PASS' "$out/r3_18bz_validation.txt"
+          grep -Fx 'knowledge_archive_verifier=PASS' "$out/r3_18bz_validation.txt"
+          grep -Fx 'git_diff_check=PASS' "$out/r3_18bz_validation.txt"
+
+      - name: Admit R3.18BZ and open exact R3.18CA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import json
+
+          BASE_SHA = "3c90dd10fb775ca45c8bd23b8330290f6ebafbbc"
+          BASE_TREE = "d2ef61ef1c34630db6139dde28f6d952e0a67e4a"
+          PROD_SHA = "3b07e223fdf326e8100412fad9410bb1b66d2cb9"
+          PROD_TREE = "68b32f61d61c863b25e393cfa77575bac55217d7"
+          EV_SHA = "cfcfb671555827b8003007ff766798a1206aca15"
+          EV_TREE = "46b91c8ab80db2c67e04f5386de5db4538cc2a7f"
+          EV_RUN = 34950884111
+          EV_JOB = 104321306221
+          EV_ART = 10389058675
+          EV_DIGEST = "sha256:e11eceb83779b2fb52c658edf8ee932d4c24228d7b8046b44b235203d9f79d39"
+          EV_MANIFEST = "f298edbe583571ac1a1b477d74fde61f76b92983b0e4016a01639fd2de8930af"
+          BX = "37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576"
+
+          def p(path): return Path(path)
+          def read(path): return p(path).read_text(encoding="utf-8")
+          def write(path, text): p(path).write_text(text, encoding="utf-8", newline="\n")
+          def replace_once(text, old, new, label):
+              n = text.count(old)
+              if n != 1:
+                  raise SystemExit(f"{label}: expected one match, got {n}")
+              return text.replace(old, new, 1)
+
+          # Master continuity file: canonical state block + append-only newest override.
+          path = "MIMIR_CONTINUE_HERE.md"
+          s = read(path)
+          s = replace_once(s,
+              "LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18BW — one-following-header evidence Outcome A / BU rows=2 / false terminator=1 / true header=1 / exact header=1/1 / mismatch 0 / artifact 10346819501",
+              "LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18BZ — published-R3.18BY differential Outcome A / rows=2/2 / false terminator=1/1 / true header=1/1 / exact BX context=1/1 / mismatch/reselection=0/0 / payload/control=0/0 / artifact 10389058675",
+              "continue audit")
+          s = replace_once(s,
+              "LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18BW — exact one-following-header evidence / two BU rows / false terminator 1 / true continuation 1 / one header exact 1/1 / payload/control consumption 0/0 / artifact 10346819501",
+              "LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18BZ — published-R3.18BY mixed following-header differential / Outcome A / exact rows 2/2 / false/true 1/1 / direct header 1/1 / BW reconciliation 2/2 / mismatch/reselection 0/0 / payload/control 0/0 / artifact 10389058675",
+              "continue evidence")
+          s = replace_once(s,
+              "CURRENT_PASS:\n  R3.18BZ — published-R3.18BY mixed following-header differential",
+              "CURRENT_PASS:\n  R3.18CA — one following-payload evidence after published R3.18BY",
+              "continue current pass")
+          s = replace_once(s,
+              "CURRENT_PASS_TYPE:\n  read-only published-production differential / exact BY two-row lane / false=no-header terminator / true=one exact R3.18BX header / payload and later-control consumption 0/0",
+              "CURRENT_PASS_TYPE:\n  read-only payload-boundary evidence / exact BY=true LoadoutsOnline row only / existing admitted K4 decoder may be attempted / stop at exact payload end / later-control consumption 0",
+              "continue current type")
+          override = f'''\n\n# CURRENT OVERRIDE — 2026-09-15 — R3.18BZ CLOSED / R3.18CA ACTIVE\n\n- canonical production remains R3.18BY `{PROD_SHA}` / `{PROD_TREE}`; R3.18BZ is read-only and changes no production Rust.\n- R3.18BZ evidence `{EV_SHA}` / `{EV_TREE}` is exactly one temporary-workflow commit over continuity base `{BASE_SHA}` / `{BASE_TREE}`; runner `{EV_RUN}/{EV_JOB}` SUCCESS.\n- immutable artifact `{EV_ART}` / 3111 bytes / `{EV_DIGEST}`; internal manifest sha256 `{EV_MANIFEST}` and every listed payload file verify.\n- Outcome A: rows 2/2; false terminator 1/1; true header 1/1; exact BX context 1/1; direct stateless-header match 1/1; BW row reconciliation 2/2; native/oracle mismatch 0; witness reselection 0; following payload/second-control consumption 0/0; all negative controls PASS.\n- R3.18CA is ACTIVE as read-only one-following-payload evidence only on the exact BY=true `largest_100/079...` LoadoutsOnline row at `payload_start=3245`; the BU=false row remains outside the payload lane. Existing R3.17O K4 may be attempted only under its already-published exact allowlist.\n- no K4 decoder/allowlist widening, no production/Cargo/fixture/corpus/support mutation, no false-row payload access, no next property-control bit, no second payload, no historical width/shape inheritance, no generalized cursor and no wider semantic/runtime behavior.\n'''
+          if "# CURRENT OVERRIDE — 2026-09-15 — R3.18BZ CLOSED / R3.18CA ACTIVE" in s:
+              raise SystemExit("continue override already present")
+          s = s.rstrip() + override
+          write(path, s)
+
+          # Knowledge graph status, catalog and newest milestone nodes.
+          path = "MIMIR_KNOWLEDGE_GRAPH.md"
+          s = read(path)
+          s = replace_once(s,
+              "R3.18BZ published-R3.18BY mixed following-header differential / ACTIVE",
+              "R3.18BZ published-R3.18BY mixed following-header differential / Outcome A CLOSED\nR3.18CA one following-payload evidence after published R3.18BY / ACTIVE",
+              "kg status")
+          s = replace_once(s,
+              "202. `docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md`",
+              "202. `docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md`\n203. `docs/continuity/MIMIR_R3_18BZ_DECISION.md`\n204. `docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md`",
+              "kg catalog")
+          kg_tail = f'''\n\n### R3.18BZ published-R3.18BY mixed following-header differential: OUTCOME A / CLOSED\n- evidence `{EV_SHA}` / `{EV_TREE}`; runner `{EV_RUN}/{EV_JOB}` SUCCESS; immutable artifact `{EV_ART}` / `{EV_DIGEST}`; internal manifest `{EV_MANIFEST}`.\n- exact published rows 2/2; false/true=1/1; exact BX context 1/1; direct shared-header match 1/1; BW reconciliation 2/2; mismatch/reselection 0/0.\n- repeatability/corrupt-BU/post-stop-poison and structural negative matrix PASS; following payload/second-control 0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.\n\n### R3.18CA one following-payload evidence after published R3.18BY: ACTIVE\n- only the exact BY=true `largest_100/079...` LoadoutsOnline row may enter from payload_start 3245; BU=false remains a terminator outside the payload lane.\n- pinned Boxcars and the already-published bounded R3.17O K4 decoder must establish exact payload boundary/shape/value agreement before any capability claim; existing K4 membership may reject fail-closed.\n- no K4/allowlist widening, production mutation, next-control read, second payload, historical width inheritance, witness reselection or generalized cursor.\n'''
+          if "### R3.18BZ published-R3.18BY mixed following-header differential: OUTCOME A / CLOSED" in s:
+              raise SystemExit("kg BZ close already present")
+          s = s.rstrip() + kg_tail
+          write(path, s)
+
+          # Boundary locks: replace only current override, preserve historical sections.
+          path = "docs/continuity/MIMIR_BOUNDARY_LOCKS.md"
+          s = read(path)
+          start = s.index("# 0. Current override")
+          end = s.index("# 1. Status vocabulary")
+          block = f'''# 0. Current override — R3.18BZ closed / R3.18CA one-payload evidence active\n\n## PRODUCTION AUTHORITY — R3.18BY\n- `{PROD_SHA}` / `{PROD_TREE}` remains canonical production.\n- false BU control `[11239,11240)` terminates without header; true BU control `[3238,3239)` exposes exactly one R3.18BX member header and stops at payload_start 3245.\n\n## CLOSED READ-ONLY DIFFERENTIAL — R3.18BZ\n- `{EV_SHA}` / `{EV_TREE}`; runner `{EV_RUN}/{EV_JOB}` SUCCESS; artifact `{EV_ART}` / `{EV_DIGEST}`.\n- rows 2/2; false/true 1/1; exact BX context/direct header 1/1; BW reconciliation 2/2; mismatch/reselection 0/0; payload/control 0/0; negatives PASS.\n\n## ACTIVE READ-ONLY PAYLOAD EVIDENCE — R3.18CA\n- only exact BY=true `largest_100/079...` `LoadoutsOnline` may be observed from payload_start 3245.\n- existing bounded R3.17O K4 is the only primary native decoder candidate and may succeed only under its existing exact allowlist.\n- BU=false remains outside the payload lane.\n\n## CLOSED\n- K4 decoder or allowlist widening during CA;\n- production/Cargo/fixture/corpus/support mutation during CA;\n- false-row payload access;\n- next property-control bit and second payload;\n- historical payload width/shape inheritance;\n- witness/lookup substitution;\n- generic/repeated property cursor and wider semantic/runtime behavior.\n\n'''
+          s = s[:start] + block + s[end:]
+          write(path, s)
+
+          # Structured continuity state.
+          path = "docs/continuity/MIMIR_CONTINUITY_STATE.json"
+          data = json.loads(read(path))
+          data["updated_date"] = "2026-09-15"
+          data["last_completed_read_only_audit"] = "R3.18BZ"
+          data["last_completed_evidence_pass"] = "R3.18BZ"
+          data["last_completed_evidence_outcome"] = "A — published BY rows 2/2; false/true 1/1; exact BX/direct header 1/1; BW reconciliation 2/2; mismatch/reselection 0/0; payload/control 0/0; artifact 10389058675."
+          data["current_pass"] = "R3.18CA"
+          data["current_pass_kind"] = "read-only one-following-payload evidence after published R3.18BY"
+          data["current_pass_goal"] = "Observe exactly one LoadoutsOnline payload on the immutable BY=true row from payload_start 3245; require pinned Boxcars and existing bounded K4 evidence to agree before any widening."
+          data["current_pass_stop_boundary"] = "BU=false remains outside payload access. BY=true may consume exactly one payload through its measured exact end; consume no next property-control bit and no second payload."
+          data["r3_18bz_evidence"] = {
+              "outcome": "A — admitted / closed read-only",
+              "continuity_base_sha": BASE_SHA,
+              "continuity_base_tree": BASE_TREE,
+              "evidence_sha": EV_SHA,
+              "evidence_tree": EV_TREE,
+              "run": EV_RUN,
+              "job": EV_JOB,
+              "artifact": EV_ART,
+              "artifact_digest": EV_DIGEST,
+              "artifact_manifest_sha256": EV_MANIFEST,
+              "rows": 2,
+              "false_terminators": 1,
+              "true_headers": 1,
+              "exact_bx_context_rows": 1,
+              "direct_header_matches": 1,
+              "bw_row_reconciliation": "2/2",
+              "native_oracle_mismatch": 0,
+              "witness_reselection": 0,
+              "following_payload_bits_consumed": 0,
+              "second_later_control_bits_consumed": 0,
+              "negative_controls": "PASS",
+              "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
+              "privacy_scan": "PASS"
+          }
+
+          required_anchor = "docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md"
+          additions = ["docs/continuity/MIMIR_R3_18BZ_DECISION.md", "docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md"]
+          list_hits = []
+          def walk(obj):
+              if isinstance(obj, dict):
+                  for v in obj.values(): walk(v)
+              elif isinstance(obj, list):
+                  if required_anchor in obj: list_hits.append(obj)
+                  for v in obj: walk(v)
+          walk(data)
+          if len(list_hits) != 1:
+              raise SystemExit(f"continuity required-doc list hits={len(list_hits)}")
+          for a in additions:
+              if a not in list_hits[0]: list_hits[0].append(a)
+
+          # Tighten whichever top-level closed-boundary list contains the existing BZ mutation lock.
+          lock_hits = []
+          def walk_locks(obj):
+              if isinstance(obj, dict):
+                  for v in obj.values(): walk_locks(v)
+              elif isinstance(obj, list):
+                  if "production mutation during R3.18BZ" in obj: lock_hits.append(obj)
+                  for v in obj: walk_locks(v)
+          walk_locks(data)
+          if len(lock_hits) != 1:
+              raise SystemExit(f"continuity lock list hits={len(lock_hits)}")
+          for item in [
+              "K4 decoder or allowlist widening during R3.18CA",
+              "production mutation during R3.18CA",
+              "false-row payload access during R3.18CA",
+              "next property-control consumption during R3.18CA",
+              "second payload consumption during R3.18CA",
+              "historical payload width or shape inheritance during R3.18CA",
+              "witness or lookup substitution during R3.18CA"
+          ]:
+              if item not in lock_hits[0]: lock_hits[0].append(item)
+          write(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+
+          # Compact canonical state.
+          current = f'''# MIMIR — Current Canonical State\n\n**Continuity date:** 2026-09-15\n**Repository:** `Naveax/MIMIR`\n**Canonical production SHA:** `{PROD_SHA}`\n**Production tree:** `{PROD_TREE}`\n**Production milestone:** `R3.18BY — bounded post-BU mixed-continuation following-header production`\n**Last read-only evidence/audit:** `R3.18BZ — Outcome A / rows 2/2 / false=1 true=1 / exact BX=1/1 / artifact {EV_ART}`\n**Last contract pass:** `R3.18BX — Outcome A / one exact eight-field tuple / contract {BX}`\n**Current exact pass:** `R3.18CA — one following-payload evidence after published R3.18BY`\n\n## Truthful boundary\n\nR3.18BY remains canonical production at `{PROD_SHA}` / `{PROD_TREE}`. R3.18BZ closed read-only at `{EV_SHA}` / `{EV_TREE}` with runner `{EV_RUN}/{EV_JOB}` SUCCESS and immutable artifact `{EV_ART}` / `{EV_DIGEST}`.\n\nBZ Outcome A proves the exact published two-row lane: false terminator 1/1, true following header 1/1, exact R3.18BX context 1/1, direct stateless-header equality 1/1, BW row reconciliation 2/2, mismatch/reselection 0/0, and following-payload/second-control consumption 0/0. All negative controls, source scope, privacy and workspace validation pass.\n\nR3.18CA is read-only and may observe one payload only on the exact BY=true `LoadoutsOnline` row from `payload_start=3245`. The existing bounded R3.17O K4 decoder may be attempted only under its already-published exact membership; no shape or width is inherited from historical rows.\n\n## Hard stop\n\nNo K4 decoder/allowlist widening, production mutation, false-row payload access, next property-control bit, second payload, historical width/shape inheritance, witness/lookup substitution, generalized cursor or wider semantic/runtime behavior.\n'''
+          write("docs/continuity/MIMIR_CURRENT_STATE.md", current)
+
+          handoff = f'''# MIMIR — Next Chat Handoff\n\nCanonical production remains **R3.18BY** `{PROD_SHA}` / `{PROD_TREE}`.\n\nR3.18BZ is **Outcome A / CLOSED READ-ONLY** at `{EV_SHA}` / `{EV_TREE}`; runner `{EV_RUN}/{EV_JOB}` SUCCESS; artifact `{EV_ART}` / `{EV_DIGEST}`; internal manifest `{EV_MANIFEST}`. Exact rows 2/2, false/true 1/1, exact BX/direct header 1/1, BW reconciliation 2/2, mismatch/reselection 0/0, payload/second-control 0/0, all negatives PASS.\n\nActive pass: **R3.18CA — one following-payload evidence after published R3.18BY**. Only the immutable BY=true `largest_100/079...` `LoadoutsOnline` row may enter at payload_start 3245. Existing bounded R3.17O K4 is the only primary native candidate and may be used only under its existing exact allowlist. BU=false remains outside payload access.\n\nHard stop: no K4/allowlist widening, production/Cargo/fixture/corpus/support mutation, next-control bit, second payload, historical width/shape inheritance, witness substitution or generalized cursor.\n'''
+          write("docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md", handoff)
+
+          # Progress ledger is append-only.
+          path = "docs/continuity/MIMIR_PROGRESS_LEDGER.md"
+          s = read(path)
+          marker = "## 2026-09-15 — R3.18BZ — Published-R3.18BY Mixed Following-Header Differential"
+          if marker in s:
+              raise SystemExit("ledger BZ already present")
+          entry = f'''\n\n---\n\n{marker}\nOutcome: **A — ADMITTED / CLOSED READ-ONLY**\n\nAuthority:\n- continuity base `{BASE_SHA}` / `{BASE_TREE}`; canonical production R3.18BY `{PROD_SHA}` / `{PROD_TREE}`;\n- evidence `{EV_SHA}` / `{EV_TREE}`; runner `{EV_RUN}/{EV_JOB}` SUCCESS;\n- artifact `{EV_ART}` / 3111 bytes / `{EV_DIGEST}`; manifest sha256 `{EV_MANIFEST}`.\n\nResults:\n- rows 2/2; false terminator 1/1; true following header 1/1; exact R3.18BX context 1/1; direct header match 1/1; BW row reconciliation 2/2;\n- native/oracle mismatch 0; witness reselection 0; following payload/second-control consumption 0/0;\n- repeatability, corrupt-BU, post-stop poison, version/net/RL223, truncation, missing lookup, structural equality and source-scope negatives PASS;\n- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy/workspace/archive verifier PASS.\n\nAdmission consequence:\n- close R3.18BZ Outcome A;\n- open R3.18CA read-only on only the exact BY=true LoadoutsOnline payload at payload_start 3245; no payload shape/width or production composition is pre-admitted.\n'''
+          write(path, s.rstrip() + entry)
+
+          decision = f'''# MIMIR R3.18BZ Decision — Published-R3.18BY Mixed Following-Header Differential\n\n**Date:** 2026-09-15\n**Status:** CLOSED / OUTCOME A / READ-ONLY\n**Canonical production authority:** R3.18BY `{PROD_SHA}` / `{PROD_TREE}`\n**Continuity base:** `{BASE_SHA}` / `{BASE_TREE}`\n**Evidence head:** `{EV_SHA}` / `{EV_TREE}`\n**Runner:** `{EV_RUN}/{EV_JOB}` SUCCESS\n**Artifact:** `{EV_ART}` / 3111 bytes / `{EV_DIGEST}`\n**Artifact manifest SHA-256:** `{EV_MANIFEST}`\n**Frozen contract authority:** R3.18BX `sha256:{BX}`\n\n## Admission evidence\n\n- exact published rows: `2/2`\n- false BU terminator: `1/1`, no following-header access, stop `11240`\n- true BU continuation/header: `1/1`, stream `[3239,3245)`, id 61, bound 110, prop bits 6, object 67, `TAGame.PRI_TA:ClientLoadoutsOnline`, tag `LoadoutsOnline`, property ordinal 8, stop `payload_start=3245`\n- exact R3.18BX context `(110,6,67,LoadoutsOnline,868,32,10,false)`: `1/1`\n- direct shared stateless-header structural match: `1/1`\n- immutable R3.18BW row reconciliation: `2/2`\n- native/oracle mismatch: `0`\n- witness reselection: `0`\n- following payload bits consumed: `0`\n- second later control bits consumed: `0`\n- production/Cargo/fixture/corpus/support mutation: `0/0/0/0/0`\n- privacy scan: `PASS`\n\n## Negative and validation matrix\n\nRepeatability `2/2`, corrupt-BU `2/2`, post-stop poison `2/2`, version-major/minor/net/RL223 mutations `8/8`, false-terminator no-header `1/1`, true-header truncation `1/1`, unresolved actor/property lookups `1/1` each, direct-header equality `1/1`, false-before-suffix, no following-payload decoder, no second-later-control read and no generic cursor/loop all PASS. Rust 1.85 fmt, R3.18BY regression, BZ negative matrix, source scope, workspace check/test/clippy, knowledge archive verifier and git-diff check all PASS.\n\n## Decision\n\nR3.18BZ satisfies the execution spec's Outcome A gate exactly and is admitted closed. No production capability is widened. Open R3.18CA only as read-only evidence for one following payload on the exact BY=true LoadoutsOnline row beginning at `payload_start=3245`. The BU=false row remains outside payload access.\n\n## Hard stop\n\nNo K4 decoder or allowlist widening, no production source mutation, no false-row payload access, no next property-control bit, no second payload, no historical width/shape inheritance, no generic/repeated property cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.\n'''
+          write("docs/continuity/MIMIR_R3_18BZ_DECISION.md", decision)
+
+          ca = f'''# MIMIR R3.18CA — One Following-Payload Evidence After Published R3.18BY\n\n**Status:** ACTIVE / READ-ONLY EVIDENCE  \n**Pass type:** read-only payload-boundary evidence  \n**Expected production authority:** published R3.18BY `{PROD_SHA}` / `{PROD_TREE}`  \n**Header authority:** R3.18BX exact tuple + admitted R3.18BZ Outcome A  \n**R3.18BZ authority:** `{EV_SHA}` / `{EV_TREE}`; runner `{EV_RUN}/{EV_JOB}`; artifact `{EV_ART}` / `{EV_DIGEST}`  \n**Primary existing native payload candidate:** R3.17O K4 `LoadoutsOnline` decoder  \n**Later property-control bit:** forbidden  \n**Production mutation:** forbidden  \n**Generalized/repeated property loop:** forbidden\n\n## Goal\n\nObserve exactly one payload belonging to the exact published R3.18BY true-row following header. Do not assume payload width, exact admitted K4 shape, or semantic value before the pinned oracle and the existing bounded native decoder agree.\n\nThe BU=false row remains a terminator and is outside the payload lane. Only the immutable true continuation row may enter this pass.\n\n## Frozen entry boundary\n\n```text\nsource rows                            2\nfalse terminator                      sample_002 / BY stop 11240 / no payload access\ntrue continuation                     largest_100/079... / BY stop 3245\ntrue header context                   (110,6,67,LoadoutsOnline,868,32,10,false)\nproperty                              TAGame.PRI_TA:ClientLoadoutsOnline\nattribute tag                         LoadoutsOnline\nproperty ordinal                      8\npayload_start                         3245\nlater control access                  0\n```\n\n## Existing native decoder constraint\n\n`ReplayNetworkAttributeTagV1::LoadoutsOnline` is already implemented by the bounded R3.17O K4 decoder. That fact permits **attempting** the existing decoder in this evidence pass; it does not admit a new K4 shape.\n\nThe CA evidence runner must:\n\n1. call the existing `decode_replay_network_k4_v1` at the exact `payload_start=3245` with the exact replay context and lookup objects;\n2. accept a native result only if the decoder's existing R3.17N/R3.17O exact shape allowlist already admits the observed `LoadoutsOnline` representation;\n3. record the exact K4 width and shape returned by the existing admission machinery;\n4. treat `unadmitted-k4-shape` as Outcome B/C evidence, never as permission to edit or widen `k4_admitted_groups.rs` in CA;\n5. keep all K4 source, admitted groups, Cargo/dependencies and production APIs unchanged.\n\nNo width from another `LoadoutsOnline` row may be inherited. Existing widths such as 726/854/1080/1352 are historical examples only until this exact witness is measured.\n\n## Evidence procedure\n\n1. Freeze exact published R3.18BY SHA/tree and successful published-main validation receipts.\n2. Freeze exact R3.18BZ Outcome A evidence head/tree, runner/job, artifact digest and manifest before opening payload observation.\n3. Reconstruct the exact two-row BU/BY lane without witness reselection.\n4. Prove the false row terminates at 11240 and performs zero payload access.\n5. On the exact true row, require the published BY header to equal the frozen R3.18BX context and stop at 3245.\n6. Instrument pinned Boxcars `c70e77df7af81b436cb545d070bb90c82f562d0b` at exactly this property/payload boundary.\n7. Determine the exact payload representation, bit width, end bit and semantic value from the pinned oracle.\n8. Invoke only the already-published K4 decoder as the primary native candidate. Do not add or widen a decoder in this evidence pass.\n9. Compare native and pinned-oracle payload start/end/width/value representation exactly when K4 existing membership admits the row.\n10. Repeat twice and require deterministic equality.\n11. Truncate at every materially distinct payload boundary needed to prove atomic rejection.\n12. Poison the first bit after payload end and require the observed payload result to remain unchanged.\n13. Prove zero next-property-control consumption.\n14. Emit the exact observed context/value family and multiplicity without converting multiplicity into a runtime-frequency promise.\n15. Keep all production/Cargo/fixture/corpus/support mutation at zero.\n\n## Required native/oracle checks\n\nAt minimum record:\n\n- exact K4 input context and `LoadoutsOnline` tag;\n- whether existing K4 membership accepts or rejects the exact row;\n- native payload start/end/width when accepted;\n- native K4 semantic fields (`blue`, `orange`, `unknown1`, `unknown2`) in a deterministic digest-safe representation;\n- pinned Boxcars payload start/end/width and corresponding structural value representation;\n- exact native/oracle equality or the exact fail-closed rejection category;\n- zero lookup/witness substitution;\n- zero later-control read.\n\n## Outcome gate\n\n### Outcome A\n\nThe exact BY=true row yields one `LoadoutsOnline` payload whose complete K4 representation is already supported by the published exact K4 allowlist, native and pinned Boxcars agree exactly, payload end is deterministic, all negatives pass, and next-control consumption remains zero. Close CA and open a separate bounded-production pass for exactly that observed K4 shape.\n\n### Outcome B\n\nThe payload is structurally observable but the exact row is not in existing K4 admitted membership, or only a stricter safe subset is representable by existing admitted decoders. Record the exact shape/width and stop. A separate K4 evidence/contract pass is required before any production composition.\n\n### Outcome C\n\nThe payload has ambiguous boundary/semantic interpretation, differs from pinned Boxcars, depends on witness reselection, touches the false terminator, consumes a later control, or otherwise violates the hard stop. Close with no production widening and open the smallest prerequisite evidence pass.\n\n## Required artifact fields\n\n- published BY SHA/tree and validation run IDs;\n- exact R3.18BZ evidence SHA/tree, run/job, artifact/digest/manifest authority;\n- exact false/true source identities and entry coordinates;\n- BY header identity and R3.18BX membership result;\n- payload start/end/width;\n- exact observed `LoadoutsOnline` K4 shape/value representation;\n- existing K4 membership accepted/rejected result and category;\n- native/oracle equality counters;\n- repeatability and truncation counters;\n- post-payload poison result;\n- witness-reselection count;\n- next-control bits consumed;\n- source-scope and privacy scan results;\n- per-file SHA-256 manifest.\n\n## Hard stop\n\nNo K4 decoder or allowlist widening, no production source mutation, no false-row payload access, no next property-control bit, no second payload, no historical payload-width/shape inheritance, no generic cursor/property loop, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.\n'''
+          write("docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md", ca)
+          PY
+
+      - name: Validate continuity archive and exact diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+          pwsh -NoProfile -File scripts/verify_mimir_knowledge_archive.ps1
+
+          git rm .github/workflows/_tmp_r318bz_admission_builder.yml
+          mapfile -t changed < <(git diff --name-only "$BASE_SHA" | sort)
+          printf '%s\n' "${changed[@]}"
+          expected=(
+            MIMIR_CONTINUE_HERE.md
+            MIMIR_KNOWLEDGE_GRAPH.md
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md
+            docs/continuity/MIMIR_CONTINUITY_STATE.json
+            docs/continuity/MIMIR_CURRENT_STATE.md
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md
+            docs/continuity/MIMIR_R3_18BZ_DECISION.md
+            docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md
+          )
+          mapfile -t expected_sorted < <(printf '%s\n' "${expected[@]}" | sort)
+          test "${#changed[@]}" -eq "${#expected_sorted[@]}"
+          for i in "${!expected_sorted[@]}"; do
+            test "${changed[$i]}" = "${expected_sorted[$i]}"
+          done
+
+          test -z "$(git diff --name-only "$BASE_SHA" -- crates/mimir-replay Cargo.toml Cargo.lock external_fixtures test_corpus || true)"
+
+      - name: Commit exact admission surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'MIMIR GitHub Builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Admit R3.18BZ and open R3.18CA'
+          git push origin HEAD:admit/r318bz-outcome-a
