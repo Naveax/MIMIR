@@ -108,7 +108,8 @@ R3.18BV published-R3.18BU one-control differential / Outcome A CLOSED
 R3.18BW one following-property-header evidence after published R3.18BU mixed control / Outcome A CLOSED
 R3.18BX exact following-header context contract after R3.18BW / Outcome A CLOSED
 R3.18BY bounded post-BU mixed-continuation following-header production / PRODUCTION CLOSED
-R3.18BZ published-R3.18BY mixed following-header differential / ACTIVE
+R3.18BZ published-R3.18BY mixed following-header differential / Outcome A CLOSED
+R3.18CA one following-payload evidence after published R3.18BY / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -329,6 +330,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 200. `docs/continuity/MIMIR_R3_18BY_EXECUTION_SPEC.md`
 201. `docs/continuity/MIMIR_R3_18BY_DECISION.md`
 202. `docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md`
+203. `docs/continuity/MIMIR_R3_18BZ_DECISION.md`
+204. `docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1487,3 +1490,13 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - audit exactly the immutable two-row BY lane against R3.18BW/BX authority and the shared stateless header primitive.
 - expected false/true=1/1, exact true header=1/1, mismatch/reselection=0/0, following payload/second-control=0/0.
 - production mutation, false-row header access and any wider semantic/runtime behavior remain forbidden.
+
+### R3.18BZ published-R3.18BY mixed following-header differential: OUTCOME A / CLOSED
+- evidence `cfcfb671555827b8003007ff766798a1206aca15` / `46b91c8ab80db2c67e04f5386de5db4538cc2a7f`; runner `34950884111/104321306221` SUCCESS; immutable artifact `10389058675` / `sha256:e11eceb83779b2fb52c658edf8ee932d4c24228d7b8046b44b235203d9f79d39`; internal manifest `f298edbe583571ac1a1b477d74fde61f76b92983b0e4016a01639fd2de8930af`.
+- exact published rows 2/2; false/true=1/1; exact BX context 1/1; direct shared-header match 1/1; BW reconciliation 2/2; mismatch/reselection 0/0.
+- repeatability/corrupt-BU/post-stop-poison and structural negative matrix PASS; following payload/second-control 0/0; production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy PASS.
+
+### R3.18CA one following-payload evidence after published R3.18BY: ACTIVE
+- only the exact BY=true `largest_100/079...` LoadoutsOnline row may enter from payload_start 3245; BU=false remains a terminator outside the payload lane.
+- pinned Boxcars and the already-published bounded R3.17O K4 decoder must establish exact payload boundary/shape/value agreement before any capability claim; existing K4 membership may reject fail-closed.
+- no K4/allowlist widening, production mutation, next-control read, second payload, historical width inheritance, witness reselection or generalized cursor.

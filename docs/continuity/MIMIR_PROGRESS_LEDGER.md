@@ -2157,3 +2157,23 @@ Admitted exact lane:
 Admission consequence:
 - R3.18BY is canonical production;
 - R3.18BZ opens read-only on exactly these two published rows; production mutation and payload/later-control access remain forbidden.
+
+---
+
+## 2026-09-15 — R3.18BZ — Published-R3.18BY Mixed Following-Header Differential
+Outcome: **A — ADMITTED / CLOSED READ-ONLY**
+
+Authority:
+- continuity base `3c90dd10fb775ca45c8bd23b8330290f6ebafbbc` / `d2ef61ef1c34630db6139dde28f6d952e0a67e4a`; canonical production R3.18BY `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7`;
+- evidence `cfcfb671555827b8003007ff766798a1206aca15` / `46b91c8ab80db2c67e04f5386de5db4538cc2a7f`; runner `34950884111/104321306221` SUCCESS;
+- artifact `10389058675` / 3111 bytes / `sha256:e11eceb83779b2fb52c658edf8ee932d4c24228d7b8046b44b235203d9f79d39`; manifest sha256 `f298edbe583571ac1a1b477d74fde61f76b92983b0e4016a01639fd2de8930af`.
+
+Results:
+- rows 2/2; false terminator 1/1; true following header 1/1; exact R3.18BX context 1/1; direct header match 1/1; BW row reconciliation 2/2;
+- native/oracle mismatch 0; witness reselection 0; following payload/second-control consumption 0/0;
+- repeatability, corrupt-BU, post-stop poison, version/net/RL223, truncation, missing lookup, structural equality and source-scope negatives PASS;
+- production/Cargo/fixture/corpus/support mutation 0/0/0/0/0; privacy/workspace/archive verifier PASS.
+
+Admission consequence:
+- close R3.18BZ Outcome A;
+- open R3.18CA read-only on only the exact BY=true LoadoutsOnline payload at payload_start 3245; no payload shape/width or production composition is pre-admitted.

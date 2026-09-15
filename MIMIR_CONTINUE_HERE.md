@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BY — bounded post-BU mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BW — one-following-header evidence Outcome A / BU rows=2 / false terminator=1 / true header=1 / exact header=1/1 / mismatch 0 / artifact 10346819501
+  R3.18BZ — published-R3.18BY differential Outcome A / rows=2/2 / false terminator=1/1 / true header=1/1 / exact BX context=1/1 / mismatch/reselection=0/0 / payload/control=0/0 / artifact 10389058675
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BX — exact following-header context contract / Outcome A / 1 exact eight-field tuple / multiplicity 1 / 1 false terminator outside membership / contract 37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576 / historical-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BW — exact one-following-header evidence / two BU rows / false terminator 1 / true continuation 1 / one header exact 1/1 / payload/control consumption 0/0 / artifact 10346819501
+  R3.18BZ — published-R3.18BY mixed following-header differential / Outcome A / exact rows 2/2 / false/true 1/1 / direct header 1/1 / BW reconciliation 2/2 / mismatch/reselection 0/0 / payload/control 0/0 / artifact 10389058675
 
 CURRENT_PASS:
-  R3.18BZ — published-R3.18BY mixed following-header differential
+  R3.18CA — one following-payload evidence after published R3.18BY
 
 CURRENT_PASS_TYPE:
-  read-only published-production differential / exact BY two-row lane / false=no-header terminator / true=one exact R3.18BX header / payload and later-control consumption 0/0
+  read-only payload-boundary evidence / exact BY=true LoadoutsOnline row only / existing admitted K4 decoder may be attempted / stop at exact payload end / later-control consumption 0
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4351,3 +4351,12 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - production builder `34849180581/103992470153` SUCCESS; final exact-head push CI `34856781439/104018278890` SUCCESS; validation PR #223 CLOSED UNMERGED with final PR CI `34856787577/104018300863` SUCCESS; published-main CI `34857720437/104021486939` SUCCESS.
 - exact BY lane remains two rows: `sample_002` BU=false terminates at 11240 with no header; `largest_100/079...` BU=true exposes exactly one R3.18BX member header `(110,6,67,LoadoutsOnline,868,32,10,false)` and stops at payload_start 3245.
 - R3.18BZ is ACTIVE as a read-only published-BY differential on only those two immutable rows. Following payload, second later control, false-row header access, witness reselection, production mutation and generalized/repeated property cursors remain closed.
+
+# CURRENT OVERRIDE — 2026-09-15 — R3.18BZ CLOSED / R3.18CA ACTIVE
+
+- canonical production remains R3.18BY `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7`; R3.18BZ is read-only and changes no production Rust.
+- R3.18BZ evidence `cfcfb671555827b8003007ff766798a1206aca15` / `46b91c8ab80db2c67e04f5386de5db4538cc2a7f` is exactly one temporary-workflow commit over continuity base `3c90dd10fb775ca45c8bd23b8330290f6ebafbbc` / `d2ef61ef1c34630db6139dde28f6d952e0a67e4a`; runner `34950884111/104321306221` SUCCESS.
+- immutable artifact `10389058675` / 3111 bytes / `sha256:e11eceb83779b2fb52c658edf8ee932d4c24228d7b8046b44b235203d9f79d39`; internal manifest sha256 `f298edbe583571ac1a1b477d74fde61f76b92983b0e4016a01639fd2de8930af` and every listed payload file verify.
+- Outcome A: rows 2/2; false terminator 1/1; true header 1/1; exact BX context 1/1; direct stateless-header match 1/1; BW row reconciliation 2/2; native/oracle mismatch 0; witness reselection 0; following payload/second-control consumption 0/0; all negative controls PASS.
+- R3.18CA is ACTIVE as read-only one-following-payload evidence only on the exact BY=true `largest_100/079...` LoadoutsOnline row at `payload_start=3245`; the BU=false row remains outside the payload lane. Existing R3.17O K4 may be attempted only under its already-published exact allowlist.
+- no K4 decoder/allowlist widening, no production/Cargo/fixture/corpus/support mutation, no false-row payload access, no next property-control bit, no second payload, no historical width/shape inheritance, no generalized cursor and no wider semantic/runtime behavior.
