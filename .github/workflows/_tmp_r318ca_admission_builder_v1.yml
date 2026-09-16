@@ -1,0 +1,446 @@
+name: R3.18CA Admission Builder v1
+
+on:
+  push:
+    branches: [automation/r318ca-admission-builder-v1]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318ca-admission-builder-v1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_MAIN: 6ab5ee3423f74a34fbaacef32b98e5f3fd560b16
+      BASE_TREE: 9afa6362ecd0613a9bda06c2261a704cde2847b8
+      PROD_SHA: 3b07e223fdf326e8100412fad9410bb1b66d2cb9
+      PROD_TREE: 68b32f61d61c863b25e393cfa77575bac55217d7
+      CA_HEAD: 01ebdf5a8c7b192ef19a280711b3b0947f373647
+      CA_TREE: 116d2ef967bdbcd04d2af855be16fb865500854b
+      CA_RUN: '34989130467'
+      CA_JOB: '104448878632'
+      CA_CI_RUN: '34989130481'
+      CA_ARTIFACT: '10405136702'
+      CA_ARTIFACT_NAME: r318ca-exact-payload-semantic-v4
+      CA_ARTIFACT_SIZE: '3602'
+      CA_DIGEST: sha256:7e5e94df57fe51513ead7b7ed973bcce81c983f51603892fa9022227c8a05876
+      CA_MANIFEST_SHA256: a4670cdd141a2c12242542cf3788c01af331267c526b6d612c633ded01708341
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      TARGET_BRANCH: continuity/r318ca-admit-open-r318cb-v1
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact CA authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(git rev-parse HEAD^)" "$BASE_MAIN"
+          eq "$(git rev-parse "$BASE_MAIN^{tree}")" "$BASE_TREE"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/branches/main --jq .commit.sha)" "$BASE_MAIN"
+          eq "$(git rev-parse "$PROD_SHA^{tree}")" "$PROD_TREE"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_RUN --jq .head_sha)" "$CA_HEAD"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_RUN --jq .conclusion)" success
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/jobs/$CA_JOB --jq .conclusion)" success
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_CI_RUN --jq .head_sha)" "$CA_HEAD"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_CI_RUN --jq .conclusion)" success
+          eq "$(git rev-parse "$CA_HEAD^{tree}")" "$CA_TREE"
+          meta="$(gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/$CA_ARTIFACT)"
+          eq "$(jq -r .name <<<"$meta")" "$CA_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$meta")" "$CA_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$meta")" "$CA_DIGEST"
+          eq "$(jq -r .expired <<<"$meta")" false
+          ART="$RUNNER_TEMP/r318ca-art"; mkdir -p "$ART"
+          gh run download "$CA_RUN" --repo "$GITHUB_REPOSITORY" --name "$CA_ARTIFACT_NAME" --dir "$ART"
+          eq "$(sha256sum "$ART/r3_18ca_artifact_sha256.txt" | awk '{print $1}')" "$CA_MANIFEST_SHA256"
+          (cd "$ART" && sha256sum -c r3_18ca_artifact_sha256.txt)
+          grep -Fx 'R3_18CA_OUTCOME=A' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'R3_18CA_ORACLE_REPEAT=2/2' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'R3_18CA_NATIVE_REPEAT=2/2' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'R3_18CA_FALSE_ROW_PAYLOAD_ACCESS=0' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'R3_18CA_NEXT_CONTROL_BITS_CONSUMED=0' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'R3_18CA_SECOND_PAYLOADS_CONSUMED=0' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'R3_18CA_WITNESS_RESELECTION=0' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'R3_18CA_PRODUCTION_CARGO_FIXTURE_CORPUS_SUPPORT_MUTATION=0/0/0/0/0' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'payload_start=3245' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'payload_end=4227' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'payload_width=982' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'semantic_sha256=7641391ebd59828550db4ee24036b07a47a0bf40057c9c34024e5461787eb142' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'existing_k4_membership_accepted=true' "$ART/r3_18ca_native_match.txt"
+          grep -Fx 'native_oracle_structural_match=true' "$ART/r3_18ca_native_match.txt"
+          grep -Fx 'native_oracle_semantic_match=true' "$ART/r3_18ca_native_match.txt"
+          grep -Fx 'truncation_atomic_rejections=3/3' "$ART/r3_18ca_negative_controls.txt"
+          grep -Fx 'post_payload_poison=PASS' "$ART/r3_18ca_negative_controls.txt"
+          grep -Fx 'privacy_safe_output=true' "$ART/r3_18ca_privacy.txt"
+          cp "$ART/r3_18ca_oracle.txt" "$RUNNER_TEMP/r3_18ca_oracle.txt"
+          echo R3_18CA_ADMISSION_FREEZE=PASS
+
+      - name: Build clean continuity admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout -B "$TARGET_BRANCH" "$BASE_MAIN"
+          python - <<'PY'
+          import json, os, re
+          from pathlib import Path
+
+          root=Path('.')
+          oracle=Path(os.environ['RUNNER_TEMP'])/'r3_18ca_oracle.txt'
+          facts={}
+          for line in oracle.read_text(encoding='utf-8').splitlines():
+              if '=' in line:
+                  k,v=line.split('=',1); facts[k]=v
+          shape=facts['structural_shape']
+          assert facts['payload_start']=='3245' and facts['payload_end']=='4227' and facts['payload_width']=='982'
+          assert facts['semantic_sha256']=='7641391ebd59828550db4ee24036b07a47a0bf40057c9c34024e5461787eb142'
+
+          decision=f'''# MIMIR R3.18CA — One Following-Payload Evidence Decision
+
+          **Date:** 2026-09-16
+          **Outcome:** **A — CLOSED / READ-ONLY EVIDENCE**
+          **Canonical entry main:** `{os.environ['BASE_MAIN']}` / `{os.environ['BASE_TREE']}`
+          **Production authority:** R3.18BY `{os.environ['PROD_SHA']}` / `{os.environ['PROD_TREE']}`
+          **Evidence authority:** `{os.environ['CA_HEAD']}` / `{os.environ['CA_TREE']}`
+          **Evidence run/job:** `{os.environ['CA_RUN']}/{os.environ['CA_JOB']}` SUCCESS
+          **Same-head CI:** `{os.environ['CA_CI_RUN']}` SUCCESS
+          **Artifact:** `{os.environ['CA_ARTIFACT']}` / `{os.environ['CA_DIGEST']}` / 3602 bytes
+          **Artifact manifest SHA-256:** `{os.environ['CA_MANIFEST_SHA256']}`
+          **Pinned Boxcars:** `{os.environ['BOXCARS_SHA']}`
+
+          ## Decision
+
+          R3.18CA satisfies Outcome A exactly. The immutable R3.18BY true continuation exposes one `LoadoutsOnline` payload at bit 3245; pinned Boxcars and the already-published R3.17O K4 decoder agree on the complete structural and semantic result. Existing K4 membership accepts the exact observed representation. No decoder/allowlist or production capability was widened during CA.
+
+          The BU=false `external_fixtures/sample_002.replay` row remains a terminator at bit 11240 and performs zero payload access.
+
+          ## Exact admitted evidence
+
+          ```text
+          true replay                         test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay
+          true header context                 (110,6,67,LoadoutsOnline,868,32,10,false)
+          payload                             [3245,4227)
+          payload width                       982 bits
+          semantic SHA-256                    {facts['semantic_sha256']}
+          existing K4 membership              accepted
+          oracle repeat                       2/2
+          native repeat                       2/2
+          native/oracle structural match      true
+          native/oracle semantic match        true
+          truncation atomic rejection         3/3
+          post-payload poison                 PASS
+          false-row payload access            0
+          next property-control bits          0
+          second payloads                     0
+          witness reselection                 0
+          production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+          ```
+
+          Exact structural shape:
+
+          ```text
+          {shape}
+          ```
+
+          Witness multiplicity (`133` target-property witnesses; `75` same-shape witnesses) is evidence context only and is not a runtime-frequency promise.
+
+          The oracle build used Rust 1.86.0 solely to keep the pinned external Boxcars instrumentation buildable after registry dependency drift. MIMIR production remains on the repository Rust 1.85 floor; no production dependency or toolchain changed.
+
+          ## Boundary consequence
+
+          Open R3.18CB as a separate bounded-production pass. It may compose exactly the one CA-observed `LoadoutsOnline` K4 payload after the already-valid R3.18BY true header, using only the existing R3.17O K4 decoder and exact existing membership. The false BY/BU row terminates unchanged.
+
+          ## Hard stop
+
+          No K4 decoder/allowlist widening, no other header context/tag/shape, no false-row payload access, no next property-control bit after 4227, no second payload/following header, no generalized/repeated property cursor, and no actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export widening.
+          '''.replace('\n          ','\n').lstrip()
+          (root/'docs/continuity/MIMIR_R3_18CA_DECISION.md').write_text(decision,encoding='utf-8')
+
+          spec=f'''# MIMIR R3.18CB — Exact Post-BU One-Payload Production
+
+          **Status:** ACTIVE / BOUNDED PRODUCTION CANDIDATE
+          **Pass type:** narrow production composition
+          **Production baseline:** R3.18BY `{os.environ['PROD_SHA']}` / `{os.environ['PROD_TREE']}`
+          **Evidence authority:** R3.18CA `{os.environ['CA_HEAD']}` / run `{os.environ['CA_RUN']}` / artifact `{os.environ['CA_ARTIFACT']}`
+          **Existing payload decoder authority:** published R3.17O K4 only
+
+          ## Goal
+
+          Extend the published R3.18BY boundary by exactly one payload and nothing else. On the immutable true row, compose the already-published R3.18BY following header with the already-published K4 decoder for the exact CA-observed `LoadoutsOnline` representation. On the false row, terminate before payload access exactly as BY already does.
+
+          ## Exact production lane
+
+          ```text
+          false row       external_fixtures/sample_002.replay
+          false stop      11240
+          false payload   none / access 0
+
+          true row        test_corpus/largest_100/079_1f838b01-66b5-4963-b62e-64f3d7dbd545.replay
+          header tuple    (110,6,67,LoadoutsOnline,868,32,10,false)
+          payload         [3245,4227)
+          width           982
+          semantic hash   {facts['semantic_sha256']}
+          K4 membership   existing published exact membership only
+          ```
+
+          Exact structural shape:
+
+          ```text
+          {shape}
+          ```
+
+          ## Implementation contract
+
+          Add one boundary-specific public result/API in `crates/mimir-replay/src/lib.rs` and one focused integration test `crates/mimir-replay/tests/r3_18cb_post_bu_following_payload.rs`.
+
+          The implementation must:
+
+          1. recompute the published R3.18BY result from the same frozen prerequisite chain and reject a supplied/fabricated BY result that differs from recomputed authority;
+          2. preserve BY false termination exactly: `following_header=None`, `following_payload=None`, stop 11240, zero payload decode;
+          3. on BY=true require the exact R3.18BX/CA header tuple `(110,6,67,LoadoutsOnline,868,32,10,false)` and exact payload start 3245;
+          4. convert the already-resolved replay context to the existing `ReplayNetworkK4DecodeContextV1` without changing version/net/RL223 semantics;
+          5. invoke only `decode_replay_network_k4_v1` with tag `LoadoutsOnline`, payload start 3245 and the existing footer object lookup table;
+          6. require the existing K4 membership to accept the exact observed CA representation;
+          7. require returned start/end/width/shape to be exactly `3245/4227/982/{shape}`;
+          8. return the existing typed K4 decoded value without introducing a second semantic representation;
+          9. stop exactly at payload end 4227 and consume zero next property-control bits.
+
+          The K4 decoder and admitted-group tables are dependencies of this composition, not edit targets.
+
+          ## Required focused tests
+
+          - exact two-row lane: false terminator 1/1, true payload 1/1;
+          - exact BY prerequisite equality and fabricated/corrupt BY rejection;
+          - exact true header context and payload boundary/value shape;
+          - existing K4 membership accepted without allowlist mutation;
+          - repeat decode deterministic equality;
+          - truncation inside materially distinct payload regions fails atomically;
+          - post-payload-end poison leaves the composed result unchanged;
+          - unresolved actor/property/object lookup prerequisites fail closed;
+          - wrong version major/minor, net version and RL223 context fail closed;
+          - false row proves zero payload access;
+          - source-scope test proves one BY recomputation, at most one K4 payload decode, zero next-control read and no generalized loop/cursor.
+
+          ## Clean source scope
+
+          The production commit may contain exactly:
+
+          1. the minimum `crates/mimir-replay/src/lib.rs` change; and
+          2. `crates/mimir-replay/tests/r3_18cb_post_bu_following_payload.rs`.
+
+          No continuity docs, workflow/helper, Cargo/dependency, fixture/corpus/support, K4 decoder/allowlist, raw-state/event/skill/runtime/export or unrelated cleanup belongs in the production commit.
+
+          ## Validation and publication
+
+          Require Rust 1.85 formatting, focused CB tests, full `mimir-replay` regression, workspace check/test, Clippy with warnings denied, repository verifier, exact two-file scope, clean reconstruction from fresh canonical main, natural exact-head CI, fresh-main ancestry recheck, force=false publication and exact published-main CI/Knowledge Archive readback.
+
+          ## Outcome gate
+
+          ### Outcome A
+
+          Both immutable rows satisfy the exact contract, all negatives pass, the existing K4 representation remains unchanged, production stops at 11240 or 4227 as appropriate, and no next-control bit is consumed. Publish R3.18CB and open R3.18CC only as a read-only differential over the published CB API.
+
+          ### Outcome B/C
+
+          Any prerequisite drift, K4 rejection, structural/semantic mismatch, truncation/poison failure, false-row payload access, later-control consumption or need for broader source changes stops publication. Open the smallest prerequisite evidence/contract pass; do not widen CB.
+
+          ## Hard stop
+
+          No K4 decoder or allowlist widening; no payload context/tag/shape beyond the exact CA witness; no payload on the false row; no next property-control bit after 4227; no second payload/following header; no generic/repeated cursor/property loop; no next actor/frame/lifecycle/raw-state/event/replay-slice/skill/counterfactual/runtime/export behavior.
+          '''.replace('\n          ','\n').lstrip()
+          (root/'docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md').write_text(spec,encoding='utf-8')
+
+          current=f'''# MIMIR — Current Canonical State
+
+          **Continuity date:** 2026-09-16
+          **Repository:** `Naveax/MIMIR`
+          **Canonical production SHA:** `{os.environ['PROD_SHA']}`
+          **Production tree:** `{os.environ['PROD_TREE']}`
+          **Production milestone:** `R3.18BY — bounded post-BU mixed-continuation following-header production`
+          **Last read-only evidence/audit:** `R3.18CA — Outcome A / exact LoadoutsOnline [3245,4227) / width 982 / existing K4 accepted / artifact {os.environ['CA_ARTIFACT']}`
+          **Last contract pass:** `R3.18BX — Outcome A / one exact eight-field tuple / contract 37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576`
+          **Current exact pass:** `R3.18CB — exact post-BU one-payload bounded production`
+
+          ## Truthful boundary
+
+          R3.18BY remains canonical production at `{os.environ['PROD_SHA']}` / `{os.environ['PROD_TREE']}` until CB is independently validated and published.
+
+          R3.18CA closed Outcome A at `{os.environ['CA_HEAD']}` / `{os.environ['CA_TREE']}` with evidence `{os.environ['CA_RUN']}/{os.environ['CA_JOB']}` SUCCESS, same-head CI `{os.environ['CA_CI_RUN']}` SUCCESS, and artifact `{os.environ['CA_ARTIFACT']}` / `{os.environ['CA_DIGEST']}` / manifest `{os.environ['CA_MANIFEST_SHA256']}`. The exact true `LoadoutsOnline` payload is `[3245,4227)`, width 982, semantic SHA-256 `{facts['semantic_sha256']}`; existing K4 membership accepts it and native/oracle structure+semantics match exactly. Repeatability 2/2, truncation rejection 3/3, post-end poison PASS, false-row payload access 0, next-control bits 0, second payloads 0, reselection 0, mutations 0/0/0/0/0.
+
+          R3.18CB may compose only that exact payload through the existing K4 decoder. The BU=false row remains a terminator at 11240.
+
+          ## Hard stop
+
+          No K4 decoder/allowlist widening, no other payload context/tag/shape, no false-row payload, no next control after 4227, no second payload/header, no generalized property cursor/loop, and no wider semantic/runtime capability.
+          '''.replace('\n          ','\n').lstrip()
+          (root/'docs/continuity/MIMIR_CURRENT_STATE.md').write_text(current,encoding='utf-8')
+
+          handoff=f'''# MIMIR — Next Chat Handoff
+
+          Canonical production remains **R3.18BY** `{os.environ['PROD_SHA']}` / `{os.environ['PROD_TREE']}` until the bounded CB candidate is validated and published.
+
+          R3.18CA is **Outcome A / CLOSED READ-ONLY** at `{os.environ['CA_HEAD']}` / `{os.environ['CA_TREE']}`; runner `{os.environ['CA_RUN']}/{os.environ['CA_JOB']}` SUCCESS; same-head CI `{os.environ['CA_CI_RUN']}` SUCCESS; artifact `{os.environ['CA_ARTIFACT']}` / `{os.environ['CA_DIGEST']}`; internal manifest `{os.environ['CA_MANIFEST_SHA256']}`. Exact true payload `[3245,4227)`, width 982, existing K4 accepted, native/oracle structural+semantic exact, semantic SHA-256 `{facts['semantic_sha256']}`, repeat 2/2, truncation 3/3, poison PASS, false payload access 0, next-control/second-payload 0/0, reselection 0.
+
+          Active pass: **R3.18CB — exact post-BU one-payload bounded production**. Compose only the immutable BY=true `largest_100/079...` `LoadoutsOnline` payload using the unchanged existing R3.17O K4 decoder and exact existing membership. BU=false `sample_002` terminates at 11240. True row stops at 4227.
+
+          Hard stop: no K4/allowlist widening, other context/tag/shape, false-row payload, next-control bit, second payload/header, generalized cursor/loop, or wider semantic/runtime behavior.
+          '''.replace('\n          ','\n').lstrip()
+          (root/'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md').write_text(handoff,encoding='utf-8')
+
+          locks=root/'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+          s=locks.read_text(encoding='utf-8')
+          marker='# 1. Status vocabulary'
+          assert s.count(marker)==1
+          tail=s.split(marker,1)[1]
+          top=f'''# MIMIR — Boundary Locks
+
+          **Purpose:** keep current capability claims narrow and prevent a future chat from opening several binary/semantic layers at once.
+
+          This file is not a wishlist. It is the list of boundaries that are currently **OPEN**, **EVIDENCE-ONLY**, or **CLOSED**.
+
+          ---
+
+          # 0. Current override — R3.18CA closed / R3.18CB exact one-payload production active
+
+          ## PRODUCTION AUTHORITY — R3.18BY
+          - `{os.environ['PROD_SHA']}` / `{os.environ['PROD_TREE']}` remains canonical production until CB publication.
+          - false BU control `[11239,11240)` terminates without header/payload; true BU control exposes the exact BX header and reaches payload_start 3245.
+
+          ## CLOSED READ-ONLY PAYLOAD EVIDENCE — R3.18CA
+          - `{os.environ['CA_HEAD']}` / `{os.environ['CA_TREE']}`; runner `{os.environ['CA_RUN']}/{os.environ['CA_JOB']}` SUCCESS; same-head CI `{os.environ['CA_CI_RUN']}` SUCCESS; artifact `{os.environ['CA_ARTIFACT']}` / `{os.environ['CA_DIGEST']}` / manifest `{os.environ['CA_MANIFEST_SHA256']}`.
+          - exact `LoadoutsOnline` payload `[3245,4227)`, width 982; existing K4 membership accepted; native/oracle structure+semantics exact; truncation 3/3; poison PASS; false access 0; next-control/second-payload 0/0; reselection 0.
+
+          ## ACTIVE BOUNDED PRODUCTION — R3.18CB
+          - only the exact CA true row/context/shape may compose one existing K4 `LoadoutsOnline` payload.
+          - false row remains outside payload access and stops at 11240.
+          - true row must stop exactly at 4227.
+
+          ## CLOSED
+          - K4 decoder or allowlist widening during CB;
+          - production payload on the false row;
+          - payload context/tag/shape outside the exact CA witness;
+          - next property-control bit after 4227;
+          - second payload or following header;
+          - witness/lookup substitution;
+          - generic/repeated property cursor and wider semantic/runtime behavior.
+
+          '''.replace('\n          ','\n').lstrip()
+          locks.write_text(top+marker+tail,encoding='utf-8')
+
+          state_path=root/'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+          state=json.loads(state_path.read_text(encoding='utf-8'))
+          state['updated_date']='2026-09-16'
+          state['last_completed_read_only_audit']='R3.18CA'
+          state['current_pass']='R3.18CB'
+          state['current_pass_kind']='bounded production composition of the exact CA-observed post-BU LoadoutsOnline K4 payload'
+          state['current_pass_goal']='Compose exactly one existing-K4 LoadoutsOnline payload on the immutable BY=true row from bit 3245 through 4227; preserve BU=false termination and stop before the next property-control bit.'
+          state['current_pass_stop_boundary']='BU=false stops at 11240 with zero payload access. BY=true may consume exactly the CA-observed K4 payload [3245,4227) and no next property-control bit or second payload/header.'
+          state['r3_18ca']={
+            'outcome':'A','status':'closed_read_only','authority_head':os.environ['CA_HEAD'],'authority_tree':os.environ['CA_TREE'],
+            'run_id':int(os.environ['CA_RUN']),'job_id':int(os.environ['CA_JOB']),'same_head_ci_run_id':int(os.environ['CA_CI_RUN']),
+            'artifact_id':int(os.environ['CA_ARTIFACT']),'artifact_digest':os.environ['CA_DIGEST'],'artifact_manifest_sha256':os.environ['CA_MANIFEST_SHA256'],
+            'payload_start_bit':3245,'payload_end_bit':4227,'payload_width':982,'attribute_tag':'LoadoutsOnline',
+            'header_context':[110,6,67,'LoadoutsOnline',868,32,10,False],
+            'semantic_sha256':facts['semantic_sha256'],'existing_k4_membership_accepted':True,
+            'native_oracle_structural_match':True,'native_oracle_semantic_match':True,'oracle_repeat':'2/2','native_repeat':'2/2',
+            'truncation_atomic_rejections':'3/3','post_payload_poison':'PASS','false_row_payload_access':0,
+            'next_property_control_bits_consumed':0,'second_payloads_consumed':0,'witness_reselection':0,
+            'production_cargo_fixture_corpus_support_mutation':'0/0/0/0/0'
+          }
+          extra=[
+            'K4 decoder or allowlist widening during R3.18CB',
+            'payload composition on the R3.18CB false terminator',
+            'R3.18CB payload context tag or shape outside the exact R3.18CA witness',
+            'next property-control consumption after the R3.18CB payload end 4227',
+            'second payload or following header after R3.18CB',
+            'generalized/repeated property loop or generic cursor after R3.18CB'
+          ]
+          closed=state.setdefault('closed_now',[])
+          for x in extra:
+              if x not in closed: closed.append(x)
+          nfr=state.setdefault('next_files_to_read',[])
+          for x in ['docs/continuity/MIMIR_R3_18CA_DECISION.md','docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md']:
+              if x not in nfr: nfr.append(x)
+          state_path.write_text(json.dumps(state,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          cont=root/'MIMIR_CONTINUE_HERE.md'
+          s=cont.read_text(encoding='utf-8')
+          def one(pattern,repl):
+              global s
+              s2,n=re.subn(pattern,repl,s,count=1,flags=re.M)
+              assert n==1,(pattern,n)
+              s=s2
+          one(r'LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3\.18BZ[^\n]*', 'LAST_COMPLETED_READ_ONLY_AUDIT:\n  R3.18CA — one exact LoadoutsOnline payload / Outcome A / [3245,4227) / width 982 / existing K4 accepted / artifact 10405136702')
+          one(r'LAST_COMPLETED_EVIDENCE_PASS:\n  R3\.18BZ[^\n]*', 'LAST_COMPLETED_EVIDENCE_PASS:\n  R3.18CA — exact post-BU following-payload evidence / Outcome A / native-oracle structure+semantic exact / repeat 2/2 / truncation 3/3 / next-control 0 / artifact 10405136702')
+          one(r'CURRENT_PASS:\n  R3\.18CA[^\n]*', 'CURRENT_PASS:\n  R3.18CB — exact post-BU one-payload bounded production')
+          one(r'CURRENT_PASS_TYPE:\n  read-only payload-boundary evidence[^\n]*', 'CURRENT_PASS_TYPE:\n  bounded production / exact CA-observed LoadoutsOnline K4 payload only / false row terminates / true row stops at 4227 / next-control consumption 0')
+          closure=f'''\n\nR3_18CA_EVIDENCE_CLOSURE:\n  Outcome A / read-only / production unchanged at {os.environ['PROD_SHA']}\n  authority head/tree: {os.environ['CA_HEAD']} / {os.environ['CA_TREE']}\n  authority run/job: {os.environ['CA_RUN']} / {os.environ['CA_JOB']} SUCCESS\n  same-head CI: {os.environ['CA_CI_RUN']} SUCCESS\n  artifact: {os.environ['CA_ARTIFACT']} / {os.environ['CA_DIGEST']} / manifest {os.environ['CA_MANIFEST_SHA256']}\n  exact true payload: LoadoutsOnline [3245,4227) width 982 / semantic {facts['semantic_sha256']}\n  existing K4 accepted / native-oracle structural+semantic match true/true / repeat 2/2\n  truncation 3/3 / post-end poison PASS / false payload access 0 / next-control 0 / second payload 0 / reselection 0\n  production/Cargo/fixture/corpus/support mutation 0/0/0/0/0\n\nR3_18CB_ACTIVE_CONTRACT:\n  exact one-payload production only / immutable BY two-row lane\n  false sample_002 stop 11240 / zero payload access\n  true largest_100/079... exact tuple (110,6,67,LoadoutsOnline,868,32,10,false) / payload [3245,4227)\n  existing R3.17O K4 decoder and existing membership only / no K4 widening\n  stop before next property-control bit / no second payload/header / no generalized cursor\n'''
+          if 'R3_18CA_EVIDENCE_CLOSURE:' not in s:
+              s=s.rstrip()+closure+'\n'
+          cont.write_text(s,encoding='utf-8')
+
+          kg=root/'MIMIR_KNOWLEDGE_GRAPH.md'
+          s=kg.read_text(encoding='utf-8')
+          old='204. `docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md`'
+          assert old in s
+          if '205. `docs/continuity/MIMIR_R3_18CA_DECISION.md`' not in s:
+              s=s.replace(old,old+'\n205. `docs/continuity/MIMIR_R3_18CA_DECISION.md`\n206. `docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md`',1)
+          active='R3.18CA one following-payload evidence after published R3.18BY / ACTIVE'
+          if active in s:
+              s=s.replace(active,'R3.18CA one following-payload evidence after published R3.18BY / Outcome A CLOSED\nR3.18CB exact post-BU one-payload bounded production / ACTIVE',1)
+          override=f'''\n\n## Current R3.18CA -> R3.18CB override (2026-09-16)\n\n- R3.18CA closed Outcome A at `{os.environ['CA_HEAD']}` / `{os.environ['CA_TREE']}`; evidence `{os.environ['CA_RUN']}/{os.environ['CA_JOB']}` SUCCESS; same-head CI `{os.environ['CA_CI_RUN']}` SUCCESS; artifact `{os.environ['CA_ARTIFACT']}` / `{os.environ['CA_DIGEST']}` / manifest `{os.environ['CA_MANIFEST_SHA256']}`.\n- Exact payload: `LoadoutsOnline [3245,4227)`, width `982`, semantic `{facts['semantic_sha256']}`; existing K4 membership accepted; native/oracle structural+semantic match; repeat `2/2`; truncation `3/3`; post-end poison PASS.\n- R3.18CB is ACTIVE only for bounded production composition of that exact existing-K4 payload. False row stops at 11240; true row stops at 4227; next-control and second-payload consumption remain closed.\n- No K4 decoder/allowlist widening, context/shape broadening, generalized cursor/loop or wider semantic/runtime behavior.\n'''
+          if '## Current R3.18CA -> R3.18CB override (2026-09-16)' not in s:
+              s=s.rstrip()+override+'\n'
+          kg.write_text(s,encoding='utf-8')
+
+          ledger=root/'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+          s=ledger.read_text(encoding='utf-8')
+          entry=f'''\n\n---\n\n## 2026-09-16 — R3.18CA — Exact post-BU one-following-payload evidence\n\nProduction base SHA: `{os.environ['PROD_SHA']}`\nProduction commit SHA: unchanged; evidence-only pass\nPass type: pinned-oracle + existing-native differential evidence\nOutcome: **A — CLOSED / READ-ONLY**\n\nWhat changed:\n- no production Rust, Cargo, fixture, corpus or support-lane source changed;\n- the immutable BY=true `LoadoutsOnline` payload was measured exactly and compared against the existing R3.17O K4 decoder.\n\nEvidence:\n- authority `{os.environ['CA_HEAD']}` / `{os.environ['CA_TREE']}`; run/job `{os.environ['CA_RUN']}/{os.environ['CA_JOB']}` SUCCESS; same-head CI `{os.environ['CA_CI_RUN']}` SUCCESS;\n- artifact `{os.environ['CA_ARTIFACT']}` / `{os.environ['CA_DIGEST']}` / manifest `{os.environ['CA_MANIFEST_SHA256']}`;\n- exact payload `[3245,4227)`, width 982, semantic SHA-256 `{facts['semantic_sha256']}`;\n- existing K4 membership accepted; native/oracle structure and semantics exact; repeat 2/2;\n- truncation atomic rejection 3/3; post-payload poison PASS; false-row access 0; next-control/second-payload 0/0; witness reselection 0.\n\nBoundaries opened:\n- evidence sufficient for a separate exact one-payload production composition pass.\n\nBoundaries still closed:\n- K4 decoder/allowlist widening; other payload context/tag/shape; false-row payload; next control; second payload/header; generalized cursor/loop; wider replay semantics.\n\nNext exact pass:\n- `R3.18CB — exact post-BU one-payload bounded production`.\n'''
+          if '## 2026-09-16 — R3.18CA — Exact post-BU one-following-payload evidence' not in s:
+              s=s.rstrip()+entry+'\n'
+          ledger.write_text(s,encoding='utf-8')
+          PY
+
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+          test -z "$(git diff --name-only "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github/workflows)"
+          mapfile -t changed < <(git diff --name-only "$BASE_MAIN" | sort)
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 8
+          printf '%s\n' "${changed[@]}" | grep -Fx 'MIMIR_CONTINUE_HERE.md'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'MIMIR_KNOWLEDGE_GRAPH.md'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'docs/continuity/MIMIR_BOUNDARY_LOCKS.md'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'docs/continuity/MIMIR_CONTINUITY_STATE.json'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'docs/continuity/MIMIR_CURRENT_STATE.md'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'docs/continuity/MIMIR_PROGRESS_LEDGER.md'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'docs/continuity/MIMIR_R3_18CA_DECISION.md'
+          printf '%s\n' "${changed[@]}" | grep -Fx 'docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md' && exit 9 || true
+          # expected count is 9 because two new files plus seven existing canonical docs
+          test "${#changed[@]}" -eq 9
+          pwsh -NoProfile -File ./scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18CA_ADMISSION_DOCS=PASS
+
+      - name: Commit and publish admission candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Naveax
+          git config user.email Omersevik095@gmail.com
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18CA_DECISION.md docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18CA and open R3.18CB'
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github/workflows
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          echo "candidate_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "candidate_tree=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+          echo R3_18CA_ADMISSION_PUBLISH=PASS
