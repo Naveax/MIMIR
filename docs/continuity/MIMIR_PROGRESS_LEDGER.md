@@ -2177,3 +2177,32 @@ Results:
 Admission consequence:
 - close R3.18BZ Outcome A;
 - open R3.18CA read-only on only the exact BY=true LoadoutsOnline payload at payload_start 3245; no payload shape/width or production composition is pre-admitted.
+
+---
+
+## 2026-09-16 — R3.18CA — Exact post-BU one-following-payload evidence
+
+Production base SHA: `3b07e223fdf326e8100412fad9410bb1b66d2cb9`
+Production commit SHA: unchanged; evidence-only pass
+Pass type: pinned-oracle + existing-native differential evidence
+Outcome: **A — CLOSED / READ-ONLY**
+
+What changed:
+- no production Rust, Cargo, fixture, corpus or support-lane source changed;
+- the immutable BY=true `LoadoutsOnline` payload was measured exactly and compared against the existing R3.17O K4 decoder.
+
+Evidence:
+- authority `01ebdf5a8c7b192ef19a280711b3b0947f373647` / `116d2ef967bdbcd04d2af855be16fb865500854b`; run/job `34989130467/104448878632` SUCCESS; same-head CI `34989130481` SUCCESS;
+- artifact `10405136702` / `sha256:7e5e94df57fe51513ead7b7ed973bcce81c983f51603892fa9022227c8a05876` / manifest `a4670cdd141a2c12242542cf3788c01af331267c526b6d612c633ded01708341`;
+- exact payload `[3245,4227)`, width 982, semantic SHA-256 `7641391ebd59828550db4ee24036b07a47a0bf40057c9c34024e5461787eb142`;
+- existing K4 membership accepted; native/oracle structure and semantics exact; repeat 2/2;
+- truncation atomic rejection 3/3; post-payload poison PASS; false-row access 0; next-control/second-payload 0/0; witness reselection 0.
+
+Boundaries opened:
+- evidence sufficient for a separate exact one-payload production composition pass.
+
+Boundaries still closed:
+- K4 decoder/allowlist widening; other payload context/tag/shape; false-row payload; next control; second payload/header; generalized cursor/loop; wider replay semantics.
+
+Next exact pass:
+- `R3.18CB — exact post-BU one-payload bounded production`.

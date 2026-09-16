@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "updated_date": "2026-09-15",
+  "updated_date": "2026-09-16",
   "repository": "Naveax/MIMIR",
   "default_branch": "main",
   "last_production_code_sha": "3b07e223fdf326e8100412fad9410bb1b66d2cb9",
   "last_production_milestone": "R3.18BY",
   "last_production_milestone_name": "bounded post-BU mixed-continuation following-header production",
-  "last_completed_read_only_audit": "R3.18BZ",
-  "current_pass": "R3.18CA",
-  "current_pass_kind": "read-only one-following-payload evidence after published R3.18BY",
-  "current_pass_goal": "Observe exactly one LoadoutsOnline payload on the immutable BY=true row from payload_start 3245; require pinned Boxcars and existing bounded K4 evidence to agree before any widening.",
-  "current_pass_stop_boundary": "BU=false remains outside payload access. BY=true may consume exactly one payload through its measured exact end; consume no next property-control bit and no second payload.",
+  "last_completed_read_only_audit": "R3.18CA",
+  "current_pass": "R3.18CB",
+  "current_pass_kind": "bounded production composition of the exact CA-observed post-BU LoadoutsOnline K4 payload",
+  "current_pass_goal": "Compose exactly one existing-K4 LoadoutsOnline payload on the immutable BY=true row from bit 3245 through 4227; preserve BU=false termination and stop before the next property-control bit.",
+  "current_pass_stop_boundary": "BU=false stops at 11240 with zero payload access. BY=true may consume exactly the CA-observed K4 payload [3245,4227) and no next property-control bit or second payload/header.",
   "supported_replay_count": 47,
   "r3_13": {
     "network_payload_bits_consumed": false,
@@ -217,7 +217,13 @@
     "next property-control consumption during R3.18CA",
     "second payload consumption during R3.18CA",
     "historical payload width or shape inheritance during R3.18CA",
-    "witness or lookup substitution during R3.18CA"
+    "witness or lookup substitution during R3.18CA",
+    "K4 decoder or allowlist widening during R3.18CB",
+    "payload composition on the R3.18CB false terminator",
+    "R3.18CB payload context tag or shape outside the exact R3.18CA witness",
+    "next property-control consumption after the R3.18CB payload end 4227",
+    "second payload or following header after R3.18CB",
+    "generalized/repeated property loop or generic cursor after R3.18CB"
   ],
   "permanent_process_constraints": [
     "evidence and production implementation are separate passes",
@@ -430,7 +436,9 @@
     "docs/continuity/MIMIR_R3_18BY_DECISION.md",
     "docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md",
     "docs/continuity/MIMIR_R3_18BZ_DECISION.md",
-    "docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md"
+    "docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md",
+    "docs/continuity/MIMIR_R3_18CA_DECISION.md",
+    "docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md"
   ],
   "last_completed_evidence_pass": "R3.18BZ",
   "last_completed_evidence_outcome": "A — published BY rows 2/2; false/true 1/1; exact BX/direct header 1/1; BW reconciliation 2/2; mismatch/reselection 0/0; payload/control 0/0; artifact 10389058675.",
@@ -3610,5 +3618,44 @@
     "negative_controls": "PASS",
     "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0",
     "privacy_scan": "PASS"
+  },
+  "r3_18ca": {
+    "outcome": "A",
+    "status": "closed_read_only",
+    "authority_head": "01ebdf5a8c7b192ef19a280711b3b0947f373647",
+    "authority_tree": "116d2ef967bdbcd04d2af855be16fb865500854b",
+    "run_id": 34989130467,
+    "job_id": 104448878632,
+    "same_head_ci_run_id": 34989130481,
+    "artifact_id": 10405136702,
+    "artifact_digest": "sha256:7e5e94df57fe51513ead7b7ed973bcce81c983f51603892fa9022227c8a05876",
+    "artifact_manifest_sha256": "a4670cdd141a2c12242542cf3788c01af331267c526b6d612c633ded01708341",
+    "payload_start_bit": 3245,
+    "payload_end_bit": 4227,
+    "payload_width": 982,
+    "attribute_tag": "LoadoutsOnline",
+    "header_context": [
+      110,
+      6,
+      67,
+      "LoadoutsOnline",
+      868,
+      32,
+      10,
+      false
+    ],
+    "semantic_sha256": "7641391ebd59828550db4ee24036b07a47a0bf40057c9c34024e5461787eb142",
+    "existing_k4_membership_accepted": true,
+    "native_oracle_structural_match": true,
+    "native_oracle_semantic_match": true,
+    "oracle_repeat": "2/2",
+    "native_repeat": "2/2",
+    "truncation_atomic_rejections": "3/3",
+    "post_payload_poison": "PASS",
+    "false_row_payload_access": 0,
+    "next_property_control_bits_consumed": 0,
+    "second_payloads_consumed": 0,
+    "witness_reselection": 0,
+    "production_cargo_fixture_corpus_support_mutation": "0/0/0/0/0"
   }
 }

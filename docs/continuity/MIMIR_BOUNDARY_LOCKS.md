@@ -6,27 +6,27 @@ This file is not a wishlist. It is the list of boundaries that are currently **O
 
 ---
 
-# 0. Current override — R3.18BZ closed / R3.18CA one-payload evidence active
+# 0. Current override — R3.18CA closed / R3.18CB exact one-payload production active
 
 ## PRODUCTION AUTHORITY — R3.18BY
-- `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7` remains canonical production.
-- false BU control `[11239,11240)` terminates without header; true BU control `[3238,3239)` exposes exactly one R3.18BX member header and stops at payload_start 3245.
+- `3b07e223fdf326e8100412fad9410bb1b66d2cb9` / `68b32f61d61c863b25e393cfa77575bac55217d7` remains canonical production until CB publication.
+- false BU control `[11239,11240)` terminates without header/payload; true BU control exposes the exact BX header and reaches payload_start 3245.
 
-## CLOSED READ-ONLY DIFFERENTIAL — R3.18BZ
-- `cfcfb671555827b8003007ff766798a1206aca15` / `46b91c8ab80db2c67e04f5386de5db4538cc2a7f`; runner `34950884111/104321306221` SUCCESS; artifact `10389058675` / `sha256:e11eceb83779b2fb52c658edf8ee932d4c24228d7b8046b44b235203d9f79d39`.
-- rows 2/2; false/true 1/1; exact BX context/direct header 1/1; BW reconciliation 2/2; mismatch/reselection 0/0; payload/control 0/0; negatives PASS.
+## CLOSED READ-ONLY PAYLOAD EVIDENCE — R3.18CA
+- `01ebdf5a8c7b192ef19a280711b3b0947f373647` / `116d2ef967bdbcd04d2af855be16fb865500854b`; runner `34989130467/104448878632` SUCCESS; same-head CI `34989130481` SUCCESS; artifact `10405136702` / `sha256:7e5e94df57fe51513ead7b7ed973bcce81c983f51603892fa9022227c8a05876` / manifest `a4670cdd141a2c12242542cf3788c01af331267c526b6d612c633ded01708341`.
+- exact `LoadoutsOnline` payload `[3245,4227)`, width 982; existing K4 membership accepted; native/oracle structure+semantics exact; truncation 3/3; poison PASS; false access 0; next-control/second-payload 0/0; reselection 0.
 
-## ACTIVE READ-ONLY PAYLOAD EVIDENCE — R3.18CA
-- only exact BY=true `largest_100/079...` `LoadoutsOnline` may be observed from payload_start 3245.
-- existing bounded R3.17O K4 is the only primary native decoder candidate and may succeed only under its existing exact allowlist.
-- BU=false remains outside the payload lane.
+## ACTIVE BOUNDED PRODUCTION — R3.18CB
+- only the exact CA true row/context/shape may compose one existing K4 `LoadoutsOnline` payload.
+- false row remains outside payload access and stops at 11240.
+- true row must stop exactly at 4227.
 
 ## CLOSED
-- K4 decoder or allowlist widening during CA;
-- production/Cargo/fixture/corpus/support mutation during CA;
-- false-row payload access;
-- next property-control bit and second payload;
-- historical payload width/shape inheritance;
+- K4 decoder or allowlist widening during CB;
+- production payload on the false row;
+- payload context/tag/shape outside the exact CA witness;
+- next property-control bit after 4227;
+- second payload or following header;
 - witness/lookup substitution;
 - generic/repeated property cursor and wider semantic/runtime behavior.
 

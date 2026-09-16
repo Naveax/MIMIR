@@ -109,7 +109,8 @@ R3.18BW one following-property-header evidence after published R3.18BU mixed con
 R3.18BX exact following-header context contract after R3.18BW / Outcome A CLOSED
 R3.18BY bounded post-BU mixed-continuation following-header production / PRODUCTION CLOSED
 R3.18BZ published-R3.18BY mixed following-header differential / Outcome A CLOSED
-R3.18CA one following-payload evidence after published R3.18BY / ACTIVE
+R3.18CA one following-payload evidence after published R3.18BY / Outcome A CLOSED
+R3.18CB exact post-BU one-payload bounded production / ACTIVE
         |                               |
         +---------------+---------------+
                         |
@@ -332,6 +333,8 @@ scripts/verify_mimir_knowledge_archive.ps1
 202. `docs/continuity/MIMIR_R3_18BZ_EXECUTION_SPEC.md`
 203. `docs/continuity/MIMIR_R3_18BZ_DECISION.md`
 204. `docs/continuity/MIMIR_R3_18CA_EXECUTION_SPEC.md`
+205. `docs/continuity/MIMIR_R3_18CA_DECISION.md`
+206. `docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md`
 
 ### R3.18AK bounded post-AG following header: PRODUCTION / CLOSED
 - production `f20f529e3ada6e9a671ea91e5676a17a00770145` / tree `98c675811cca4e4d7f0122c762f371548c9266c2` / parent `5e26e7d3ceceac9752c35dde9c5074a1cd15262d`
@@ -1500,3 +1503,10 @@ This newest override supersedes older historical `ACTIVE` wording above.
 - only the exact BY=true `largest_100/079...` LoadoutsOnline row may enter from payload_start 3245; BU=false remains a terminator outside the payload lane.
 - pinned Boxcars and the already-published bounded R3.17O K4 decoder must establish exact payload boundary/shape/value agreement before any capability claim; existing K4 membership may reject fail-closed.
 - no K4/allowlist widening, production mutation, next-control read, second payload, historical width inheritance, witness reselection or generalized cursor.
+
+## Current R3.18CA -> R3.18CB override (2026-09-16)
+
+- R3.18CA closed Outcome A at `01ebdf5a8c7b192ef19a280711b3b0947f373647` / `116d2ef967bdbcd04d2af855be16fb865500854b`; evidence `34989130467/104448878632` SUCCESS; same-head CI `34989130481` SUCCESS; artifact `10405136702` / `sha256:7e5e94df57fe51513ead7b7ed973bcce81c983f51603892fa9022227c8a05876` / manifest `a4670cdd141a2c12242542cf3788c01af331267c526b6d612c633ded01708341`.
+- Exact payload: `LoadoutsOnline [3245,4227)`, width `982`, semantic `7641391ebd59828550db4ee24036b07a47a0bf40057c9c34024e5461787eb142`; existing K4 membership accepted; native/oracle structural+semantic match; repeat `2/2`; truncation `3/3`; post-end poison PASS.
+- R3.18CB is ACTIVE only for bounded production composition of that exact existing-K4 payload. False row stops at 11240; true row stops at 4227; next-control and second-payload consumption remain closed.
+- No K4 decoder/allowlist widening, context/shape broadening, generalized cursor/loop or wider semantic/runtime behavior.

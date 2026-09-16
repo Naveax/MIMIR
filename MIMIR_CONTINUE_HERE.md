@@ -52,19 +52,19 @@ LAST_PRODUCTION_MILESTONE:
   R3.18BY — bounded post-BU mixed-continuation following-header production
 
 LAST_COMPLETED_READ_ONLY_AUDIT:
-  R3.18BZ — published-R3.18BY differential Outcome A / rows=2/2 / false terminator=1/1 / true header=1/1 / exact BX context=1/1 / mismatch/reselection=0/0 / payload/control=0/0 / artifact 10389058675
+  R3.18CA — one exact LoadoutsOnline payload / Outcome A / [3245,4227) / width 982 / existing K4 accepted / artifact 10405136702
 
 LAST_COMPLETED_CONTRACT_PASS:
   R3.18BX — exact following-header context contract / Outcome A / 1 exact eight-field tuple / multiplicity 1 / 1 false terminator outside membership / contract 37cd43677a3523811ebd24179a5e2aec4699fa11457e078ec6e20f8998cc2576 / historical-contract inheritance false / RL223 retained
 
 LAST_COMPLETED_EVIDENCE_PASS:
-  R3.18BZ — published-R3.18BY mixed following-header differential / Outcome A / exact rows 2/2 / false/true 1/1 / direct header 1/1 / BW reconciliation 2/2 / mismatch/reselection 0/0 / payload/control 0/0 / artifact 10389058675
+  R3.18CA — exact post-BU following-payload evidence / Outcome A / native-oracle structure+semantic exact / repeat 2/2 / truncation 3/3 / next-control 0 / artifact 10405136702
 
 CURRENT_PASS:
-  R3.18CA — one following-payload evidence after published R3.18BY
+  R3.18CB — exact post-BU one-payload bounded production
 
 CURRENT_PASS_TYPE:
-  read-only payload-boundary evidence / exact BY=true LoadoutsOnline row only / existing admitted K4 decoder may be attempted / stop at exact payload end / later-control consumption 0
+  bounded production / exact CA-observed LoadoutsOnline K4 payload only / false row terminates / true row stops at 4227 / next-control consumption 0
 
 CURRENT_SUPPORTED_REPLAY_LANE:
   47 replays
@@ -4360,3 +4360,21 @@ This newest current override supersedes stale R3.18BO ACTIVE wording in historic
 - Outcome A: rows 2/2; false terminator 1/1; true header 1/1; exact BX context 1/1; direct stateless-header match 1/1; BW row reconciliation 2/2; native/oracle mismatch 0; witness reselection 0; following payload/second-control consumption 0/0; all negative controls PASS.
 - R3.18CA is ACTIVE as read-only one-following-payload evidence only on the exact BY=true `largest_100/079...` LoadoutsOnline row at `payload_start=3245`; the BU=false row remains outside the payload lane. Existing R3.17O K4 may be attempted only under its already-published exact allowlist.
 - no K4 decoder/allowlist widening, no production/Cargo/fixture/corpus/support mutation, no false-row payload access, no next property-control bit, no second payload, no historical width/shape inheritance, no generalized cursor and no wider semantic/runtime behavior.
+
+R3_18CA_EVIDENCE_CLOSURE:
+  Outcome A / read-only / production unchanged at 3b07e223fdf326e8100412fad9410bb1b66d2cb9
+  authority head/tree: 01ebdf5a8c7b192ef19a280711b3b0947f373647 / 116d2ef967bdbcd04d2af855be16fb865500854b
+  authority run/job: 34989130467 / 104448878632 SUCCESS
+  same-head CI: 34989130481 SUCCESS
+  artifact: 10405136702 / sha256:7e5e94df57fe51513ead7b7ed973bcce81c983f51603892fa9022227c8a05876 / manifest a4670cdd141a2c12242542cf3788c01af331267c526b6d612c633ded01708341
+  exact true payload: LoadoutsOnline [3245,4227) width 982 / semantic 7641391ebd59828550db4ee24036b07a47a0bf40057c9c34024e5461787eb142
+  existing K4 accepted / native-oracle structural+semantic match true/true / repeat 2/2
+  truncation 3/3 / post-end poison PASS / false payload access 0 / next-control 0 / second payload 0 / reselection 0
+  production/Cargo/fixture/corpus/support mutation 0/0/0/0/0
+
+R3_18CB_ACTIVE_CONTRACT:
+  exact one-payload production only / immutable BY two-row lane
+  false sample_002 stop 11240 / zero payload access
+  true largest_100/079... exact tuple (110,6,67,LoadoutsOnline,868,32,10,false) / payload [3245,4227)
+  existing R3.17O K4 decoder and existing membership only / no K4 widening
+  stop before next property-control bit / no second payload/header / no generalized cursor
