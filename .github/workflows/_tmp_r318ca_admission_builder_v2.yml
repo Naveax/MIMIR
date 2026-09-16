@@ -1,0 +1,145 @@
+name: R3.18CA Admission Builder v2
+
+on:
+  push:
+    branches: [automation/r318ca-admission-builder-v2]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: r318ca-admission-builder-v2
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_MAIN: 6ab5ee3423f74a34fbaacef32b98e5f3fd560b16
+      BASE_TREE: 9afa6362ecd0613a9bda06c2261a704cde2847b8
+      PROD_SHA: 3b07e223fdf326e8100412fad9410bb1b66d2cb9
+      PROD_TREE: 68b32f61d61c863b25e393cfa77575bac55217d7
+      CA_HEAD: 01ebdf5a8c7b192ef19a280711b3b0947f373647
+      CA_TREE: 116d2ef967bdbcd04d2af855be16fb865500854b
+      CA_RUN: '34989130467'
+      CA_JOB: '104448878632'
+      CA_CI_RUN: '34989130481'
+      CA_ARTIFACT: '10405136702'
+      CA_ARTIFACT_NAME: r318ca-exact-payload-semantic-v4
+      CA_ARTIFACT_SIZE: '3602'
+      CA_DIGEST: sha256:7e5e94df57fe51513ead7b7ed973bcce81c983f51603892fa9022227c8a05876
+      CA_MANIFEST_SHA256: a4670cdd141a2c12242542cf3788c01af331267c526b6d612c633ded01708341
+      BOXCARS_SHA: c70e77df7af81b436cb545d070bb90c82f562d0b
+      TARGET_BRANCH: continuity/r318ca-admit-open-r318cb-v1
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Freeze exact authority and artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          eq() { [ "$1" = "$2" ] || { echo "mismatch: got=$1 expected=$2" >&2; exit 1; }; }
+          eq "$(git rev-parse HEAD^)" "$BASE_MAIN"
+          eq "$(git rev-parse "$BASE_MAIN^{tree}")" "$BASE_TREE"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/branches/main --jq .commit.sha)" "$BASE_MAIN"
+          eq "$(git rev-parse "$PROD_SHA^{tree}")" "$PROD_TREE"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_RUN --jq .head_sha)" "$CA_HEAD"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_RUN --jq .conclusion)" success
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/jobs/$CA_JOB --jq .conclusion)" success
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_CI_RUN --jq .head_sha)" "$CA_HEAD"
+          eq "$(gh api repos/${GITHUB_REPOSITORY}/actions/runs/$CA_CI_RUN --jq .conclusion)" success
+          eq "$(git rev-parse "$CA_HEAD^{tree}")" "$CA_TREE"
+          meta="$(gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/$CA_ARTIFACT)"
+          eq "$(jq -r .name <<<"$meta")" "$CA_ARTIFACT_NAME"
+          eq "$(jq -r .size_in_bytes <<<"$meta")" "$CA_ARTIFACT_SIZE"
+          eq "$(jq -r .digest <<<"$meta")" "$CA_DIGEST"
+          eq "$(jq -r .expired <<<"$meta")" false
+          ART="$RUNNER_TEMP/r318ca-art"; mkdir -p "$ART"
+          gh run download "$CA_RUN" --repo "$GITHUB_REPOSITORY" --name "$CA_ARTIFACT_NAME" --dir "$ART"
+          eq "$(sha256sum "$ART/r3_18ca_artifact_sha256.txt" | awk '{print $1}')" "$CA_MANIFEST_SHA256"
+          (cd "$ART" && sha256sum -c r3_18ca_artifact_sha256.txt)
+          grep -Fx 'R3_18CA_OUTCOME=A' "$ART/r3_18ca_aggregate.txt"
+          grep -Fx 'payload_start=3245' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'payload_end=4227' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'payload_width=982' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'semantic_sha256=7641391ebd59828550db4ee24036b07a47a0bf40057c9c34024e5461787eb142' "$ART/r3_18ca_oracle.txt"
+          grep -Fx 'existing_k4_membership_accepted=true' "$ART/r3_18ca_native_match.txt"
+          grep -Fx 'native_oracle_structural_match=true' "$ART/r3_18ca_native_match.txt"
+          grep -Fx 'native_oracle_semantic_match=true' "$ART/r3_18ca_native_match.txt"
+          grep -Fx 'truncation_atomic_rejections=3/3' "$ART/r3_18ca_negative_controls.txt"
+          grep -Fx 'post_payload_poison=PASS' "$ART/r3_18ca_negative_controls.txt"
+          cp "$ART/r3_18ca_oracle.txt" "$RUNNER_TEMP/r3_18ca_oracle.txt"
+
+      - name: Extract frozen admission generator
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin automation/r318ca-admission-builder-v1
+          git show origin/automation/r318ca-admission-builder-v1:.github/workflows/_tmp_r318ca_admission_builder_v1.yml > "$RUNNER_TEMP/v1.yml"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          s=Path(os.environ['RUNNER_TEMP'],'v1.yml').read_text(encoding='utf-8')
+          anchor='      - name: Build clean continuity admission\n'
+          assert s.count(anchor)==1
+          part=s.split(anchor,1)[1]
+          start="          python - <<'PY'\n"
+          end="\n          PY\n\n          python -m json.tool"
+          assert part.count(start)>=1 and part.count(end)==1
+          body=part.split(start,1)[1].split(end,1)[0]
+          lines=[]
+          for line in body.splitlines():
+              if line.startswith('          '): line=line[10:]
+              lines.append(line)
+          out='\n'.join(lines)+'\n'
+          Path(os.environ['RUNNER_TEMP'],'build_admission.py').write_text(out,encoding='utf-8')
+          compile(out,'build_admission.py','exec')
+          PY
+
+      - name: Generate and validate clean admission candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout -B "$TARGET_BRANCH" "$BASE_MAIN"
+          python "$RUNNER_TEMP/build_admission.py"
+          python -m json.tool docs/continuity/MIMIR_CONTINUITY_STATE.json >/dev/null
+          git diff --check
+          test -z "$(git diff --name-only "$BASE_MAIN" -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github/workflows)"
+          mapfile -t changed < <(git diff --name-only "$BASE_MAIN" | sort)
+          printf '%s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 9
+          for p in \
+            MIMIR_CONTINUE_HERE.md \
+            MIMIR_KNOWLEDGE_GRAPH.md \
+            docs/continuity/MIMIR_BOUNDARY_LOCKS.md \
+            docs/continuity/MIMIR_CONTINUITY_STATE.json \
+            docs/continuity/MIMIR_CURRENT_STATE.md \
+            docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md \
+            docs/continuity/MIMIR_PROGRESS_LEDGER.md \
+            docs/continuity/MIMIR_R3_18CA_DECISION.md \
+            docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md; do
+            printf '%s\n' "${changed[@]}" | grep -Fx "$p"
+          done
+          pwsh -NoProfile -File ./scripts/verify_mimir_knowledge_archive.ps1
+          echo R3_18CA_ADMISSION_VALIDATION=PASS
+
+      - name: Commit and push clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name Naveax
+          git config user.email Omersevik095@gmail.com
+          git add MIMIR_CONTINUE_HERE.md MIMIR_KNOWLEDGE_GRAPH.md docs/continuity/MIMIR_BOUNDARY_LOCKS.md docs/continuity/MIMIR_CONTINUITY_STATE.json docs/continuity/MIMIR_CURRENT_STATE.md docs/continuity/MIMIR_NEXT_CHAT_HANDOFF.md docs/continuity/MIMIR_PROGRESS_LEDGER.md docs/continuity/MIMIR_R3_18CA_DECISION.md docs/continuity/MIMIR_R3_18CB_EXECUTION_SPEC.md
+          git commit -m 'Admit R3.18CA and open R3.18CB'
+          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
+          git diff --exit-code "$BASE_MAIN"..HEAD -- crates Cargo.toml Cargo.lock external_fixtures test_corpus tools scripts .github/workflows
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          printf 'R3_18CA_ADMISSION_HEAD=%s\n' "$(git rev-parse HEAD)"
+          printf 'R3_18CA_ADMISSION_TREE=%s\n' "$(git rev-parse HEAD^{tree})"
+          echo R3_18CA_ADMISSION_PUBLISH=PASS
